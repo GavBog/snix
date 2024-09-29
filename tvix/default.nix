@@ -21,6 +21,7 @@ let
         "bigtable_rs"
         "reqwest-middleware"
         "reqwest-tracing"
+        "tower-otel-http-metrics"
         "wu-manber"
       ]);
   };
