@@ -3,12 +3,6 @@
 with pkgs;
 with lib;
 
-let
-
-  emacs = pkgs.emacs28;
-
-in
-
 opts:
 
 let
@@ -42,7 +36,7 @@ in
 runCommand outName { inherit src; } ''
   buildFile() {
     cp "$1" file.org
-    ${emacs}/bin/emacs --batch \
+    ${pkgs.emacs}/bin/emacs --batch \
       --load ${./config.el} \
       --visit file.org \
       --eval "(progn
