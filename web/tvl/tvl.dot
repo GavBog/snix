@@ -45,6 +45,7 @@ digraph tvl {
     tazjin [href="https://tazj.in/"];
     wpcarro [href="https://wpcarro.dev/"];
     raitobezarius [href="https://ryan.lahfa.xyz/"];
+    vova [href="https://github.com/vkryachko"];
     yuuko;
   }
 
@@ -94,6 +95,7 @@ digraph tvl {
     Profpatsch -> nix;
     lassulus -> nix;
     etu -> nix;
+    vova -> nix;
 
     // via tvix
     j4m3s -> tvix;
