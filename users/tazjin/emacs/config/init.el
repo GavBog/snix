@@ -187,7 +187,8 @@
   :config (telega-mode-line-mode 1)
   :custom
   (telega-emoji-use-images nil)
-  (telega-completing-read-function #'completing-read))
+  (telega-completing-read-function #'completing-read)
+  (telega-video-player-command "vlc"))
 
 (use-package terraform-mode)
 (use-package toml-ts-mode)
