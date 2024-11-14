@@ -44,7 +44,7 @@ We are a technology company headquartered in Moscow, working with a variety of t
   </details>
 
 * **Software development**. We offer a wide range of software development
-  services. Whether you need existence with existing projects, or want to create
+  services. Whether you need assistance with existing projects, or want to create
   a new solution from scratch, we can help. We specialize in helping
   organizations avoid the trap of building overly complex systems that don't
   meet their needs.
