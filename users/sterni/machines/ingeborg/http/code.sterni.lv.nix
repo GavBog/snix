@@ -260,6 +260,9 @@ in
                   cd "${path}"
 
                   git fetch "${repo.upstream}" '+refs/*:refs/*' --prune
+
+                  # no auto gc here and we're not pruning for nothing…
+                  git gc
                 '';
 
               serviceConfig = {
