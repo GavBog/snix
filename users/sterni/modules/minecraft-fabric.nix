@@ -201,6 +201,20 @@ let
       url = "https://piston-data.mojang.com/v1/objects/59353fb40c36d304f2035d51e7d6e6baa98dc05c/server.jar";
       sha256 = "1fxl66938ixks6imz8c5bry69z0kh6iawq1fiwca1kck7rlmbg73";
     };
+    # https://www.minecraft.net/en-us/article/minecraft-java-edition-1-21-2
+    "1.21.2" = fetchJar {
+      pname = "server";
+      version = "1.21.2";
+      url = "https://piston-data.mojang.com/v1/objects/7bf95409b0d9b5388bfea3704ec92012d273c14c/server.jar";
+      sha256 = "13a1j3vw0hy9c6wm3m2yzg6g99ikdsasap728pvi62ivna1cmjrv";
+    };
+    # https://www.minecraft.net/en-us/article/minecraft-java-edition-1-21-3 (bug fixes for 1.21.2)
+    "1.21.3" = fetchJar {
+      pname = "server";
+      version = "1.21.3";
+      url = "https://piston-data.mojang.com/v1/objects/45810d238246d90e811d896f87b14695b7fb6839/server.jar";
+      sha256 = "1ddgz0dh830869v82q0cp3zkyanl1p45f7ccbvgrr0y00advhlz1";
+    };
   };
 
   #

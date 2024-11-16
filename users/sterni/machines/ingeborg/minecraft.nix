@@ -2,13 +2,13 @@
 
 let
   carpet = pkgs.fetchurl {
-    url = "https://github.com/gnembon/fabric-carpet/releases/download/1.4.147/fabric-carpet-1.21-1.4.147+v240613.jar";
-    sha256 = "1n8r1zznl2xvkzqqwzg18d0rhfzrb675ik7z22q29svkw2jci7q7";
+    url = "https://github.com/gnembon/fabric-carpet/releases/download/1.4.158/fabric-carpet-1.21.2-1.4.158+v241022.jar";
+    sha256 = "0c76r0gz7nyn91k86flvwpbbypw5v41iib7kkvbyjb84aaafb8ap";
   };
 
   carpet-extra = pkgs.fetchurl {
-    url = "https://github.com/gnembon/carpet-extra/releases/download/1.4.148/carpet-extra-1.21-1.4.148.jar";
-    sha256 = "1yyqv1c08vml3sxyjbs5qk0z3yqiylzq8qa8vxbwiyw49dx5yhnq";
+    url = "https://github.com/gnembon/carpet-extra/releases/download/1.4.158/carpet-extra-1.21.2-1.4.158.jar";
+    sha256 = "083zifzpdgl7xxd989nm1svrrqxl4fmv7wxna10cyipg6jjabjq1";
   };
 
   userGroup = "minecraft";
@@ -74,7 +74,7 @@ in
     services.minecraft-fabric-server = {
       creative = {
         enable = false; # not actively used
-        version = "1.21.1";
+        version = "1.21.3";
         mods = [
           carpet
           carpet-extra
@@ -100,7 +100,7 @@ in
 
       carpet = {
         enable = true;
-        version = "1.21.1";
+        version = "1.21.3";
         mods = [
           carpet
           carpet-extra
