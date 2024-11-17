@@ -118,6 +118,8 @@ let
     enable-blame=1
     enable-commit-graph=1
 
+    robots=noindex,nofollow
+
     root-title=code.sterni.lv
     root-desc=
     css=/cgit.css
@@ -190,6 +192,12 @@ in
       root = "${pkgs.cgit-pink}/cgit/";
       extraConfig = ''
         try_files $uri @cgit;
+
+        # Note this overrides the default robots.txt cgit-pink ships
+        location = /robots.txt {
+           add_header Content-Type text/plain;
+           return 200 "User-agent: *\nDisallow: /\n";
+        }
 
         location @cgit {
           include ${pkgs.nginx}/conf/fastcgi_params;
