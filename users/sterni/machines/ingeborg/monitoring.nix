@@ -17,6 +17,7 @@ in
 
 {
   imports = [
+    ./http/nginx.nix
     ./irccat.nix
   ];
 
