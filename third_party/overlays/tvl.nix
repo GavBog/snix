@@ -16,10 +16,16 @@ depot.nix.readTree.drvTargets {
       };
     };
   };
-  nix_latest = super.nix.override ({
+  nix_latest_stable = super.nix.override ({
     # flaky tests, long painful build, see https://github.com/NixOS/nixpkgs/pull/266443
     withAWS = false;
   });
+
+  # No longer builds with Nix 2.3 after
+  # https://github.com/nixos/nixpkgs/commit/5f9d2d95721cdf20ace744f2db75ad70a7aedd3a
+  nixos-option = super.nixos-option.override {
+    nix = self.nix_latest_stable;
+  };
 
   home-manager = super.home-manager.overrideAttrs (_: {
     src = depot.third_party.sources.home-manager;

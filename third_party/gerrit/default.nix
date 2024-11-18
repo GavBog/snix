@@ -27,7 +27,7 @@ pkgs.lib.makeOverridable depot.nix.buildBazelPackageNG rec {
       find "$dir" -name .git -print0 | xargs -0 rm -rf
     '';
   });
-  depsHash = "sha256-OS2kLXjtuWf+XRyQO2qGvEaAOvxqu20+gXR+fsCvpMc=";
+  depsHash = "sha256:114k8ck7056c415qncqmykwqrgprmxnaw3pdv50758mrgw7zdkpm";
 
   patches = [
     ./0001-Syntax-highlight-nix.patch
