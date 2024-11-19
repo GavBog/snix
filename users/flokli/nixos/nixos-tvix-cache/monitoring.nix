@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 let
   domain = config.machine.domain;
 in
@@ -18,12 +18,13 @@ in
         grpc_server_max_send_msg_size = 67108864;
         log_level = "warn";
       };
-      distributor.receivers = {
-        otlp.protocols = {
-          grpc = { }; # *:4317
-          http = { }; # *:4318
-        };
+
+      # move the otlp listener to another port than 4317, and disable the 4318 one.
+      # opentelemetry-connector binds on both 4317 and 4318.
+      distributor.receivers.otlp.protocols = {
+        grpc.endpoint = "127.0.0.1:4319";
       };
+
       storage.trace = {
         backend = "local";
         wal.path = "/var/lib/tempo/wal";
@@ -33,55 +34,51 @@ in
     };
   };
 
-  # No need, tempo collects the traces directly.
-  #
-  # services.opentelemetry-collector = {
-  #   enable = true;
+  services.opentelemetry-collector = {
+    enable = true;
+    settings = {
+      receivers = {
+        otlp.protocols.grpc.endpoint = "127.0.0.1:4317";
+        otlp.protocols.http.endpoint = "127.0.0.1:4318";
+      };
 
-  #   settings = {
-  #     receivers = {
-  #       otlp.protocols.grpc.endpoint = "127.0.0.1:4317";
-  #       otlp.protocols.http.endpoint = "127.0.0.1:4318";
-  #     };
+      processors = {
+        batch = { };
+      };
 
-  #     processors = {
-  #       batch = { };
-  #     };
+      exporters = {
+        otlp = {
+          endpoint = "127.0.0.1:4319"; # Tempo otlp-grpc
+          tls.insecure = true;
+        };
+        "otlphttp/metrics" = {
+          compression = "gzip";
+          encoding = "proto";
+          endpoint = "http://localhost:8428/opentelemetry";
+          tls.insecure = true;
 
-  #     exporters = {
-  #       otlp = {
-  #         endpoint = "127.0.0.1:9080"; # Tempo
-  #       };
-  #     };
+        };
+      };
 
-  #     extensions = {
-  #       zpages = { };
-  #     };
+      service = {
+        pipelines = {
+          traces = {
+            receivers = [ "otlp" ];
+            processors = [ "batch" ];
+            exporters = [ "otlp" ];
+          };
+          metrics = {
+            receivers = [ "otlp" ];
+            processors = [ "batch" ];
+            exporters = [ "otlphttp/metrics" ];
+          };
+        };
+      };
+    };
+  };
 
-  #     service = {
-  #       extensions = [
-  #         "zpages"
-  #       ];
-  #       pipelines = {
-  #         traces = {
-  #           receivers = [ "otlp" ];
-  #           processors = [ "batch" ];
-  #           exporters = [ "otlp" ];
-  #         };
-  #         metrics = {
-  #           receivers = [ "otlp" ];
-  #           processors = [ "batch" ];
-  #           exporters = [ "otlp" ];
-  #         };
-  #         logs = {
-  #           receivers = [ "otlp" ];
-  #           processors = [ "batch" ];
-  #           exporters = [ "otlp" ];
-  #         };
-  #       };
-  #     };
-  #   };
-  # };
+  services.victoriametrics.enable = true;
+
 
   services.grafana = {
     enable = true;
@@ -122,18 +119,24 @@ in
           name = "Tempo";
           type = "tempo";
           uid = "traces";
-          url = "http://127.0.0.1:3200";
+          url = "http://127.0.0.1:9080";
           access = "proxy";
           timeout = "300";
 
           jsonData = {
             nodeGraph.enabled = true;
             # tracesToLogs.datasourceUid = "logs";
-            # tracesToMetrics.datasourceUid = "metrics";
+            tracesToMetrics.datasourceUid = "metrics";
             # serviceMap.datasourceUid = "metrics";
             # nodeGraph.enabled = true;
             # lokiSearch.datasourceUid = "logs";
           };
+        }
+        {
+          name = "prometheus";
+          type = "prometheus";
+          uid = "metrics";
+          url = "http://localhost:8428/";
         }
       ];
     };
@@ -143,5 +146,6 @@ in
 
   services.nginx.virtualHosts."${domain}".locations."/grafana" = {
     proxyPass = "http://localhost:3000";
+    proxyWebsockets = true;
   };
 }
