@@ -58,7 +58,7 @@
           (help-requested-p (find-if (lambda (x)
                                        (member x '("-h" "--help" "--usage")
                                                :test #'string=))
-                                     args)))
+                                     flags)))
       (apply
        (if help-requested-p
            #'display-help
