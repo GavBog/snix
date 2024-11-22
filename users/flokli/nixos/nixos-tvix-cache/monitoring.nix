@@ -39,71 +39,55 @@ in
   services.alloy.enable = true;
 
   environment.etc."alloy/config.alloy".text = ''
-    prometheus.exporter.unix "main" { }
+    // Accept OTLP. Forward metrics to victoriametrics, and traces to tempo.
+    otelcol.receiver.otlp "main" {
+      grpc {
+        endpoint = "[::1]:4317"
+      }
 
-    prometheus.scrape "main" {
-      targets    = prometheus.exporter.unix.main.targets
-      forward_to = [otelcol.receiver.prometheus.default.receiver]
-    }
+      http {
+        endpoint = "[::1]:4318"
+      }
 
-    otelcol.receiver.prometheus "default" {
       output {
-        metrics = [otelcol.exporter.otlp.default.input]
+        metrics = [otelcol.exporter.otlphttp.victoriametrics.input]
+        traces = [otelcol.exporter.otlp.tempo.input]
       }
     }
 
-    otelcol.exporter.otlp "default" {
+    // We push to Tempo over otlp-grpc.
+    otelcol.exporter.otlp "tempo" {
       client {
-        endpoint = "127.0.0.1:4317"
+        endpoint = "127.0.0.1:4319"
         tls {
           insecure = true
         }
       }
     }
+
+    // We push to VictoriaMetrics over otlp-http.
+    otelcol.exporter.otlphttp "victoriametrics" {
+      client {
+        endpoint = "http://localhost:8428/opentelemetry"
+      }
+    }
+
+    // Run a bundled node-exporter.
+    prometheus.exporter.unix "main" { }
+
+    // Scrape it.
+    prometheus.scrape "main" {
+      targets    = prometheus.exporter.unix.main.targets
+      forward_to = [otelcol.receiver.prometheus.default.receiver]
+    }
+
+    // Convert Prometheus metrics to OTLP and export them.
+    otelcol.receiver.prometheus "default" {
+      output {
+        metrics = [otelcol.exporter.otlphttp.victoriametrics.input]
+      }
+    }
   '';
-
-  services.opentelemetry-collector = {
-    enable = true;
-    settings = {
-      receivers = {
-        otlp.protocols.grpc.endpoint = "127.0.0.1:4317";
-        otlp.protocols.http.endpoint = "127.0.0.1:4318";
-      };
-
-      processors = {
-        batch = { };
-      };
-
-      exporters = {
-        otlp = {
-          endpoint = "127.0.0.1:4319"; # Tempo otlp-grpc
-          tls.insecure = true;
-        };
-        "otlphttp/metrics" = {
-          compression = "gzip";
-          encoding = "proto";
-          endpoint = "http://localhost:8428/opentelemetry";
-          tls.insecure = true;
-
-        };
-      };
-
-      service = {
-        pipelines = {
-          traces = {
-            receivers = [ "otlp" ];
-            processors = [ "batch" ];
-            exporters = [ "otlp" ];
-          };
-          metrics = {
-            receivers = [ "otlp" ];
-            processors = [ "batch" ];
-            exporters = [ "otlphttp/metrics" ];
-          };
-        };
-      };
-    };
-  };
 
   services.victoriametrics.enable = true;
 
