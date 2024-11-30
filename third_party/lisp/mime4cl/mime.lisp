@@ -880,10 +880,7 @@ returns a MIME-MESSAGE object."
           do (write-char (code-char byte) out)))
       (pathname
        (with-open-file (in body)
-         (loop
-            for c = (read-char in nil)
-            while c
-            do (write-char c out)))))))
+         (redirect-stream in out))))))
 
 (defmethod print-mime-part ((part mime-message) (out stream))
   (flet ((hdr (name)
