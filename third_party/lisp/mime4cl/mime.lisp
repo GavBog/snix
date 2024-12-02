@@ -677,9 +677,10 @@ body."
 (defun keywordify-encoding (string)
   "Return a keyword for a content transfer encoding string.
 Return STRING itself if STRING is an unkown encoding."
-  (aif (member string +known-encodings+ :test #'string-equal)
-       (car it)
-       string))
+  (when string
+    (aif (member string +known-encodings+ :test #'string-equal)
+         (car it)
+         string)))
 
 (defun header (name headers)
   (let ((elt (assoc name headers :test #'string-equal)))
@@ -714,8 +715,9 @@ guessed from the headers, use the *DEFAULT-TYPE*."
                                   :disposition (car disp)
                                   :disposition-parameters (cdr disp)
                                   :mime-version (hdr :mime-version)
-                                  :encoding (keywordify-encoding
-                                             (hdr :content-transfer-encoding))
+                                  :encoding (or (keywordify-encoding
+                                                 (hdr :content-transfer-encoding))
+                                                :7bit) ; default per RFC2045
                                   :description (hdr :content-description)
                                   :id (hdr :content-id)
                                   :allow-other-keys t)))
