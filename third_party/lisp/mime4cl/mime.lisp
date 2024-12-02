@@ -67,6 +67,15 @@
   (:documentation
    "Abstract base class for all types of MIME parts."))
 
+(defparameter +redundant-headers+ '(:mime-version
+                                    :content-type
+                                    :content-id
+                                    :content-description
+                                    :content-disposition
+                                    :content-transfer-encoding)
+  "Headers that don't need to be preserved in the  HEADERS slot of MIME-MESSAGE
+because they are stored in dedicated slots in MIME-PART.")
+
 (defclass mime-bodily-part (mime-part)
   ((body
     :initarg :body
@@ -131,11 +140,20 @@
   ;; Allow a list of mime parts to be specified as body of a
   ;; mime-message.  In that case we implicitly create a mime-multipart
   ;; and assign to the body slot.
-  (with-slots (real-message) part
+  (with-slots (real-message headers) part
     (when (and (slot-boundp part 'real-message)
                (consp real-message))
       (setf real-message
-            (make-instance 'mime-multipart :parts real-message)))))
+            (make-instance 'mime-multipart :parts real-message)))
+    ;; Remove headers that are parsed and stored in MIME-PART (i.e.
+    ;; REAL-MESSAGE). This prevents redundant storage and rendering of these
+    ;; headers as well as MIME= depending on the specific rendering of these
+    ;; headers which may diverge between mime4cl and other software. We do this
+    ;; here since construction of REAL-MESSAGE may access the HEADERS slot.
+    (setf headers
+          (delete-if (lambda (h)
+                       (member (car h) +redundant-headers+ :test #'string-equal))
+                     headers))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -471,15 +489,14 @@ separated by PART-BOUNDARY."
   (encode-mime-body part stream))
 
 (defmethod encode-mime-part ((part mime-message) stream)
-  ;; tricky: we have to mix the MIME headers with the message headers
+  ;; tricky: we have to mix the MIME headers with the message headers, i.e.
+  ;; ENCODE-MIME-PART will output additional headers
   (dolist (h (mime-message-headers part))
     (unless (stringp (car h))
       (setf (car h)
             (string-capitalize (car h))))
-    (unless (or (string-starts-with "content-" (car h) #'string-equal)
-                (string-equal "mime-version" (car h)))
-      (format stream "~A: ~A~%"
-              (car h) (cdr h))))
+    (format stream "~A: ~A~%"
+            (car h) (cdr h)))
   (encode-mime-part (mime-body part) stream))
 
 (defmethod encode-mime-part ((part mime-multipart) stream)
