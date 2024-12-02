@@ -9,7 +9,7 @@ let
       # delete unexported and unused double defun in sgml-dtd.lisp
       # which reference undefined CL-USER:*HTML-DTD* (!) which
       # unlike CLOSURE-HTML:*HTML-DTD* is not involved in the
-      # packages operation.
+      # package's operation.
       ./no-double-defun.patch
       # Patches html-parser.lisp to look for the distributed
       # dtd files and catalog in this source derivations out
@@ -61,5 +61,9 @@ depot.nix.buildLisp.library {
   deps = [
     depot.third_party.lisp.flexi-streams
     depot.third_party.lisp.closure-common
+  ];
+
+  brokenOn = [
+    "ecl" # see closure-common
   ];
 }

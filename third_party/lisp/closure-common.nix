@@ -33,4 +33,9 @@ depot.nix.buildLisp.library {
     depot.third_party.lisp.trivial-gray-streams
     depot.third_party.lisp.babel #+rune-is-character
   ];
+
+  brokenOn = [
+    # TODO(sterni): fails when loading because it tries to access package.lisp at runtime
+    "ecl"
+  ];
 }

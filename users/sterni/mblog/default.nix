@@ -32,7 +32,7 @@
   main = "cli:main";
 
   brokenOn = [
-    "ecl"
+    "ecl" # closure-common fails to start up
   ];
 }).overrideAttrs (super: {
   # The built binary dispatches based on argv[0]. Building two executables would
