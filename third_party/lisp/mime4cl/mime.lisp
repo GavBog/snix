@@ -500,6 +500,7 @@ separated by PART-BOUNDARY."
   (encode-mime-part (mime-body part) stream))
 
 (defmethod encode-mime-part ((part mime-multipart) stream)
+  (declare (ignore stream)) ; call-next-method
   ;; choose a boundary if not already set
   (let* ((original-boundary (get-mime-type-parameter part :boundary))
          (boundary (choose-boundary (mime-parts part) original-boundary)))
@@ -997,9 +998,6 @@ is a string."))
 (defgeneric mime-type-string (mime-part)
   (:documentation
    "Return the string describing the MIME part."))
-
-(defmethod mime-type-string ((part mime-unknown-part))
-  (mime-type part))
 
 (defmethod mime-type-string ((part mime-text))
   (format nil "text/~A" (mime-subtype part)))

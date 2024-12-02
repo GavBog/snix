@@ -31,9 +31,7 @@
 
   main = "cli:main";
 
-  # due to sclf
   brokenOn = [
-    "ccl"
     "ecl"
   ];
 }).overrideAttrs (super: {

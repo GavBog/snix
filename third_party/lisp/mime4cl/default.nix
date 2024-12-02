@@ -45,7 +45,6 @@ depot.nix.buildLisp.library {
 
   # limited by sclf
   brokenOn = [
-    "ccl"
     "ecl"
   ];
 }

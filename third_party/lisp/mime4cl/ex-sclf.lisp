@@ -274,7 +274,8 @@ ELEMENT-TYPE."
 ;; file; just ask politely.
 (defun file-size (pathname)
   #+sbcl (sb-posix:stat-size (sb-posix:stat pathname))
-  #-sbcl (error "nyi"))
+  #+ccl (ccl:file-data-size pathname)
+  #-(or sbcl ccl) (error "nyi"))
 
 ;; LAZY
 
