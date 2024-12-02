@@ -878,6 +878,8 @@ returns a MIME-MESSAGE object."
        (loop
           for byte across body
           do (write-char (code-char byte) out)))
+      (file-portion
+       (redirect-stream (open-decoded-file-portion body) out))
       (pathname
        (with-open-file (in body)
          (redirect-stream in out))))))
