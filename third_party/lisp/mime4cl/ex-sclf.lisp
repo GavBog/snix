@@ -32,7 +32,6 @@
 
 (defpackage :mime4cl-ex-sclf
   (:use :common-lisp)
-  (:import-from :sb-posix :stat :stat-size)
 
   (:export
    #:aif
@@ -274,7 +273,7 @@ ELEMENT-TYPE."
 ;; allows to get to know the file size without being able to open a
 ;; file; just ask politely.
 (defun file-size (pathname)
-  #+sbcl (stat-size (unix-stat pathname))
+  #+sbcl (sb-posix:stat-size (sb-posix:stat pathname))
   #-sbcl (error "nyi"))
 
 ;; LAZY
