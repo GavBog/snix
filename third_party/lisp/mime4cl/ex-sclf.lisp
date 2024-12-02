@@ -270,11 +270,6 @@ ELEMENT-TYPE."
 
 ;; FILES
 
-(defun native-namestring (pathname)
-  #+sbcl (sb-ext:native-namestring pathname)
-  #-sbcl (let (#+cmu (lisp::*ignore-wildcards* t))
-           (namestring pathname)))
-
 ;; FILE-LENGTH is a bit idiosyncratic in this respect.  Besides, Unix
 ;; allows to get to know the file size without being able to open a
 ;; file; just ask politely.
