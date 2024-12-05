@@ -4,8 +4,7 @@ input {
     keyboard {
         xkb {
             layout "us,ru"
-            variant "hyper"
-            options "grp:win_space_toggle,compose:ralt,caps:hyper"
+            options "grp:win_space_toggle,compose:ralt,caps:super"
         }
     }
 
