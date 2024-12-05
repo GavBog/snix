@@ -65,6 +65,6 @@ let
   };
 
 in
-depot.nix.buildManPages "dot-time" { } [
+depot.users.sterni.nix.build.manPages "dot-time" { } [
   dot-time
 ]
