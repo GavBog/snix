@@ -15,7 +15,7 @@ let
 
       Henlo world!
 
-      #application/gzip#base64 ${pkgs.haskell.compiler.ghc963Binary.src}
+      #application/x-xz#base64 ${pkgs.haskell.compiler.ghc963Binary.src}
       EOF
     '';
 
