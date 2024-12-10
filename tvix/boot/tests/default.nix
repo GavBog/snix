@@ -48,7 +48,7 @@ let
         ] ++ lib.optionals (isClosure && useNarBridge) [
           depot.tvix.nar-bridge
           pkgs.curl
-          pkgs.parallel
+          pkgs.rush-parallel
           pkgs.xz.bin
         ];
         buildCommand = ''
@@ -103,7 +103,7 @@ let
           # nar-bridge doesn't care about the path we upload *to*, but a
           # subsequent .narinfo upload need to refer to its contents (by narhash).
           echo -e "Uploading NARs… "
-          ls -d $to_upload/nar/*.nar.xz | parallel 'xz -d < {} | curl -s -T - --unix-socket $PWD/nar-bridge.sock http://localhost:9000/nar/$(basename {} | cut -d "." -f 1).nar'
+          ls -d $to_upload/nar/*.nar.xz | rush 'xz -d < {} | curl -s -T - --unix-socket $PWD/nar-bridge.sock http://localhost:9000/nar/$(basename {} | cut -d "." -f 1).nar'
           echo "Done."
 
           # Upload all NARInfo files.
@@ -111,7 +111,7 @@ let
           # on PathInfoService not doing any checking.
           # In the future, we might want to make this behaviour configurable,
           # and disable checking here, to keep the logic simple.
-          ls -d $to_upload/*.narinfo | parallel 'curl -s -T - --unix-socket $PWD/nar-bridge.sock http://localhost:9000/$(basename {}) < {}'
+          ls -d $to_upload/*.narinfo | rush 'curl -s -T - --unix-socket $PWD/nar-bridge.sock http://localhost:9000/$(basename {}) < {}'
         '' + ''
           # Invoke a VM using tvix as the backing store, ensure the outpath appears in its listing.
           echo "Starting VM…"
