@@ -41,6 +41,8 @@ let
       "-p"
       "4318:4318"
       "jaeger:1.49.0"
+      "jaeger-all-in-one"
+      "$@"
     ];
 in
 runner
