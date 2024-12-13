@@ -18,7 +18,9 @@ const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks
 const { EventEmitter } = require('stream');
 const { setTimeout } = require('node:timers/promises');
 const { promisify } = require('util');
-const { randomUUID, randomBytes, pseudoRandomBytes } = require('crypto');
+const { pseudoRandomBytes } = require('crypto');
+const { execFile } = require('node:child_process');
+const { readdir } = require('fs/promises');
 
 // NB: this code is like 80% copilot generated, and seriously missing error handling.
 // It might break at any time, but for now it seems to work lol.
@@ -712,8 +714,183 @@ class Tracer {
   }
 }
 
+const execFileP = promisify(execFile);
+
+/** actual brightness roughly (but not quite arghhhh) logarithmic on a ThinkPad T14s with effin ARM crap
+/* @type {number[]}
+*/
+const brightnessMappingInternal = [0, 2, 4, 6, 9, 14, 20, 35, 50, 84, 120, 147, 200, 255];
+const brightnessMappingExternal = [0, 0, 0, 0, 12, 24, 36, 48, 60, 72, 84, 100, 100, 100];
+const maxBrightnessVal = brightnessMappingInternal.length - 1;
+async function getInitialInternalMonitorBrightness() {
+  const { stdout } = await execFileP(`blight`, [`get`, 'brightness'], {});
+  const brightness = parseInt(stdout, 10);
+
+  const brightnessVal = brightnessMappingInternal.findIndex(value => value >= brightness);
+  return brightnessVal;
+}
+
+/**
+ * @param {number} brightnessVal number between 0 and `maxBrightnessVal`
+ * (the amount of steps we want) where 0 is “turn off if possible” and `maxBrightnessVal` is “full brightness”
+ * The steps should be roughly aligned (by human eye) between the internal and external monitor.
+ */
+async function SetBrightnessAllMonitors(brightnessVal) {
+  return Promise.all([
+    (async () => {
+      const internalMonitorBrightness = brightnessMappingInternal[brightnessVal] ?? '255';
+      // set the brightness for internal monitor with the `blight` command line util
+      console.log(`Setting internal monitor brightness to ${internalMonitorBrightness}`);
+      await execFileP(`blight`, [`set`, `${internalMonitorBrightness}`], {});
+    })(),
+    (async () => {
+      // find external monitors by listing all directories in /dev/bus/ddcci and reading their numbers
+      // external monitor brightness (ddc) is between 0 and 100
+      const externalBrightness = brightnessMappingExternal[brightnessVal] ?? '100';
+      ddcutilNewBrightness(externalBrightness);
+    })(),
+  ]);
+}
+
+const ddcutilEmitter = new EventEmitter();
+/**
+ * @param {number} brightness
+ */
+function ddcutilNewBrightness(brightness) {
+  ddcutilEmitter.emit('new-brightness', brightness);
+}
+
+/**
+ * @type {number | null}
+ */
+let nextBrightness = null;
+/** Set the brightness of the external monitor using ddcutil,
+ * but only if nothing else is already trying to set it. In that case schedule to set it later.
+ * Also debounce the brightness setting to avoid setting it multiple times in a short time.
+ *
+ * @param {number} externalBrightness
+ */
+async function onDdcutilBrightnessChange(externalBrightness) {
+  if (nextBrightness === externalBrightness) return;
+  if (nextBrightness !== null) {
+    nextBrightness = externalBrightness;
+    console.log(`Already running, will set brightness to ${externalBrightness} later`);
+    return;
+  }
+  nextBrightness = externalBrightness;
+
+  // debounce for some ms if anything happens to nextBrightness in the meantime, use that value
+  await setTimeout(250);
+  if (nextBrightness !== externalBrightness) {
+    console.log(
+      `Newer brightness value ${nextBrightness} was requested, ignoring ${externalBrightness}`,
+    );
+    const brightness = nextBrightness;
+    nextBrightness = null;
+    await onDdcutilBrightnessChange(brightness);
+    return;
+  }
+
+  const ddcciDevices = await readdir('/dev/bus/ddcci');
+  console.log(`Found ddcci devices: ${ddcciDevices}`);
+
+  for (const device of ddcciDevices) {
+    console.log(
+      `Setting external monitor brightness to ${externalBrightness} for device ${device}`,
+    );
+
+    await execFileP('ddcutil', [
+      `--bus`,
+      device,
+      `--sleep-multiplier`,
+      '0.20',
+      `setvcp`,
+      `0x10`,
+      `${externalBrightness}`,
+    ]).catch(err => {
+      /** @type {string} */
+      let stdout = err.stdout;
+      // err.stdout contains "No monitor detected on bus"
+      if (stdout.includes('No monitor detected on bus')) {
+        console.log(`External monitor on bus ${device} is gone, ignoring.`);
+        return;
+      }
+      console.warn(`Error setting brightness with ddcutil for device ${device}`, err);
+    });
+  }
+
+  if (nextBrightness !== externalBrightness) {
+    const brightness = nextBrightness;
+    nextBrightness = null;
+    await onDdcutilBrightnessChange(brightness);
+  } else {
+    nextBrightness = null;
+    console.log(`Finished setting external monitor brightness to ${externalBrightness}`);
+  }
+}
+
+async function exportDisplayBrightnessDbusInterface() {
+  console.log(
+    'Exporting display brightness interface de.profpatsch.alacritty.DisplayBrightness',
+  );
+  const ifaceName = 'de.profpatsch.alacritty.DisplayBrightness';
+  const iface = {
+    name: 'de.profpatsch.alacritty.DisplayBrightness',
+    methods: {
+      // between 0 and 10
+      SetBrightnessAllMonitors: ['d', ''],
+      // either '+' or '-'
+      SetBrightnessAllMonitorsRelative: ['s', ''],
+    },
+  };
+
+  let currentBrightness = await getInitialInternalMonitorBrightness();
+  console.log(`Current brightness: ${currentBrightness}`);
+
+  ddcutilEmitter.on('new-brightness', onDdcutilBrightnessChange);
+
+  const ifaceImpl = {
+    /** @type {function(number): void} */
+    SetBrightnessAllMonitors: function (brightness) {
+      console.log(`SetBrightnessAllMonitors called with ${brightness}`);
+      // set the brightness
+      SetBrightnessAllMonitors(brightness);
+    },
+
+    /** @type {function(string): void} */
+    SetBrightnessAllMonitorsRelative: function (direction) {
+      console.log(`SetBrightnessAllMonitorsRelative called with ${direction}`);
+      switch (direction) {
+        case '+':
+          currentBrightness = Math.min(maxBrightnessVal, currentBrightness + 1);
+          break;
+        case '-':
+          currentBrightness = Math.max(0, currentBrightness - 1);
+          break;
+        default:
+          console.warn(`Invalid direction ${direction}`);
+          return;
+      }
+      ifaceImpl.SetBrightnessAllMonitors(currentBrightness);
+    },
+  };
+
+  try {
+    const retCode = await bus.requestName(ifaceName, 0);
+    console.log(
+      `Request name returned ${retCode} for interface de.profpatsch.alacritty.DisplayBrightness`,
+    );
+    bus.exportInterface(ifaceImpl, '/de/profpatsch/alacritty/DisplayBrightness', iface);
+    console.log('Exported interface de.profpatsch.alacritty.DisplayBrightness');
+  } catch (err) {
+    console.log('Error exporting interface de.profpatsch.alacritty.DisplayBrightness');
+    console.error(err);
+  }
+}
+
 async function main() {
   await exportOtelInterface();
+  await exportDisplayBrightnessDbusInterface();
 
   const tracer = await Tracer.setup('hello');
   await tracer.withSpan(
