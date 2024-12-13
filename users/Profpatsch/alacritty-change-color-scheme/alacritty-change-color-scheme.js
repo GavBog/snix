@@ -20,7 +20,7 @@ const { setTimeout } = require('node:timers/promises');
 const { promisify } = require('util');
 const { pseudoRandomBytes } = require('crypto');
 const { execFile } = require('node:child_process');
-const { readdir } = require('fs/promises');
+const { readdir, realpath, access } = require('fs/promises');
 
 // NB: this code is like 80% copilot generated, and seriously missing error handling.
 // It might break at any time, but for now it seems to work lol.
@@ -33,8 +33,8 @@ let darkThemeName = process.argv[3] ?? 'alacritty_0_12';
 let lightThemeName = process.argv[4] ?? 'dayfox';
 assert(themeDir, 'Theme directory is required');
 
-const darkTheme = getThemePathSync(darkThemeName);
-const lightTheme = getThemePathSync(lightThemeName);
+let darkTheme = getThemePathSync(darkThemeName);
+let lightTheme = getThemePathSync(lightThemeName);
 
 console.log(`Dark theme: ${darkTheme}`);
 console.log(`Light theme: ${lightTheme}`);
@@ -291,14 +291,32 @@ if (!process.env.XDG_CONFIG_HOME) {
   process.env.XDG_CONFIG_HOME = process.env.HOME + '/.config';
 }
 
-/**
+/** get the path of the theme config file synchronously
+ *
  * @param {string} theme
+ * @returns {string}
  * */
 function getThemePathSync(theme) {
   const path = `${themeDir}/${theme}.toml`;
   const absolutePath = fs.realpathSync(path);
   assert(fs.existsSync(absolutePath), `Theme file not found: ${absolutePath}`);
   return absolutePath;
+}
+
+/** get the path of the theme config file
+ *
+ * @param {string} theme
+ * @returns {Promise<string | null>} null if the theme file does not exist
+ * */
+async function getThemePath(theme) {
+  const path = `${themeDir}/${theme}.toml`;
+  try {
+    const absolutePath = await realpath(path);
+    await access(absolutePath);
+    return absolutePath;
+  } catch (err) {
+    return null;
+  }
 }
 
 /** write new color scheme
@@ -407,6 +425,10 @@ async function exportColorSchemeDbusInterface() {
     name: 'de.profpatsch.alacritty.ColorScheme',
     methods: {
       SetColorScheme: ['s', ''],
+      // first argument: 'dark' | 'light'
+      // second argument: the theme name (one of the themes in the theme directory)
+      // will only be applied during the run-time of this program, and reset on restart
+      SetColorSchemeTheme: ['ss', ''],
     },
   };
 
@@ -415,6 +437,28 @@ async function exportColorSchemeDbusInterface() {
     SetColorScheme: function (cs) {
       console.log(`SetColorScheme called with ${cs}`);
       writeAlacrittyColorConfigIfDifferent(cs);
+    },
+    SetColorSchemeTheme: async function (
+      /** @type {string} */ cs,
+      /** @type {string} */ theme,
+    ) {
+      console.log(`SetColorSchemeTheme called with ${cs} and theme ${theme}`);
+      if (cs !== 'dark' && cs !== 'light') {
+        console.warn(`Invalid color scheme ${cs}`);
+        return;
+      }
+      const themePath = await getThemePath(theme);
+      if (themePath === null) {
+        return;
+      }
+      if (cs === 'dark') {
+        darkTheme = themePath;
+      }
+      if (cs === 'light') {
+        lightTheme = themePath;
+      }
+      console.log(`Setting color scheme ${cs} with theme ${themePath}`);
+      writeAlacrittyColorConfig(cs === 'dark' ? 'prefer-dark' : 'prefer-light');
     },
   };
 
