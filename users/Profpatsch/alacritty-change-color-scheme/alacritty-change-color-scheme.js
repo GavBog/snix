@@ -1,3 +1,4 @@
+'use strict';
 //@ts-check
 
 // Step 3: Create the script
@@ -17,6 +18,7 @@ const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks
 const { EventEmitter } = require('stream');
 const { setTimeout } = require('node:timers/promises');
 const { promisify } = require('util');
+const { randomUUID, randomBytes, pseudoRandomBytes } = require('crypto');
 
 // NB: this code is like 80% copilot generated, and seriously missing error handling.
 // It might break at any time, but for now it seems to work lol.
@@ -51,16 +53,23 @@ class Bus {
         this._bus = dbus.systemBus();
         break;
     }
-    this._bus.connection.once('error', err => {
-      console.error(`${this._type} bus ${this._name} error: ${err}`);
-      throw new Error(`${this._type} bus ${this._name} error: ${err}`);
-    });
+    this._bus.connection.once(
+      'error',
+      /** @param {Error} err */
+      err => {
+        console.error(`${this._type} bus ${this._name} error: ${err}`);
+        throw new Error(`${this._type} bus ${this._name} error: ${err}`);
+      },
+    );
     this._bus.connection.once('end', () => {
       console.error(`${this._type} bus ${this._name} connection ended unexpectedly`);
       throw new Error(`${this._type} bus ${this._name} connection ended unexpectedly`);
     });
   }
 
+  /**
+   * @param {string} what
+   */
   _busErrorMessages(what) {
     return `Error getting ${what} from ${this._type} bus ${this._name}`;
   }
@@ -122,11 +131,12 @@ class Bus {
 
     // We need to promisify all methods on the interface
     const methodNames = Object.keys(iface.$methods ?? {});
+    /** @type {{[key: string]: any}} */
     const methods = {};
     /** @type {Record<string, Function>} */
     for (const methodName of methodNames) {
       methods[methodName] = iface[methodName];
-      iface[methodName] = (...args) =>
+      iface[methodName] = (/** @type {any[]} */ ...args) =>
         promisifyMethodAnnotate(
           iface,
           methods[methodName],
@@ -183,7 +193,10 @@ function emitNewRootSpanEvent(tracer, spanData) {
   dbusSpanEmitter.emit('new-root-span', tracer, spanData);
 }
 
-/** @param {StartSpan} childSpanData */
+/**
+ * @param {StartSpan} childSpanData
+ * @param {string} parentSpanId
+ */
 function emitNewChildSpanEvent(parentSpanId, childSpanData) {
   dbusSpanEmitter.emit(`new-child-span-for/${parentSpanId}`, childSpanData);
 }
@@ -276,6 +289,9 @@ if (!process.env.XDG_CONFIG_HOME) {
   process.env.XDG_CONFIG_HOME = process.env.HOME + '/.config';
 }
 
+/**
+ * @param {string} theme
+ * */
 function getThemePathSync(theme) {
   const path = `${themeDir}/${theme}.toml`;
   const absolutePath = fs.realpathSync(path);
@@ -346,6 +362,8 @@ function promisifyMethodAnnotate(obj, method, msg, ...args) {
 
 /** write respective alacritty config if the colorscheme changes.
  * Colorscheme changes are only tracked in-between calls to this function in-memory.
+ *
+ * @param {'prefer-dark' | 'prefer-light'} cs
  */
 function writeAlacrittyColorConfigIfDifferent(cs) {
   // only change the color scheme if it's different from the previous one
@@ -391,6 +409,7 @@ async function exportColorSchemeDbusInterface() {
   };
 
   const ifaceImpl = {
+    /** @type {function('prefer-dark' | 'prefer-light'): void} */
     SetColorScheme: function (cs) {
       console.log(`SetColorScheme called with ${cs}`);
       writeAlacrittyColorConfigIfDifferent(cs);
@@ -482,6 +501,7 @@ async function exportOtelInterface() {
     });
     bus2.exportInterface(
       {
+        /** @param {string} tracerName */
         CreateTracer: function (tracerName) {
           console.log(`Creating tracer with name ${tracerName}`);
           const tracer = opentelemetry.trace.getTracer(tracerName, '0.0.1');
@@ -515,14 +535,20 @@ async function getParentCallsite() {
   return cs[2] ?? cs[1] ?? null;
 }
 
+/** @typedef  {([true, StartSpan] | [false, EndSpan])} BatchSpan */
+
+/**
+ * @typedef {{
+ *   StartSpan: (spanData: StartSpan) => Promise<void>,
+ *   EndSpan: (spanData: EndSpan) => Promise<void>,
+ *   BatchSpans: (spans: BatchSpan[]) => Promise<void>
+ *  }} TracerIface
+ */
+
 /** Calls the tracer dbus interface, sets up a tracer
  *
  * @param {string} tracerName The name of the tracer to set up
- * @returns {Promise<{
- *   StartSpan: (spanData: StartSpan) => Promise<void>,
- *   EndSpan: (spanData: EndSpan) => Promise<void>,
- *   BatchSpans: (spans: ([true, StartSpan] | [false, EndSpan])[]) => Promise<void>
- * }>}
+ * @returns {Promise<TracerIface>}
  */
 async function setupTracer(tracerName) {
   const parentCallsite = await getParentCallsite();
@@ -541,7 +567,7 @@ async function setupTracer(tracerName) {
    *  @typedef {{
    *    StartSpan: (spanData: string) => Promise<void>,
    *    EndSpan: (spanData: string) => Promise<void>
-   *    BatchSpans: ([bool, string]) => Promise<void>
+   *    BatchSpans: (spans: [boolean, string][]) => Promise<void>
    * }} Tracer
    *  @type {IfaceReturn<Tracer>}
    * */
@@ -551,12 +577,17 @@ async function setupTracer(tracerName) {
     path,
   );
 
+  /** @param {StartSpan} spanData */
   function StartSpan(spanData) {
     return tracerIface.StartSpan(JSON.stringify(spanData));
   }
+  /**
+   * @param {any} spanData
+   */
   function EndSpan(spanData) {
     return tracerIface.EndSpan(JSON.stringify(spanData));
   }
+  /** @param {[boolean, unknown][]} spans */
   function BatchSpans(spans) {
     return tracerIface.BatchSpans(
       spans.map(([isStartSpan, span]) => [isStartSpan, JSON.stringify(span)]),
@@ -569,58 +600,145 @@ async function setupTracer(tracerName) {
   };
 }
 
+/** @typedef {{}} Span */
+/** @typedef {{name: string, attributes?: opentelemetry.Attributes, parentSpan?: Span}} SpanData */
+
+class Tracer {
+  /** @param {string} tracerName */
+  static async setup(tracerName) {
+    const iface = await setupTracer(tracerName);
+    return new Tracer(tracerName, iface);
+  }
+
+  /**
+   * @param {string} tracerName
+   * @param {TracerIface} iface
+   */
+  constructor(tracerName, iface) {
+    this.tracerName = tracerName;
+
+    const batch = new EventEmitter();
+    /**
+     * @type {BatchSpan[]}
+     */
+    const batchQueue = [];
+
+    async function sendBatch() {
+      if (batchQueue.length > 0) {
+        await iface.BatchSpans(batchQueue);
+        batchQueue.length = 0;
+      }
+    }
+
+    /**
+     * @param {StartSpan} spanData
+     */
+    function onNewSpan(spanData) {
+      batchQueue.push([true, spanData]);
+      if (batchQueue.length > 10) {
+        sendBatch();
+      }
+    }
+
+    /**
+     * @param {EndSpan} spanData
+     */
+    function onEndSpan(spanData) {
+      batchQueue.push([false, spanData]);
+      if (batchQueue.length > 10) {
+        sendBatch();
+      }
+    }
+
+    batch.on('new-span', onNewSpan);
+    batch.on('end-span', onEndSpan);
+
+    let errorCounter = 0;
+    async function batchTimeout() {
+      const BATCH_TIMEOUT = 100;
+      try {
+        await setTimeout(BATCH_TIMEOUT);
+        await sendBatch();
+      } catch (e) {
+        errorCounter++;
+        throw e;
+      } finally {
+        if (errorCounter > 5) {
+          console.warn('Too many errors, stopping batchTimeout');
+          throw new Error('Too many errors, had to stop batchTimeout');
+        }
+        await setTimeout(BATCH_TIMEOUT).then(batchTimeout);
+      }
+    }
+    batchTimeout();
+    /** @param {StartSpan} spanData */
+    function startSpan(spanData) {
+      batch.emit('new-span', spanData);
+    }
+    /** @param {EndSpan} spanId */
+    function endSpan(spanId) {
+      batch.emit('end-span', { spanId });
+    }
+
+    this.batch = {
+      startSpan,
+      endSpan,
+    };
+  }
+
+  /**
+   * @template A
+   * @param {SpanData} spanData
+   * @param {function(Span): A} f
+   */
+  async withSpan(spanData, f) {
+    const spanId = this.tracerName + '-' + pseudoRandomBytes(16).toString('hex');
+    const startTime = hrTime();
+    // @ts-ignore spanId is an internal impl detaul to our Span type
+    const parentId = spanData.parentSpan?.spanId;
+    try {
+      this.batch.startSpan({
+        spanId,
+        name: spanData.name,
+        attributes: spanData.attributes,
+        startTime,
+        parentId,
+      });
+      const span = { spanId };
+      return await f(span);
+    } finally {
+      this.batch.endSpan({ spanId });
+    }
+  }
+}
+
 async function main() {
   await exportOtelInterface();
 
-  const tracer = await setupTracer('hello');
-  await tracer.StartSpan({
-    name: 'hello',
-    spanId: 'hello',
-    startTime: hrTime(),
-    attributes: {
-      foo: 'bar',
-    },
-  });
-  await tracer.StartSpan({
-    name: 'world',
-    spanId: 'world',
-    parentId: 'hello',
-    attributes: {
-      bar: 'baz',
-    },
-  });
-  await tracer.EndSpan({
-    spanId: 'world',
-    endTime: hrTime(),
-  });
-  await tracer.EndSpan({
-    spanId: 'hello',
-    endTime: hrTime(),
-  });
-  const t = performance.now();
-  await tracer.BatchSpans([
-    [
-      true,
-      {
-        name: 'batchy',
-        spanId: 'batchy',
-        startTime: t,
-        attributes: { foo: 'bar' },
+  const tracer = await Tracer.setup('hello');
+  await tracer.withSpan(
+    {
+      name: 'hello',
+      attributes: {
+        foo: 'bar',
       },
-    ],
-    [
-      true,
-      {
-        name: 'worldy',
-        spanId: 'worldy',
-        parentId: 'batchy',
-        startTime: t + 100,
-        attributes: { bar: 'baz' },
-      },
-    ],
-    [false, { spanId: 'worldy', endTime: t + 500 }],
-    [false, { spanId: 'batchy', endTime: t + 1000 }],
-  ]);
+    },
+    async span => {
+      await tracer.withSpan(
+        {
+          parentSpan: span,
+          name: 'world',
+          attributes: {
+            bar: 'baz',
+          },
+        },
+        async () => {
+          // Code inside the nested span
+        },
+      );
+      // Code after the nested span
+    },
+  );
 
   await exportColorSchemeDbusInterface();
 
