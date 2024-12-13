@@ -830,12 +830,10 @@ async function onDdcutilBrightnessChange(externalBrightness) {
 }
 
 async function exportDisplayBrightnessDbusInterface() {
-  console.log(
-    'Exporting display brightness interface de.profpatsch.alacritty.DisplayBrightness',
-  );
-  const ifaceName = 'de.profpatsch.alacritty.DisplayBrightness';
+  console.log('Exporting display brightness interface de.profpatsch.DisplayBrightness');
+  const ifaceName = 'de.profpatsch.DisplayBrightness';
   const iface = {
-    name: 'de.profpatsch.alacritty.DisplayBrightness',
+    name: 'de.profpatsch.DisplayBrightness',
     methods: {
       // between 0 and 10
       SetBrightnessAllMonitors: ['d', ''],
@@ -878,12 +876,12 @@ async function exportDisplayBrightnessDbusInterface() {
   try {
     const retCode = await bus.requestName(ifaceName, 0);
     console.log(
-      `Request name returned ${retCode} for interface de.profpatsch.alacritty.DisplayBrightness`,
+      `Request name returned ${retCode} for interface de.profpatsch.DisplayBrightness`,
     );
-    bus.exportInterface(ifaceImpl, '/de/profpatsch/alacritty/DisplayBrightness', iface);
-    console.log('Exported interface de.profpatsch.alacritty.DisplayBrightness');
+    bus.exportInterface(ifaceImpl, '/de/profpatsch/DisplayBrightness', iface);
+    console.log('Exported interface de.profpatsch.DisplayBrightness');
   } catch (err) {
-    console.log('Error exporting interface de.profpatsch.alacritty.DisplayBrightness');
+    console.log('Error exporting interface de.profpatsch.DisplayBrightness');
     console.error(err);
   }
 }
