@@ -21,6 +21,7 @@ const { promisify } = require('util');
 const { pseudoRandomBytes } = require('crypto');
 const { execFile } = require('node:child_process');
 const { readdir, realpath, access } = require('fs/promises');
+const net = require('node:net');
 
 // NB: this code is like 80% copilot generated, and seriously missing error handling.
 // It might break at any time, but for now it seems to work lol.
@@ -931,9 +932,88 @@ async function exportDisplayBrightnessDbusInterface() {
   }
 }
 
+function exportVarlinkInterface() {
+  const varlinkSocket = '/run/user/1000/de.Profpatsch.alacritty.ColorScheme';
+
+  try {
+    fs.unlinkSync(varlinkSocket);
+  } catch (err) {}
+  const server = net.createServer(socket => {
+    console.log('Varlink Client connected');
+    let leftover = Buffer.alloc(0);
+    socket.on('data', data => {
+      console.log(`Received data: ${data}`);
+      let buf = Buffer.concat([leftover, data]);
+      for (;;) {
+        // find \0 in buffer
+        let idx = buf.findIndex(value => value == 0);
+        if (idx == -1) {
+          leftover = buf;
+          return;
+        }
+        /** @type {{method: string, parameters?: {[key: string]: unknown}}} */
+        const message = JSON.parse(buf.subarray(0, idx).toString('utf-8'));
+        switch (message.method) {
+          case 'org.varlink.service.GetInfo':
+            socket.write(
+              JSON.stringify({
+                parameters: {
+                  vendor: 'Profpatsch',
+                  product: 'Alacritty Color Scheme',
+                  version: '0.1',
+                  url: 'none',
+                  interfaces: ['de.profpatsch.alacritty.ColorScheme'],
+                },
+              }) + '\0',
+            );
+            break;
+          case 'org.varlink.service.GetInterfaceDescription':
+            switch (message.parameters?.['interface']) {
+              case 'de.profpatsch.alacritty.ColorScheme':
+                socket.write(
+                  JSON.stringify({
+                    parameters: {
+                      description: `
+                        interface de.profpatsch.alacritty.ColorScheme
+
+                        method SetColorScheme(colorScheme: string) -> ()
+                      `,
+                    },
+                  }) + '\0',
+                );
+              default:
+                console.warn(`Unknown interface ${message.parameters?.['interface']}`);
+            }
+            break;
+          case 'de.Profpatsch.alacritty.ColorScheme.SetColorScheme':
+            const colorScheme = message.parameters?.['colorScheme'];
+            if (colorScheme !== 'prefer-dark' && colorScheme !== 'prefer-light') {
+              console.warn(`Invalid color scheme ${colorScheme}`);
+            } else {
+              writeAlacrittyColorConfigIfDifferent(colorScheme);
+            }
+            socket.write(JSON.stringify({ parameters: {} }) + '\0');
+            break;
+          default:
+            console.warn(`Unknown method ${message.method}`);
+            socket.write(JSON.stringify({ error: 'UnkownMethod' }) + '\0');
+        }
+        buf = buf.subarray(idx + 1);
+      }
+    });
+    socket.on('end', () => {
+      console.log('Varlink client disconnected');
+    });
+    socket.on('error', err => {
+      console.error('Socket error:', err);
+    });
+  });
+  server.listen(varlinkSocket);
+}
 async function main() {
   await exportOtelInterface();
   await exportDisplayBrightnessDbusInterface();
+  exportVarlinkInterface();
 
   const tracer = await Tracer.setup('hello');
   await tracer.withSpan(
