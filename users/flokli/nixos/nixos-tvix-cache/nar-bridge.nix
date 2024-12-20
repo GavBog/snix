@@ -21,6 +21,9 @@
       locations."/" = {
         proxyPass = "http://unix:/run/nar-bridge.sock:/";
         extraConfig = ''
+          # Sometimes it takes a while to download and unpack from upstream.
+          proxy_read_timeout 180s;
+
           # Restrict allowed HTTP methods
           limit_except GET HEAD {
             # nar bridge allows to upload nars via PUT
