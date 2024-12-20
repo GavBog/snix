@@ -16,3 +16,6 @@ _fix ⇐ {𝕩 𝕊∘⊢⍟≢ 𝔽 𝕩}
 ImportBqnLibs ⇐ {•Import 𝕩∾˜"/"∾˜¯1↓1⊑•SH "printenv"‿"BQNLIBS"}
 
 Xor ⇐ (¬⊸∧∨∧⟜¬)
+
+# To get all Diagonals (⊢∾○Diagonals⌽)
+Diagonals ⇐ {(0‿0⊸⍉ ↓⟜𝕩)¨ (↕≠𝕩)}
