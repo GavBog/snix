@@ -17,7 +17,7 @@ let
     + pipe tree [
       (mapAttrsToList (k: v:
         if isPathLike v then
-          "cp -R --reflink=auto ${v} \"$out/\"${esc path}/${esc k}"
+          "cp -R --reflink=auto ${esc "${v}"} \"$out/\"${esc path}/${esc k}"
         else if lib.isAttrs v then
           writeTreeAtPath (path + "/" + k) v
         else
