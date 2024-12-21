@@ -21,7 +21,6 @@
 
     # Inactive:
     # ./http/likely-music.sterni.lv.nix
-    # ./gopher.nix
 
     # TODO(sterni): fail2ban
     # TODO(sterni): automatic backups for full recovery
