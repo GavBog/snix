@@ -120,5 +120,4 @@ if $dry; then
   printf 'Would push resulting HEAD to %s on %s\n' "$to" "$remote" >&2
 else
   git push "$remote" "HEAD:$to"
-  usage
 fi
