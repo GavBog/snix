@@ -25,7 +25,7 @@ die() {
 
 usage() {
   printf '%s\n' \
-    "git only-push [-n] [-x] [-b <rev>] -r <remote> -t <refspec> [--] <commit>..." \
+    "git only-push [-n] [-f] [-x] [-b <rev>] -r <remote> -t <refspec> [--] <commit>..." \
     >&2
 }
 
@@ -33,7 +33,7 @@ base=refs/remotes/origin/HEAD
 dry=false
 
 # TODO(sterni): non-interactive mode, e.g. clean up also on cherry-pick failure
-while getopts "b:r:t:nxh" opt; do
+while getopts "b:r:t:nxfh" opt; do
   case $opt in
     # TODO(sterni): it is probably too close to --branch?
     b)
@@ -51,6 +51,10 @@ while getopts "b:r:t:nxh" opt; do
     x)
       cherry_pick_x=true
       ;;
+    f)
+      # TODO(sterni): support --force-with-lease
+      push_f=true
+      ;;
     h|?)
       usage
       # TODO(sterni): add man page
@@ -60,6 +64,7 @@ while getopts "b:r:t:nxh" opt; do
 \t-t <refspec>\tTarget ref to push to.
 \t-b <rev>\tOptional: Base revision to cherry-pick commits onto. Defaults to refs/remotes/origin/HEAD.
 \t-x\t\tUse `git cherry-pick -x` for creating cherry-picks.
+\t-f\-\tForce push to remote ref.
 \t-n\t\tDry run.
 '
       [ "$opt" = "h" ] && exit 0 || exit 100
@@ -124,5 +129,5 @@ done
 if $dry; then
   printf 'Would push resulting HEAD to %s on %s\n' "$to" "$remote" >&2
 else
-  git push "$remote" "HEAD:$to"
+  git push ${push_f:+-f} "$remote" "HEAD:$to"
 fi
