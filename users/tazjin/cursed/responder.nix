@@ -4,7 +4,6 @@ let
   inherit (depot.users.sterni.nix.html)
     __findFile
     esc
-    withDoctype
     ;
 
   # CGI envvars: https://www.instanet.com/cgi/env.html
@@ -24,7 +23,7 @@ let
 
   default = let {
   hasQuery = if builtins.length (builtins.attrNames query) > 0 then "?" else "";
-  body = (withDoctype (<html> { lang = "en"; } [
+  body = <html> { lang = "en"; } [
     (<head> { } [
       (<title> { } "some cursed nix")
     ])
@@ -33,7 +32,7 @@ let
       (<p> { } [ method " " path hasQuery rawQuery ])
       (<p> { } (builtins.toJSON query))
     ])
-  ]));
+  ];
   };
 
   greeter = withDoctype (<html> { lang = "en"; } [

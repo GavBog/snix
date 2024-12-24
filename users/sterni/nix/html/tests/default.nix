@@ -4,10 +4,9 @@ let
   inherit (depot.users.sterni.nix.html)
     __findFile
     esc
-    withDoctype
     ;
 
-  exampleDocument = withDoctype (<html> { lang = "en"; } [
+  exampleDocument = <html> { lang = "en"; } [
     (<head> { } [
       (<meta> { charset = "utf-8"; } null)
       (<title> { } "html.nix example document")
@@ -78,7 +77,7 @@ let
         ])
       ])
     ])
-  ]);
+  ];
 in
 
 pkgs.runCommand "html.nix.html"

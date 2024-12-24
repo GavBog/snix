@@ -1,4 +1,4 @@
-# Copyright © 2021 sterni
+# SPDX-FileCopyrightText: Copyright © 2021, 2024 sterni
 # SPDX-License-Identifier: MIT
 #
 # This file provides a cursed HTML DSL for nix which works by overloading
@@ -58,6 +58,9 @@ let
      calls, we can't escape it automatically. Instead this must be done manually
      using `esc`.
 
+     If the tag is "html", e.g. in case of `<html> { } …`, "<!DOCTYPE html> will
+     be prepended to the normal rendering of the text.
+
      Type: string -> attrs<string> -> (list<string> | string | null) -> string
 
      Example:
@@ -98,20 +101,16 @@ let
         then builtins.concatStringsSep "" (flatten content)
         else content;
     in
-    if content == null
+    (if tag == "html" then "<!DOCTYPE html>" else "") +
+    (if content == null
     then "<${tag}${attrs'}/>"
-    else "<${tag}${attrs'}>${content'}</${tag}>";
+    else "<${tag}${attrs'}>${content'}</${tag}>");
 
-  /* Prepend "<!DOCTYPE html>" to a string.
-
-     Type: string -> string
-
-     Example:
-
-     withDoctype (<body> {} (esc "hello"))
-     => "<!DOCTYPE html><body>hello</body>"
+  /* Deprecated, does nothing.
   */
-  withDoctype = doc: "<!DOCTYPE html>" + doc;
+  withDoctype = doc: builtins.trace
+    "WARN: withDoctype no longer does anything, `<html> { } [ … ]` takes care of rendering <!DOCTYPE html>"
+    doc;
 
   /* Taken from <nixpkgs/lib/lists.nix>. */
   flatten = x:

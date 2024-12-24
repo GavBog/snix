@@ -11,10 +11,10 @@ let
   htmlNix = import ./path/to/html.nix { };
 
   # make the magic work
-  inherit (htmlNix) __findFile esc withDoctype;
+  inherit (htmlNix) __findFile esc;
 in
 
-pkgs.writeText "example.html" (withDoctype (<html> {} [
+pkgs.writeText "example.html" (<html> {} [
   (<head> {} [
     (<meta> { charset = "utf-8"; } null)
     (<title> {} (esc "hello world"))
@@ -35,7 +35,7 @@ pkgs.writeText "example.html" (withDoctype (<html> {} [
       ])
     ])
   ])
-]))
+])
 ```
 
 Convince yourself it works:
