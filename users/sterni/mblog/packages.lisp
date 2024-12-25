@@ -22,8 +22,8 @@
    :common-lisp
    :closure-html
    :cl-date-time-parser
-   :mime4cl
-   :config)
+   :mime4cl)
+  (:import-from :config :*general-buffer-size*)
   (:import-from
    :alexandria
    :when-let*
