@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: Copyright (C) 2022-2023 by sterni
+# SPDX-FileCopyrightText: Copyright (C) 2022-2024 by sterni
 { depot, pkgs, ... }:
 
 (depot.nix.buildLisp.program {
@@ -9,8 +9,8 @@
     ./packages.lisp
     ./config.lisp
     ./maildir.lisp
-    ./transformer.lisp
-    ./note.lisp
+    ./mail-note/html-transformer.lisp
+    ./mail-note/note.lisp
     ./mblog.lisp
     ./cli.lisp
   ];

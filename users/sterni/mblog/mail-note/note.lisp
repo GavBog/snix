@@ -1,7 +1,7 @@
 ;; SPDX-License-Identifier: GPL-3.0-only
-;; SPDX-FileCopyrightText: Copyright (C) 2022-2023 by sterni
+;; SPDX-FileCopyrightText: Copyright (C) 2022-2024 by sterni
 
-(in-package :note)
+(in-package :mail-note)
 (declaim (optimize (safety 3)))
 
 ;;; util
@@ -15,7 +15,7 @@
           do (write-string (who:escape-string-minimal (subseq buf 0 len)) out))))
 
 (defun cid-header-value (cid)
-  "Takes a Content-ID as present in Apple Notes' <object> tags and properly
+  "Takes a Content-ID as present in Mail Notes' <object> tags and properly
   surrounds them with angle brackets for a MIME header"
   (concatenate 'string "<" cid ">"))
 
@@ -25,49 +25,49 @@
 
 ;;; main implementation
 
-(defun apple-note-mime-subtype-p (x)
+(defun mail-note-mime-subtype-p (x)
   (member x '("plain" "html") :test #'string-equal))
 
-(deftype apple-note-mime-subtype ()
-  '(satisfies apple-note-mime-subtype-p))
+(deftype mail-note-mime-subtype ()
+  '(satisfies mail-note-mime-subtype-p))
 
-(defclass apple-note (mime:mime-message)
+(defclass mail-note (mime:mime-message)
   ((text-part
     :type mime:mime-text
     :initarg :text-part
-    :reader apple-note-text-part)
+    :reader mail-note-text-part)
    (subject
     :type string
     :initarg :subject
-    :reader apple-note-subject)
+    :reader mail-note-subject)
    (uuid
     :type string
     :initarg :uuid
-    :reader apple-note-uuid)
+    :reader mail-note-uuid)
    (time
     :type integer
     :initarg :time
-    :reader apple-note-time)
+    :reader mail-note-time)
    (mime-subtype
-    :type apple-note-mime-subtype
+    :type mail-note-mime-subtype
     :initarg :mime-subtype
-    :reader apple-note-mime-subtype))
+    :reader mail-note-mime-subtype))
   (:documentation
-   "Representation of a Note created using Apple's Notes via the IMAP backend"))
+   "Representation of a Mail Note, e.g. created using Apple's Notes App via the IMAP backend"))
 
-(defun apple-note-p (msg)
+(defun mail-note-p (msg)
   "Checks X-Uniform-Type-Identifier of a MIME:MIME-MESSAGE
-  to determine if a given mime message claims to be an Apple Note."
+  to determine if a given mime message claims to be an (Apple) Mail Note."
   (when-let (uniform-id (car (mime:mime-message-header-values
                               "X-Uniform-Type-Identifier"
                               msg)))
     (string-equal uniform-id "com.apple.mail-note")))
 
-(defun make-apple-note (msg)
+(defun make-mail-note (msg)
   (check-type msg mime-message)
 
-  (unless (apple-note-p msg)
-    (error "Passed message is not an Apple Note according to headers"))
+  (unless (mail-note-p msg)
+    (error "Passed message is not a Mail Note according to headers"))
 
   (let ((text-part (mime:find-mime-text-part msg))
         (subject (car (mime:mime-message-header-values "Subject" msg :decode t)))
@@ -78,16 +78,16 @@
         (time (find-mime-message-date msg)))
     ;; The idea here is that we don't need to check a lot manually, instead
     ;; the type annotation are going to do this for us (with sufficient safety?)
-    (change-class msg 'apple-note
+    (change-class msg 'mail-note
                   :text-part text-part
                   :subject subject
                   :uuid uuid
                   :time time
                   :mime-subtype (mime:mime-subtype text-part))))
 
-(defgeneric apple-note-html-fragment (note out)
+(defgeneric mail-note-html-fragment (note out)
   (:documentation
-   "Takes an APPLE-NOTE and writes its text content as HTML to
+   "Takes an MAIL-NOTE and writes its text content as HTML to
    the OUT stream. The <object> tags are resolved to <img> which
    refer to the respective attachment's filename as a relative path,
    but extraction of the attachments must be done separately. The
@@ -95,19 +95,19 @@
    discarded completely, so only a fragment which can be included
    in custom templates remains."))
 
-(defmethod apple-note-html-fragment ((note apple-note) (out stream))
-  (let ((text (apple-note-text-part note)))
+(defmethod mail-note-html-fragment ((note mail-note) (out stream))
+  (let ((text (mail-note-text-part note)))
     (cond
       ;; notemap creates text/plain notes we need to handle properly.
       ;; Additionally we *could* check X-Mailer which notemap sets
-      ((string-equal (apple-note-mime-subtype note) "plain")
+      ((string-equal (mail-note-mime-subtype note) "plain")
        (html-escape-stream (mime:mime-body-stream text) out))
       ;; Notes.app creates text/html parts
-      ((string-equal (apple-note-mime-subtype note) "html")
+      ((string-equal (mail-note-mime-subtype note) "html")
        (closure-html:parse
         (mime:mime-body-stream text)
         (make-instance
-         'apple-note-transformer
+         'mail-note-transformer
          :cid-lookup
          (lambda (cid)
            (when-let* ((part (mime:find-mime-part-by-id note (cid-header-value cid)))

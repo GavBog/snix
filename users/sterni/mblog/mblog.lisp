@@ -1,5 +1,5 @@
 ;; SPDX-License-Identifier: GPL-3.0-only
-;; SPDX-FileCopyrightText: Copyright (C) 2022-2023 by sterni
+;; SPDX-FileCopyrightText: Copyright (C) 2022-2024 by sterni
 ;; SPDX-FileCopyrightText: Copyright (C) 2006-2010 by Walter C. Pelissero
 
 (in-package :mblog)
@@ -73,13 +73,13 @@ a:link, a:visited {
   "Convert NOTE to HTML and write it to index.html in NOTE-DIR alongside any
   extra attachments NOTE contains."
   (with-overwrite-file (html-stream (merge-pathnames "index.html" note-dir))
-    (render-page (html-stream (apple-note-subject note))
+    (render-page (html-stream (mail-note-subject note))
       (:article
-       (apple-note-html-fragment note html-stream))))
+       (mail-note-html-fragment note html-stream))))
 
   (mime:do-parts (part note)
     (unless (string= (mime:mime-id part)
-                     (mime:mime-id (note:apple-note-text-part note)))
+                     (mime:mime-id (mail-note-text-part note)))
       (let ((attachment-in (mime:mime-body-stream part))
             (attachment-dst (merge-pathnames
                              (mime:mime-part-file-name part)
@@ -106,11 +106,11 @@ a:link, a:visited {
        (dolist (note notes-list)
          (who:htm
           (:tr
-           (:td (:a :href (who:escape-string (apple-note-uuid note))
-                    (who:esc (apple-note-subject note))))
+           (:td (:a :href (who:escape-string (mail-note-uuid note))
+                    (who:esc (mail-note-subject note))))
            (:td (who:esc
                  (klatre:format-dottime
-                  (universal-to-timestamp (apple-note-time note)))))))))))
+                  (universal-to-timestamp (mail-note-time note)))))))))))
   (values))
 
 (defun build-mblog (notes-dir html-dir)
@@ -124,10 +124,10 @@ a:link, a:visited {
 
   (let ((all-notes '()))
     (dolist (message-path (maildir:list notes-dir))
-      (let* ((note (make-apple-note (mime:mime-message message-path)))
+      (let* ((note (make-mail-note (mime:mime-message message-path)))
              (note-dir  (merge-pathnames (make-pathname
                                           :directory
-                                          `(:relative ,(apple-note-uuid note)))
+                                          `(:relative ,(mail-note-uuid note)))
                                          html-dir)))
 
         (format *error-output* "Writing note message ~A to ~A~%"
@@ -137,7 +137,7 @@ a:link, a:visited {
         (push note all-notes)))
 
     ;; reverse sort the entries by time for the index page
-    (setf all-notes (sort all-notes #'> :key #'apple-note-time))
+    (setf all-notes (sort all-notes #'> :key #'mail-note-time))
 
     (build-index-page all-notes (merge-pathnames "index.html" html-dir))
 

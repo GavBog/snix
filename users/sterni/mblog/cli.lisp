@@ -1,5 +1,5 @@
 ;; SPDX-License-Identifier: GPL-3.0-only
-;; SPDX-FileCopyrightText: Copyright (C) 2022-2023 by sterni
+;; SPDX-FileCopyrightText: Copyright (C) 2022-2024 by sterni
 
 (in-package :cli)
 (declaim (optimize (safety 3)))
@@ -24,8 +24,8 @@
   "Convert all note mime messages given as ARGS to HTML fragments."
   (declare (ignore name flags))
   (loop for arg in args
-        do (note:apple-note-html-fragment
-            (note:make-apple-note (mime:mime-message (pathname arg)))
+        do (mail-note-html-fragment
+            (make-mail-note (mime:mime-message (pathname arg)))
             *standard-output*)))
 
 (defun mblog (name flags maildir outdir)

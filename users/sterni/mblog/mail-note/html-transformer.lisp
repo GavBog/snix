@@ -1,7 +1,7 @@
 ;; SPDX-License-Identifier: GPL-3.0-only
-;; SPDX-FileCopyrightText: Copyright (C) 2022 by sterni
+;; SPDX-FileCopyrightText: Copyright (C) 2022, 2024 by sterni
 
-(in-package :note)
+(in-package :mail-note)
 (declaim (optimize (safety 3)))
 
 ;; Throw away these tags and all of their children
@@ -32,7 +32,7 @@
   (def-proxy-handler hax:unescaped (data))
   (def-proxy-handler hax:comment (data)))
 
-(defclass apple-note-transformer (hax-proxy-handler)
+(defclass mail-note-transformer (hax-proxy-handler)
   ((cid-lookup
     :initarg :cid-lookup
     :initform (lambda (cid) nil)
@@ -52,7 +52,7 @@
 ;; Define the “boring” handlers which just call the next method (i. e. the next
 ;; handler) unless discard-until is not nil in which case the event is dropped.
 (macrolet ((def-filter-handler (name (&rest args))
-             `(defmethod ,name ((h apple-note-transformer) ,@args)
+             `(defmethod ,name ((h mail-note-transformer) ,@args)
                 (when (not (transformer-discard-until h))
                   (call-next-method)))))
   (def-filter-handler hax:start-document (name p-id s-id))
@@ -70,7 +70,7 @@
                             :return-suffix t :test #'char=)
       (if starts-with-cid-p suffix data))))
 
-(defmethod hax:start-element ((handler apple-note-transformer) name attrs)
+(defmethod hax:start-element ((handler mail-note-transformer) name attrs)
   (with-accessors ((discard-until transformer-discard-until)
                    (next-handler proxy-next-handler)
                    (cid-lookup transformer-cid-lookup)
@@ -109,7 +109,7 @@
       (t (call-next-method)))
     (setf depth (1+ depth))))
 
-(defmethod hax:end-element ((handler apple-note-transformer) name)
+(defmethod hax:end-element ((handler mail-note-transformer) name)
   (with-accessors ((discard-until transformer-discard-until)
                    (depth transformer-depth))
       handler
