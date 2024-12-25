@@ -837,32 +837,40 @@ async function onDdcutilBrightnessChange(externalBrightness) {
     return;
   }
 
-  const ddcciDevices = await readdir('/dev/bus/ddcci');
-  console.log(`Found ddcci devices: ${ddcciDevices}`);
-
-  for (const device of ddcciDevices) {
+  /** @param {string | null} device
+   * @param {number} externalBrightness
+   */
+  const setDdcciBrightness = async function (device, externalBrightness) {
+    let deviceName = device !== null ? `device ${device}` : 'all devices';
     console.log(
-      `Setting external monitor brightness to ${externalBrightness} for device ${device}`,
+      `Setting external monitor brightness to ${externalBrightness} for ${deviceName}`,
     );
 
     await execFileP('ddcutil', [
-      `--bus`,
-      device,
-      `--sleep-multiplier`,
-      '0.20',
-      `setvcp`,
-      `0x10`,
-      `${externalBrightness}`,
+      ...(device !== null ? [`--bus`, device] : []),
+      ...[`--sleep-multiplier`, '0.20', `setvcp`, `0x10`, `${externalBrightness}`],
     ]).catch(err => {
       /** @type {string} */
       let stdout = err.stdout;
       // err.stdout contains "No monitor detected on bus"
       if (stdout.includes('No monitor detected on bus')) {
-        console.log(`External monitor on bus ${device} is gone, ignoring.`);
+        console.log(`External monitor on bus ${deviceName} is gone, ignoring.`);
         return;
       }
-      console.warn(`Error setting brightness with ddcutil for device ${device}`, err);
+      console.warn(`Error setting brightness with ddcutil for ${deviceName}`, err);
     });
+  };
+
+  const ddcciDevices = await readdir('/dev/bus/ddcci').catch(err => ({ err: err }));
+  if ('err' in ddcciDevices) {
+    console.warn('Error reading /dev/bus/ddcci', ddcciDevices.err);
+    console.log('Trying to set external brightness without knowing the device');
+    await setDdcciBrightness(null, externalBrightness);
+  } else {
+    console.log(`Found ddcci devices: ${ddcciDevices}`);
+    for (const device of ddcciDevices) {
+      await setDdcciBrightness(device, externalBrightness);
+    }
   }
 
   if (nextBrightness !== externalBrightness) {
