@@ -29,7 +29,7 @@ let
      If the content argument is `null`, the tag will have no children nor a
      closing element. If the content argument is a string it is used as the
      content as is (unescaped). If the content argument is a list, its
-     elements are concatenated.
+     elements are concatenated (recursively if necessary).
 
      `renderTag` is only an internal function which is reexposed as `__findFile`
      to allow for much neater syntax than calling `renderTag` everywhere:
@@ -95,7 +95,7 @@ let
       );
       content' =
         if builtins.isList content
-        then builtins.concatStringsSep "" content
+        then builtins.concatStringsSep "" (flatten content)
         else content;
     in
     if content == null
@@ -112,6 +112,12 @@ let
      => "<!DOCTYPE html><body>hello</body>"
   */
   withDoctype = doc: "<!DOCTYPE html>" + doc;
+
+  /* Taken from <nixpkgs/lib/lists.nix>. */
+  flatten = x:
+    if builtins.isList x
+    then builtins.concatMap (y: flatten y) x
+    else [ x ];
 
 in
 {

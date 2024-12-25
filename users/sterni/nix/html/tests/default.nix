@@ -34,7 +34,13 @@ let
           (<h1> { } (esc "html.nix"))
           (<h2> { } [
             (<em> { } "the")
-            (esc " most cursed HTML DSL ever!")
+            # test flattening
+            [
+              (esc " ")
+              (esc "most")
+              [ (esc " cursed ") ]
+              (esc "HTML DSL ever!")
+            ]
           ])
         ])
         (<dl> { } [
