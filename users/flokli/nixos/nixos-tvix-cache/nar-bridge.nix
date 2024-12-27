@@ -107,22 +107,22 @@
   };
 
   systemd.tmpfiles.rules = [
-    # Put the data in the big disk
+    # Put the blobs on the big disk
     "d /tank/nar-bridge 0755 nar-bridge nar-bridge -"
+    "d /tank/nar-bridge/blobs.object_store 0755 nar-bridge nar-bridge -"
     # Cache responses on NVME
     "d /var/cache/nginx 0755 ${config.services.nginx.user} ${config.services.nginx.group} -"
   ];
 
-  fileSystems."/var/lib/nar-bridge" = {
-    device = "/tank/nar-bridge";
-    options = [
-      "bind"
-      "nofail"
-    ];
-  };
-
   systemd.services.nar-bridge = {
-    unitConfig.RequiresMountsFor = "/var/lib/nar-bridge";
+    unitConfig = {
+      # Keep most data on the SSD which is at /var/lib/nar-bridge, but bind-mount the blobs in
+      RequiresMountsFor = "/tank";
+      BindPaths = [
+        "/tank/nar-bridge/blobs.object_store:/var/lib/nar-bridge/blobs.object_store"
+      ];
+    };
+
     # twice the normal allowed limit, same as nix-daemon
     serviceConfig.LimitNOFILE = "1048576";
   };
