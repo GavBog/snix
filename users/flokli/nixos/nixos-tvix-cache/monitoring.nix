@@ -80,6 +80,7 @@ in
     prometheus.scrape "main" {
       targets    = prometheus.exporter.unix.main.targets
       forward_to = [otelcol.receiver.prometheus.default.receiver]
+      scrape_interval = "15s"
     }
 
     // Convert Prometheus metrics to OTLP and export them.
@@ -167,7 +168,7 @@ in
           uid = "mimir";
           url = "http://localhost:9009/prometheus";
           jsonData = {
-            timeInterval = "60s";
+            timeInterval = "15s";
           };
         }
       ];
