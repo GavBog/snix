@@ -15,7 +15,7 @@ The goals of this machine:
 You can configure this as a Nix substitutor on your systems like this:
 
 ```nix
-  nix.settings.substituters = lib.mkForce [
+  nix.settings.substituters = [
     "https://nixos.tvix.store"
   ];
 ```
