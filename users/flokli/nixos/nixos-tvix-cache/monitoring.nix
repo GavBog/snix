@@ -31,8 +31,9 @@ in
         local.path = "/var/lib/tempo/blocks";
       };
       usage_report.reporting_enabled = false;
-      # 10x the default
+      # bump defaults
       overrides.defaults.ingestion.max_traces_per_user = 10000 * 10;
+      overrides.defaults.global.max_bytes_per_trace = 500 * 1000 * 1000;
     };
   };
 
