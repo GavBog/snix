@@ -165,6 +165,9 @@ in
           type = "prometheus";
           uid = "mimir";
           url = "http://localhost:9009/prometheus";
+          jsonData = {
+            timeInterval = "60s";
+          };
         }
       ];
     };
