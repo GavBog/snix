@@ -1,5 +1,6 @@
 { config
 , lib
+, utils
 , pkgs
 , depot
 , ...
@@ -61,7 +62,7 @@ in
       after = [ "nar-bridge.socket" ];
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
-        ExecStart = "${package}/bin/nar-bridge ${lib.escapeShellArgs args}";
+        ExecStart = "${package}/bin/nar-bridge ${utils.escapeSystemdExecArgs args}";
 
         Restart = "always";
         RestartSec = "10";
