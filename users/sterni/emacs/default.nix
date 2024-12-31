@@ -44,7 +44,6 @@ let
     epkgs.melpaPackages.paredit
     epkgs.melpaPackages.rainbow-delimiters
     epkgs.melpaPackages.sly
-    epkgs.melpaPackages.use-package
     epkgs.melpaPackages.yaml-mode
     epkgs.rust-mode
     epkgs.tvlPackages.tvl

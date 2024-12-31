@@ -139,7 +139,6 @@ let
       tide
       ts
       tuareg
-      use-package
       vterm
       web-mode
       which-key

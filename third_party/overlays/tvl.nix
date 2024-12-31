@@ -109,6 +109,14 @@ depot.nix.readTree.drvTargets {
     ];
   });
 
+  # https://gcc.gnu.org/gcc-14/porting_to.html#warnings-as-errors
+  thttpd = super.thttpd.overrideAttrs (oldAttrs: {
+    NIX_CFLAGS_COMPILE = oldAttrs.NIX_CFLAGS_COMPILE or [ ] ++ [
+      "-Wno-error=implicit-int"
+      "-Wno-error=implicit-function-declaration"
+    ];
+  });
+
   # https://github.com/NixOS/nixpkgs/pull/329415/files
   grpc-health-check = super.rustPlatform.buildRustPackage {
     pname = "grpc-health-check";

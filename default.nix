@@ -117,6 +117,10 @@ readTree.fix (self: (readDepot {
     self.users.wpcarro.nixos.kyokoSystem
     self.users.wpcarro.nixos.marcusSystem
     self.users.wpcarro.nixos.tarascoSystem
+
+    # Disabled because it depends on an unstable FOD, which, when updated,
+    # breaks the build. Needs to be investigated by flokli.
+    self.users.flokli.keyboards.corneish_zen.firmware
   ];
 
   # List of all buildable targets, for CI purposes.

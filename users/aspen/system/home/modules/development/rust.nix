@@ -23,7 +23,6 @@ with lib;
     # benchmarking+profiling
     cargo-criterion
     cargo-flamegraph
-    coz
     inferno
     hotspot
   ] ++ optionals (stdenv.isLinux) [

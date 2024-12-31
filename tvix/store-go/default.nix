@@ -8,7 +8,7 @@ in
 (pkgs.buildGoModule {
   name = "store-go";
   src = depot.third_party.gitignoreSource ./.;
-  vendorHash = "sha256-JAxjSI4efCwbAUbvS7AQ5ZbVlf3ebGDBzDFMTK7dvl4=";
+  vendorHash = "sha256:1zj42lwx33fwl1kng3zr4mgsnyhik2s728cm9c57qplbrhigpvdz";
 }).overrideAttrs (_: {
   meta.ci.extraSteps = {
     check = {

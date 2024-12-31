@@ -8,7 +8,7 @@ in
 (pkgs.buildGoModule {
   name = "castore-go";
   src = depot.third_party.gitignoreSource ./.;
-  vendorHash = "sha256-ZNtSSW+oCxMsBtURSrea9/GyUHDagtGefM+Ii+VkgCA=";
+  vendorHash = "sha256:03wwzk7irlb05y0zjfmpp5c2dxhcpnmfc169g05sn6d3ni07aly8";
 }).overrideAttrs (_: {
   meta.ci.extraSteps = {
     check = {
