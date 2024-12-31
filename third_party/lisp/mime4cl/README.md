@@ -17,8 +17,9 @@ and decidedly lacks performance.
 
 ## Differences from the original version
 
-* `//nix/buildLisp` is used as the build system. ASDF is currently untested and
-  may be broken.
+* `//nix/buildLisp` is used as the build system. ASDF has been removed
+  since it was untested (it should be reintroduced once mime4cl is
+  “ready”).
 
 * The dependency on [sclf](http://wcp.sdf-eu.org/software/#sclf) has been
   eliminated by inlining the relevant parts.
