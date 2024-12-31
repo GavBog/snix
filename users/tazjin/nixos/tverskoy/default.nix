@@ -45,7 +45,6 @@ lib.fix (self: {
     loader.efi.canTouchEfiVariables = true;
   };
 
-  virtualisation.docker.enable = true;
   users.users.tazjin.extraGroups = [ "docker" "vboxusers" "adbusers" ];
 
   fileSystems = {
