@@ -4,6 +4,7 @@ module Redacted where
 
 import AppT
 import Arg
+import Comparison
 import Control.Monad.Logger.CallStack
 import Control.Monad.Reader
 import Data.Aeson qualified as Json
@@ -365,12 +366,41 @@ assertOneUpdated span name x = case x.numberOfRowsAffected of
 data TorrentData transmissionInfo = TorrentData
   { groupId :: Int,
     torrentId :: Int,
+    releaseType :: ReleaseType,
     seedingWeight :: Int,
     artists :: [T2 "artistId" Int "artistName" Text],
     torrentGroupJson :: TorrentGroupJson,
     torrentStatus :: TorrentStatus transmissionInfo,
     torrentFormat :: Text
   }
+
+-- | https://redacted.sh/wiki.php?action=article&id=455#_1804298149
+newtype ReleaseType = ReleaseType {unReleaseType :: Text}
+  deriving stock (Eq, Show)
+
+releaseTypeComparison :: Comparison ReleaseType
+releaseTypeComparison = listIndexComparison [releaseTypeAlbum, releaseTypeSoundtrack, releaseTypeEP, releaseTypeAnthology, releaseTypeCompilation, releaseTypeSingle, releaseTypeLiveAlbum, releaseTypeRemix, releaseTypeBootleg, releaseTypeInterview, releaseTypeMixtape, releaseTypeDemo, releaseTypeConcertRecording, releaseTypeDJMix, releaseTypeUnknown, releaseTypeProducedBy, releaseTypeComposition, releaseTypeRemixedBy, releaseTypeGuestAppearance]
+
+releaseTypeAlbum, releaseTypeSoundtrack, releaseTypeEP, releaseTypeAnthology, releaseTypeCompilation, releaseTypeSingle, releaseTypeLiveAlbum, releaseTypeRemix, releaseTypeBootleg, releaseTypeInterview, releaseTypeMixtape, releaseTypeDemo, releaseTypeConcertRecording, releaseTypeDJMix, releaseTypeUnknown, releaseTypeProducedBy, releaseTypeComposition, releaseTypeRemixedBy, releaseTypeGuestAppearance :: ReleaseType
+releaseTypeAlbum = ReleaseType "Album"
+releaseTypeSoundtrack = ReleaseType "Soundtrack"
+releaseTypeEP = ReleaseType "EP"
+releaseTypeAnthology = ReleaseType "Anthology"
+releaseTypeCompilation = ReleaseType "Compilation"
+releaseTypeSingle = ReleaseType "Single"
+releaseTypeLiveAlbum = ReleaseType "Live album"
+releaseTypeRemix = ReleaseType "Remix"
+releaseTypeBootleg = ReleaseType "Bootleg"
+releaseTypeInterview = ReleaseType "Interview"
+releaseTypeMixtape = ReleaseType "Mixtape"
+releaseTypeDemo = ReleaseType "Demo"
+releaseTypeConcertRecording = ReleaseType "Concert Recording"
+releaseTypeDJMix = ReleaseType "DJ Mix"
+releaseTypeUnknown = ReleaseType "Unknown"
+releaseTypeProducedBy = ReleaseType "Produced By"
+releaseTypeComposition = ReleaseType "Composition"
+releaseTypeRemixedBy = ReleaseType "Remixed By"
+releaseTypeGuestAppearance = ReleaseType "Guest Appearance"
 
 data TorrentGroupJson = TorrentGroupJson
   { groupName :: Text,
@@ -427,6 +457,7 @@ getBestTorrents opts = do
         tg.group_id,
         t.torrent_id,
         t.seeding_weight,
+        tg.full_json_result->>'releaseType' AS release_type,
         t.full_json_result->'artists' AS artists,
         tg.full_json_result->>'groupName' AS group_name,
         tg.full_json_result->>'groupYear' AS group_year,
@@ -451,6 +482,7 @@ getBestTorrents opts = do
         groupId <- Dec.fromField @Int
         torrentId <- Dec.fromField @Int
         seedingWeight <- Dec.fromField @Int
+        releaseType <- ReleaseType <$> Dec.text
         artists <- Dec.json $
           Json.eachInArray $ do
             id_ <- Json.keyLabel @"artistId" "id" (Json.asIntegral @_ @Int)

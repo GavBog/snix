@@ -61,6 +61,7 @@ library
       Aeson
       Arg
       AtLeast
+      Comparison
       Json
       Json.Enc
       Test

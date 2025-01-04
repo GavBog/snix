@@ -5,6 +5,7 @@ module WhatcdResolver where
 
 import AppT
 import Arg
+import Comparison
 import Control.Category qualified as Cat
 import Control.Monad.Catch.Pure (runCatch)
 import Control.Monad.Logger.CallStack
@@ -15,6 +16,7 @@ import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Error.Tree
 import Data.HashMap.Strict qualified as HashMap
 import Data.List qualified as List
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Map.Strict qualified as Map
 import Data.Pool qualified as Pool
 import Data.Text qualified as Text
@@ -347,9 +349,11 @@ artistPage ::
   dat ->
   m Html
 artistPage dat = runTransaction $ do
-  fresh <- getBestTorrentsData (Just $ getLabel @"artistRedactedId" dat)
+  fresh <-
+    getBestTorrentsData
+      (Just $ getLabel @"artistRedactedId" dat)
   let artistName = fresh & findMaybe (\t -> t.artists & findMaybe (\a -> if a.artistId == (dat.artistRedactedId & fromIntegral @Natural @Int) then Just a.artistName else Nothing))
-  let torrents = mkBestTorrentsTable fresh
+  let torrents = mkBestTorrentsTable (label @"groupByReleaseType" True) fresh
   pure $
     htmlPageChrome
       ( case artistName of
@@ -522,8 +526,7 @@ snipsRedactedSearch ::
 snipsRedactedSearch dat = do
   t <-
     redactedSearchAndInsert
-      [ ("searchstr", dat.searchstr),
-        ("releasetype", "album")
+      [ ("searchstr", dat.searchstr)
       ]
   runTransaction $ do
     t
@@ -544,7 +547,7 @@ getBestTorrentsTable ::
   Transaction m Html
 getBestTorrentsTable dat = do
   fresh <- getBestTorrentsData dat
-  pure $ mkBestTorrentsTable fresh
+  pure $ mkBestTorrentsTable (label @"groupByReleaseType" False) fresh
 
 doIfJust :: (Applicative f) => (a -> f ()) -> Maybe a -> f ()
 doIfJust = traverse_
@@ -585,6 +588,7 @@ getBestTorrentsData artistFilter = inSpan' "get torrents table data" $ \span -> 
       else pure bestStale
   pure $
     bestBest
+      & filter (\td -> td.releaseType /= releaseTypeCompilation)
       --  we have to update the status of every torrent that’s not in tranmission anymore
       -- TODO I feel like it’s easier (& more correct?) to just do the database request again …
       <&> ( \td -> case td.torrentStatus of
@@ -598,8 +602,8 @@ getBestTorrentsData artistFilter = inSpan' "get torrents table data" $ \span -> 
               NoTorrentFileYet -> td {torrentStatus = NoTorrentFileYet}
           )
 
-mkBestTorrentsTable :: [TorrentData (Label "percentDone" Percentage)] -> Html
-mkBestTorrentsTable fresh = do
+mkBestTorrentsTable :: Label "groupByReleaseType" Bool -> [TorrentData (Label "percentDone" Percentage)] -> Html
+mkBestTorrentsTable opts fresh = do
   let localTorrent b = case b.torrentStatus of
         NoTorrentFileYet ->
           [hsx|
@@ -614,8 +618,8 @@ mkBestTorrentsTable fresh = do
         |]
         InTransmission info -> [hsx|{info.transmissionInfo.percentDone.unPercentage}% done|]
         NotInTransmissionYet -> [hsx|<button hx-post="snips/redacted/startTorrentFile" hx-swap="outerHTML" hx-vals={Enc.encToBytesUtf8 $ Enc.object [("torrent-id", Enc.int b.torrentId)]}>Start Torrent</button>|]
-  let bestRows =
-        fresh
+  let bestRows rowData =
+        rowData
           & foldMap
             ( \b -> do
                 let artists =
@@ -639,6 +643,7 @@ mkBestTorrentsTable fresh = do
                       {Html.toHtml @Text b.torrentGroupJson.groupName}
                     </a>
                   </td>
+                  <td>{Html.toHtml @Text b.releaseType.unReleaseType}</td>
                   <td>{Html.toHtml @Natural b.torrentGroupJson.groupYear}</td>
                   <td>{Html.toHtml @Int b.seedingWeight}</td>
                   <td>{Html.toHtml @Text b.torrentFormat}</td>
@@ -646,7 +651,10 @@ mkBestTorrentsTable fresh = do
                   </tr>
                 |]
             )
-  [hsx|
+  let section rows = do
+        let releaseType = rows & NonEmpty.head & (.releaseType.unReleaseType)
+        [hsx|
+        <h2>{releaseType}s</h2>
         <table class="table">
           <thead>
             <tr>
@@ -654,6 +662,7 @@ mkBestTorrentsTable fresh = do
               <th>Group ID</th>
               <th>Artist</th>
               <th>Name</th>
+              <th>Type</th>
               <th>Year</th>
               <th>Weight</th>
               <th>Format</th>
@@ -661,10 +670,22 @@ mkBestTorrentsTable fresh = do
             </tr>
           </thead>
           <tbody>
-            {bestRows}
+            {bestRows rows}
           </tbody>
         </table>
       |]
+
+  case fresh & nonEmpty of
+    Nothing -> [hsx|No torrents found|]
+    Just fresh' -> do
+      ( if opts.groupByReleaseType
+          then
+            fresh'
+              & toList
+              & groupAllWithComparison ((.releaseType) >$< releaseTypeComparison)
+          else [fresh']
+        )
+        & foldMap section
 
 mkLinkList :: [T2 "url" Text "content" Html] -> Html
 mkLinkList xs =
