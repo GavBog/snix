@@ -12,6 +12,7 @@ import Data.Aeson.BetterErrors qualified as Json
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Error.Tree
 import Data.List qualified as List
+import Data.Maybe (catMaybes)
 import Database.PostgreSQL.Simple (Binary (Binary), Only (..))
 import Database.PostgreSQL.Simple.Types (PGArray (PGArray))
 import FieldParser qualified as Field
@@ -152,23 +153,29 @@ redactedSearchAndInsert extraArguments = do
               Json.key "results" $ do
                 tourGroups <-
                   label @"tourGroups"
-                    <$> ( Json.eachInArray $ do
-                            groupId <- Json.keyLabel @"groupId" "groupId" (Json.asIntegral @_ @Int)
-                            groupName <- Json.keyLabel @"groupName" "groupName" Json.asText
-                            fullJsonResult <-
-                              label @"fullJsonResult"
-                                <$> ( Json.asObject
-                                        -- remove torrents cause they are inserted separately below
-                                        <&> KeyMap.filterWithKey (\k _ -> k /= "torrents")
-                                        <&> Json.Object
-                                    )
-                            let tourGroup = T3 groupId groupName fullJsonResult
-                            torrents <- Json.keyLabel @"torrents" "torrents" $
-                              Json.eachInArray $ do
-                                torrentId <- Json.keyLabel @"torrentId" "torrentId" (Json.asIntegral @_ @Int)
-                                fullJsonResultT <- label @"fullJsonResult" <$> Json.asValue
-                                pure $ T2 torrentId fullJsonResultT
-                            pure (T2 (label @"tourGroup" tourGroup) torrents)
+                    <$> ( catMaybes
+                            <$> ( Json.eachInArray $ do
+                                    Json.keyMay "torrents" (pure ()) >>= \case
+                                      -- not a torrent group, maybe some files or something (e.g. guitar tabs see Dream Theater Systematic Chaos)
+                                      Nothing -> pure Nothing
+                                      Just () -> do
+                                        groupId <- Json.keyLabel @"groupId" "groupId" (Json.asIntegral @_ @Int)
+                                        groupName <- Json.keyLabel @"groupName" "groupName" Json.asText
+                                        fullJsonResult <-
+                                          label @"fullJsonResult"
+                                            <$> ( Json.asObject
+                                                    -- remove torrents cause they are inserted separately below
+                                                    <&> KeyMap.filterWithKey (\k _ -> k /= "torrents")
+                                                    <&> Json.Object
+                                                )
+                                        let tourGroup = T3 groupId groupName fullJsonResult
+                                        torrents <- Json.keyLabel @"torrents" "torrents" $
+                                          Json.eachInArray $ do
+                                            torrentId <- Json.keyLabel @"torrentId" "torrentId" (Json.asIntegral @_ @Int)
+                                            fullJsonResultT <- label @"fullJsonResult" <$> Json.asValue
+                                            pure $ T2 torrentId fullJsonResultT
+                                        pure $ Just (T2 (label @"tourGroup" tourGroup) torrents)
+                                )
                         )
                 pure
                   ( T2
@@ -580,3 +587,13 @@ redactedApiRequestJson span dat parser = do
   addAttribute span "redacted.request" (toOtelJsonAttr (T2 (getLabel @"action" dat) (getLabel @"actionArgs" dat)))
   mkRedactedApiRequest dat
     >>= Http.httpJson defaults parser
+
+-- test :: (MonadThrow m, MonadRedacted m, MonadOtel m) => m ()
+-- test =
+--   inSpan' "test" $ \span -> do
+--     redactedApiRequestJson
+--       span
+--       (T2 (label @"action" "browse") (label @"actionArgs" [("searchstr", Just "dream theater")]))
+--       (Json.asValue)
+--       <&> Pretty.showPrettyJson
+--       >>= liftIO . putStderrLn
