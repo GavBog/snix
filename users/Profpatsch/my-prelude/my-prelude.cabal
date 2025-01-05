@@ -61,8 +61,10 @@ library
       Aeson
       Arg
       AtLeast
+      Builder
       Comparison
       Debug
+      Divisive
       Json
       Json.Enc
       Test
@@ -92,6 +94,7 @@ library
      , base64-bytestring
      , bytestring
      , containers
+     , contravariant
      , foldl
      , unordered-containers
      , resource-pool

@@ -140,6 +140,7 @@ module MyPrelude
     contramap,
     (>$<),
     (>&<),
+    module Divisive,
     Profunctor,
     dimap,
     lmap,
@@ -222,6 +223,7 @@ import Data.Traversable (for)
 import Data.Vector (Vector)
 import Data.Void (Void, absurd)
 import Data.Word (Word8)
+import Divisive
 import GHC.Exception (errorCallWithCallStackException)
 import GHC.Exts (Any, RuntimeRep, TYPE, raise#)
 import GHC.Generics (Generic)
