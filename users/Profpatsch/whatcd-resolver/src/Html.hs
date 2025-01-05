@@ -2,6 +2,7 @@
 
 module Html where
 
+import Builder
 import Data.Aeson qualified as Json
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.List.NonEmpty qualified as NonEmpty
@@ -15,7 +16,7 @@ import Prelude hiding (span)
 -- | Render an arbitrary json value to HTML in a more-or-less reasonable fashion.
 mkVal :: Json.Value -> Html
 mkVal = \case
-  Json.Number n -> Html.toHtml @Text $ showToText n
+  Json.Number n -> Html.lazyText $ buildTextLazy scientificDecimalT n
   Json.String s -> Html.toHtml @Text s
   Json.Bool True -> [hsx|<em>true</em>|]
   Json.Bool False -> [hsx|<em>false</em>|]

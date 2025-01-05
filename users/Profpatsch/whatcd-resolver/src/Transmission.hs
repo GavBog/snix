@@ -3,6 +3,7 @@
 module Transmission where
 
 import AppT
+import Builder
 import Control.Monad.Logger.CallStack
 import Control.Monad.Reader
 import Data.Aeson qualified as Json
@@ -25,7 +26,6 @@ import Json.Enc qualified as Enc
 import Label
 import MyPrelude
 import Network.HTTP.Types
-import OpenTelemetry.Attributes (ToAttribute (toAttribute))
 import OpenTelemetry.Trace qualified as Otel hiding (getTracer, inSpan, inSpan')
 import Optional
 import Postgres.MonadPostgres
@@ -253,7 +253,7 @@ doTransmissionRequest ::
 doTransmissionRequest span dat (req, parser) = do
   sessionId <- getCurrentTransmissionSessionId
   let textArg t = (Enc.text t, Otel.toAttribute @Text t)
-  let encArg enc = (enc, Otel.toAttribute @Text $ enc & Enc.encToTextPretty)
+  let encArg enc = (enc, enc & toOtelJsonAttr)
   let intArg i = (Enc.int i, Otel.toAttribute @Int i)
 
   let body :: [(Text, (Enc, Otel.Attribute))] =
@@ -292,20 +292,14 @@ doTransmissionRequest span dat (req, parser) = do
           & liftIO
           <&> NonEmpty.head
 
-      addAttributes span' $
-        HashMap.fromList
-          [ ("transmission.new_session_id", tid & bytesToTextUtf8Lenient & toAttribute),
-            ("transmission.old_session_id", sessionId <&> bytesToTextUtf8Lenient & fromMaybe "<none yet>" & toAttribute)
-          ]
+      addAttribute span' "transmission.new_session_id" (tid, utf8LenientT)
+      addAttribute span' "transmission.old_session_id" (sessionId, utf8LenientT >&< fromMaybe "<none yet>")
 
       updateTransmissionSessionId tid
 
       doTransmissionRequest span dat (req, parser)
     200 -> do
-      addAttributes span $
-        HashMap.fromList
-          [ ("transmission.valid_session_id", sessionId <&> bytesToTextUtf8Lenient & fromMaybe "<none yet>" & toAttribute)
-          ]
+      addAttribute span "transmission.valid_session_id" (sessionId, utf8LenientT >&< fromMaybe "<none yet>")
       resp
         & Http.getResponseBody
         & Json.parseStrict

@@ -5,6 +5,7 @@ module WhatcdResolver where
 
 import AppT
 import Arg
+import Builder
 import Comparison
 import Control.Category qualified as Cat
 import Control.Monad.Catch.Pure (runCatch)
@@ -562,7 +563,7 @@ getBestTorrentsData ::
   Maybe (Label "artistRedactedId" Natural) ->
   Transaction m [TorrentData (Label "percentDone" Percentage)]
 getBestTorrentsData artistFilter = inSpan' "get torrents table data" $ \span -> do
-  artistFilter & doIfJust (\a -> addAttribute span "artist-filter.redacted-id" (a.artistRedactedId & showToText & Otel.toAttribute))
+  artistFilter & doIfJust (\a -> addAttribute span "artist-filter.redacted-id" (a.artistRedactedId, naturalDecimalT))
   let getBest = getBestTorrents GetBestTorrentsFilter {onlyArtist = artistFilter, onlyDownloaded = False}
   bestStale :: [TorrentData ()] <- getBest
   (statusInfo, transmissionStatus) <-

@@ -862,17 +862,10 @@ traceQueryIfEnabled span logDatabaseQueries prettyQuery qry params = do
             HasSingleParam p -> pgFormatQuery' prettyQuery qry p
             HasMultiParams ps -> pgFormatQueryMany' prettyQuery qry ps
 
-  let doLog errs =
-        Otel.addAttributes
-          span
-          $ HashMap.fromList
-          $ ( ("_.postgres.query", Otel.toAttribute @Text (errs.query & bytesToTextUtf8Lenient))
-                : ( errs.explain
-                      & \case
-                        Nothing -> []
-                        Just ex -> [("_.postgres.explain", Otel.toAttribute @Text ex)]
-                  )
-            )
+  let doLog errs = do
+        Otel.addAttribute span "_.postgres.query" (errs.query & bytesToTextUtf8Lenient & Otel.toAttribute)
+        for_ errs.explain $ \ex ->
+          Otel.addAttribute span "_.postgres.explain" (Otel.toAttribute @Text ex)
   let doExplain = do
         q <- formattedQuery
         Otel.inSpan "Postgres EXPLAIN Query" Otel.defaultSpanArguments $ do

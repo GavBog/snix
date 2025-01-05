@@ -4,6 +4,7 @@ module Redacted where
 
 import AppT
 import Arg
+import Builder
 import Comparison
 import Control.Monad.Logger.CallStack
 import Control.Monad.Reader
@@ -65,7 +66,7 @@ redactedGetTorrentFile dat = inSpan' "Redacted Get Torrent File" $ \span -> do
       ( T2
           (label @"action" "download")
           ( label @"actionArgs"
-              [ ("id", Just (dat.torrentId & showToText @Int & textToBytesUtf8))
+              [ ("id", Just (buildBytes intDecimalB dat.torrentId))
               -- try using tokens as long as we have them (TODO: what if there’s no tokens left?
               -- ANSWER: it breaks:
               -- responseBody = "{\"status\":\"failure\",\"error\":\"You do not have any freeleech tokens left. Please use the regular DL link.\"}",
@@ -139,7 +140,7 @@ redactedSearchAndInsert extraArguments = do
       redactedSearch
         ( extraArguments
             -- pass the page (for every search but the first one)
-            <> (mpage & ifExists (\page -> ("page", (page :: Natural) & showToText & textToBytesUtf8)))
+            <> (mpage & ifExists (\page -> ("page", buildBytes naturalDecimalB page)))
         )
         ( do
             status <- Json.key "status" Json.asText

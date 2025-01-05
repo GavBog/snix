@@ -11,12 +11,21 @@ module Builder
     bytesLazyB,
     utf8B,
     utf8LazyB,
+    utf8LenientT,
+    utf8LenientLazyT,
     intDecimalT,
-    intDecimalNaturalT,
+    intDecimalB,
+    integerDecimalT,
+    integerDecimalB,
+    naturalDecimalT,
+    naturalDecimalB,
+    scientificDecimalT,
+    scientificDecimalB,
   )
 where
 
 import Data.ByteString.Builder qualified as Bytes
+import Data.ByteString.Builder.Scientific qualified as Scientific.Bytes
 import Data.ByteString.Lazy qualified as Bytes.Lazy
 import Data.Functor.Contravariant
 import Data.Functor.Contravariant.Divisible
@@ -24,6 +33,7 @@ import Data.String
 import Data.Text.Lazy qualified as Text.Lazy
 import Data.Text.Lazy.Builder qualified as Text
 import Data.Text.Lazy.Builder.Int qualified as Text
+import Data.Text.Lazy.Builder.Scientific qualified as Scientific.Text
 import MyPrelude
 
 newtype TextBuilder a = TextBuilder {unTextBuilder :: a -> Text.Builder}
@@ -81,6 +91,12 @@ bytesB = BytesBuilder Bytes.byteString
 bytesLazyB :: BytesBuilder Bytes.Lazy.ByteString
 bytesLazyB = BytesBuilder Bytes.lazyByteString
 
+utf8LenientT :: TextBuilder ByteString
+utf8LenientT = bytesToTextUtf8Lenient >$< textT
+
+utf8LenientLazyT :: TextBuilder Bytes.Lazy.ByteString
+utf8LenientLazyT = bytesToTextUtf8LenientLazy >$< textLazyT
+
 utf8B :: BytesBuilder Text
 utf8B = textToBytesUtf8 >$< bytesB
 
@@ -90,5 +106,23 @@ utf8LazyB = textToBytesUtf8Lazy >$< bytesLazyB
 intDecimalT :: TextBuilder Int
 intDecimalT = TextBuilder Text.decimal
 
-intDecimalNaturalT :: TextBuilder Natural
-intDecimalNaturalT = TextBuilder Text.decimal
+intDecimalB :: BytesBuilder Int
+intDecimalB = BytesBuilder Bytes.intDec
+
+integerDecimalT :: TextBuilder Integer
+integerDecimalT = TextBuilder Text.decimal
+
+integerDecimalB :: BytesBuilder Integer
+integerDecimalB = BytesBuilder Bytes.integerDec
+
+naturalDecimalT :: TextBuilder Natural
+naturalDecimalT = TextBuilder Text.decimal
+
+naturalDecimalB :: BytesBuilder Natural
+naturalDecimalB = toInteger >$< integerDecimalB
+
+scientificDecimalT :: TextBuilder Scientific
+scientificDecimalT = TextBuilder Scientific.Text.scientificBuilder
+
+scientificDecimalB :: BytesBuilder Scientific
+scientificDecimalB = BytesBuilder Scientific.Bytes.scientificBuilder

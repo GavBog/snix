@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module AppT where
 
+import Builder
 import Control.Monad.Logger qualified as Logger
 import Control.Monad.Logger.CallStack
 import Control.Monad.Reader
@@ -97,6 +99,9 @@ addEventSimple span name =
 -- | Create an otel attribute from a json encoder
 jsonAttribute :: Enc -> Otel.Attribute
 jsonAttribute e = e & Enc.encToTextPretty & Otel.toAttribute
+
+instance Otel.ToAttribute (a, TextBuilder a) where
+  toAttribute (a, b) = buildText b a & Otel.toAttribute
 
 parseOrThrow :: (MonadThrow m, MonadIO m) => Otel.Span -> FieldParser from to -> from -> m to
 parseOrThrow span fp f =
@@ -208,12 +213,16 @@ runPGTransaction (Transaction transaction) = do
     withPGTransaction pool $ \conn -> do
       unliftIO $ runReaderT transaction conn
 
+-- | Best effort to convert a value to a JSON string that can be put in an Otel attribute.
 toOtelJsonAttr :: (ToOtelJsonAttr a) => a -> Otel.Attribute
 toOtelJsonAttr = toOtelJsonAttrImpl >>> Enc.encToTextPretty >>> Otel.toAttribute
 
 -- | Best effort to convert a value to a JSON string that can be put in an Otel attribute.
 class ToOtelJsonAttr a where
   toOtelJsonAttrImpl :: a -> Enc
+
+instance ToOtelJsonAttr Enc where
+  toOtelJsonAttrImpl = id
 
 -- | Bytes are leniently converted to Text, because they are often used as UTF-8 encoded strings.
 instance ToOtelJsonAttr ByteString where
