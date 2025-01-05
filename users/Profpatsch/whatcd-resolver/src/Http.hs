@@ -25,8 +25,11 @@ import Data.CaseInsensitive (CI (original))
 import Data.Char qualified as Char
 import Data.Error.Tree
 import Data.List qualified as List
+import Data.List.NonEmpty qualified as NonEmpty
+import Data.Ord (clamp)
 import Data.Text qualified as Text
 import Data.Text.Punycode qualified as Punycode
+import FieldParser qualified as Field
 import Json qualified
 import Json.Enc qualified as Enc
 import Label
@@ -38,6 +41,7 @@ import Network.HTTP.Types.Status (Status (..))
 import Network.Wai.Parse qualified as Wai
 import Optional
 import Pretty
+import UnliftIO.Concurrent (threadDelay)
 import Prelude hiding (span)
 
 data RequestOptions = RequestOptions
@@ -70,30 +74,50 @@ httpJson ::
   m b
 httpJson opts parser req = inSpan' "HTTP Request (JSON)" $ \span -> do
   let opts' = opts.withDefault (label @"contentType" "application/json")
-  Http.httpBS req
-    >>= assertM
-      span
-      ( \resp -> do
-          let statusCode = resp & Http.responseStatus & (.statusCode)
-              contentType =
-                resp
-                  & Http.responseHeaders
-                  & List.lookup "content-type"
-                  <&> Wai.parseContentType
-                  <&> (\(ct, _mimeAttributes) -> ct)
-          if
-            | statusCode == 200,
-              Just ct <- contentType,
-              ct == opts'.contentType ->
-                Right $ (resp & Http.responseBody)
-            | statusCode == 200,
-              Just otherType <- contentType ->
-                Left [fmt|Server returned a non-json body, with content-type "{otherType}"|]
-            | statusCode == 200,
-              Nothing <- contentType ->
-                Left [fmt|Server returned a body with unspecified content type|]
-            | code <- statusCode -> Left $ AppExceptionPretty [[fmt|Server returned an non-200 error code, code {code}:|], pretty resp]
-      )
+  let go =
+        Http.httpBS req
+          >>= ( \resp -> do
+                  let statusCode = resp & Http.responseStatus & (.statusCode)
+                      contentType =
+                        resp
+                          & Http.responseHeaders
+                          & List.lookup "content-type"
+                          <&> Wai.parseContentType
+                          <&> (\(ct, _mimeAttributes) -> ct)
+                  if
+                    | statusCode == 200,
+                      Just ct <- contentType,
+                      ct == opts'.contentType ->
+                        pure $ Right $ (resp & Http.responseBody)
+                    | statusCode == 200,
+                      Just otherType <- contentType ->
+                        pure $ Left [fmt|Server returned a non-json body, with content-type "{otherType}"|]
+                    | statusCode == 200,
+                      Nothing <- contentType ->
+                        pure $ Left [fmt|Server returned a body with unspecified content type|]
+                    | statusCode == 429 -> do
+                        let retryAfter =
+                              resp
+                                & Http.getResponseHeader "Retry-After"
+                                & nonEmpty
+                                >>= ( NonEmpty.head
+                                        >>> Field.runFieldParser
+                                          ( Field.utf8
+                                              >>> (Field.decimalNatural <&> toInteger)
+                                              >>> (Field.bounded @Int "Int" <&> clamp @Int (0, 10))
+                                          )
+                                        >>> hush
+                                    )
+                                  & fromMaybe 2
+                        inSpan' "HTTP Request (JSON) - Rate Limited" $ \span' -> do
+                          addAttribute span' "request.response.status" statusCode
+                          addAttribute span' "request.response.retry-after" retryAfter
+                          threadDelay (retryAfter * 1_000_000)
+                          go
+                    | code <- statusCode -> pure $ Left $ AppExceptionPretty [[fmt|Server returned an non-200 error code, code {code}:|], pretty resp]
+              )
+  go
+    >>= orAppThrow span
     >>= \body -> do
       val <-
         Json.eitherDecodeStrict body
@@ -106,6 +130,10 @@ httpJson opts parser req = inSpan' "HTTP Request (JSON)" $ \span -> do
           let prettyErr = Json.parseErrorTreeValCtx "could not parse HTTP response" val e
           appThrow span (AppExceptionTree prettyErr)
         Right a -> pure a
+
+hush :: Either e a -> Maybe a
+hush (Right a) = Just a
+hush _ = Nothing
 
 doRequestJson ::
   (MonadOtel m) =>
