@@ -388,7 +388,28 @@ newtype ReleaseType = ReleaseType {unReleaseType :: Text}
   deriving stock (Eq, Show)
 
 releaseTypeComparison :: Comparison ReleaseType
-releaseTypeComparison = listIndexComparison [releaseTypeAlbum, releaseTypeSoundtrack, releaseTypeEP, releaseTypeAnthology, releaseTypeCompilation, releaseTypeSingle, releaseTypeLiveAlbum, releaseTypeRemix, releaseTypeBootleg, releaseTypeInterview, releaseTypeMixtape, releaseTypeDemo, releaseTypeConcertRecording, releaseTypeDJMix, releaseTypeUnknown, releaseTypeProducedBy, releaseTypeComposition, releaseTypeRemixedBy, releaseTypeGuestAppearance]
+releaseTypeComparison =
+  listIndexComparison
+    [ releaseTypeAlbum,
+      releaseTypeLiveAlbum,
+      releaseTypeAnthology,
+      releaseTypeSoundtrack,
+      releaseTypeEP,
+      releaseTypeCompilation,
+      releaseTypeSingle,
+      releaseTypeRemix,
+      releaseTypeBootleg,
+      releaseTypeInterview,
+      releaseTypeMixtape,
+      releaseTypeDemo,
+      releaseTypeConcertRecording,
+      releaseTypeDJMix,
+      releaseTypeUnknown,
+      releaseTypeProducedBy,
+      releaseTypeComposition,
+      releaseTypeRemixedBy,
+      releaseTypeGuestAppearance
+    ]
 
 releaseTypeAlbum, releaseTypeSoundtrack, releaseTypeEP, releaseTypeAnthology, releaseTypeCompilation, releaseTypeSingle, releaseTypeLiveAlbum, releaseTypeRemix, releaseTypeBootleg, releaseTypeInterview, releaseTypeMixtape, releaseTypeDemo, releaseTypeConcertRecording, releaseTypeDJMix, releaseTypeUnknown, releaseTypeProducedBy, releaseTypeComposition, releaseTypeRemixedBy, releaseTypeGuestAppearance :: ReleaseType
 releaseTypeAlbum = ReleaseType "Album"
