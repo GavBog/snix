@@ -22,6 +22,7 @@ lib.fix (self: {
     (usermod "laptop.nix")
     (usermod "persistence.nix")
     (usermod "physical.nix")
+    (usermod "systemd-unfreeze.nix")
 
     (pkgs.home-manager.src + "/nixos")
   ] ++ lib.optional (builtins.pathExists ./local-config.nix) ./local-config.nix;

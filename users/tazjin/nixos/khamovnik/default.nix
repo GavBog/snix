@@ -22,6 +22,7 @@ in
     (usermod "home-config.nix")
     (usermod "laptop.nix")
     (usermod "physical.nix")
+    (usermod "systemd-unfreeze.nix")
     (pkgs.home-manager.src + "/nixos")
   ] ++ (if (builtins.pathExists private) then [
     (private + "/nixos/yandex.nix")
