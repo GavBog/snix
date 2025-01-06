@@ -19,3 +19,5 @@ Xor ⇐ (¬⊸∧∨∧⟜¬)
 
 # To get all Diagonals (⊢∾○Diagonals⌽)
 Diagonals ⇐ {(0‿0⊸⍉ ↓⟜𝕩)¨ (↕≠𝕩)}
+
+ApplyMany ← {fs 𝕊 arg: {𝕏 arg}¨ fs}

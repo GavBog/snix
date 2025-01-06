@@ -17,15 +17,14 @@ MkDirP ← •file.CreateDir⍟(¬•file.Exists)
 
 AsciiDown ← ('A'-'a')⊸(⊢-×⟜('A'⊸≤∧≤⟜'Z'))
 
-nl ← @+10
+_join ← {(∾⟜(𝕗⊸∾))´𝕩;𝕨∾𝕗∾𝕩}
 
+nl ← @+10
 SplitChar ← ((=(¯1˙⍟⊣)¨+`∘=)⊔⊢)
 Lines ← nl⊸SplitChar
 
 ReadPosInt ← {(𝕨⊸×+⊣)´∘⌽-⟜'0'𝕩} # ty leah2
 ReadPosDec ← 10⊸ReadPosInt
-
-ApplyMany ← {fs 𝕊 arg: {𝕏 arg}¨ fs}
 
 Chomp ← {⟨nl⟩≡¯1↑𝕩? ¯1↓𝕩; 𝕩}
 
@@ -43,16 +42,20 @@ LR ← Lines∘R
 # (Apple) Mail Notes Backend
 
 # TODO(sterni): avoid argv limit by chunking
-Hdr ← {LR "mhdr"‿"-dh"‿𝕨∾𝕩}
-Date ← {ReadPosDec¨ LR "mhdr"‿"-Dh"‿"Date"∾𝕩}
+Hdrs ← {LR "mhdr"‿"-dh"‿(':' _join 𝕨)∾𝕩}
+Dates ← {ReadPosDec¨ LR "mhdr"‿"-Dh"‿"Date"∾𝕩}
+headerNames ← "X-Uniform-Type-Identifier"‿"X-Universally-Unique-Identifier"‿"Subject"
 
 MailNotesBackend ← {𝕊 mailDir:
-  Filter ← {𝕩 ("com.apple.mail-note"⊸≡¨/⊣) "X-Uniform-Type-Identifier" Hdr 𝕩}
-  Id ← AsciiDown "X-Universally-Unique-Identifier"⊸Hdr
-  Title ← "Subject"⊸Hdr
-  MkRenderer ← {𝕊 p: {R "execline-cd"‿𝕩‿"mshow"‿"-x"‿p ⋄ R "mn2html"‿p}}
-  # TODO(sterni): entries could become namespaces
-  Entries ⇐ {𝕊: ⍉>⟨Id,Title,Date,MkRenderer¨⟩⊸ApplyMany Filter LR "mlist"‿mailDir}
+  Entries ⇐ {𝕊:
+    ms ← LR "mlist"‿mailDir
+    th ← ⍉⟨≠ms,≠headerNames⟩⥊headerNames Hdrs ms
+    dh ← Dates ms
+    ah ← (("com.apple.mail-note"⊸≡⊑)˘/⊢) ⍉th∾dh≍ms
+    {𝕊 ·‿id‿title‿date‿path:
+      ⟨AsciiDown id, title, date, {"execline-cd"‿𝕩‿"mshow"‿"-x"‿path ⋄ R "mn2html"‿path}⟩
+    }˘ ah
+  }
 }
 
 # Rendering
