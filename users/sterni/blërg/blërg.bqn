@@ -52,8 +52,10 @@ MailNotesBackend ← {𝕊 mailDir:
     th ← ⍉⟨≠ms,≠headerNames⟩⥊headerNames Hdrs ms
     dh ← Dates ms
     ah ← (("com.apple.mail-note"⊸≡⊑)˘/⊢) ⍉th∾dh≍ms
-    {𝕊 ·‿id‿title‿date‿path:
-      ⟨AsciiDown id, title, date, {"execline-cd"‿𝕩‿"mshow"‿"-x"‿path ⋄ R "mn2html"‿path}⟩
+    {𝕊 ·‿uuid‿title‿time‿path:
+      title ⇐ ⋄ time ⇐
+      id ⇐ AsciiDown uuid
+      Render ⇐ {"execline-cd"‿𝕩‿"mshow"‿"-x"‿path ⋄ R "mn2html"‿path}
     }˘ ah
   }
 }
@@ -70,11 +72,11 @@ RenderPage ← {
 <h1>"‿𝕨‿"</h1>"‿𝕩
 }
 
-WriteEntry ← {outDir 𝕊 id‿title‿·‿renderEntry:
-  entryDir ← MkDirP outDir •file.At id
-  (entryDir •file.At "index.html") •file.Chars title RenderPage RenderEntry entryDir
+WriteEntry ← {outDir 𝕊 entry:
+  entryDir ← MkDirP outDir •file.At entry.id
+  (entryDir •file.At "index.html") •file.Chars entry.title RenderPage entry.Render entryDir
   # TODO(sterni): urlencode
-  "<li><a href="""∾id∾""">"∾title∾"</a></li>"
+  "<li><a href="""∾entry.id∾""">"∾entry.title∾"</a></li>"
 }
 
 # Main
@@ -87,10 +89,10 @@ mailDir‿outDir ← {
 }
 
 m ← MailNotesBackend mailDir
-entries ← ((⍒ 2⊸⊑˘)⊏⊢) m.Entries @
+entries ← (<"time") ((⍒∘(•ns.Get˜¨))⊏⊢) m.Entries @
 
 title ← "blërg"
 
 MkDirP outDir
-entryIndex ← (< outDir⊸WriteEntry)˘ entries
+entryIndex ← outDir⊸WriteEntry¨ entries
 (outDir •file.At "index.html") •file.Chars title RenderPage ∾"<ul>"∾entryIndex∾"</ul>"
