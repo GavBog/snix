@@ -51,6 +51,7 @@ newtype AppT m a = AppT {unAppT :: ReaderT Context m a}
 data AppException
   = AppExceptionTree ErrorTree
   | AppExceptionPretty [Pretty.Err]
+  | AppExceptionEnc Enc
   deriving anyclass (Exception)
 
 instance IsString AppException where
@@ -59,6 +60,7 @@ instance IsString AppException where
 instance Show AppException where
   showsPrec _ (AppExceptionTree t) = ("AppException: " ++) . ((textToString $ prettyErrorTree t) ++)
   showsPrec _ (AppExceptionPretty t) = ("AppException: " ++) . ((Pretty.prettyErrsNoColor t) ++)
+  showsPrec _ (AppExceptionEnc e) = ((textToString $ Enc.encToTextPretty e) ++)
 
 instance (MonadIO m) => MonadLogger (AppT m) where
   monadLoggerLog loc src lvl msg = liftIO $ Logger.defaultOutput IO.stderr loc src lvl (Logger.toLogStr msg)
@@ -119,6 +121,7 @@ appThrowNewSpan spanName exc = inSpan' spanName $ \span -> do
   let msg = case exc of
         AppExceptionTree e -> prettyErrorTree e
         AppExceptionPretty p -> Pretty.prettyErrsNoColor p & stringToText
+        AppExceptionEnc e -> Enc.encToTextPretty e
   recordException
     span
     ( T2
@@ -132,6 +135,7 @@ appThrow span exc = do
   let msg = case exc of
         AppExceptionTree e -> prettyErrorTree e
         AppExceptionPretty p -> Pretty.prettyErrsNoColor p & stringToText
+        AppExceptionEnc e -> Enc.encToTextPretty e
   recordException
     span
     ( T2

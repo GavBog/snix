@@ -10,9 +10,11 @@ import Control.Monad.Logger.CallStack
 import Control.Monad.Reader
 import Data.Aeson qualified as Json
 import Data.Aeson.BetterErrors qualified as Json
+import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Error.Tree
 import Data.List qualified as List
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (catMaybes)
 import Database.PostgreSQL.Simple (Binary (Binary), Only (..))
 import Database.PostgreSQL.Simple.Types (PGArray (PGArray))
@@ -37,19 +39,74 @@ instance (MonadIO m) => MonadRedacted (AppT m) where
   getRedactedApiKey = AppT (asks (.redactedApiKey))
 
 redactedSearch ::
-  (MonadThrow m, MonadOtel m, MonadRedacted m) =>
-  [(ByteString, ByteString)] ->
+  ( MonadThrow m,
+    MonadOtel m,
+    MonadRedacted m,
+    HasField "actionArgs" extraArguments [(ByteString, ByteString)],
+    HasField "page" dat (Maybe Natural)
+  ) =>
+  extraArguments ->
+  dat ->
   Json.Parse ErrorTree a ->
   m a
-redactedSearch advanced parser =
+redactedSearch extraArguments dat parser =
   inSpan' "Redacted API Search" $ \span ->
-    redactedApiRequestJson
+    redactedPagedRequest
       span
-      ( T2
+      ( T3
           (label @"action" "browse")
-          (label @"actionArgs" ((advanced <&> second Just)))
+          (getLabel @"actionArgs" extraArguments)
+          (getLabel @"page" dat)
       )
       parser
+
+redactedGetArtist ::
+  ( MonadOtel m,
+    MonadThrow m,
+    MonadRedacted m,
+    HasField "artistId" r Text,
+    HasField "page" r (Maybe Natural)
+  ) =>
+  r ->
+  Json.Parse ErrorTree a ->
+  m a
+redactedGetArtist dat parser =
+  inSpan' "Redacted Get Artist" $ \span -> do
+    redactedPagedRequest
+      span
+      ( T3
+          (label @"action" "artist")
+          (label @"actionArgs" [("id", buildBytes utf8B dat.artistId)])
+          (getLabel @"page" dat)
+      )
+      parser
+
+redactedPagedRequest ::
+  ( MonadThrow m,
+    MonadOtel m,
+    MonadRedacted m,
+    HasField "action" dat ByteString,
+    HasField "actionArgs" dat [(ByteString, ByteString)],
+    HasField "page" dat (Maybe Natural)
+  ) =>
+  Otel.Span ->
+  dat ->
+  Json.Parse ErrorTree a ->
+  m a
+redactedPagedRequest span dat parser =
+  redactedApiRequestJson
+    span
+    ( T2
+        (label @"action" dat.action)
+        ( label @"actionArgs" $
+            (dat.actionArgs <&> second Just)
+              <> ( dat.page
+                     & ifExists
+                       (\page -> ("page", Just $ buildBytes naturalDecimalB page))
+                 )
+        )
+    )
+    parser
 
 redactedGetTorrentFile ::
   ( MonadLogger m,
@@ -108,21 +165,143 @@ exampleSearch = do
         -- ("releasetype", "album"),
         ("order_by", "year")
       ]
-  pure (t1 >> t2 >> t3)
+  pure (t1 >> t2 >> t3 >> pure ())
 
--- | Do the search, return a transaction that inserts all results from all pages of the search.
-redactedSearchAndInsert ::
-  forall m.
+redactedRefreshArtist ::
   ( MonadLogger m,
     MonadPostgres m,
     MonadThrow m,
     MonadOtel m,
-    MonadRedacted m
+    MonadRedacted m,
+    HasField "artistId" dat Text
   ) =>
+  dat ->
+  m (Transaction m (Label "newTorrents" [Label "torrentId" Int]))
+redactedRefreshArtist dat = do
+  redactedPagedSearchAndInsert
+    (Json.key "torrentgroup" $ parseTourGroups (T2 (label @"torrentFieldName" "torrent") (label @"torrentIdName" "id")))
+    ( \page ->
+        redactedGetArtist
+          ( T2
+              (getLabel @"artistId" dat)
+              page
+          )
+    )
+
+-- | Do the search, return a transaction that inserts all results from all pages of the search.
+redactedSearchAndInsert ::
+  (MonadLogger m, MonadPostgres m, MonadThrow m, MonadOtel m, MonadRedacted m) =>
   [(ByteString, ByteString)] ->
-  m (Transaction m ())
-redactedSearchAndInsert extraArguments = do
-  logInfo [fmt|Doing redacted search with arguments: {showPretty extraArguments}|]
+  m (Transaction m (Label "newTorrents" [Label "torrentId" Int]))
+redactedSearchAndInsert extraArguments =
+  redactedPagedSearchAndInsert
+    (Json.key "results" $ parseTourGroups (T2 (label @"torrentFieldName" "torrents") (label @"torrentIdName" "torrentId")))
+    ( redactedSearch
+        (label @"actionArgs" extraArguments)
+    )
+
+-- | Parse the standard Redacted reply object, @{ status: "success", response: ... }@ or throw an error.
+--
+-- The response might contain a `pages` field, if not we’ll return 1.
+parseRedactedReplyStatus ::
+  (Monad m) =>
+  Json.ParseT ErrorTree m b ->
+  Json.ParseT ErrorTree m (T2 "pages" Natural "response" b)
+parseRedactedReplyStatus inner = do
+  status <- Json.key "status" Json.asText
+  when (status /= "success") $ do
+    Json.throwCustomError ([fmt|Status was not "success", but {status}|] :: ErrorTree)
+  Json.key "response" $ do
+    pages <-
+      Json.keyMay
+        "pages"
+        ( Field.toJsonParser
+            ( Field.mapError singleError $
+                Field.jsonNumber >>> Field.boundedScientificIntegral @Int "not an Integer" >>> Field.integralToNatural
+            )
+        )
+        -- in case the field is missing, let’s assume there is only one page
+        <&> fromMaybe 1
+    res <- inner
+    pure $
+      T2
+        (label @"pages" pages)
+        (label @"response" res)
+
+type TourGroups =
+  ( Label
+      "tourGroups"
+      [ T2
+          "tourGroup"
+          (T3 "groupId" Int "groupName" Text "fullJsonResult" Json.Value)
+          "torrents"
+          [T2 "torrentId" Int "fullJsonResult" Json.Value]
+      ]
+  )
+
+parseTourGroups ::
+  ( Monad m,
+    HasField "torrentFieldName" opts Text,
+    HasField "torrentIdName" opts Text
+  ) =>
+  opts ->
+  Json.ParseT err m TourGroups
+parseTourGroups opts =
+  do
+    label @"tourGroups"
+    <$> ( catMaybes
+            <$> ( Json.eachInArray $ do
+                    Json.keyMay opts.torrentFieldName (pure ()) >>= \case
+                      -- not a torrent group, maybe some files or something (e.g. guitar tabs see Dream Theater Systematic Chaos)
+                      Nothing -> pure Nothing
+                      Just () -> do
+                        groupId <- Json.keyLabel @"groupId" "groupId" (Json.asIntegral @_ @Int)
+                        groupName <- Json.keyLabel @"groupName" "groupName" Json.asText
+                        fullJsonResult <-
+                          label @"fullJsonResult"
+                            <$> ( Json.asObject
+                                    -- remove torrents cause they are inserted separately below
+                                    <&> KeyMap.filterWithKey (\k _ -> k /= (opts.torrentFieldName & Key.fromText))
+                                    <&> Json.Object
+                                )
+                        let tourGroup = T3 groupId groupName fullJsonResult
+                        torrents <- Json.keyLabel @"torrents" opts.torrentFieldName $
+                          Json.eachInArray $ do
+                            torrentId <- Json.keyLabel @"torrentId" opts.torrentIdName (Json.asIntegral @_ @Int)
+                            fullJsonResultT <-
+                              label @"fullJsonResult"
+                                <$> ( Json.asObject
+                                        <&> KeyMap.mapKeyVal
+                                          ( \k ->
+                                              if
+                                                -- some torrent objects use “snatched” instead of “snatches”
+                                                | k == "snatched" -> "snatches"
+                                                -- normalize the torrent id field
+                                                | k == (opts.torrentIdName & Key.fromText) -> "torrentId"
+                                                | otherwise -> k
+                                          )
+                                          id
+                                        <&> Json.Object
+                                    )
+                            pure $ T2 torrentId fullJsonResultT
+                        pure $ Just (T2 (label @"tourGroup" tourGroup) torrents)
+                )
+        )
+
+redactedPagedSearchAndInsert ::
+  forall m.
+  ( MonadLogger m,
+    MonadPostgres m
+  ) =>
+  Json.Parse ErrorTree TourGroups ->
+  -- | A redacted request that returns a paged result
+  ( forall a.
+    Label "page" (Maybe Natural) ->
+    Json.Parse ErrorTree a ->
+    m a
+  ) ->
+  m (Transaction m (Label "newTorrents" [Label "torrentId" Int]))
+redactedPagedSearchAndInsert innerParser pagedRequest = do
   -- The first search returns the amount of pages, so we use that to query all results piece by piece.
   firstPage <- go Nothing
   let remainingPages = firstPage.pages - 1
@@ -131,58 +310,17 @@ redactedSearchAndInsert extraArguments = do
   otherPages <- traverse go (Just <$> otherPagesNum)
   pure $
     (firstPage : otherPages)
-      & concatMap (.tourGroups)
+      & concatMap (.response.tourGroups)
       & \case
-        IsNonEmpty tgs -> tgs & insertTourGroupsAndTorrents
-        IsEmpty -> pure ()
+        IsNonEmpty tgs -> do
+          tgs & insertTourGroupsAndTorrents
+          pure $ label @"newTorrents" (tgs & concatMap (\tg -> tg.torrents <&> getLabel @"torrentId"))
+        IsEmpty -> pure $ label @"newTorrents" []
   where
     go mpage =
-      redactedSearch
-        ( extraArguments
-            -- pass the page (for every search but the first one)
-            <> (mpage & ifExists (\page -> ("page", buildBytes naturalDecimalB page)))
-        )
-        ( do
-            status <- Json.key "status" Json.asText
-            when (status /= "success") $ do
-              Json.throwCustomError [fmt|Status was not "success", but {status}|]
-            Json.key "response" $ do
-              pages <-
-                Json.keyMay "pages" (Field.toJsonParser (Field.mapError singleError $ Field.jsonNumber >>> Field.boundedScientificIntegral @Int "not an Integer" >>> Field.integralToNatural))
-                  -- in case the field is missing, let’s assume there is only one page
-                  <&> fromMaybe 1
-              Json.key "results" $ do
-                tourGroups <-
-                  label @"tourGroups"
-                    <$> ( catMaybes
-                            <$> ( Json.eachInArray $ do
-                                    Json.keyMay "torrents" (pure ()) >>= \case
-                                      -- not a torrent group, maybe some files or something (e.g. guitar tabs see Dream Theater Systematic Chaos)
-                                      Nothing -> pure Nothing
-                                      Just () -> do
-                                        groupId <- Json.keyLabel @"groupId" "groupId" (Json.asIntegral @_ @Int)
-                                        groupName <- Json.keyLabel @"groupName" "groupName" Json.asText
-                                        fullJsonResult <-
-                                          label @"fullJsonResult"
-                                            <$> ( Json.asObject
-                                                    -- remove torrents cause they are inserted separately below
-                                                    <&> KeyMap.filterWithKey (\k _ -> k /= "torrents")
-                                                    <&> Json.Object
-                                                )
-                                        let tourGroup = T3 groupId groupName fullJsonResult
-                                        torrents <- Json.keyLabel @"torrents" "torrents" $
-                                          Json.eachInArray $ do
-                                            torrentId <- Json.keyLabel @"torrentId" "torrentId" (Json.asIntegral @_ @Int)
-                                            fullJsonResultT <- label @"fullJsonResult" <$> Json.asValue
-                                            pure $ T2 torrentId fullJsonResultT
-                                        pure $ Just (T2 (label @"tourGroup" tourGroup) torrents)
-                                )
-                        )
-                pure
-                  ( T2
-                      (label @"pages" pages)
-                      tourGroups
-                  )
+      pagedRequest
+        (label @"page" mpage)
+        ( parseRedactedReplyStatus $ innerParser
         )
     insertTourGroupsAndTorrents ::
       NonEmpty
@@ -238,11 +376,15 @@ redactedSearchAndInsert extraArguments = do
                 full_json_result = excluded.full_json_result
               RETURNING (id)
             |]
-        ( dats <&> \dat ->
-            ( dat.groupId,
-              dat.groupName,
-              dat.fullJsonResult
-            )
+        ( dats
+            -- make sure we don’t have the same conflict target twice
+            & NonEmpty.nubBy (\a b -> a.groupId == b.groupId)
+            <&> ( \dat ->
+                    ( dat.groupId,
+                      dat.groupName,
+                      dat.fullJsonResult
+                    )
+                )
         )
         (label @"tourGroupIdPg" <$> Dec.fromField @Int)
 
@@ -292,6 +434,7 @@ redactedSearchAndInsert extraArguments = do
             | dat <- dats,
               group <- dat.torrents
           ]
+            & List.nubBy (\a b -> a.torrentId == b.torrentId)
             & unzip3PGArray
               @"torrentGroupIdPg"
               @Int
@@ -455,7 +598,8 @@ getTorrentById dat = do
 
 data GetBestTorrentsFilter = GetBestTorrentsFilter
   { onlyDownloaded :: Bool,
-    onlyArtist :: Maybe (Label "artistRedactedId" Natural)
+    onlyArtist :: Maybe (Label "artistRedactedId" Natural),
+    onlyTheseTorrents :: Maybe ([Label "torrentId" Int])
   }
 
 -- | Find the best torrent for each torrent group (based on the seeding_weight)
@@ -477,6 +621,9 @@ getBestTorrents opts = do
           -- filter by artist id
           AND
           (?::bool OR (to_jsonb(?::int) <@ (jsonb_path_query_array(full_json_result, '$.artists[*].id'))))
+          -- filter by torrent ids
+          AND
+          (?::bool OR torrent_id = ANY (?::int[]))
         ORDER BY
           torrent_group,
           -- prefer torrents which we already downloaded
@@ -488,7 +635,12 @@ getBestTorrents opts = do
         t.torrent_id,
         t.seeding_weight,
         tg.full_json_result->>'releaseType' AS release_type,
-        t.full_json_result->'artists' AS artists,
+        -- TODO: different endpoints handle this differently (e.g. action=search and action=artist), we should unify this while parsing
+        COALESCE(
+          t.full_json_result->'artists',
+          tg.full_json_result->'artists',
+          '[]'::jsonb
+        ) as artists,
         tg.full_json_result->>'groupName' AS group_name,
         tg.full_json_result->>'groupYear' AS group_year,
         t.torrent_file IS NOT NULL AS has_torrent_file,
@@ -503,9 +655,14 @@ getBestTorrents opts = do
         let (onlyArtistB, onlyArtistId) = case opts.onlyArtist of
               Nothing -> (True, 0)
               Just a -> (False, a.artistRedactedId)
+        let (onlyTheseTorrentsB, onlyTheseTorrents) = case opts.onlyTheseTorrents of
+              Nothing -> (True, PGArray [])
+              Just a -> (False, a <&> (.torrentId) & PGArray)
         ( opts.onlyDownloaded :: Bool,
           onlyArtistB :: Bool,
-          onlyArtistId & fromIntegral @Natural @Int
+          onlyArtistId & fromIntegral @Natural @Int,
+          onlyTheseTorrentsB :: Bool,
+          onlyTheseTorrents
           )
     )
     ( do
@@ -610,12 +767,12 @@ redactedApiRequestJson span dat parser = do
   mkRedactedApiRequest dat
     >>= Http.httpJson defaults parser
 
--- test :: (MonadThrow m, MonadRedacted m, MonadOtel m) => m ()
--- test =
---   inSpan' "test" $ \span -> do
---     redactedApiRequestJson
---       span
---       (T2 (label @"action" "browse") (label @"actionArgs" [("searchstr", Just "dream theater")]))
---       (Json.asValue)
---       <&> Pretty.showPrettyJson
---       >>= liftIO . putStderrLn
+test :: (MonadThrow m, MonadRedacted m, MonadOtel m) => m ()
+test =
+  inSpan' "test" $ \span -> do
+    redactedApiRequestJson
+      span
+      (T2 (label @"action" "artist") (label @"actionArgs" [("id", Just "2785")]))
+      (Json.asValue)
+      <&> Pretty.showPrettyJsonColored
+      >>= liftIO . putStderrLn

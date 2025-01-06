@@ -1,8 +1,10 @@
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Json where
 
+import Builder
 import Data.Aeson (FromJSON (parseJSON), ToJSON (toEncoding, toJSON), Value (..), withObject)
 import Data.Aeson qualified as Json
 import Data.Aeson.BetterErrors qualified as Json
@@ -19,9 +21,10 @@ import Data.Time (UTCTime)
 import Data.Vector qualified as Vector
 import FieldParser (FieldParser)
 import FieldParser qualified as Field
+import Json.Enc (Enc)
+import Json.Enc qualified as Enc
 import Label
 import MyPrelude
-import Pretty
 
 -- | Use a "Data.Aeson.BetterErrors" parser to implement 'FromJSON'’s 'parseJSON' method.
 --
@@ -71,11 +74,12 @@ parseErrorTree contextMsg errs =
     & singleError
     & nestedError contextMsg
 
--- | Convert a 'Json.ParseError' to a corresponding 'ErrorTree'
+-- | Convert a 'Json.ParseError' to a pair of error message and a shrunken-down
+-- version of the value at the path where the error occurred.
 --
 -- This version shows some of the value at the path where the error occurred.
-parseErrorTreeValCtx :: Error -> Json.Value -> Json.ParseError ErrorTree -> ErrorTree
-parseErrorTreeValCtx contextMsg origValue errs = do
+parseErrorTreeValCtx :: Json.Value -> Json.ParseError ErrorTree -> T2 "errorMessage" Enc "valueAtErrorPath" (Maybe Json.Value)
+parseErrorTreeValCtx origValue errs = do
   let ctxPath = case errs of
         Json.BadSchema path _spec -> Just path
         _ -> Nothing
@@ -88,33 +92,57 @@ parseErrorTreeValCtx contextMsg origValue errs = do
           Nothing -> v
           Just v' -> go v' path
 
-  ( ( errs
-        & Json.displayError prettyErrorTree
-        & Text.intercalate "\n"
-        & newError
+  T2
+    ( label @"errorMessage" $
+        errs
+          & displayErrorCustom
     )
-      :| ( maybe
-             []
-             ( \ctx ->
-                 [ go origValue ctx
-                     & Pretty.showPrettyJson
-                     & newError
-                 ]
-             )
-             ctxPath
-         )
+    ( label @"valueAtErrorPath" $
+        ctxPath
+          <&> ( go origValue
+                  -- make sure we don’t explode the error message by showing too much of the value
+                  >>> restrictJson restriction
+              )
     )
-    -- We nest this here because the json errors is multiline, so the result looks like
-    --
-    -- @
-    -- contextMsg
-    -- \|
-    -- `- At the path: ["foo"]["bar"]
-    --   Type mismatch:
-    --   Expected a value of type object
-    --   Got: true
-    -- @
-    & errorTree contextMsg
+  where
+    restriction =
+      RestrictJsonOpts
+        { maxDepth = 2,
+          maxSizeObject = 10,
+          maxSizeArray = 3,
+          maxStringLength = 100
+        }
+    displayErrorCustom :: Json.ParseError ErrorTree -> Enc
+    displayErrorCustom = \case
+      Json.InvalidJSON str ->
+        ["The input could not be parsed as JSON: " <> str & stringToText]
+          & Enc.list Enc.text
+      Json.BadSchema path spec -> do
+        let pieceEnc = \case
+              Json.ObjectKey k -> Enc.text k
+              Json.ArrayIndex i -> Enc.int i
+        case spec of
+          Json.WrongType t val ->
+            Enc.object
+              [ ("@", Enc.list pieceEnc path),
+                ( "error",
+                  -- not showing the value here, because we are gonna show it anyway in the valueAtErrorPath
+                  [fmt|Expected a value of type `{displayJSONType t}` but got one of type `{val & Json.jsonTypeOf & displayJSONType}`|]
+                )
+              ]
+          other ->
+            Json.displaySpecifics prettyErrorTree other
+              & Text.intercalate "\n"
+              & Enc.text
+
+    displayJSONType :: Json.JSONType -> Text
+    displayJSONType t = case t of
+      Json.TyObject -> "object"
+      Json.TyArray -> "array"
+      Json.TyString -> "string"
+      Json.TyNumber -> "number"
+      Json.TyBool -> "boolean"
+      Json.TyNull -> "null"
 
 -- | Lift the parser error to an error tree
 asErrorTree :: (Functor m) => Json.ParseT Error m a -> Json.ParseT ErrorTree m a
@@ -304,3 +332,75 @@ instance ToJSON EmptyObject where
 -- | Create a json array from a list of json values.
 mkJsonArray :: [Value] -> Value
 mkJsonArray xs = xs & Vector.fromList & Array
+
+data RestrictJsonOpts = RestrictJsonOpts
+  { maxDepth :: Natural,
+    maxSizeObject :: Natural,
+    maxSizeArray :: Natural,
+    maxStringLength :: Natural
+  }
+
+-- | Restrict a json object so that its depth and size are within the given bounds.
+--
+-- Bounds are maximum 'Int' width.
+restrictJson ::
+  RestrictJsonOpts ->
+  Value ->
+  Value
+restrictJson opts = do
+  let maxSizeObject = opts.maxSizeObject & naturalToInteger & integerToBoundedClamped
+  let maxSizeArray = opts.maxSizeArray & naturalToInteger & integerToBoundedClamped
+  let maxStringLength = opts.maxStringLength & naturalToInteger & integerToBoundedClamped
+  go (opts.maxDepth, maxSizeObject, maxSizeArray, maxStringLength)
+  where
+    go (0, _, _, strLen) (Json.String s) = truncateString strLen s
+    go (0, _, _, _) (Json.Array arr) = Array $ Vector.singleton [fmt|<{Vector.length arr} elements elided>|]
+    go (0, _, _, _) (Json.Object obj) =
+      obj
+        & buildText (KeyMap.keys >$< ("<object {" <> intersperseT ", " (Key.toText >$< textT) <> "}>"))
+        & String
+    go (depth, sizeObject, sizeArray, strLen) val = case val of
+      Object obj ->
+        obj
+          & ( \m ->
+                if KeyMap.size m > sizeObject
+                  then
+                    m
+                      & KeyMap.toList
+                      & take sizeObject
+                      & KeyMap.fromList
+                      & KeyMap.map (go (depth - 1, sizeObject, sizeArray, strLen))
+                      & \smol ->
+                        smol
+                          & KeyMap.insert
+                            "<some fields elided>"
+                            (m `KeyMap.difference` smol & KeyMap.keys & toJSON)
+                  else
+                    m
+                      & KeyMap.map (go (depth - 1, sizeObject, sizeArray, strLen))
+            )
+          & Json.Object
+      Array arr ->
+        arr
+          & ( \v ->
+                if Vector.length v > sizeArray
+                  then
+                    v
+                      & Vector.take sizeArray
+                      & Vector.map (go (depth - 1, sizeObject, sizeArray, strLen))
+                      & (\v' -> Vector.snoc v' ([fmt|<{Vector.length v - sizeArray} more elements elided>|] & String))
+                  else
+                    v
+                      & Vector.map (go (depth - 1, sizeObject, sizeArray, strLen))
+            )
+          & Array
+      String txt -> truncateString strLen txt
+      other -> other
+
+    truncateString strLen txt =
+      let truncatedTxt = Text.take strLen txt
+          finalTxt =
+            if Text.length txt > strLen
+              then Text.append truncatedTxt "…"
+              else truncatedTxt
+       in String finalTxt

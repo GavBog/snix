@@ -127,8 +127,16 @@ httpJson opts parser req = inSpan' "HTTP Request (JSON)" $ \span -> do
       let res = Json.parseValue parser val
       case res of
         Left e -> do
-          let prettyErr = Json.parseErrorTreeValCtx "could not parse HTTP response" val e
-          appThrow span (AppExceptionTree prettyErr)
+          let err = Json.parseErrorTreeValCtx val e
+          appThrow
+            span
+            ( AppExceptionEnc $
+                Enc.tuple3
+                  Enc.text
+                  Enc.enc
+                  (Enc.nullOr Enc.value)
+                  ("Could not parse HTTP response", err.errorMessage, err.valueAtErrorPath)
+            )
         Right a -> pure a
 
 hush :: Either e a -> Maybe a

@@ -26,6 +26,7 @@ import Data.Time qualified as Time
 import Data.Time.Format.ISO8601 qualified as ISO8601
 import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
 import PossehlAnalyticsPrelude
+import Pretty (hscolour')
 
 -- | A JSON encoder.
 --
@@ -53,18 +54,18 @@ instance RationalLiteral Enc where
 
 -- | Convert an 'Enc' to a strict UTF8-bytestring which is valid JSON (minified).
 encToBytesUtf8 :: Enc -> ByteString
-encToBytesUtf8 enc = enc & encToBytesUtf8Lazy & toStrictBytes
+encToBytesUtf8 enc' = enc' & encToBytesUtf8Lazy & toStrictBytes
 
 -- | Convert an 'Enc' to a lazy UTF8-bytestring which is valid JSON (minified).
 encToBytesUtf8Lazy :: Enc -> LazyBytes.ByteString
-encToBytesUtf8Lazy enc = enc.unEnc & Json.Enc.encodingToLazyByteString
+encToBytesUtf8Lazy enc' = enc'.unEnc & Json.Enc.encodingToLazyByteString
 
 -- | Convert an 'Enc' to a strict Text which is valid JSON (prettyfied).
 --
 -- __ATTN__: will re-parse the json through 'Json.Value', so only use for user-interactions like pretty-printing.
 encToTextPretty :: Enc -> Text
-encToTextPretty enc =
-  enc
+encToTextPretty enc' =
+  enc'
     & encToTextPrettyLazy
     & toStrict
 
@@ -72,14 +73,25 @@ encToTextPretty enc =
 --
 -- __ATTN__: will re-parse the json through 'Json.Value', so only use for user-interactions like pretty-printing.
 encToTextPrettyLazy :: Enc -> Lazy.Text
-encToTextPrettyLazy enc =
-  enc
+encToTextPrettyLazy enc' =
+  enc'
     & encToBytesUtf8Lazy
     & Json.decode @Json.Value
     & annotate "the json parser can’t parse json encodings??"
     & unwrapError
     & Aeson.Pretty.encodePrettyToTextBuilder
     & Text.Builder.toLazyText
+
+-- | Convert an 'Enc' to a strict Text which is valid JSON (prettyfied and colored).
+--
+-- __ATTN__: will re-parse the json through 'Json.Value', so only use for user-interactions like pretty-printing.
+encToTextPrettyColored :: Enc -> Text
+encToTextPrettyColored enc' =
+  enc'
+    & encToTextPretty
+    & textToString
+    & hscolour'
+    & stringToText
 
 -- | Embed a 'Json.Encoding' verbatim (it’s a valid JSON value)
 encoding :: Encoding -> Enc
@@ -88,6 +100,10 @@ encoding = Enc
 -- | Encode a 'Json.Value' verbatim (it’s a valid JSON value)
 value :: Value -> Enc
 value = Enc . AesonEnc.value
+
+-- | Encode an Enc verbatim (for completeness’ sake)
+enc :: Enc -> Enc
+enc = id
 
 -- | Encode an empty json list
 emptyArray :: Enc

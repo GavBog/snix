@@ -21,6 +21,8 @@ module Builder
     naturalDecimalB,
     scientificDecimalT,
     scientificDecimalB,
+    intersperseT,
+    intersperseB,
   )
 where
 
@@ -126,3 +128,17 @@ scientificDecimalT = TextBuilder Scientific.Text.scientificBuilder
 
 scientificDecimalB :: BytesBuilder Scientific
 scientificDecimalB = BytesBuilder Scientific.Bytes.scientificBuilder
+
+-- TODO: can these be abstracted over Divisible & Semigroup? Or something?
+
+intersperseT :: (forall b. TextBuilder b) -> TextBuilder a -> TextBuilder [a]
+intersperseT sep a = ((),) >$< intersperseT' sep a
+
+intersperseT' :: TextBuilder b -> TextBuilder a -> TextBuilder (b, [a])
+intersperseT' (TextBuilder sep) (TextBuilder a) = TextBuilder $ \(b, as) -> mintersperse (sep b) (fmap a as)
+
+intersperseB :: (forall b. BytesBuilder b) -> BytesBuilder a -> BytesBuilder [a]
+intersperseB sep a = ((),) >$< intersperseB' sep a
+
+intersperseB' :: BytesBuilder b -> BytesBuilder a -> BytesBuilder (b, [a])
+intersperseB' (BytesBuilder sep) (BytesBuilder a) = BytesBuilder $ \(b, as) -> mintersperse (sep b) (fmap a as)

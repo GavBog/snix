@@ -14,6 +14,7 @@ import Control.Monad.Reader
 import Data.Aeson qualified as Json
 import Data.Aeson.BetterErrors qualified as Json
 import Data.Aeson.KeyMap qualified as KeyMap
+import Data.CaseInsensitive (CI)
 import Data.Error.Tree
 import Data.HashMap.Strict qualified as HashMap
 import Data.List qualified as List
@@ -100,6 +101,9 @@ htmlUi = do
             Left (AppExceptionPretty err) -> do
               runInIO (logError (err & Pretty.prettyErrsNoColor & stringToText))
               respondOrig (Wai.responseLBS Http.status500 [] "")
+            Left (AppExceptionEnc err) -> do
+              runInIO (logError (Enc.encToTextPrettyColored err))
+              respondOrig (Wai.responseLBS Http.status500 [] "")
 
     catchAppException $ do
       let mp span parser =
@@ -132,7 +136,27 @@ htmlUi = do
                           ( do
                               label @"searchstr" <$> Multipart.field "redacted-search" Cat.id
                           )
-                      snipsRedactedSearch dat
+                      t <- redactedSearchAndInsert [("searchstr", dat.searchstr)]
+                      runTransaction $ do
+                        res <- t
+                        table <-
+                          getBestTorrentsTable
+                            (label @"groupByReleaseType" True)
+                            ( Just (E21 (label @"onlyTheseTorrents" res.newTorrents)) ::
+                                ( Maybe
+                                    ( E2
+                                        "onlyTheseTorrents"
+                                        [Label "torrentId" Int]
+                                        "artistRedactedId"
+                                        Natural
+                                    )
+                                )
+                            )
+                        pure
+                          [hsx|
+                          <h1>Search results for <pre>{dat.searchstr}</pre></h1>
+                          {table}
+                        |]
                 ),
                 ( "snips/redacted/torrentDataJson",
                   respond.html $ \span -> do
@@ -226,6 +250,18 @@ htmlUi = do
                       $ \qry _span -> do
                         artistPage qry
                 ),
+                ( "artist/refresh",
+                  respond.htmlOrRedirect $
+                    \span -> do
+                      dat <-
+                        mp
+                          span
+                          (label @"artistId" <$> Multipart.field "artist-id" Field.utf8)
+                      t <- redactedRefreshArtist dat
+                      runTransaction $ do
+                        t
+                      pure $ E22 (label @"redirectTo" [fmt|/artist?redacted_id={dat.artistId}|])
+                ),
                 ( "autorefresh",
                   respond.plain $ do
                     qry <-
@@ -264,7 +300,7 @@ htmlUi = do
       --       "https://musicbrainz.org/work/92000fd4-d304-406d-aeb4-6bdbeed318ec"
       --     )
       --     <&> renderJsonld
-      bestTorrentsTable <- getBestTorrentsTable Nothing
+      bestTorrentsTable <- getBestTorrentsTable (label @"groupByReleaseType" False) Nothing
       -- transmissionTorrentsTable <- lift @Transaction getTransmissionTorrentsTable
       pure $
         htmlPageChrome
@@ -299,14 +335,22 @@ htmlUi = do
 
 -- | Reload the current page (via the Referer header) if the browser has Javascript disabled (and thus htmx does not work). This should make post requests work out of the box.
 htmxOrReferer :: Wai.Request -> Wai.Response -> Wai.Response
-htmxOrReferer req act = do
+htmxOrReferer req resp = do
   let fnd h = req & Wai.requestHeaders & List.find (\(hdr, _) -> hdr == h)
   let referer = fnd "Referer"
   if
-    | Just _ <- fnd "Hx-Request" -> act
-    | Nothing <- referer -> act
+    | Just _ <- fnd "Hx-Request" -> resp
+    | Nothing <- referer -> resp
     | Just (_, rfr) <- referer -> do
         Wai.responseLBS seeOther303 [("Location", rfr)] ""
+
+-- | Redirect to the given page, if the browser has Javascript enabled use HTMX client side redirect, otherwise use a normal HTTP redirect.
+redirectOrFallback :: ByteString -> (Status -> (CI ByteString, ByteString) -> Wai.Response) -> Wai.Request -> Wai.Response
+redirectOrFallback target responseFn req = do
+  let fnd h = req & Wai.requestHeaders & List.find (\(hdr, _) -> hdr == h)
+  case fnd "Hx-Request" of
+    Just _ -> responseFn Http.ok200 ("Hx-Redirect", target)
+    Nothing -> responseFn Http.seeOther303 ("Location", target)
 
 htmlPageChrome :: (ToHtml a) => Text -> a -> Html
 htmlPageChrome title body =
@@ -352,9 +396,10 @@ artistPage ::
 artistPage dat = runTransaction $ do
   fresh <-
     getBestTorrentsData
-      (Just $ getLabel @"artistRedactedId" dat)
+      (Just $ E22 (getLabel @"artistRedactedId" dat))
   let artistName = fresh & findMaybe (\t -> t.artists & findMaybe (\a -> if a.artistId == (dat.artistRedactedId & fromIntegral @Natural @Int) then Just a.artistName else Nothing))
   let torrents = mkBestTorrentsTable (label @"groupByReleaseType" True) fresh
+
   pure $
     htmlPageChrome
       ( case artistName of
@@ -362,9 +407,22 @@ artistPage dat = runTransaction $ do
           Just a -> [fmt|{a} - Artist Page - whatcd-resolver|]
       )
       [hsx|
-        Artist ID: {dat.artistRedactedId}
+        <p>Artist ID: {dat.artistRedactedId}</p>
 
-        {torrents}
+        <div id="artist-torrents">
+          {torrents}
+        </div>
+
+        <form method="post" action="artist/refresh" hx-post="artist/refresh">
+          <input
+            hidden
+            type="text"
+            name="artist-id"
+            value={dat.artistRedactedId & buildText naturalDecimalT}
+            />
+          <button type="submit" hx-disabled-elt="this">Refresh Artist Page</button>
+          <div class="htmx-indicator">Refreshing!</div>
+        </form>
       |]
 
 type Handlers m = HandlerResponses m -> Map Text (m ResponseReceived)
@@ -372,6 +430,8 @@ type Handlers m = HandlerResponses m -> Map Text (m ResponseReceived)
 data HandlerResponses m = HandlerResponses
   { -- | render html
     html :: (Otel.Span -> m Html) -> m ResponseReceived,
+    -- | either render html or redirect to another page
+    htmlOrRedirect :: (Otel.Span -> m (E2 "respond" Html "redirectTo" ByteString)) -> m ResponseReceived,
     -- | render html after parsing some query arguments
     htmlWithQueryArgs :: forall a. (Parse Query a -> (a -> Otel.Span -> m Html) -> m ResponseReceived),
     -- | render html or reload the page via the Referer header if no htmx
@@ -381,6 +441,7 @@ data HandlerResponses m = HandlerResponses
   }
 
 runHandlers ::
+  forall m.
   (MonadOtel m) =>
   (HandlerResponses m -> m ResponseReceived) ->
   (HandlerResponses m -> Map Text (m ResponseReceived)) ->
@@ -401,18 +462,26 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
               }
           )
           ( \span -> do
-              res <- act span <&> (\h -> T2 (label @"html" h) (label @"extraHeaders" []))
+              res <- act span <&> (\h -> label @"html" h)
               addEventSimple span "Got Html result, rendering…"
               liftIO $ respond (resp res)
           )
-  let htmlResp res = Wai.responseLBS Http.ok200 ([("Content-Type", "text/html")] <> res.extraHeaders) . Html.renderHtml $ res.html
+  let htmlResp res = Wai.responseLBS Http.ok200 ([("Content-Type", "text/html")]) . Html.renderHtml $ res.html
   let html = html' htmlResp
   let htmlOrReferer = html' $ \res -> htmxOrReferer req (htmlResp res)
-
+  let htmlOrRedirect :: (Otel.Span -> m (E2 "respond" Html "redirectTo" ByteString)) -> m ResponseReceived
+      htmlOrRedirect = html' $ \res -> case res.html of
+        E21 h -> htmlResp (label @"html" h.respond)
+        E22 r ->
+          redirectOrFallback
+            r.redirectTo
+            (\status header -> Wai.responseLBS status [header] "")
+            req
   let handlerResponses =
         ( HandlerResponses
             { plain = (\m -> liftIO $ runInIO m >>= respond),
               html,
+              htmlOrRedirect,
               htmlWithQueryArgs = \parser act ->
                 case req & Parse.runParse "Unable to find the right request query arguments" (lmap Wai.queryString parser) of
                   Right a -> html (act a)
@@ -513,26 +582,6 @@ checkException some = case fromException some of
   Nothing -> Left some
   Just e -> Right e
 
-snipsRedactedSearch ::
-  ( MonadLogger m,
-    MonadPostgres m,
-    HasField "searchstr" r ByteString,
-    MonadThrow m,
-    MonadTransmission m,
-    MonadOtel m,
-    MonadRedacted m
-  ) =>
-  r ->
-  m Html
-snipsRedactedSearch dat = do
-  t <-
-    redactedSearchAndInsert
-      [ ("searchstr", dat.searchstr)
-      ]
-  runTransaction $ do
-    t
-    getBestTorrentsTable (Nothing :: Maybe (Label "artistRedactedId" Natural))
-
 data ArtistFilter = ArtistFilter
   { onlyArtist :: Maybe (Label "artistId" Text)
   }
@@ -542,13 +591,15 @@ getBestTorrentsTable ::
     MonadThrow m,
     MonadLogger m,
     MonadPostgres m,
-    MonadOtel m
+    MonadOtel m,
+    HasField "groupByReleaseType" opts Bool
   ) =>
-  Maybe (Label "artistRedactedId" Natural) ->
+  opts ->
+  Maybe (E2 "onlyTheseTorrents" [Label "torrentId" Int] "artistRedactedId" Natural) ->
   Transaction m Html
-getBestTorrentsTable dat = do
+getBestTorrentsTable opts dat = do
   fresh <- getBestTorrentsData dat
-  pure $ mkBestTorrentsTable (label @"groupByReleaseType" False) fresh
+  pure $ mkBestTorrentsTable opts fresh
 
 doIfJust :: (Applicative f) => (a -> f ()) -> Maybe a -> f ()
 doIfJust = traverse_
@@ -560,11 +611,15 @@ getBestTorrentsData ::
     MonadPostgres m,
     MonadOtel m
   ) =>
-  Maybe (Label "artistRedactedId" Natural) ->
+  Maybe (E2 "onlyTheseTorrents" [Label "torrentId" Int] "artistRedactedId" Natural) ->
   Transaction m [TorrentData (Label "percentDone" Percentage)]
-getBestTorrentsData artistFilter = inSpan' "get torrents table data" $ \span -> do
-  artistFilter & doIfJust (\a -> addAttribute span "artist-filter.redacted-id" (a.artistRedactedId, naturalDecimalT))
-  let getBest = getBestTorrents GetBestTorrentsFilter {onlyArtist = artistFilter, onlyDownloaded = False}
+getBestTorrentsData filters = inSpan' "get torrents table data" $ \span -> do
+  let onlyArtist = label @"artistRedactedId" <$> (filters >>= getE22 @"artistRedactedId")
+  onlyArtist & doIfJust (\a -> addAttribute span "artist-filter.redacted-id" (a.artistRedactedId, naturalDecimalT))
+  let onlyTheseTorrents = filters >>= getE21 @"onlyTheseTorrents"
+  onlyTheseTorrents & doIfJust (\a -> addAttribute span "torrent-filter.ids" (a <&> (getLabel @"torrentId") & showToText & Otel.toAttribute))
+
+  let getBest = getBestTorrents GetBestTorrentsFilter {onlyDownloaded = False, ..}
   bestStale :: [TorrentData ()] <- getBest
   (statusInfo, transmissionStatus) <-
     getAndUpdateTransmissionTorrentsStatus
@@ -589,7 +644,16 @@ getBestTorrentsData artistFilter = inSpan' "get torrents table data" $ \span -> 
       else pure bestStale
   pure $
     bestBest
-      & filter (\td -> td.releaseType /= releaseTypeCompilation)
+      -- filter out some kinds we don’t really care about
+      & filter
+        ( \td ->
+            td.releaseType
+              `List.notElem` [ releaseTypeCompilation,
+                               releaseTypeDJMix,
+                               releaseTypeMixtape,
+                               releaseTypeRemix
+                             ]
+        )
       --  we have to update the status of every torrent that’s not in tranmission anymore
       -- TODO I feel like it’s easier (& more correct?) to just do the database request again …
       <&> ( \td -> case td.torrentStatus of
@@ -603,7 +667,11 @@ getBestTorrentsData artistFilter = inSpan' "get torrents table data" $ \span -> 
               NoTorrentFileYet -> td {torrentStatus = NoTorrentFileYet}
           )
 
-mkBestTorrentsTable :: Label "groupByReleaseType" Bool -> [TorrentData (Label "percentDone" Percentage)] -> Html
+mkBestTorrentsTable ::
+  (HasField "groupByReleaseType" opts Bool) =>
+  opts ->
+  [TorrentData (Label "percentDone" Percentage)] ->
+  Html
 mkBestTorrentsTable opts fresh = do
   let localTorrent b = case b.torrentStatus of
         NoTorrentFileYet ->
@@ -806,7 +874,7 @@ migrate = inSpan "Database Migration" $ do
     $$ LANGUAGE plpgsql IMMUTABLE;
 
     ALTER TABLE redacted.torrents_json
-    ADD COLUMN IF NOT EXISTS seeding_weight int GENERATED ALWAYS AS (calc_seeding_weight(full_json_result)) STORED;
+    ADD COLUMN IF NOT EXISTS seeding_weight int NOT NULL GENERATED ALWAYS AS (calc_seeding_weight(full_json_result)) STORED;
 
     -- inflect out values of the full json
     CREATE OR REPLACE VIEW redacted.torrents AS
@@ -862,6 +930,7 @@ runAppWith appT = withTracer $ \tracer -> withDb $ \db -> do
     `catch` ( \case
                 AppExceptionPretty p -> throwM $ EscapedException (p & Pretty.prettyErrs)
                 AppExceptionTree t -> throwM $ EscapedException (t & prettyErrorTree & textToString)
+                AppExceptionEnc e -> throwM $ EscapedException (e & Enc.encToTextPrettyColored & textToString)
             )
 
 -- | Just a silly wrapper so that correctly format any 'AppException' that would escape the runAppWith scope.

@@ -3,6 +3,7 @@ module Pretty
     Err,
     showPretty,
     showPrettyJson,
+    showPrettyJsonColored,
     showedStringPretty,
     printPretty,
     printShowedStringPretty,
@@ -63,6 +64,17 @@ showPrettyJson val =
     & Text.Builder.toLazyText
     & toStrict
 
+-- | Shows a pretty json string with some color (very inefficient!)
+showPrettyJsonColored :: Json.Value -> Text
+showPrettyJsonColored val =
+  val
+    & Aeson.Pretty.encodePrettyToTextBuilder
+    & Text.Builder.toLazyText
+    & toStrict
+    & textToString
+    & hscolour'
+    & stringToText
+
 -- | Display a list of 'Err's as a colored error message
 prettyErrs :: [Err] -> String
 prettyErrs errs = res
@@ -71,7 +83,8 @@ prettyErrs errs = res
     one = \case
       ErrMsg s -> color Red s
       ErrPrettyString s -> prettyShowString s
-    -- Pretty print a String that was produced by 'show'
+
+    -- \| Pretty print a String that was produced by 'show'
     prettyShowString :: String -> String
     prettyShowString = hscolour' . nicify
 

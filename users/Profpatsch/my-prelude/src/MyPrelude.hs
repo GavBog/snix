@@ -130,11 +130,16 @@ module MyPrelude
     mconcat,
     ifTrue,
     ifExists,
+    sintersperse,
+    mintersperse,
     Void,
     absurd,
     Identity (Identity, runIdentity),
     Natural,
+    naturalToInteger,
     intToNatural,
+    integerToBounded,
+    integerToBoundedClamped,
     Scientific,
     Contravariant,
     contramap,
@@ -196,6 +201,7 @@ import Data.Functor ((<&>))
 import Data.Functor.Contravariant (Contravariant (contramap), (>$<))
 import Data.Functor.Identity (Identity (runIdentity))
 import Data.List (zip4)
+import Data.List qualified as List
 import Data.List.NonEmpty (NonEmpty ((:|)), nonEmpty)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Map.Strict
@@ -207,7 +213,7 @@ import Data.Maybe qualified as Maybe
 import Data.Profunctor (Profunctor, dimap, lmap, rmap)
 import Data.Scientific (Scientific)
 import Data.Semigroup (sconcat)
-import Data.Semigroup.Foldable (Foldable1 (fold1), foldMap1)
+import Data.Semigroup.Foldable (Foldable1 (fold1, toNonEmpty), foldMap1)
 import Data.Semigroup.Traversable (Traversable1)
 import Data.Semigroupoid (Semigroupoid (o))
 import Data.Text
@@ -227,6 +233,7 @@ import Divisive
 import GHC.Exception (errorCallWithCallStackException)
 import GHC.Exts (Any, RuntimeRep, TYPE, raise#)
 import GHC.Generics (Generic)
+import GHC.Natural (naturalToInteger)
 import GHC.Records (HasField)
 import GHC.Stack (HasCallStack)
 import GHC.TypeLits
@@ -653,6 +660,27 @@ intToNatural i =
     then Nothing
     else Just $ fromIntegral i
 
+-- | Convert an Integer to a bounded type if possible.
+--
+-- taken from 'Scientific.toBoundedInteger'.
+integerToBounded :: forall i. (Bounded i, Integral i) => Integer -> Maybe i
+integerToBounded i
+  | i < iMinBound || i > iMaxBound = Nothing
+  | otherwise = Just $ fromInteger i
+  where
+    iMinBound = toInteger (minBound :: i)
+    iMaxBound = toInteger (maxBound :: i)
+
+-- | Convert an Integer to a bounded type, clamping to the bounds if necessary.
+integerToBoundedClamped :: forall i. (Bounded i, Integral i) => Integer -> i
+integerToBoundedClamped i
+  | i < iMinBound = minBound
+  | i > iMaxBound = maxBound
+  | otherwise = fromInteger i
+  where
+    iMinBound = toInteger (minBound :: i)
+    iMaxBound = toInteger (maxBound :: i)
+
 -- | @inverseFunction f@ creates a function that is the inverse of a given function
 -- @f@. It does so by constructing 'M.Map' internally for each value @f a@. The
 -- implementation makes sure that the 'M.Map' is constructed only once and then
@@ -758,7 +786,6 @@ mapFromListOnMerge f xs =
 -- >>> mconcat [ Sum 1, ifTrue (1 == 1) (Sum 2), Sum 3 ]
 
 -- Sum {getSum = 6}
-
 ifTrue :: (Monoid m) => Bool -> m -> m
 ifTrue pred' m = if pred' then m else mempty
 
@@ -775,9 +802,20 @@ ifTrue pred' m = if pred' then m else mempty
 --
 -- >>> mconcat [ Sum 1, ifExists id (Just 2), Sum 3 ]
 -- Sum {getSum = 6}
-
 ifExists :: (Monoid (f b), Applicative f) => (a -> b) -> Maybe a -> f b
 ifExists f m = m & foldMap @Maybe (pure . f)
+
+-- | Intersperse a monoidal value between each element of a list.
+--
+-- Generalization of 'Data.List.intersperse' to any 'Foldable' and 'Semigroup'.
+sintersperse :: (Foldable1 t, Semigroup m) => m -> t m -> m
+sintersperse sep xs = xs & toNonEmpty & NonEmpty.intersperse sep & sconcat
+
+-- | Intersperse a monoidal value between each element of a list. If the list is empty, return 'mempty'.
+--
+-- Generalization of 'Data.List.intersperse' to any 'Foldable' and 'Monoid'.
+mintersperse :: (Foldable t, Monoid m) => m -> t m -> m
+mintersperse sep xs = xs & toList & List.intersperse sep & mconcat
 
 -- | Get the text of a symbol via TypeApplications
 symbolText :: forall sym. (KnownSymbol sym) => Text
