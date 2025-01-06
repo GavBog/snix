@@ -1,6 +1,12 @@
 { depot, ... }:
 
 (with depot.ops.machines; [
-  meta01
+  # Gerrit instance
+  gerrit01
+  # Public-facing services
   public01
+  # Build machine
+  build01
+  # Observability stack and internal software
+  meta01
 ])

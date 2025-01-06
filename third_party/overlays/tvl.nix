@@ -8,6 +8,10 @@
 
 self: super:
 depot.nix.readTree.drvTargets {
+  # Not available in nixpkgs.
+  # Raito: If you want this to disappear, please send the PR yourself.
+  alertmanager-irc-relay = super.callPackage depot.third_party.alertmanager-irc-relay.package { };
+
   # Avoid builds of mkShell derivations in CI.
   mkShell = super.lib.makeOverridable (
     args:

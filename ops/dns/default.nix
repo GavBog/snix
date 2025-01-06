@@ -1,5 +1,4 @@
-# Performs simple (local-only) validity checks on DNS zones.
-{ depot, pkgs, ... }:
+{ depot, lib, pkgs, ... }:
 
 let
   checkZone = zone: file: pkgs.runCommand "${zone}-check" { } ''
@@ -7,8 +6,19 @@ let
   '';
 
 in
-depot.nix.readTree.drvTargets {
-  nixery-dev = checkZone "nixery.dev" ./nixery.dev.zone;
-  tvl-fyi = checkZone "tvl.fyi" ./tvl.fyi.zone;
-  tvl-su = checkZone "tvl.su" ./tvl.su.zone;
+depot.nix.readTree.drvTargets rec {
+  # Provide a Terraform wrapper with the right provider installed.
+  terraform = pkgs.terraform.withPlugins (p: [
+    p.digitalocean
+  ]);
+
+  validate = {
+    snix-dev = checkZone "snix.dev" ./snix.dev.zone;
+    snix-systems = checkZone "snix.systems" ./snix.systems.zone;
+    terraform = depot.tools.checks.validateTerrform {
+      inherit terraform;
+      name = "dns";
+      src = lib.cleanSource ./.;
+    };
+  };
 }

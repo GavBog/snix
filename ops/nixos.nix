@@ -60,5 +60,9 @@ in rec {
   '';
 
   # Systems that should be built in CI
-  meta.ci.targets = [ ];
+  gerrit01System = nixosFor depot.ops.machines.gerrit01;
+  public01System = nixosFor depot.ops.machines.public01;
+  build01System = nixosFor depot.ops.machines.build01;
+  meta01System = nixosFor depot.ops.machines.meta01;
+  meta.ci.targets = [ "gerrit01System" "public01System" "build01System" "meta01System" ];
 }

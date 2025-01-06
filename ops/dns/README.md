@@ -2,10 +2,18 @@ DNS configuration
 =================
 
 This folder contains configuration for our DNS zones. The zones are hosted with
-Google Cloud DNS, which supports zone-file based import/export.
+Digital Ocean DNS, which possess a Terraform provider for DNS records.
 
-Currently there is no automation to deploy these zones, but CI will check their
-integrity.
+Secrets are needed for applying this. The encrypted file
+`//ops/secrets/tf-dns.age` contains `export` calls which should be
+sourced, for example via `direnv`, by users with the appropriate
+credentials.
 
-*Note: While each zone file specifies an SOA record, it only exists to satisfy
-`named-checkzone`. Cloud DNS manages this record for us.*
+Here is an example `direnv` configuration:
+
+```
+# //ops/secrets/.envrc
+source_up
+eval $(age --decrypt -i ~/.ssh/id_ed25519 $(git rev-parse --show-toplevel)/ops/secrets/tf-dns.age)
+watch_file $(git rev-parse --show-toplevel)/secrets/tf-dns.age
+```

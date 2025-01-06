@@ -9,6 +9,7 @@ let
   inherit (depot.nix.yants)
     attrs
     any
+    either
     defun
     list
     path
@@ -17,7 +18,8 @@ let
     struct
     ;
   ssh-pubkey = restrict "SSH pubkey" (lib.hasPrefix "ssh-") string;
-  agenixSecret = struct "agenixSecret" { publicKeys = list ssh-pubkey; };
+  age-pubkey = restrict "age pubkey" (lib.hasPrefix "age") string;
+  agenixSecret = struct "agenixSecret" { publicKeys = list (either age-pubkey ssh-pubkey); };
 in
 
 defun [ path (attrs agenixSecret) (attrs any) ]

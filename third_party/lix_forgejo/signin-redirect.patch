@@ -1,0 +1,30 @@
+From efba969f2ea6505417546e5f628066e3f10817d5 Mon Sep 17 00:00:00 2001
+From: Puck Meerburg <puck@puckipedia.com>
+Date: Wed, 8 May 2024 19:28:34 +0000
+Subject: [PATCH] Auto-redirect to oauth2 if a provider is available.
+
+---
+ routers/web/auth/auth.go | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/routers/web/auth/auth.go b/routers/web/auth/auth.go
+index 50fd760d80..c6cb5c9075 100644
+--- a/routers/web/auth/auth.go
++++ b/routers/web/auth/auth.go
+@@ -186,6 +186,13 @@ func SignIn(ctx *context.Context) {
+ 		ctx.ServerError("UserSignIn", err)
+ 		return
+ 	}
++
++	if len(oauth2Providers) > 0 {
++		provider := oauth2Providers[0]
++		ctx.Redirect(setting.AppSubURL + "/user/oauth2/" + provider.DisplayName())
++		return
++	}
++
+ 	ctx.Data["OAuth2Providers"] = oauth2Providers
+ 	ctx.Data["Title"] = ctx.Tr("sign_in")
+ 	ctx.Data["SignInLink"] = setting.AppSubURL + "/user/login"
+-- 
+2.44.0
+

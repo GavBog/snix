@@ -51,6 +51,7 @@
     {
       inherit (eval) pkgs config options;
       system = eval.config.system.build.toplevel;
-      vm = vmConfig.system.build.vm;
+      # NOTE: This doesn't work because of missing NixOS modules.
+      # vm = vmConfig.system.build.vm;
     };
 }

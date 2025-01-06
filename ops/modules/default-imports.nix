@@ -9,5 +9,6 @@
   imports = [
     ./automatic-gc.nix
     ./auto-deploy.nix
+    ./raito-vm.nix
   ];
 }

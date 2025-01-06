@@ -23,6 +23,18 @@
         "url": "https://github.com/mlochbaum/bqn-libs/archive/405644fe7aeca7cd31304c05b95de1a6c197fff6.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "disko": {
+        "branch": "master",
+        "description": "Declarative disk partitioning and formatting using nix [maintainers=@Lassulus @Enzime @iFreilicht]",
+        "homepage": "",
+        "owner": "nix-community",
+        "repo": "disko",
+        "rev": "84a5b93637cc16cbfcc61b6e1684d626df61eb21",
+        "sha256": "0pg2gmr63wa8ywkwvmkwir38yp2hqmz2mya71rlzzkdxwyf7bnyr",
+        "type": "tarball",
+        "url": "https://github.com/nix-community/disko/archive/84a5b93637cc16cbfcc61b6e1684d626df61eb21.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "gitignore.nix": {
         "branch": "master",
         "description": "Nix functions for filtering local git sources",
@@ -59,6 +71,12 @@
         "type": "tarball",
         "url": "https://github.com/nix-community/napalm/archive/e1babff744cd278b56abe8478008b4a9e23036cf.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nix-gerrit": {
+        "branch": "main",
+        "repo": "https://git.lix.systems/the-distro/nix-gerrit.git",
+        "rev": "86d04ec2e075c8c548acc6cb03eba08d8931c681",
+        "type": "git"
     },
     "nixpkgs": {
         "branch": "nixos-unstable",

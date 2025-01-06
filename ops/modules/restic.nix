@@ -1,13 +1,14 @@
 # Configure restic backups to S3-compatible storage, in our case
-# Yandex Cloud Storage.
+# Hetzner Cloud object storage.
 #
-# When adding a new machine, the repository has to be initialised once. Refer to
-# the Restic documentation for details on this process.
-{ config, depot, lib, pkgs, ... }:
+# Conventions:
+# - restic's cache lives in /var/backup/restic/cache
+# - repository password lives in `config.age.secrets.restic-repository-password.path`
+# - object storage credentials in `config.age.secrets.restic-bucket-credentials.path`
+{ config, lib, pkgs, ... }:
 
 let
   cfg = config.services.depot.restic;
-  description = "Restic backups to Yandex Cloud";
   mkStringOption = default: lib.mkOption {
     inherit default;
     type = lib.types.str;
@@ -15,10 +16,10 @@ let
 in
 {
   options.services.depot.restic = {
-    enable = lib.mkEnableOption description;
-    bucketEndpoint = mkStringOption "storage.yandexcloud.net";
-    bucketName = mkStringOption "tvl-backups";
-    bucketCredentials = mkStringOption "/run/agenix/yc-restic";
+    enable = lib.mkEnableOption "the restic backups";
+    bucketEndpoint = mkStringOption "fsn1.your-objectstorage.com";
+    bucketName = mkStringOption "snix-backups";
+    bucketCredentials = mkStringOption config.age.secrets.restic-bucket-credentials.path;
     repository = mkStringOption config.networking.hostName;
     interval = mkStringOption "hourly";
 
@@ -30,24 +31,24 @@ in
     exclude = with lib; mkOption {
       description = "Files that should be excluded from backups";
       type = types.listOf types.str;
+      default = [ ];
     };
   };
 
   config = lib.mkIf cfg.enable {
-    age.secrets = {
-      restic-password.file = depot.ops.secrets."restic-${config.networking.hostName}.age";
-      yc-restic.file = depot.ops.secrets."yc-restic.age";
-    };
-
     systemd.services.restic = {
-      description = "Backups to Yandex Cloud";
+      description = "Backups to Hetzner Cloud";
 
       script = "${pkgs.restic}/bin/restic backup ${lib.concatStringsSep " " cfg.paths}";
+
+      serviceConfig.ExecStartPre = pkgs.writeShellScript "init-repo" ''
+        ${pkgs.restic}/bin/restic init && echo "Initializing the repository." || echo "Already initialized."
+      '';
 
       environment = {
         RESTIC_REPOSITORY = "s3:${cfg.bucketEndpoint}/${cfg.bucketName}/${cfg.repository}";
         AWS_SHARED_CREDENTIALS_FILE = cfg.bucketCredentials;
-        RESTIC_PASSWORD_FILE = "/run/agenix/restic-password";
+        RESTIC_PASSWORD_FILE = config.age.secrets.restic-repository-password.path;
         RESTIC_CACHE_DIR = "/var/backup/restic/cache";
 
         RESTIC_EXCLUDE_FILE =

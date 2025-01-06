@@ -12,7 +12,7 @@ in
 {
   options.services.depot.gerrit-autosubmit = {
     enable = lib.mkEnableOption description;
-    gerritUrl = mkStringOption "https://cl.tvl.fyi";
+    gerritUrl = mkStringOption "https://cl.snix.dev";
 
     secretsFile = with lib; mkOption {
       description = "Path to a systemd EnvironmentFile containing secrets";
@@ -37,6 +37,7 @@ in
 
       environment = {
         GERRIT_URL = cfg.gerritUrl;
+        GERRIT_USERNAME = "clbot";
       };
     };
   };

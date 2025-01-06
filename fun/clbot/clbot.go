@@ -210,7 +210,7 @@ func changeShouldBeSkipped(onlyDisplay string, changeSubject string) bool {
 }
 
 func patchSetURL(c gerritevents.Change, p gerritevents.PatchSet) string {
-	return fmt.Sprintf("https://cl.tvl.fyi/%d", c.Number)
+	return fmt.Sprintf("https://cl.snix.dev/%d", c.Number)
 }
 
 func main() {

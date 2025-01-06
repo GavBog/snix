@@ -22,6 +22,21 @@ depot.nix.lazy-deps {
     cmd = "terraform";
   };
 
+  tf-dns = {
+    attr = "ops.dns.terraform";
+    cmd = "terraform";
+  };
+
+  tf-hcloud = {
+    attr = "ops.hcloud.terraform";
+    cmd = "terraform";
+  };
+
+  tf-hetzner-s3 = {
+    attr = "ops.hetzner-s3.terraform";
+    cmd = "terraform";
+  };
+
   tf-keycloak = {
     attr = "ops.keycloak.terraform";
     cmd = "terraform";

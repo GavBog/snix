@@ -1,10 +1,13 @@
-# Gerrit configuration for the TVL monorepo
+# Gerrit configuration for the snix monorepo
 { depot, pkgs, config, lib, ... }:
 
 let
   cfg = config.services.gerrit;
 
-  besadiiWithConfig = name: pkgs.writeShellScript "besadii-hook" ''
+  gerritPackage = depot.third_party.nix-gerrit.gerrit_3_11;
+  gerritPlugins = depot.third_party.nix-gerrit.plugins_3_11;
+
+  besadiiWithConfig = name: pkgs.writeShellScript "besadii-gerrit01" ''
     export BESADII_CONFIG=/run/agenix/gerrit-besadii-config
     exec -a ${name} ${depot.ops.besadii}/bin/besadii "$@"
   '';
@@ -16,10 +19,11 @@ let
   '';
 in
 {
+  networking.firewall.allowedTCPPorts = [ 29418 ];
   services.gerrit = {
     enable = true;
     listenAddress = "[::]:4778"; # 4778 - grrt
-    serverId = "4fdfa107-4df9-4596-8e0a-1d2bbdd96e36";
+    serverId = "b4813230-0b9b-46cb-b400-dcbed70f87e6";
 
     builtinPlugins = [
       "download-commands"
@@ -27,28 +31,32 @@ in
       "replication"
     ];
 
-    plugins = with depot.third_party.gerrit_plugins; [
-      code-owners
+    plugins = with gerritPlugins; [
+      # TODO: re-enable once we have figured out all the email situation.
+      # code-owners
       oauth
-      depot.ops.gerrit-tvl
+      (depot.ops.gerrit-tvl {
+        gerrit = gerritPackage;
+      })
     ];
 
-    package = depot.third_party.gerrit;
+    package = gerritPackage;
 
     jvmHeapLimit = "4g";
 
-    # In some NixOS channel bump, the default version of OpenJDK has
-    # changed to one that is incompatible with our current version of
-    # Gerrit.
-    #
-    # TODO(tazjin): Update Gerrit and remove this when possible.
-    jvmPackage = pkgs.openjdk17_headless;
+    # WARN(raito): keep this synchronized with the Gerrit version!
+    jvmPackage = pkgs.openjdk21_headless;
+
+    jvmOpts = [
+      # https://bugs.openjdk.org/browse/JDK-8170568 someday… !
+      "-Djava.net.preferIPv6Addresses=system"
+    ];
 
     settings = {
       core.packedGitLimit = "100m";
       log.jsonLogging = true;
       log.textLogging = false;
-      sshd.advertisedAddress = "code.tvl.fyi:29418";
+      sshd.advertisedAddress = "cl.snix.dev:29418";
       hooks.path = "${gerritHooks}";
       cache.web_sessions.maxAge = "3 months";
       plugins.allowRemoteAdmin = false;
@@ -58,7 +66,7 @@ in
       # Configures gerrit for being reverse-proxied by nginx as per
       # https://gerrit-review.googlesource.com/Documentation/config-reverseproxy.html
       gerrit = {
-        canonicalWebUrl = "https://cl.tvl.fyi";
+        canonicalWebUrl = "https://cl.snix.dev";
         docUrl = "/Documentation";
       };
 
@@ -72,43 +80,43 @@ in
       ];
 
       # Configure for cgit.
-      gitweb = {
-        type = "custom";
-        url = "https://code.tvl.fyi";
-        project = "/";
-        revision = "/commit/?id=\${commit}";
-        branch = "/log/?h=\${branch}";
-        tag = "/tag/?h=\${tag}";
-        roottree = "/tree/?h=\${commit}";
-        file = "/tree/\${file}?h=\${commit}";
-        filehistory = "/log/\${file}?h=\${branch}";
-        linkname = "cgit";
-      };
+      # gitweb = {
+      #   type = "custom";
+      #   url = "https://code.snix.dev";
+      #   project = "/";
+      #   revision = "/commit/?id=\${commit}";
+      #   branch = "/log/?h=\${branch}";
+      #   tag = "/tag/?h=\${tag}";
+      #   roottree = "/tree/?h=\${commit}";
+      #   file = "/tree/\${file}?h=\${commit}";
+      #   filehistory = "/log/\${file}?h=\${branch}";
+      #   linkname = "cgit";
+      # };
 
-      # Auto-link panettone bug links
-      commentlink.panettone = {
-        match = "b/(\\d+)";
-        link = "https://b.tvl.fyi/issues/$1";
-      };
+      # # Auto-link panettone bug links
+      # commentlink.panettone = {
+      #   match = "b/(\\d+)";
+      #   link = "https://b.tvl.fyi/issues/$1";
+      # };
 
       # Auto-link other CLs
       commentlink.gerrit = {
         match = "cl/(\\d+)";
-        link = "https://cl.tvl.fyi/$1";
+        link = "https://cl.snix.dev/$1";
       };
 
       # Auto-link links to monotonically increasing revisions/commits
-      commentlink.revision = {
-        match = "r/(\\d+)";
-        link = "https://code.tvl.fyi/commit/?h=refs/r/$1";
-      };
+      # commentlink.revision = {
+      #   match = "r/(\\d+)";
+      #   link = "https://code.tvl.fyi/commit/?h=refs/r/$1";
+      # };
 
       # Configures integration with Keycloak, which then integrates with a
       # variety of backends.
       auth.type = "OAUTH";
       plugin.gerrit-oauth-provider-keycloak-oauth = {
-        root-url = "https://auth.tvl.fyi/auth";
-        realm = "TVL";
+        root-url = "https://auth.snix.dev/";
+        realm = "snix-project";
         client-id = "gerrit";
         # client-secret is set in /var/lib/gerrit/etc/secure.config.
       };
@@ -136,31 +144,34 @@ in
       # $site_path/etc/secure.config and is *not* controlled by Nix.
       #
       # Receiving email is not currently supported.
-      sendemail = {
-        enable = true;
-        html = false;
-        connectTimeout = "10sec";
-        from = "TVL Code Review <tvlbot@tazj.in>";
-        includeDiff = true;
-        smtpEncryption = "none";
-        smtpServer = "localhost";
-        smtpServerPort = 2525;
-      };
+      # sendemail = {
+      #   enable = true;
+      #   html = false;
+      #   connectTimeout = "10sec";
+      #   from = "TVL Code Review <tvlbot@tazj.in>";
+      #   includeDiff = true;
+      #   smtpEncryption = "none";
+      #   smtpServer = "localhost";
+      #   smtpServerPort = 2525;
+      # };
     };
 
-    # Replication of the depot repository to secondary machines, for
-    # serving cgit/josh.
+    # Replication of the snix repository to secondary machines, for
+    # serving forgejo.
     replicationSettings = {
       gerrit.replicateOnStartup = true;
 
-      remote.sanduny = {
-        url = "depot@sanduny.tvl.su:/var/lib/depot";
-        projects = "depot";
-      };
-
-      remote.bugry = {
-        url = "depot@bugry.tvl.fyi:/var/lib/depot";
-        projects = "depot";
+      # Replicate to our forgejo instance.
+      remote.forgejo = {
+        url = "git@git.snix.dev:snix/snix.git";
+        push = [ "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" ];
+        timeout = 30;
+        threads = 3;
+        remoteNameStyle = "dash";
+        mirror = true;
+        # we are unsure if this should be private info
+        replicatePermissions = false;
+        projects = [ "snix" ];
       };
     };
   };
@@ -176,6 +187,52 @@ in
       User = "git";
       Group = "git";
     };
+  };
+
+  # Taken from Lix.
+  # Before starting gerrit, we'll want to create a "secure auth" file that contains our secrets.
+  systemd.services.gerrit-keys = {
+    enable = true;
+
+    before = [ "gerrit.service" ];
+    wantedBy = [ "gerrit.service" ];
+    after = [ "network.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "true";
+      WorkingDirectory = "/var/lib/gerrit";
+    };
+
+    path = [ pkgs.git ];
+
+    script = ''
+      CONF=etc/secure.config
+
+      # Ensure our config file is accessible to gerrit.
+      touch $CONF
+      chmod 600 $CONF
+
+      # Configure the SSH replication material
+      mkdir -p /var/lib/git/.ssh
+      cp ${config.age.secrets.gerrit-replication-key.path} /var/lib/git/.ssh/id_replication
+      cat > /var/lib/git/.ssh/config <<EOF
+      Host *
+        IdentityFile /var/lib/git/.ssh/id_replication
+      EOF
+      chmod 600 /var/lib/git/.ssh/id_replication
+      chmod 600 /var/lib/git/.ssh/config
+      chmod 700 /var/lib/git/.ssh
+      cp -L /etc/ssh/ssh_known_hosts /var/lib/git/.ssh/known_hosts
+      chmod 600 /var/lib/git/.ssh/known_hosts
+      chown -R git:git /var/lib/git/.ssh
+
+      # ... and finally, plop our secrets inside, and give the file to gerrit.
+      git config -f $CONF plugin.gerrit-oauth-provider-keycloak-oauth.client-secret \
+        "$(cat ${config.age.secrets.gerrit-oauth-secret.path})"
+
+      chown git:git $CONF
+    '';
   };
 
   services.depot.restic = {

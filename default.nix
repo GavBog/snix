@@ -23,6 +23,15 @@ let
     '';
 
     exceptions = [
+      # machines is allowed to access //users for several reasons:
+      #
+      # 1. User SSH keys are set in //users.
+      # 2. Some personal websites or demo projects are served from it.
+      [ "ops" "machines" "gerrit01" ]
+      [ "ops" "machines" "public01" ]
+      [ "ops" "machines" "build01" ]
+      [ "ops" "machines" "meta01" ]
+
       # Due to evaluation order this also affects these targets.
       # TODO(tazjin): Can this one be removed somehow?
       [ "ops" "nixos" ]

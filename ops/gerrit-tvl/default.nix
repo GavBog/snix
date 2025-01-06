@@ -1,8 +1,9 @@
 { depot, pkgs, lib, ... }:
+{ gerrit }:
 
 let
   classPath = lib.concatStringsSep ":" [
-    "${depot.third_party.gerrit}/share/api/extension-api_deploy.jar"
+    "${gerrit}/share/api/extension-api_deploy.jar"
   ];
 in
 pkgs.stdenvNoCC.mkDerivation rec {
