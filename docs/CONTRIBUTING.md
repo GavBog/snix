@@ -65,6 +65,13 @@ disambiguating. For example, when changing the configuration of the host
 
 Please take a look at the existing commit log for examples.
 
+This way of writing commit messages is known as [Conventional Commits][] and
+should bring these advantages:
+
+* automatic creation of changelogs from commit messages
+* disciplined commit hygiene: one focused change per commit
+* filtering of commit history by type
+
 ## Commit content
 
 Multiple changes should be divided into multiple git commits whenever possible.
@@ -118,3 +125,4 @@ review][] documentation.
 [magit]: https://magit.vc/
 [Nix]: https://nixos.org/nix/
 [code review]: ./REVIEWS.md
+[Conventional Commits]: https://www.conventionalcommits.org
