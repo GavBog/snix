@@ -53,6 +53,20 @@ resource "glesys_dnsdomain_record" "tvl_fyi_whitby_AAAA" {
   data   = var.whitby_ipv6
 }
 
+resource "glesys_dnsdomain_record" "tvl_fyi_nevsky_A" {
+  domain = glesys_dnsdomain.tvl_fyi.id
+  host   = "nevsky"
+  type   = "A"
+  data   = var.nevsky_ipv4
+}
+
+resource "glesys_dnsdomain_record" "tvl_fyi_nevsky_AAAA" {
+  domain = glesys_dnsdomain.tvl_fyi.id
+  host   = "nevsky"
+  type   = "AAAA"
+  data   = var.nevsky_ipv6
+}
+
 resource "glesys_dnsdomain_record" "tvl_fyi_nixery-01_A" {
   domain = glesys_dnsdomain.tvl_fyi.id
   host   = "nixery-01"

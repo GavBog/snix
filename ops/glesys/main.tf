@@ -61,6 +61,16 @@ variable "whitby_ipv6" {
   default = "2a01:4f8:242:5b21:0:feed:edef:beef"
 }
 
+variable "nevsky_ipv4" {
+  type    = string
+  default = "188.225.81.75"
+}
+
+variable "nevsky_ipv6" {
+  type    = string
+  default = "2a03:6f00:2:514b:0:feed:edef:beef"
+}
+
 variable "sanduny_ipv4" {
   type    = string
   default = "85.119.82.231"
