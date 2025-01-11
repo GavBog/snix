@@ -35,20 +35,39 @@ in
       }
     '';
 
-    # TODO(sterni): irc notifications (?)
-    services = {
-      smartd = {
-        enable = true;
-        autodetect = true;
-        # Short self test every day 03:00
-        # Long self test every tuesday 05:00
-        defaults.autodetected = "-a -o on -s (S/../.././03|L/../../2/05)";
-        extraOptions = [
-          "-A"
-          "/var/log/smartd/"
-        ];
+    # Based on nixos/modules/services/monitoring/smard.nix which has a much
+    # too specific smartd-notify.sh (and I'm too lazy to propose a redesign)
+    systemd.services.smartd = {
+      description = "S.M.A.R.T. Daemon";
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "notify";
+        ExecStart =
+          let
+            smartdNotify = pkgs.writeShellScript "smartd-notify.sh" ''
+              ${send-irc-msg} "smartd: $SMARTD_FAILTYPE($SMARTD_DEVICE): $SMARTD_MESSAGE"
+            '';
+            smartdConf = pkgs.writeText "smartd.conf" (
+              # Short self test every day 03:00
+              # Long self test every tuesday 05:00
+              lib.concatMapStrings
+                (d: ''
+                  ${d} -m <nomailer> -M exec ${smartdNotify} -a -o on -s (S/../.././03|L/../../2/05)
+                '')
+                [ "DEFAULT" "DEVICESCAN" ]
+            );
+          in
+          lib.concatStringsSep " " [
+            "${pkgs.smartmontools}/sbin/smartd"
+            "-A"
+            "/var/log/smartd"
+            "--no-fork"
+            "--configfile=${smartdConf}"
+          ];
       };
+    };
 
+    services = {
       netdata = {
         enable = true;
         config = {
