@@ -62,6 +62,7 @@ in rec {
   # Systems that should be built in CI
   whitbySystem = (nixosFor depot.ops.machines.whitby).system;
   sandunySystem = (nixosFor depot.ops.machines.sanduny).system;
+  bugrySystem = (nixosFor depot.ops.machines.bugry).system;
   nixeryDev01System = (nixosFor depot.ops.machines.nixery-01).system;
-  meta.ci.targets = [ "sandunySystem" "whitbySystem" "nixeryDev01System" ];
+  meta.ci.targets = [ "sandunySystem" "whitbySystem" "bugrySystem" "nixeryDev01System" ];
 }

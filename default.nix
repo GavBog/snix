@@ -32,6 +32,7 @@ let
       # 1. User SSH keys are set in //users.
       # 2. Some personal websites or demo projects are served from it.
       [ "ops" "machines" "whitby" ]
+      [ "ops" "machines" "bugry" ]
 
       # Due to evaluation order this also affects these targets.
       # TODO(tazjin): Can this one be removed somehow?
