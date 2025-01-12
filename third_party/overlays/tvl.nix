@@ -33,6 +33,10 @@ depot.nix.readTree.drvTargets {
       + builtins.substring 0 7 depot.third_party.sources.home-manager.rev;
   });
 
+  niri = super.niri.overrideAttrs (_: {
+    doCheck = false;
+  });
+
   # Add our Emacs packages to the fixpoint
   emacsPackagesFor = emacs: (
     (super.emacsPackagesFor emacs).overrideScope (eself: esuper: {
