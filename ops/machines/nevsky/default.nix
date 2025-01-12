@@ -6,6 +6,7 @@ let
 in
 {
   imports = [
+    (mod "known-hosts.nix")
     (mod "tvl-users.nix")
     (depot.third_party.agenix.src + "/modules/age.nix")
   ];
