@@ -10,6 +10,7 @@ in
 {
   imports = [
     (mod "atward.nix")
+    (mod "builderball.nix")
     (mod "cgit.nix")
     (mod "cheddar.nix")
     (mod "clbot.nix")
@@ -33,11 +34,13 @@ in
     (mod "www/atward.tvl.fyi.nix")
     (mod "www/auth.tvl.fyi.nix")
     (mod "www/b.tvl.fyi.nix")
+    (mod "www/cache.tvl.fyi.nix")
     (mod "www/cache.tvl.su.nix")
     (mod "www/cl.tvl.fyi.nix")
     (mod "www/code.tvl.fyi.nix")
     (mod "www/cs.tvl.fyi.nix")
     (mod "www/deploys.tvl.fyi.nix")
+    (mod "www/self-cache.tvl.fyi.nix")
     (mod "www/self-redirect.nix")
     (mod "www/signup.tvl.fyi.nix")
     (mod "www/static.tvl.fyi.nix")
@@ -385,6 +388,9 @@ in
   services.depot = {
     # Run a livegrep code search instance
     livegrep.enable = true;
+
+    # Run Nix cache proxy
+    builderball.enable = true;
 
     # Run the Panettone issue tracker
     panettone = {

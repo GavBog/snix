@@ -104,6 +104,40 @@ resource "glesys_dnsdomain_record" "tvl_fyi_net_CNAME" {
   host   = "net"
 }
 
+# Binary cache round-robin setup (experimental; only on .fyi)
+
+resource "glesys_dnsdomain_record" "cache_tvl_fyi_A" {
+  domain   = glesys_dnsdomain.tvl_fyi.id
+  host     = "cache"
+  type     = "A"
+  data     = each.key
+  for_each = toset([var.whitby_ipv4, var.nevsky_ipv4])
+}
+
+resource "glesys_dnsdomain_record" "cache_tvl_fyi_AAAA" {
+  domain   = glesys_dnsdomain.tvl_fyi.id
+  host     = "cache"
+  type     = "AAAA"
+  data     = each.key
+  for_each = toset([var.whitby_ipv6, var.nevsky_ipv6])
+}
+
+# Builderball cache records
+
+resource "glesys_dnsdomain_record" "tvl_fyi_cache_whitby_CNAME" {
+  domain = glesys_dnsdomain.tvl_fyi.id
+  type   = "CNAME"
+  data   = "whitby.tvl.fyi."
+  host   = "whitby.cache"
+}
+
+resource "glesys_dnsdomain_record" "tvl_fyi_cache_nevsky_CNAME" {
+  domain = glesys_dnsdomain.tvl_fyi.id
+  type   = "CNAME"
+  data   = "nevsky.tvl.fyi."
+  host   = "nevsky.cache"
+}
+
 # Google Domains mail forwarding configuration (no sending)
 resource "glesys_dnsdomain_record" "tvl_fyi_MX_5" {
   domain = glesys_dnsdomain.tvl_fyi.id

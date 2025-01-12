@@ -98,7 +98,6 @@ locals {
     "atward",
     "auth",
     "b",
-    "cache",
     "cl",
     "code",
     "cs",

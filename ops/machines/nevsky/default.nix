@@ -6,8 +6,13 @@ let
 in
 {
   imports = [
+    (mod "builderball.nix")
+    (mod "harmonia.nix")
     (mod "known-hosts.nix")
     (mod "tvl-users.nix")
+    (mod "www/cache.tvl.fyi.nix")
+    (mod "www/self-cache.tvl.fyi.nix")
+    (mod "www/self-redirect.nix")
     (depot.third_party.agenix.src + "/modules/age.nix")
   ];
 
@@ -85,9 +90,25 @@ in
     };
   };
 
-  age.secrets = {
-    wg-privkey.file = depot.ops.secrets."wg-nevsky.age";
-  };
+  age.secrets =
+    let
+      secretFile = name: depot.ops.secrets."${name}.age";
+    in
+    {
+      wg-privkey.file = depot.ops.secrets."wg-nevsky.age";
+
+      nix-cache-priv = {
+        file = secretFile "nix-cache-priv";
+        mode = "0440";
+        group = "harmonia";
+      };
+
+      # Not actually a secret
+      nix-cache-pub = {
+        file = secretFile "nix-cache-pub";
+        mode = "0444";
+      };
+    };
 
   networking = {
     hostName = "nevsky";
@@ -175,12 +196,22 @@ in
     useRoutingFeatures = "both";
   };
 
-  security.sudo.extraRules = [
-    {
-      groups = [ "wheel" ];
-      commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }];
-    }
-  ];
+  # Run a Harmonia binary cache.
+  #
+  # TODO(tazjin): switch to upstream module after fix for Nix 2.3
+  services.depot.harmonia = {
+    enable = true;
+    signKeyPaths = [ (config.age.secretsDir + "/nix-cache-priv") ];
+    settings.bind = "127.0.0.1:6443";
+    settings.priority = 50;
+  };
+
+  services.depot.builderball.enable = true;
+
+  security.sudo.extraRules = [{
+    groups = [ "wheel" ];
+    commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }];
+  }];
 
   zramSwap.enable = true;
 

@@ -67,6 +67,13 @@ resource "glesys_dnsdomain_record" "tvl_su_sanduny_AAAA" {
   data   = var.sanduny_ipv6
 }
 
+resource "glesys_dnsdomain_record" "cache_tvl_su_whitby_CNAME" {
+  domain = glesys_dnsdomain.tvl_su.id
+  host   = "cache"
+  type   = "CNAME"
+  data   = "whitby.tvl.su."
+}
+
 # Explicit records for all services running on whitby
 resource "glesys_dnsdomain_record" "tvl_su_whitby_services" {
   domain   = glesys_dnsdomain.tvl_su.id
