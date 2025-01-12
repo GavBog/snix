@@ -9,6 +9,7 @@ in
     (mod "builderball.nix")
     (mod "harmonia.nix")
     (mod "known-hosts.nix")
+    (mod "tvl-buildkite.nix")
     (mod "tvl-users.nix")
     (mod "www/cache.tvl.fyi.nix")
     (mod "www/self-cache.tvl.fyi.nix")
@@ -107,6 +108,30 @@ in
       nix-cache-pub = {
         file = secretFile "nix-cache-pub";
         mode = "0444";
+      };
+
+      buildkite-agent-token = {
+        file = secretFile "buildkite-agent-token";
+        mode = "0440";
+        group = "buildkite-agents";
+      };
+
+      buildkite-graphql-token = {
+        file = secretFile "buildkite-graphql-token";
+        mode = "0440";
+        group = "buildkite-agents";
+      };
+
+      buildkite-besadii-config = {
+        file = secretFile "besadii";
+        mode = "0440";
+        group = "buildkite-agents";
+      };
+
+      buildkite-private-key = {
+        file = secretFile "buildkite-ssh-private-key";
+        mode = "0440";
+        group = "buildkite-agents";
       };
     };
 
@@ -207,6 +232,12 @@ in
   };
 
   services.depot.builderball.enable = true;
+
+  # Run a handful of Buildkite agents to support parallel builds.
+  services.depot.buildkite = {
+    enable = true;
+    agentCount = 16;
+  };
 
   # Use TVL cache locally through the proxy; for cross-builder substitution.
   tvl.cache.enable = true;
