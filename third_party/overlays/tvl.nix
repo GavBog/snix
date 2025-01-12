@@ -168,4 +168,33 @@ depot.nix.readTree.drvTargets {
   #
   # temporarily restore the old name to make things work again.
   utillinux = self.util-linux;
+
+  # harmonia >2.0 broke compatibility with Nix 2.3; revert back for now
+  harmonia = self.rustPlatform.buildRustPackage rec {
+    pname = "harmonia";
+    version = "1.0.2";
+    doCheck = false;
+    cargoHash = "sha256-gW/OljEngDQddIovtgwghu7uHLFVZHvWIijPgbOOkDc=";
+    meta.mainProgram = "harmonia";
+
+    src = self.fetchFromGitHub {
+      owner = "nix-community";
+      repo = "harmonia";
+      rev = "refs/tags/harmonia-v${version}";
+      hash = "sha256-72nDVSvUfZsLa2HbyricOpA0Eb8gxs/VST25b6DNBpM=";
+    };
+
+    nativeBuildInputs = with self; [
+      pkg-config
+      nixVersions.nix_2_24
+    ];
+
+    buildInputs = with self; [
+      boost
+      libsodium
+      openssl
+      nlohmann_json
+      nixVersions.nix_2_24
+    ];
+  };
 }
