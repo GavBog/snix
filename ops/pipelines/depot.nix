@@ -27,6 +27,11 @@ let
         command = ''
           nix-build -A ci.gcroot --out-link /nix/var/nix/gcroots/depot/canon
         '';
+
+        # Ensure that anchoring happens on whitby, so that cache.tvl.su always
+        # has the full cache. Unanchored machines may garbage collect live
+        # paths.
+        agents.hostname = "whitby"; # TODO(tazjin): b/433
       }
     ];
   };
