@@ -208,6 +208,10 @@ in
 
   services.depot.builderball.enable = true;
 
+  # Use TVL cache locally through the proxy; for cross-builder substitution.
+  tvl.cache.enable = true;
+  tvl.cache.builderball = true;
+
   security.sudo.extraRules = [{
     groups = [ "wheel" ];
     commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }];

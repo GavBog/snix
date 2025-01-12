@@ -28,6 +28,7 @@ lib.fix (self: {
   ] ++ lib.optional (builtins.pathExists ./local-config.nix) ./local-config.nix;
 
   tvl.cache.enable = true;
+  tvl.cache.builderball = true;
 
   boot = {
     initrd.availableKernelModules = [ "nvme" "ehci_pci" "xhci_pci" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];

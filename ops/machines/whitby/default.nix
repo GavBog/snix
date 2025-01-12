@@ -674,5 +674,9 @@ in
 
   zramSwap.enable = true;
 
+  # Use TVL cache locally through the proxy; for cross-builder substitution.
+  tvl.cache.enable = true;
+  tvl.cache.builderball = true;
+
   system.stateVersion = "20.03";
 }
