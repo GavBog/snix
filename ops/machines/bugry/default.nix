@@ -164,5 +164,8 @@ in
 
   zramSwap.enable = true;
 
+  tvl.cache.enable = true;
+  tvl.cache.builderball = true;
+
   system.stateVersion = "24.11";
 }
