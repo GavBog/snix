@@ -37,12 +37,13 @@ let
   sandunyDefault.publicKeys = admins ++ [ sanduny ];
   bugryDefault.publicKeys = admins ++ [ bugry ];
   nevskyDefault.publicKeys = admins ++ [ nevsky ];
+  cacheDefault.publicKeys = whitbyDefault.publicKeys ++ [ nevsky ];
 in
 {
-  "besadii.age" = whitbyDefault;
-  "buildkite-agent-token.age" = whitbyDefault;
-  "buildkite-graphql-token.age" = whitbyDefault;
-  "buildkite-ssh-private-key.age" = whitbyDefault;
+  "besadii.age" = cacheDefault;
+  "buildkite-agent-token.age" = cacheDefault;
+  "buildkite-graphql-token.age" = cacheDefault;
+  "buildkite-ssh-private-key.age" = cacheDefault;
   "clbot-ssh.age" = whitbyDefault;
   "clbot.age" = whitbyDefault;
   "depot-inbox-imap.age" = sandunyDefault;
@@ -53,8 +54,8 @@ in
   "irccat.age" = whitbyDefault;
   "journaldriver.age" = allDefault;
   "keycloak-db.age" = whitbyDefault;
-  "nix-cache-priv.age" = whitbyDefault;
-  "nix-cache-pub.age" = whitbyDefault;
+  "nix-cache-priv.age" = cacheDefault;
+  "nix-cache-pub.age" = cacheDefault;
   "owothia.age" = whitbyDefault;
   "panettone.age" = whitbyDefault;
   "smtprelay.age" = whitbyDefault;
