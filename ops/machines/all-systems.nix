@@ -3,6 +3,8 @@
 (with depot.ops.machines; [
   sanduny
   whitby
+  bugry
+  nevsky
   nixery-01
 ]) ++
 
