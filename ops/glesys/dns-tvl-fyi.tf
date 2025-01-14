@@ -81,13 +81,6 @@ resource "glesys_dnsdomain_record" "tvl_fyi_bugry_AAAA" {
   data   = var.bugry_ipv6
 }
 
-resource "glesys_dnsdomain_record" "tvl_fyi_nixery-01_A" {
-  domain = glesys_dnsdomain.tvl_fyi.id
-  host   = "nixery-01"
-  type   = "A"
-  data   = "51.250.51.78"
-}
-
 # Explicit records for all services running on whitby
 resource "glesys_dnsdomain_record" "tvl_fyi_whitby_services" {
   domain   = glesys_dnsdomain.tvl_fyi.id
