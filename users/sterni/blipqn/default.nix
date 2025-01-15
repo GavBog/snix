@@ -17,8 +17,9 @@ let
       pkgs.cbqn
     ];
 
+    meta.ci.targets = [ "debug" ];
     passthru.debug = drv.overrideAttrs (old: {
-      CFLAGS = "-g -Werror";
+      CFLAGS = "-g -Werror -DFLIPDOT_DEBUG=1";
     });
   };
 in

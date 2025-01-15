@@ -7,6 +7,9 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#ifndef FLIPDOT_DEBUG
+#define FLIPDOT_DEBUG 0
+#endif
 
 int resolve_addr(char *host, char *port, struct addrinfo **addrs) {
   struct addrinfo hints;
@@ -27,6 +30,7 @@ struct flipdot {
 // Assumes all pointers in struct flipdot are not NULL which should be the case
 // for any struct returned by flipdot_open().
 void flipdot_close(struct flipdot *flipdot) {
+  if (FLIPDOT_DEBUG) fprintf(stderr, "flipdot_close() called\n");
   freeaddrinfo(flipdot->addrs);
   close(flipdot->sockfd);
   free(flipdot);
@@ -48,6 +52,16 @@ struct flipdot *flipdot_open(char *host, in_port_t port_number) {
   flipdot->sockfd = socket(flipdot->addrs->ai_family, SOCK_DGRAM, IPPROTO_UDP);
   if (flipdot->sockfd < 0) goto error;
 
+  if (FLIPDOT_DEBUG) {
+    char resolved_ip[NI_MAXHOST], resolved_port[NI_MAXSERV];
+    if (getnameinfo(flipdot->addrs->ai_addr, flipdot->addrs->ai_addrlen,
+                    resolved_ip, sizeof(resolved_ip), resolved_port,
+                    sizeof(resolved_port),
+                    NI_NUMERICHOST | NI_NUMERICSERV | NI_DGRAM) == 0)
+      fprintf(stderr, "flipdot_open(): using %s, port %s\n", resolved_ip,
+              resolved_port);
+  }
+
   return flipdot;
 
 error:
@@ -66,6 +80,10 @@ int8_t flipdot_send(struct flipdot *flipdot, uint8_t *bitmap,
                     size_t bitmap_len) {
   ssize_t sent = sendto(flipdot->sockfd, bitmap, bitmap_len, 0,
                         flipdot->addrs->ai_addr, flipdot->addrs->ai_addrlen);
+
+  if (FLIPDOT_DEBUG) {
+    fprintf(stderr, "flipdot_send(): sent %ld bytes\n", sent);
+  }
 
   return (sent == (ssize_t)bitmap_len);
 }
