@@ -1,6 +1,6 @@
 #!/usr/bin/env BQN
 
-⟨MakeFlipdot⟩ ⇐ •Import "../lib/"⊸∾⍟("bin" (⊣≡(-∘≠⊸↑)) •path) "blipqn.bqn"
+⟨WithFlipdot⟩ ⇐ •Import "../lib/"⊸∾⍟("bin" (⊣≡(-∘≠⊸↑)) •path) "blipqn.bqn"
 
 examples ← ⍉>⟨
 "random"‿{𝕩.Send 𝕩.shape •rand.Range 2},
@@ -19,11 +19,9 @@ opts ← {
   host‿port‿width‿height‿example ← •args
 
   example ⇐
-  addr ⇐ host⋈•ParseFloat port
-  dim ⇐ •ParseFloat¨ width‿height
+  cfg ⇐ ⟨host⟩∾•ParseFloat¨ port‿width‿height
 }
 
 action ← examples (⊏⊸(⊑∘⊐) ⊑ ⊏˜⟜1)⟜< opts.example
 
-flip ← opts.addr MakeFlipdot opts.dim
-Action flip
+opts.cfg WithFlipdot action

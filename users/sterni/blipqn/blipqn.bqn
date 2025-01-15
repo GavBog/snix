@@ -1,20 +1,42 @@
-MakeFlipdot⇐
+WithFlipdot⇐
 
-# - host (char*) argument:
-#   - Assume char is i8 (safe even if it's actually u8 if
-#     ASCII). We can't let •FFI check this for us since CBQN doesn't support
-#     specifying c7. We do this in MakeFlipdot
-#   - Needs to be zero-terminated, we also do this in MakeFlipdot.
-# - bitmap_len (size_t) argument: assume size_t is at least u32.
-ffi_send_to_flipdot ← "libflipdot.so" •FFI "i8"‿"send_to_flipdot"‿"*i8:c8"‿"u16"‿"*u8"‿"u32"
+t ← {
+  bool ⇐ "i8"
+  # needs bound checking in wrapper (no c7 in CBQN) and zero byte appended
+  charp ⇐ "*i8:c8"
+  # assume size_t is at least 32bit
+  size ⇐ "u32"
+  # used for struct flipdot *
+  hdl ⇐ "*"
+}
+
+ffi_flipdot_open  ← "libflipdot.so" •FFI  t.hdl‿"flipdot_open"‿t.charp‿"u16"
+ffi_flipdot_close ← "libflipdot.so" •FFI     ""‿"flipdot_close"‿t.hdl
+ffi_flipdot_send  ← "libflipdot.so" •FFI t.bool‿"flipdot_send"‿t.hdl‿"*u8"‿t.size
 
 Compact ← +´∘(⌽ × 2⊸⋆∘↕∘≠)˘∘(∘‿8⊸⥊)
 
 MakeFlipdot ← {
-  host‿port 𝕊 w‿h:
-  "Total pixel count must be divisible by 8" ! 0=8|w×h
+  host‿port‿w‿h:
   "Hostname must be ASCII"                   ! ∧´(@+127)≥host
+  "Total pixel count must be divisible by 8" ! 0=8|w×h
+
+  hdl ← FFI_flipdot_open (host∾@)‿port
+  Close ⇐ {𝕤 ⋄ FFI_flipdot_close ⋈hdl}
+
   shape ⇐ h‿w
   empty ⇐ shape⥊0
-  Send ⇐ {"sendto(2) error"!FFI_send_to_flipdot (host∾@)‿port∾(⊢⋈≠) Compact 𝕩}
+  Send ⇐ {FFI_flipdot_send hdl∾(⊢⋈≠) Compact 𝕩}
 }
+
+# Inspired by Go's defer. Will execute 𝔽 after 𝔾 (passing 𝕨 and 𝕩 to each)
+# even if an error occurs. If an error occurred, _defer_ will cause an
+# assertion failure with the error message after executing 𝔾. This looses
+# the original error location, though.
+_defer_ ← {
+  # At least in CBQN, •CurrentError may fail for namespace related reasons
+  s‿r ← (1⊸⋈∘𝔾)⎊(0⊸⋈∘(•CurrentError⎊("_defer_: Unknown Error occurred"˙))) 𝕩 ⋄ 𝔽 𝕩 ⋄ r⊣r!s;
+  (𝕨⊸𝔽) _𝕣_ (𝕨⊸𝔾) 𝕩
+}
+
+WithFlipdot ← {{𝕩.Close @} _defer_ 𝕏 MakeFlipdot 𝕨}

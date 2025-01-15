@@ -1,9 +1,9 @@
 #define _DEFAULT_SOURCE          // see getnameinfo(3), for NI_MAX*
 #define _POSIX_C_SOURCE 200112L  // see getaddrinfo(3)
 #include <assert.h>
-#include <limits.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -19,29 +19,53 @@ int resolve_addr(char *host, char *port, struct addrinfo **addrs) {
   return getaddrinfo(host, port, &hints, addrs);
 }
 
-// Send given bytes[len] to the host:port via UDP, returns 1 if all bytes
-// where sent and no locally detectable errors occurred.
-int8_t send_to_flipdot(char *host, in_port_t port_number, uint8_t *bitmap,
-                       size_t bitmap_len) {
+struct flipdot {
+  int sockfd;
+  struct addrinfo *addrs;
+};
+
+// Assumes all pointers in struct flipdot are not NULL which should be the case
+// for any struct returned by flipdot_open().
+void flipdot_close(struct flipdot *flipdot) {
+  freeaddrinfo(flipdot->addrs);
+  close(flipdot->sockfd);
+  free(flipdot);
+}
+
+// Returns NULL if some error occurred. Note that errno isn't necessarily set.
+struct flipdot *flipdot_open(char *host, in_port_t port_number) {
   char port[NI_MAXSERV];
-  int sockfd = -1;
-  ssize_t sent = 0;
-  struct addrinfo *addrs = NULL;
+  struct flipdot *flipdot = malloc(sizeof(struct flipdot));
+  if (flipdot == NULL) goto error;
 
-  if (snprintf(port, sizeof port, "%d", port_number) < 0) goto error;
+  memset(flipdot, 0, sizeof(struct flipdot));
+  flipdot->sockfd = -1;
+  flipdot->addrs = NULL;
 
-  if (resolve_addr(host, port, &addrs) != 0) goto error;
+  if (snprintf(port, sizeof(port), "%d", port_number) < 0) goto error;
+  if (resolve_addr(host, port, &flipdot->addrs) != 0) goto error;
 
-  sockfd = socket(addrs->ai_family, SOCK_DGRAM, IPPROTO_UDP);
-  if (sockfd < 0) goto error;
+  flipdot->sockfd = socket(flipdot->addrs->ai_family, SOCK_DGRAM, IPPROTO_UDP);
+  if (flipdot->sockfd < 0) goto error;
 
-  sent =
-      sendto(sockfd, bitmap, bitmap_len, 0, addrs->ai_addr, addrs->ai_addrlen);
-
-  if (sent != (ssize_t)bitmap_len) goto error;
+  return flipdot;
 
 error:
-  if (addrs != NULL) freeaddrinfo(addrs);
-  if (sockfd >= 0) close(sockfd);
+  if (flipdot != NULL) {
+    if (flipdot->sockfd >= 0) close(flipdot->sockfd);
+    if (flipdot->addrs != NULL) freeaddrinfo(flipdot->addrs);
+    free(flipdot);
+  }
+
+  return NULL;
+}
+
+// Send given bytes[len] to the given flipdot, returns 1 if all bytes were sent
+// and no locally detectable errors occurred, 0 otherwise.
+int8_t flipdot_send(struct flipdot *flipdot, uint8_t *bitmap,
+                    size_t bitmap_len) {
+  ssize_t sent = sendto(flipdot->sockfd, bitmap, bitmap_len, 0,
+                        flipdot->addrs->ai_addr, flipdot->addrs->ai_addrlen);
+
   return (sent == (ssize_t)bitmap_len);
 }
