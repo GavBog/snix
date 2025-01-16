@@ -124,11 +124,11 @@ htmlUi = do
               & assertMNewSpan spanName (first AppExceptionTree)
 
       let handlers :: Handlers (AppT IO)
-          handlers respond =
+          handlers =
             Map.fromList
-              [ ("", respond.html (mainHtml uniqueRunId)),
+              [ ("", Html (mainHtml uniqueRunId)),
                 ( "snips/redacted/search",
-                  respond.html $
+                  Html $
                     \span -> do
                       dat <-
                         mp
@@ -159,12 +159,12 @@ htmlUi = do
                         |]
                 ),
                 ( "snips/redacted/torrentDataJson",
-                  respond.html $ \span -> do
+                  Html $ \span -> do
                     dat <- torrentIdMp span
                     Html.mkVal <$> (runTransaction $ getTorrentById dat)
                 ),
                 ( "snips/redacted/getTorrentFile",
-                  respond.htmlOrReferer $ \span -> do
+                  HtmlOrReferer $ \span -> do
                     dat <- torrentIdMp span
                     runTransaction $ do
                       inserted <- redactedGetTorrentFileAndInsert dat
@@ -184,7 +184,7 @@ htmlUi = do
                 ),
                 -- TODO: this is bad duplication??
                 ( "snips/redacted/startTorrentFile",
-                  respond.html $ \span -> do
+                  Html $ \span -> do
                     dat <- torrentIdMp span
                     runTransaction $ do
                       file <-
@@ -207,7 +207,7 @@ htmlUi = do
                           "Starting"
                 ),
                 ( "snips/transmission/getTorrentState",
-                  respond.html $ \span -> do
+                  Html $ \span -> do
                     dat <- mp span $ label @"torrentHash" <$> Multipart.field "torrent-hash" Field.utf8
                     status <-
                       doTransmissionRequest'
@@ -227,8 +227,7 @@ htmlUi = do
                 ),
                 ( "snips/jsonld/render",
                   do
-                    let HandlerResponses {htmlWithQueryArgs} = respond
-                    htmlWithQueryArgs
+                    HtmlWithQueryArgs
                       ( label @"target"
                           <$> ( (singleQueryArgument "target" Field.utf8 >>> textToURI)
                                   & Parse.andParse uriToHttpClientRequest
@@ -241,9 +240,7 @@ htmlUi = do
                 ),
                 ( "artist",
                   do
-                    let HandlerResponses {htmlWithQueryArgs} = respond
-
-                    htmlWithQueryArgs
+                    HtmlWithQueryArgs
                       ( label @"artistRedactedId"
                           <$> (singleQueryArgument "redacted_id" (Field.utf8 >>> Field.decimalNatural))
                       )
@@ -251,7 +248,7 @@ htmlUi = do
                         artistPage qry
                 ),
                 ( "artist/refresh",
-                  respond.htmlOrRedirect $
+                  HtmlOrRedirect $
                     \span -> do
                       dat <-
                         mp
@@ -263,7 +260,7 @@ htmlUi = do
                       pure $ E22 (label @"redirectTo" [fmt|/artist?redacted_id={dat.artistId}|])
                 ),
                 ( "autorefresh",
-                  respond.plain $ do
+                  Plain $ do
                     qry <-
                       parseQueryArgsNewSpan
                         "Autorefresh Query Parse"
@@ -284,7 +281,7 @@ htmlUi = do
               ]
       runInIO $
         runHandlers
-          (\respond -> respond.html $ (mainHtml uniqueRunId))
+          (Html $ mainHtml uniqueRunId)
           handlers
           req
           respondOrig
@@ -425,26 +422,25 @@ artistPage dat = runTransaction $ do
         </form>
       |]
 
-type Handlers m = HandlerResponses m -> Map Text (m ResponseReceived)
+type Handlers m = Map Text (HandlerResponse m)
 
-data HandlerResponses m = HandlerResponses
-  { -- | render html
-    html :: (Otel.Span -> m Html) -> m ResponseReceived,
-    -- | either render html or redirect to another page
-    htmlOrRedirect :: (Otel.Span -> m (E2 "respond" Html "redirectTo" ByteString)) -> m ResponseReceived,
-    -- | render html after parsing some query arguments
-    htmlWithQueryArgs :: forall a. (Parse Query a -> (a -> Otel.Span -> m Html) -> m ResponseReceived),
-    -- | render html or reload the page via the Referer header if no htmx
-    htmlOrReferer :: (Otel.Span -> m Html) -> m ResponseReceived,
-    -- | render a plain wai response
-    plain :: (m Wai.Response -> m ResponseReceived)
-  }
+data HandlerResponse m where
+  -- | render html
+  Html :: (Otel.Span -> m Html) -> HandlerResponse m
+  -- | either render html or redirect to another page
+  HtmlOrRedirect :: (Otel.Span -> m (E2 "respond" Html "redirectTo" ByteString)) -> HandlerResponse m
+  -- | render html after parsing some query arguments
+  HtmlWithQueryArgs :: Parse Query a -> (a -> Otel.Span -> m Html) -> HandlerResponse m
+  -- | render html or reload the page via the Referer header if no htmx
+  HtmlOrReferer :: (Otel.Span -> m Html) -> HandlerResponse m
+  -- | render a plain wai response
+  Plain :: m Wai.Response -> HandlerResponse m
 
 runHandlers ::
   forall m.
   (MonadOtel m) =>
-  (HandlerResponses m -> m ResponseReceived) ->
-  (HandlerResponses m -> Map Text (m ResponseReceived)) ->
+  (HandlerResponse m) ->
+  (Map Text (HandlerResponse m)) ->
   Wai.Request ->
   (Wai.Response -> IO ResponseReceived) ->
   m ResponseReceived
@@ -477,37 +473,35 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
             r.redirectTo
             (\status header -> Wai.responseLBS status [header] "")
             req
-  let handlerResponses =
-        ( HandlerResponses
-            { plain = (\m -> liftIO $ runInIO m >>= respond),
-              html,
-              htmlOrRedirect,
-              htmlWithQueryArgs = \parser act ->
-                case req & Parse.runParse "Unable to find the right request query arguments" (lmap Wai.queryString parser) of
-                  Right a -> html (act a)
-                  Left err ->
-                    html
-                      ( \span -> do
-                          recordException
-                            span
-                            ( T2
-                                (label @"type_" "Query Parse Exception")
-                                (label @"message" (prettyErrorTree err))
-                            )
+  let htmlWithQueryArgs parser act =
+        case req & Parse.runParse "Unable to find the right request query arguments" (lmap Wai.queryString parser) of
+          Right a -> html (act a)
+          Left err ->
+            html
+              ( \span -> do
+                  recordException
+                    span
+                    ( T2
+                        (label @"type_" "Query Parse Exception")
+                        (label @"message" (prettyErrorTree err))
+                    )
 
-                          pure
-                            [hsx|
+                  pure
+                    [hsx|
                               <h1>Error:</h1>
                               <pre>{err & prettyErrorTree}</pre>
                             |]
-                      ),
-              htmlOrReferer
-            }
-        )
+              )
   let handler =
-        (handlers handlerResponses)
+        handlers
           & Map.lookup path
-          & fromMaybe (defaultHandler handlerResponses)
+          & fromMaybe defaultHandler
+          & \case
+            Html act -> html act
+            HtmlOrRedirect act -> htmlOrRedirect act
+            HtmlWithQueryArgs parser act -> htmlWithQueryArgs parser act
+            HtmlOrReferer act -> htmlOrReferer act
+            Plain act -> liftIO $ runInIO act >>= respond
   runInIO handler
 
 singleQueryArgument :: Text -> FieldParser ByteString to -> Parse Http.Query to
