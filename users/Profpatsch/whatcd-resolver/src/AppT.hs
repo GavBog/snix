@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module AppT where
@@ -16,6 +17,7 @@ import Data.Text qualified as Text
 import Database.PostgreSQL.Simple qualified as Postgres
 import FieldParser (FieldParser)
 import FieldParser qualified as Field
+import GHC.Generics qualified as G
 import GHC.Records (getField)
 import GHC.Stack qualified
 import GHC.TypeLits
@@ -272,3 +274,55 @@ instance (ToOtelJsonAttr t1, ToOtelJsonAttr t2) => ToOtelJsonAttr (t1, t2) where
 
 instance (ToOtelJsonAttr t1, ToOtelJsonAttr t2, ToOtelJsonAttr t3) => ToOtelJsonAttr (t1, t2, t3) where
   toOtelJsonAttrImpl t = Enc.tuple3 toOtelJsonAttrImpl toOtelJsonAttrImpl toOtelJsonAttrImpl t
+
+-- | Pretty-print the given value to a string
+toOtelAttrGenericStruct :: (Generic a, GenericStructSimple (G.Rep a)) => a -> Otel.Attribute
+toOtelAttrGenericStruct a = toOtelJsonAttr @Enc $ encodeSimpleValue $ G.from a
+
+class GenericStruct f where
+  encodeStructAsObject :: f a -> [(Text, Enc)]
+
+-- :*: (product)
+-- Object fields (get field name and put into a list of key-value pair)
+instance
+  (KnownSymbol l, ToOtelJsonAttr val) =>
+  GenericStruct (G.M1 G.S (G.MetaSel (Just l) u s f) (G.K1 i val))
+  where
+  encodeStructAsObject (G.M1 (G.K1 x)) = [(symbolText @l, toOtelJsonAttrImpl x)]
+
+-- Concatenate two fields in a struct
+instance (GenericStruct f, GenericStruct g) => GenericStruct (f G.:*: g) where
+  encodeStructAsObject (f G.:*: g) = encodeStructAsObject f <> encodeStructAsObject g
+
+class GenericStructSimple f where
+  encodeSimpleValue :: f a -> Enc
+
+instance
+  (ToOtelJsonAttr val, KnownSymbol l) =>
+  GenericStructSimple (G.M1 G.S (G.MetaSel (Just l) u s f) (G.K1 i val))
+  where
+  encodeSimpleValue (G.M1 x) = Enc.object $ [(symbolText @l, encodeSimpleValue x)]
+
+-- pass through other M1
+instance (GenericStructSimple f) => GenericStructSimple (G.M1 G.D u f) where
+  encodeSimpleValue (G.M1 x) = encodeSimpleValue x
+
+-- pass through other M1
+instance (GenericStructSimple f) => GenericStructSimple (G.M1 G.C u f) where
+  encodeSimpleValue (G.M1 x) = encodeSimpleValue x
+
+-- | Encode a generic representation as an object with :*:
+instance (GenericStruct f, GenericStruct g) => GenericStructSimple (f G.:*: g) where
+  encodeSimpleValue (a G.:*: b) = Enc.object $ encodeStructAsObject a <> encodeStructAsObject b
+
+-- Void
+instance GenericStructSimple G.V1 where
+  encodeSimpleValue x = case x of {}
+
+-- Empty type is the empty object
+instance GenericStructSimple G.U1 where
+  encodeSimpleValue _ = emptyObject
+
+-- K1
+instance (ToOtelJsonAttr val) => GenericStructSimple (G.K1 i val) where
+  encodeSimpleValue (G.K1 x) = toOtelJsonAttrImpl x
