@@ -50,6 +50,8 @@ in
       '';
 
       openssh.enable = true;
+      # TODO(sterni): consider porting to reaction
+      fail2ban.enable = true;
     };
 
     programs = {
