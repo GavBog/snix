@@ -4,12 +4,8 @@
 #
 # blërg is a reimplementation of mblog in BQN. BQN is used as a sort of bespoke
 # scripting languages so we can rely on external tools for certain tasks (e.g.
-# transforming HTML and parsing MIME messages).
-#
-# Specifically, blërg depends on:
-# - mblaze
-# - mn2html
-# - execline (to work around the lack of cwd in BQN)
+# transforming HTML and parsing MIME messages). A list of dependencies is
+# maintained in README.md.
 
 # Utilities
 

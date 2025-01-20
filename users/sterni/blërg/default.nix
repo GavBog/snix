@@ -1,12 +1,14 @@
 { depot, pkgs, lib, ... }:
 
 let
+  # update README.md when changing this
   runtimeDependencies = [
     depot.users.sterni.mn2html
     pkgs.mblaze
     pkgs.execline # execline-cd
   ];
 
+  # … and this
   buildInputs = [
     pkgs.cbqn
   ];
