@@ -7,10 +7,18 @@ let
       (lib.mapAttrsToList
         (name: _: dir + "/${name}")
         (builtins.readDir dir));
+
+  mkbqnkeyboard' = pkgs.writeShellScript "mkbqnkeyboard'" ''
+    exec ${pkgs.cbqn}/bin/BQN ${../mkbqnkeyboard.bqn} -s -i \
+      "${pkgs.srcOnly pkgs.mbqn}/editors/inputrc" "$1"
+  '';
 in
 
 pkgs.plan9port.overrideAttrs (old: {
   patches = old.patches or [ ] ++ patchesFromDir ./.;
+  postPatch = old.postPatch or "" + ''
+    ${mkbqnkeyboard'} lib/keyboard
+  '';
 
   nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [
     pkgs.buildPackages.makeWrapper
