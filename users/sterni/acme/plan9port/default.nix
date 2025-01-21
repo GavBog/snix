@@ -18,6 +18,9 @@ pkgs.plan9port.overrideAttrs (old: {
   patches = old.patches or [ ] ++ patchesFromDir ./.;
   postPatch = old.postPatch or "" + ''
     ${mkbqnkeyboard'} lib/keyboard
+
+    cp --reflink=auto ${./../plumb}/* plumb/
+    mv plumb/sterni.plumbing plumb/initial.plumbing
   '';
 
   nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [
@@ -30,5 +33,17 @@ pkgs.plan9port.overrideAttrs (old: {
       makeWrapper "$out/plan9/bin/$cmd" "$out/bin/$cmd" \
         --set PLAN9 "$out/plan9"
     done
+  '';
+
+  doInstallCheck = true;
+  installCheckPhase = old.installCheckPhase or "" + ''
+    export NAMESPACE="$(mktemp -d)"
+    "$out/bin/9" plumber -f &
+    pid="$!"
+    until [[ -e "$NAMESPACE/plumb" ]]; do
+      sleep 0.1
+    done
+    "$out/bin/9" 9p write plumb/rules < ${./../plumb}/sterni.plumbing
+    kill "$pid"
   '';
 })
