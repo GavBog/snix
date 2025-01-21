@@ -40,4 +40,4 @@ tvl-get-depends "$TARGET_DIR" | xargs git sparse-checkout add
 cd "$NICE_CHECKOUT_ROOT"/"$CHECKOUT_NAME"
 ```
 
-[depot-scan]: ../users/edef/depot-scan.nix
+[depot-scan]: ../../users/edef/depot-scan
