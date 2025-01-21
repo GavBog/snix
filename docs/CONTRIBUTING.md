@@ -55,7 +55,7 @@ Where `type` can be one of:
 * `refactor`: Hopefully self-explanatory!
 * `test`: Added missing tests / fixed tests
 * `chore`: Maintenance work
-* `subtree`: Operations involving `git subtree`
+* `subtree`: Subtree merges or updates, see also [Importing projects into depot][]
 
 And `scope` should refer to some kind of logical grouping inside of the project.
 
@@ -126,3 +126,4 @@ review][] documentation.
 [Nix]: https://nixos.org/nix/
 [code review]: ./REVIEWS.md
 [Conventional Commits]: https://www.conventionalcommits.org
+[Importing projects into depot]: ./importing-projects.md
