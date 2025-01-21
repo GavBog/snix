@@ -100,11 +100,10 @@ git push origin HEAD:refs/for/canon%wip
 ```
 
 TIP: Every individual commit will become a separate change. We do not squash
-related commits, but instead submit them one by one. Be aware that if you are
-expecting a different behaviour and attempt something like an unsquashed subtree
-merge, you will produce a *lot* of CLs (read
-[how to import another project properly][importing-projects]).
-This is strongly discouraged.
+related commits, but instead submit them one by one. If you need to add a
+lot of commits to depot in one go, e.g. for importing a preexisting project,
+[you can create a special merge commit][importing-projects]) under some
+circumstances.
 
 During your review, the reviewer(s) might ask you to make changes. You can
 simply amend your commit(s) and push to the same ref. Gerrit will automatically
