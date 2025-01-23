@@ -4,7 +4,7 @@ version = "3771.0.0"
 authors = ["Vincent Ambo <tazjin@tvl.su>"]
 description = "(Higher-level) Rust bindings to POSIX message queues"
 license = "MIT"
-homepage = "https://cs.tvl.fyi/depot/-/tree/ops/posix_mq.rs"
+homepage = "https://code.tvl.fyi/tree/ops/posix_mq.rs"
 repository = "https://code.tvl.fyi/depot.git:/ops/posix_mq.rs.git"
 
 [dependencies]

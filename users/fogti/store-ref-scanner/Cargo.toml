@@ -5,7 +5,7 @@ description = "scanner/extractor of Nix-like store paths from byte arrays/stream
 license = "MIT OR Apache-2.0"
 categories = ["no-std", "parsing"]
 edition = "2021"
-homepage = "https://cs.tvl.fyi/depot/-/tree/users/fogti/store-ref-scanner"
+homepage = "https://code.tvl.fyi/tree/users/fogti/store-ref-scanner"
 include = ["/src"]
 
 [dependencies]

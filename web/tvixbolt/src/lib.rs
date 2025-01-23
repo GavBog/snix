@@ -75,7 +75,7 @@ fn footer() -> Html {
         <footer>
           <p class="footer">
             {footer_link("https://tvl.fyi", "home")}
-            {footer_link("https://cs.tvl.fyi", "code")}
+            {footer_link("https://code.tvl.fyi", "code")}
             {footer_link("https://tvl.fyi/builds", "ci")}
             {footer_link("https://b.tvl.fyi", "bugs")}
             {"© TVL"}

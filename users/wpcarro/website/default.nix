@@ -13,7 +13,7 @@ let
     habits = "https://${domain}/habits";
     github = "https://github.com/wpcarro";
     linkedin = "https://linkedin.com/in/williampatrickcarroll";
-    depotWork = "https://cs.tvl.fyi/depot/-/blob/users/wpcarro";
+    depotWork = "https://code.tvl.fyi/tree/users/wpcarro";
   };
 
   renderTemplate = src: vars: pkgs.substituteAll (globalVars // vars // {

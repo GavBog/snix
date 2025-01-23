@@ -314,7 +314,7 @@ you run into any snags, or have any questions.
 [Tvix]:                       https://tvix.dev
 [aterm]:                      http://program-transformation.org/Tools/ATermFormat.html
 [bazel-remote]:               https://github.com/buchgr/bazel-remote/pull/715
-[castore-docs]:               https://cs.tvl.fyi/depot/-/blob/tvix/castore/docs
+[castore-docs]:               https://code.tvl.fyi/tree/tvix/docs/src/castore
 [frankenbuild]:               https://blog.layus.be/posts/2021-06-25-frankenbuilds.html
 [go-nix-outpath]:             https://github.com/nix-community/go-nix/blob/93cb24a868562714f1691840e94d54ef57bc0a5a/pkg/derivation/hashes.go#L52
 [nix-compat-derivation]:      https://docs.tvix.dev/rust/nix_compat/derivation/struct.Derivation.html
@@ -325,9 +325,9 @@ you run into any snags, or have any questions.
 [nixcpp-builtins-derivation]: https://github.com/NixOS/nix/blob/49cf090cb2f51d6935756a6cf94d568cab063f81/src/libexpr/primops/derivation.nix#L4
 [nixcpp-patch-hashes]:        https://github.com/adisbladis/nix/tree/hash-tracing
 [refscan-string-contexts]:    https://inbox.tvl.su/depot/20230316120039.j4fkp3puzrtbjcpi@tp/T/#t
-[store-docs]:                 https://cs.tvl.fyi/depot/-/blob/tvix/store/docs/api.md
+[store-docs]:                 https://code.tvl.fyi/about/tvix/docs/src/store/api.md
 [string-contexts-nix-bug]:    https://github.com/NixOS/nix/issues/4629
 [tryeval-infrec]:             https://b.tvl.fyi/issues/281
-[tvix-boot-readme]:           https://cs.tvl.fyi/depot/-/blob/tvix/boot/README.md
+[tvix-boot-readme]:           https://code.tvl.fyi/about/tvix/boot/README.md
 [why-string-contexts-now]:    https://cl.tvl.fyi/c/depot/+/10446/7/tvix/eval/docs/build-references.md
 [windtunnel]:                 https://staging.windtunnel.ci/tvl/tvix

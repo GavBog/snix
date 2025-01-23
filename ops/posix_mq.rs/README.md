@@ -31,7 +31,7 @@ let result = queue.receive().expect("message receiving failed");
 ## Development
 
 Development happens in the [TVL
-monorepo](https://cs.tvl.fyi/depot/-/tree/ops/posix_mq.rs).
+monorepo](https://code.tvl.fyi/tree/ops/posix_mq.rs).
 
 Starting from version `3771.0.0`, the version numbers correspond to
 _revisions_ of the TVL repository, available as git refs (e.g.

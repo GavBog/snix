@@ -46,4 +46,4 @@ cargo publish --allow-dirty
 
 [repo]: https://github.com/yandex-cloud/cloudapi
 [docs]: https://docs.rs/yandex-cloud/latest/yandex_cloud/
-[code]: https://cs.tvl.fyi/depot/-/tree/ops/yandex-cloud-rs
+[code]: https://code.tvl.fyi/tree/ops/yandex-cloud-rs

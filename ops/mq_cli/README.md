@@ -30,7 +30,7 @@ SUBCOMMANDS:
 ## Development
 
 Development happens in the [TVL
-monorepo](https://cs.tvl.fyi/depot/-/tree/ops/mq_cli).
+monorepo](https://code.tvl.fyi/tree/ops/mq_cli).
 
 Starting from version `3773.0.0`, the version numbers correspond to
 _revisions_ of the TVL repository, available as git refs (e.g.

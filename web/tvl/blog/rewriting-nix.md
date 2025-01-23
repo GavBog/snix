@@ -80,7 +80,7 @@ for Nix features that are in use today.
 
 As things ramp up we will be posting more information on this blog,
 for now you can keep an eye on
-[`//tvix`](https://cs.tvl.fyi/depot/-/tree/tvix) in the TVL monorepo
+[`//tvix`](https://code.tvl.fyi/tree/tvix) in the TVL monorepo
 and subscribe to [our feed](https://tvl.fyi/feed.atom).
 
 Stay tuned!

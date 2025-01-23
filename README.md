@@ -35,7 +35,7 @@ partially see this as [an experiment][] in tooling for monorepos.
 * We use Buildkite for CI. Recent builds are listed on
   [tvl.fyi/builds](https://tvl.fyi/builds) and pipelines are configured
   dynamically via
-  [`//ops/pipelines`](https://cs.tvl.fyi/depot/-/tree/ops/pipelines).
+  [`//ops/pipelines`](https://code.tvl.fyi/tree/ops/pipelines).
 
 * A search service that makes TVL services available via textual
   shortcuts is available: [atward](https://at.tvl.fyi)
@@ -45,10 +45,10 @@ configuration is tracked in `//ops/{modules,machines}`.
 
 ## Nix
 
-* [`//nix/readTree`](https://cs.tvl.fyi/depot/-/blob/nix/readTree/README.md)
+* [`//nix/readTree`](https://code.tvl.fyi/about/nix/readTree/README.md)
   contains the Nix code which automatically registers projects in our Nix
   attribute hierarchy based on their in-tree location
-* [`//tools/nixery`](https://cs.tvl.fyi/depot/-/tree/tools/nixery)
+* [`//tools/nixery`](https://code.tvl.fyi/tree/tools/nixery)
   contains the source code of [Nixery][], a container registry that
   can build images ad-hoc from Nix packages
 * `//nix/yants` contains **Y**et **A**nother **N**ix **T**ype **S**ystem, which
@@ -83,7 +83,7 @@ be of interest.
 ## User packages
 
 Contributors to the repository have user directories under
-[`//users`](https://cs.tvl.fyi/depot@canon/-/tree/users), which can be used for
+[`//users`](https://code.tvl.fyi/tree/users), which can be used for
 personal or experimental code that does not require review.
 
 Some examples:
@@ -112,7 +112,7 @@ Hackint also provide a [web chat][tvl-webchat].
 [tvl]: https://tvl.fyi
 [Nix]: https://nixos.org/nix
 [an experiment]: https://tvl.fyi/monorepo-doc
-[panettone]: https://cs.tvl.fyi/depot@canon/-/tree/web/panettone
+[panettone]: https://code.tvl.fyi/tree/web/panettone
 [dottime]: https://dotti.me
 [tvl-irc]: ircs://irc.hackint.org:6697/#tvl
 [hackint]: https://hackint.org/

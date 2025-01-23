@@ -260,13 +260,13 @@ TIP: This is implemented in [popcount][] in Nixery.
 Hopefully this detailed design review was useful to you. You can also watch [my
 NixCon talk][talk] about Nixery for a review of some of this, and some demos.
 
-[Nixery]: https://cs.tvl.fyi/depot/-/tree/tools/nixery
+[Nixery]: https://code.tvl.fyi/tree/tools/nixery
 [grhmc]: https://grahamc.com/blog/nix-and-layered-docker-images
 [Nix]: https://nixos.org/nix
 [registry protocols]: https://github.com/opencontainers/distribution-spec/blob/master/spec.md
 [nixery.dev]: https://nixery.dev
 [dominator trees]: https://en.wikipedia.org/wiki/Dominator_(graph_theory)
 [gonum/graph]: https://godoc.org/gonum.org/v1/gonum/graph
-[layers.go]: https://cs.tvl.fyi/depot/-/blob/tools/nixery/layers/layers.go
-[popcount]: https://cs.tvl.fyi/depot/-/tree/tools/nixery/popcount
+[layers.go]: https://code.tvl.fyi/tree/tools/nixery/layers/layers.go
+[popcount]: https://code.tvl.fyi/tree/tools/nixery/popcount
 [talk]: https://www.youtube.com/watch?v=pOI9H4oeXqA

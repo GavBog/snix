@@ -7,7 +7,7 @@ my name is aspen smith and i'm a software engineer and musician.
 * code
 
 - [[https://github.com/glittershark/][github]]
-- [[https://cs.tvl.fyi/depot/-/tree/users/aspen][my directory in the tvl monorepo]]
+- [[https://code.tvl.fyi/tree/users/aspen][my directory in the tvl monorepo]]
 
 * work
 
@@ -24,9 +24,9 @@ that's wire-compatible with postgresql and mysql, based on [[https://github.com/
 - [[https://tvix.dev/][tvix]], a project to reimplement nix in rust with a focus on better performance,
   maintainability, and extensibility. i'm a committer to the project, and mostly
   focus on the implementation of the language evaluator.
-- [[https://cs.tvl.fyi/depot/-/tree/users/aspen/achilles][achilles]], a compiler for (what I plan to become) a dependently typed,
+- [[https://code.tvl.fyi/tree/users/aspen/achilles][achilles]], a compiler for (what I plan to become) a dependently typed,
   low-level functional programming language targeting LLVM
-- [[https://cs.tvl.fyi/depot/-/tree/users/aspen/xanthous][xanthous]], a terminal roguelike in haskell that I work on intermittently and
+- [[https://code.tvl.fyi/tree/users/aspen/xanthous][xanthous]], a terminal roguelike in haskell that I work on intermittently and
   exclusively for fun
 
 * music

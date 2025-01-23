@@ -14,7 +14,7 @@ let
       <p class="footer">
         <a class="uncoloured-link" href="https://tazj.in">homepage</a>
         |
-        <a class="uncoloured-link" href="https://cs.tvl.fyi/">code</a>
+        <a class="uncoloured-link" href="https://code.tvl.fyi/">code</a>
       </p>
       <p class="lod">ಠ_ಠ</p>
     '';

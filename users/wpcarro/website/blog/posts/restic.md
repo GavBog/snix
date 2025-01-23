@@ -85,7 +85,7 @@ Snapshots processed:   175
 > Ah... the world agrees again.
 > -- me
 
-[1]: https://cs.tvl.fyi/depot@2ec0d3611960b163a7052e8554ba065f3c89a8cc/-/blob/ops/modules/restic.nix?L9
+[1]: https://code.tvl.fyi/blob/ops/modules/restic.nix?id=2ec0d3611960b163a7052e8554ba065f3c89a8cc#n9
 [2]: https://github.com/profpatsch
 [3]: https://min.io/
 [4]: https://restic.net/

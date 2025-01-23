@@ -155,7 +155,7 @@ We'll see you around!
 [Tvix]: https://tvl.fyi/blog/rewriting-nix
 [Tvixbolt]: https://bolt.tvix.dev
 [integrated]: https://cl.tvl.fyi/q/status:merged+%2522tvix/eval%2522+mergedbefore:2022-09-09
-[src]: https://cs.tvl.fyi/depot/-/tree/tvix/eval
+[src]: https://code.tvl.fyi/tree/tvix/eval
 [src-noscript]: https://code.tvl.fyi/tree/tvix/eval
 [tazjin]: https://tazj.in
 [grfn]: https://gws.fyi/

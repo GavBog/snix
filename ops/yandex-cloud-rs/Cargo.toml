@@ -4,7 +4,7 @@ description = "Generated gRPC clients for the Yandex Cloud API"
 license = "MIT"
 version = "2023.9.4"
 edition = "2021"
-homepage = "https://cs.tvl.fyi/depot/-/tree/ops/yandex-cloud-rs"
+homepage = "https://code.tvl.fyi/tree/ops/yandex-cloud-rs"
 repository = "https://code.tvl.fyi/depot.git:/ops/yandex-cloud-rs.git"
 include = [ "/src", "README.md" ]
 
