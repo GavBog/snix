@@ -1,7 +1,6 @@
 # TODO(sterni): document TVL short links,
 # for now see //tools/cheddar, //web/atward, //tools/magrathea
 # and //ops/modules/monorepo-gerrit.
-# TODO(sterni): r/([0-9]+)
 
 # TVL short links that go to the browser, e.g. cl/8413, b/187
 
@@ -16,6 +15,13 @@ data matches 'b/([0-9]+)'
 data set https://b.tvl.fyi/issues/$1
 plumb to web
 plumb start web $data
+
+# TVL revision short links e.g. r/9000, r/3
+
+type is text
+data matches 'r/([0-9]+)'
+data set refs/r/$1
+plumb start rc -c 'cd '$wdir'; cd `{git rev-parse --show-toplevel} && git show --pretty=fuller '$data' | plumb -i -d edit -a ''action=showdata filename=+git/'$data''' '
 
 # TVL target short links
 
