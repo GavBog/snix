@@ -125,8 +125,8 @@
   (setq org-archive-location (concat org-archive-file "::")
         org-agenda-files (remove org-archive-file
                                  (directory-files-recursively org-folder "\\.org$"))
-        org-default-notes-file (concat org-folder "/context.org")
-        initial-buffer-choice org-default-notes-file
+        org-default-notes-file (concat org-folder "/inbox.org")
+        initial-buffer-choice (concat org-folder "/context.org")
         org-refile-targets '((org-agenda-files . (:maxlevel . 4)))))
 
 ;; latex
