@@ -120,8 +120,11 @@
 (setq org-clock-persist 'history)
 (org-clock-persistence-insinuate)
 
-(let ((org-folder (concat (getenv "HOME") "/files/sync/org")))
-  (setq org-agenda-files (directory-files-recursively org-folder "\\.org$")
+(let* ((org-folder (concat (getenv "HOME") "/files/sync/org"))
+       (org-archive-file (concat org-folder "/archive.org")))
+  (setq org-archive-location (concat org-archive-file "::")
+        org-agenda-files (remove org-archive-file
+                                 (directory-files-recursively org-folder "\\.org$"))
         org-default-notes-file (concat org-folder "/context.org")
         initial-buffer-choice org-default-notes-file
         org-refile-targets '((org-agenda-files . (:maxlevel . 2)))))
@@ -233,7 +236,10 @@
       (display-fill-column-indicator-mode 'toggle)))
   ;; org-mode
   (evil-define-key 'normal 'global (kbd "<leader>oa") 'org-agenda)
-  (evil-define-key 'normal 'global (kbd "<leader>oc") 'org-capture))
+  (evil-define-key 'normal 'global (kbd "<leader>oc") 'org-capture)
+  (evil-define-key 'normal 'org-mode-map (kbd "<leader>or") 'org-refile)
+  (evil-define-key 'normal 'org-mode-map (kbd "<leader>oAA") 'org-archive-subtree)
+  (evil-define-key 'normal 'org-mode-map (kbd "<leader>oAT") 'org-toggle-archive-tag))
 
 (use-package evil-collection
   :after evil
