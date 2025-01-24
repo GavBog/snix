@@ -228,6 +228,7 @@
   (evil-define-key 'normal 'global (kbd "<leader>em") 'man)
   (evil-define-key '(normal visual) 'global (kbd "<leader>eu") 'browse-url-at-point)
   (evil-define-key '(normal visual) 'global (kbd "<leader>ef") 'ffap)
+  (evil-define-key 'normal 'global (kbd "<leader>er") 'rename-visited-file)
   ;; modify what is displayed
   (evil-define-key 'normal 'global (kbd "<leader>dw")
     (lambda ()
