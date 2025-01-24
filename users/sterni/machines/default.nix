@@ -1,7 +1,7 @@
 { depot, lib, pkgs, ... }:
 
 let
-  bins = depot.nix.getBins pkgs.nq [ "fq" "nq" ];
+  bins = depot.nix.getBins pkgs.nq [ "nqtail" "nq" ];
 
   machines = lib.mapAttrs
     (name: _:
@@ -35,7 +35,7 @@ let
       readonly DEPLOY_DRV="${
         builtins.unsafeDiscardOutputDependency (
           # Wrapper script around localDeployScriptFor that merely starts the
-          # local deploy script using and nq and then waits using fq. This means
+          # local deploy script using and nq and then waits using nqtail. This means
           # we can't Ctrl-C the deploy and it won't be terminated by a lost
           # connection.
           pkgs.writeShellScript "queue-deploy-${system.name}" ''
@@ -45,7 +45,7 @@ let
             export NQDIR="$STATE_DIR"
 
             "${bins.nq}" "${localDeployScriptFor machine}"
-            "${bins.fq}"
+            "${bins.nqtail}"
           ''
         ).drvPath
       }"
