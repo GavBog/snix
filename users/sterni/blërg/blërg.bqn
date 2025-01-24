@@ -1,5 +1,5 @@
 #!/usr/bin/env BQN
-# SPDX-FileCopyrightText: Copyright © 2024 sterni
+# SPDX-FileCopyrightText: Copyright © 2024-2025 sterni
 # SPDX-License-Identifier: GPL-3.0-only
 #
 # blërg is a reimplementation of mblog in BQN. BQN is used as a sort of bespoke
@@ -34,6 +34,21 @@ Run ← {
 R ← {𝕊 exit‿stdout‿stderr: stderr!0=exit ⋄ stdout}∘Run
 LR ← Lines∘R
 
+GetEnv ← {R "importas"‿"env"‿𝕩‿"printf"‿"%s"‿"$env"}
+
+RelPath ← •wdpath⊸•file.At
+
+# 3p dependencies
+
+j ← {
+  # Update README.md if dependency discovery changes
+  ⟨Parse⟩ ⇐ •Import (GetEnv "BQN_LIBS") •file.At "json.bqn"
+
+  # TODO(sterni): default value
+  ObjGet ⇐ (⊏⊸(⊑∘⊐) ⊑ ⊏˜⟜1)⟜<
+  ObjGetPath ⇐ ObjGet˜´⟜⌽
+}
+
 # (Apple) Mail Notes Backend
 
 # TODO(sterni): avoid argv limit by chunking
@@ -41,7 +56,8 @@ Hdrs ← {LR "mhdr"‿"-dh"‿(':' _join 𝕨)∾𝕩}
 Dates ← {ReadPosDec¨ LR "mhdr"‿"-Dh"‿"Date"∾𝕩}
 headerNames ← "X-Uniform-Type-Identifier"‿"X-Universally-Unique-Identifier"‿"Subject"
 
-MailNotesBackend ← {𝕊 mailDir:
+MailNotesBackend ← {𝕊 config:
+  mailDir ← RelPath config j.ObjGet "maildir"
   Entries ⇐ {𝕊:
     ms ← LR "mlist"‿mailDir
     th ← ⟨≠ms,≠headerNames⟩⥊headerNames Hdrs ms
@@ -54,6 +70,8 @@ MailNotesBackend ← {𝕊 mailDir:
     }˘ ah
   }
 }
+
+backends ← ⍉>⟨"mail-notes"‿mailNotesBackend⟩
 
 # Rendering
 
@@ -76,18 +94,26 @@ WriteEntry ← {outDir 𝕊 entry:
 
 # Main
 
-mailDir‿outDir ← {
-  # Usage: blërg <maildir> <out dir>
+configFile‿outDir ← {
+  # Usage: blërg <config file> <out dir>
   ! 2=≠•args
   # TODO(sterni): expand ~/
-  •wdpath⊸•file.At¨ •args
+  RelPath¨ •args
 }
 
-m ← MailNotesBackend mailDir
-entries ← (<"time") ((⍒∘(•ns.Get˜¨))⊏⊢) m.Entries @
+config ← {
+  raw ← j.Parse •FChars configFile
 
-title ← "blërg"
+  [bns,bcs] ← raw j.ObjGet "backends"
+  bcs ↩ bcs ∾˘⟜{2‿1⊸⥊"name"‿𝕩}¨ bns
+  bts ← (j.ObjGet⟜"type")˜¨ bcs
+  backends ⇐ bcs {𝕏 𝕨}¨ backends⊸j.ObjGet¨ bts
+
+  title ⇐ raw j.ObjGet "title"
+}
+
+entries ← (<"time") ((⍒∘(•ns.Get˜¨))⊏⊢) ∾{𝕩.Entries @}¨ config.backends
 
 MkDirP outDir
 entryIndex ← outDir⊸WriteEntry¨ entries
-(outDir •file.At "index.html") •file.Chars title RenderPage ∾"<ul>"∾entryIndex∾"</ul>"
+(outDir •file.At "index.html") •file.Chars config.title RenderPage ∾"<ul>"∾entryIndex∾"</ul>"
