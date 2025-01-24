@@ -28,6 +28,12 @@ in
       };
       # TODO(sterni): tmp.sterni.lv
       locations."/tmp/".root = toString /srv/http;
+      extraConfig = ''
+        location = /robots.txt {
+           add_header Content-Type text/plain;
+           return 200 "User-agent: *\nDisallow: /tmp\n";
+        }
+      '';
     };
   };
 }
