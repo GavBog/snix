@@ -28,11 +28,10 @@ Run ← {
   𝕊 𝕩: 1 𝕊 𝕩;
   doChomp 𝕊 cmd:
   exit‿stdout‿stderr ← •SH cmd
-  •term.ErrRaw⍟(0≠exit) stderr
-  ⟨Chomp⍟doChomp stdout, exit⟩
+  exit∾Chomp⍟doChomp¨ stdout‿stderr
 }
 
-R ← {𝕊 stdout‿exit: !0=exit ⋄ stdout}∘Run
+R ← {𝕊 exit‿stdout‿stderr: stderr!0=exit ⋄ stdout}∘Run
 LR ← Lines∘R
 
 # (Apple) Mail Notes Backend
