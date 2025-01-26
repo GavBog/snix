@@ -108,6 +108,22 @@
 (setq-default indicate-buffer-boundaries 'left)
 (setq sentence-end-double-space nil)
 
+;; search
+
+;; TODO(sterni): can we use ripgrep for xref?
+(defun sterni-find-regexp (regexp)
+  "Find all matches for REGEXP in a specified directory.
+Like \\[project-find-regexp], but always ask for a directory (defaulting to
+`default-directory') and never prompt for a file glob pattern."
+  (interactive (list (project--read-regexp)))
+  (require 'xref)
+  (let* ((dir (read-directory-name "Base directory: "
+                                   default-directory nil t))
+         (files (project--files-in-directory dir nil)))
+    (xref-show-xrefs
+     (apply-partially #'project--find-regexp-in-files regexp files)
+     nil)))
+
 ;;; Configure built in modes
 
 ;; Perl
@@ -228,6 +244,7 @@
   (evil-define-key 'normal 'global (kbd "<leader>em") 'man)
   (evil-define-key '(normal visual) 'global (kbd "<leader>eu") 'browse-url-at-point)
   (evil-define-key '(normal visual) 'global (kbd "<leader>ef") 'ffap)
+  (evil-define-key 'normal 'global (kbd "<leader>eg") 'sterni-find-regexp)
   (evil-define-key 'normal 'global (kbd "<leader>er") 'rename-visited-file)
   ;; modify what is displayed
   (evil-define-key 'normal 'global (kbd "<leader>dw")
