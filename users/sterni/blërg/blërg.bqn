@@ -14,6 +14,10 @@ MkDirP ← •file.CreateDir⍟(¬•file.Exists)
 AsciiDown ← ('A'-'a')⊸(⊢-×⟜('A'⊸≤∧≤⟜'Z'))
 Slugify ← '-'⊸⊣⍟(¬(('A'⊸≤∧'z'⊸≥)∨<⊸(⊑∊)⟜"-_0123456789"))¨ AsciiDown
 
+DropPrefix ← {𝕩(≠/⊣)𝕨↑˜≠𝕩}
+StripLeft ← ((¬ ∧`∘=)/⊢)
+StripRight ← ⌽ StripLeft⟜⌽
+
 _join ← {(∾⟜(𝕗⊸∾))´𝕩;𝕨∾𝕗∾𝕩}
 
 nl ← @+10
@@ -45,9 +49,10 @@ j ← {
   # Update README.md if dependency discovery changes
   ⟨Parse⟩ ⇐ •Import (GetEnv "BQN_LIBS") •file.At "json.bqn"
 
-  # TODO(sterni): default value
   ObjGet ⇐ (⊏⊸(⊑∘⊐) ⊑ ⊏˜⟜1)⟜<
   ObjGetPath ⇐ ObjGet˜´⟜⌽
+
+  _objGetDef ⇐ {𝕨 (⊏⊸(⊑∘⊐) ⊑ (∾⟜(⋈𝕗))∘(⊏˜⟜1)) <𝕩}
 }
 
 # (Apple) Mail Notes Backend
@@ -72,7 +77,34 @@ MailNotesBackend ← {𝕊 config:
   }
 }
 
-backends ← ⍉>⟨"mail-notes"‿mailNotesBackend⟩
+# Git Backend
+
+GitBackend ← {𝕊 config:
+  repo ← RelPath •file.At config j.ObjGet "repository"
+  path ← ∾⟜'/' '/' StripRight config "." j._ObjGetDef "path"
+
+  # We use zero separated fields when dealing with paths, so quoting is unnecessary
+  Git ← {R "git"‿"-c"‿"core.quotePath=false"‿"-C"‿repo∾𝕩}
+  rev ← Git "rev-parse"‿"HEAD"
+  # Use the author date of the latest commit on the file to establish the date
+  # of the file. The author date is easier to arbitrarily change and survives
+  # history rewrites. It could be interesting to ignore commits that touch
+  # multiple files (especially treewide ones).
+  PathDate ← {ReadPosDec Git "log"‿"--date=unix"‿"--pretty=tformat:%ad"‿"-1"‿rev‿"--"‿𝕩}
+
+  Entries ⇐ {𝕤⋄
+    blobs ← ∘‿2⥊@ SplitChar Git "ls-tree"‿"-zr"‿"--format=%(path)%x00%(objectname)"‿rev‿path
+    {𝕊 p‿b:
+      id ⇐ Slugify path DropPrefix p
+      # TODO(sterni): extract from file if possible
+      title ⇐ •file.Name p
+      time ⇐ PathDate p
+      Render ⇐ {𝕤 ⋄ {"<pre>"∾𝕩∾"</pre>"} Git "cat-file"‿"blob"‿b}
+    }˘blobs
+  }
+}
+
+backends ← ⍉>⟨"mail-notes"‿mailNotesBackend, "git"‿gitBackend⟩
 
 # Rendering
 
