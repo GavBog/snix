@@ -12,6 +12,7 @@
 MkDirP ← •file.CreateDir⍟(¬•file.Exists)
 
 AsciiDown ← ('A'-'a')⊸(⊢-×⟜('A'⊸≤∧≤⟜'Z'))
+Slugify ← '-'⊸⊣⍟(¬(('A'⊸≤∧'z'⊸≥)∨<⊸(⊑∊)⟜"-_0123456789"))¨ AsciiDown
 
 _join ← {(∾⟜(𝕗⊸∾))´𝕩;𝕨∾𝕗∾𝕩}
 
@@ -65,7 +66,7 @@ MailNotesBackend ← {𝕊 config:
     ah ← (("com.apple.mail-note"⊸≡⊑)˘/⊢) th∾˘dh≍˘ms
     {𝕊 ·‿uuid‿title‿time‿path:
       title ⇐ ⋄ time ⇐
-      id ⇐ AsciiDown uuid
+      id ⇐ Slugify uuid
       Render ⇐ {R "execline-cd"‿𝕩‿"mshow"‿"-x"‿path ⋄ R "mn2html"‿path}
     }˘ ah
   }
@@ -113,6 +114,7 @@ config ← {
 }
 
 entries ← (<"time") ((⍒∘(•ns.Get˜¨))⊏⊢) ∾{𝕩.Entries @}¨ config.backends
+# TODO(sterni): assert id uniqueness
 
 MkDirP outDir
 entryIndex ← outDir⊸WriteEntry¨ entries
