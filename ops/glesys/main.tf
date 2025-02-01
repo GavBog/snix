@@ -107,4 +107,12 @@ locals {
     "status",
     "todo",
   ]
+
+  # Hostnames of all public services on nevsky
+  nevsky_services = [
+  ]
+
+  # Hostnames of all public services on bugry
+  bugry_services = [
+  ]
 }

@@ -79,8 +79,29 @@ resource "glesys_dnsdomain_record" "tvl_su_whitby_services" {
   domain   = glesys_dnsdomain.tvl_su.id
   type     = "CNAME"
   data     = "whitby.tvl.su."
+  ttl      = 60
   host     = each.key
   for_each = toset(local.whitby_services)
+}
+
+# Explicit records for all services running on nevsky
+resource "glesys_dnsdomain_record" "tvl_su_nevsky_services" {
+  domain   = glesys_dnsdomain.tvl_su.id
+  type     = "CNAME"
+  data     = "nevsky.tvl.su."
+  host     = each.key
+  ttl      = 600
+  for_each = toset(local.nevsky_services)
+}
+
+# Explicit records for all services running on bugry
+resource "glesys_dnsdomain_record" "tvl_su_bugry_services" {
+  domain   = glesys_dnsdomain.tvl_su.id
+  type     = "CNAME"
+  data     = "bugry.tvl.su."
+  host     = each.key
+  ttl      = 600
+  for_each = toset(local.bugry_services)
 }
 
 # historical tvixbolt.tvl.su record, redirects to bolt.tvix.dev
