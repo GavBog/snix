@@ -235,6 +235,15 @@ in
 
   services.depot.builderball.enable = true;
 
+  # Automatically collect garbage from the Nix store.
+  services.depot.automatic-gc = {
+    enable = true;
+    interval = "1 hour";
+    diskThreshold = 200; # GiB
+    maxFreed = 420; # GiB
+    preserveGenerations = "60d";
+  };
+
   # Run a handful of Buildkite agents to support parallel builds.
   services.depot.buildkite = {
     enable = true;
