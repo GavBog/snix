@@ -67,21 +67,11 @@ resource "glesys_dnsdomain_record" "tvl_su_sanduny_AAAA" {
   data   = var.sanduny_ipv6
 }
 
-resource "glesys_dnsdomain_record" "cache_tvl_su_whitby_CNAME" {
+resource "glesys_dnsdomain_record" "cache_tvl_su_nevsky_CNAME" {
   domain = glesys_dnsdomain.tvl_su.id
   host   = "cache"
   type   = "CNAME"
-  data   = "whitby.tvl.su."
-}
-
-# Explicit records for all services running on whitby
-resource "glesys_dnsdomain_record" "tvl_su_whitby_services" {
-  domain   = glesys_dnsdomain.tvl_su.id
-  type     = "CNAME"
-  data     = "whitby.tvl.su."
-  ttl      = 60
-  host     = each.key
-  for_each = toset(local.whitby_services)
+  data   = "nevsky.tvl.fyi."
 }
 
 # Explicit records for all services running on nevsky
@@ -90,7 +80,6 @@ resource "glesys_dnsdomain_record" "tvl_su_nevsky_services" {
   type     = "CNAME"
   data     = "nevsky.tvl.fyi."
   host     = each.key
-  ttl      = 600
   for_each = toset(local.nevsky_services)
 }
 
@@ -100,7 +89,6 @@ resource "glesys_dnsdomain_record" "tvl_su_bugry_services" {
   type     = "CNAME"
   data     = "bugry.tvl.fyi."
   host     = each.key
-  ttl      = 600
   for_each = toset(local.bugry_services)
 }
 
@@ -109,7 +97,7 @@ resource "glesys_dnsdomain_record" "tvix_su_tvixbolt_CNAME" {
   domain = glesys_dnsdomain.tvl_su.id
   host   = "tvixbolt"
   type   = "CNAME"
-  data   = "whitby.tvl.su."
+  data   = "nevsky.tvl.fyi."
 }
 
 resource "glesys_dnsdomain_record" "tvl_su_inbox_CNAME" {

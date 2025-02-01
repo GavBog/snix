@@ -81,23 +81,12 @@ resource "glesys_dnsdomain_record" "tvl_fyi_bugry_AAAA" {
   data   = var.bugry_ipv6
 }
 
-# Explicit records for all services running on whitby
-resource "glesys_dnsdomain_record" "tvl_fyi_whitby_services" {
-  domain   = glesys_dnsdomain.tvl_fyi.id
-  type     = "CNAME"
-  data     = "whitby.tvl.fyi."
-  host     = each.key
-  ttl      = 60 # TODO
-  for_each = toset(local.whitby_services)
-}
-
 # Explicit records for all services running on nevsky
 resource "glesys_dnsdomain_record" "tvl_fyi_nevsky_services" {
   domain   = glesys_dnsdomain.tvl_fyi.id
   type     = "CNAME"
   data     = "nevsky.tvl.fyi."
   host     = each.key
-  ttl      = 600 # TODO
   for_each = toset(local.nevsky_services)
 }
 
@@ -107,7 +96,6 @@ resource "glesys_dnsdomain_record" "tvl_fyi_bugry_services" {
   type     = "CNAME"
   data     = "bugry.tvl.fyi."
   host     = each.key
-  ttl      = 600 # TODO
   for_each = toset(local.bugry_services)
 }
 

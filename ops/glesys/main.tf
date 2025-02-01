@@ -92,11 +92,6 @@ variable "sanduny_ipv6" {
 }
 
 locals {
-  # Hostnames of all public services on whitby
-  whitby_services = [
-    "deploys",
-  ]
-
   # Hostnames of all public services on nevsky
   nevsky_services = [
     "auth",
@@ -104,6 +99,7 @@ locals {
     "cl",
     "code",
     "cs",
+    "deploys", # TODO: unsupported (b/437)
     "grep",
     "status",
   ]
