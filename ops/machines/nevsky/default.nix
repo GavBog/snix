@@ -31,6 +31,7 @@ in
 
   hardware.cpu.amd.updateMicrocode = true;
   hardware.enableRedistributableFirmware = true;
+  powerManagement.cpuFreqGovernor = "performance";
 
   boot = {
     tmp.useTmpfs = true;
