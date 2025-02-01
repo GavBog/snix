@@ -6,13 +6,22 @@ let
 in
 {
   imports = [
+    (mod "atward.nix")
     (mod "depot-replica.nix")
     (mod "known-hosts.nix")
     (mod "nixery.nix")
     (mod "tvl-cache.nix")
     (mod "tvl-users.nix")
+    (mod "www/atward.tvl.fyi.nix")
     (mod "www/nixery.dev.nix")
     (mod "www/self-redirect.nix")
+    (mod "www/signup.tvl.fyi.nix")
+    (mod "www/static.tvl.fyi.nix")
+    (mod "www/todo.tvl.fyi.nix")
+    (mod "www/tvix.dev.nix")
+    (mod "www/tvl.fyi.nix")
+    (mod "www/tvl.su.nix")
+    (mod "www/wigglydonke.rs.nix")
 
     (depot.third_party.agenix.src + "/modules/age.nix")
   ];
@@ -173,18 +182,24 @@ in
   tvl.cache.enable = true;
   tvl.cache.builderball = true;
 
-  services.depot.nixery.enable = true;
+  services.depot =
+    {
+      nixery.enable = true;
 
-  # Allow Gerrit to replicate depot to /var/lib/depot
-  services.depot.replica.enable = true;
+      # Allow Gerrit to replicate depot to /var/lib/depot
+      replica.enable = true;
 
-  services.depot.automatic-gc = {
-    enable = true;
-    interval = "1 hour";
-    diskThreshold = 50; # GiB (10% of disk)
-    maxFreed = 150; # GiB
-    preserveGenerations = "14d";
-  };
+      # Run atward, the search engine redirection thing.
+      atward.enable = true;
+
+      automatic-gc = {
+        enable = true;
+        interval = "1 hour";
+        diskThreshold = 50; # GiB (10% of disk)
+        maxFreed = 150; # GiB
+        preserveGenerations = "14d";
+      };
+    };
 
   system.stateVersion = "24.11";
 }
