@@ -31,7 +31,7 @@ let
         # Ensure that anchoring happens on whitby, so that cache.tvl.su always
         # has the full cache. Unanchored machines may garbage collect live
         # paths.
-        agents.hostname = "whitby"; # TODO(tazjin): b/433
+        agents.hostname = "nevsky";
       }
     ];
   };
