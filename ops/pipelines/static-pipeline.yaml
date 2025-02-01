@@ -50,7 +50,8 @@ steps:
   - label: ":llama:"
     key: "pipeline-gen"
     concurrency_group: 'depot-nix-eval'
-    concurrency: 3 # much more than this and whitby will OOM
+    concurrency: 4 # TODO: limit per builder host?
+    priority: 1
     command: |
       set -ue
 
