@@ -102,7 +102,6 @@ locals {
     "code",
     "cs",
     "deploys",
-    "images",
     "signup",
     "static",
     "status",
