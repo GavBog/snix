@@ -19,6 +19,7 @@ in
     (mod "restic.nix")
     (mod "smtprelay.nix")
     (mod "tvl-buildkite.nix")
+    (mod "tvl-slapd/default.nix")
     (mod "tvl-users.nix")
     (mod "www/cache.tvl.fyi.nix")
     (mod "www/cl.tvl.fyi.nix")
