@@ -7,6 +7,7 @@ in
 {
   imports = [
     (mod "builderball.nix")
+    (mod "clbot.nix")
     (mod "harmonia.nix")
     (mod "irccat.nix")
     (mod "known-hosts.nix")
@@ -333,6 +334,35 @@ in
             "#tvl"
           ];
         };
+      };
+    };
+
+    # Start the Gerrit->IRC bot
+    clbot = {
+      enable = true;
+      channels = {
+        "#tvl" = { };
+        "#tvix-dev" = {
+          only_display = "tvix,nix-compat,third_party,third-party,3p";
+        };
+      };
+
+      # See //fun/clbot for details.
+      flags = {
+        gerrit_host = "cl.tvl.fyi:29418";
+        gerrit_ssh_auth_username = "clbot";
+        gerrit_ssh_auth_key = config.age.secretsDir + "/clbot-ssh";
+
+        irc_server = "localhost:${toString config.services.znc.config.Listener.l.Port}";
+        irc_user = "tvlbot";
+        irc_nick = "tvlbot";
+
+        notify_branches = "canon,refs/meta/config";
+        notify_repo = "depot";
+
+        # This secret is read from an environment variable, which is
+        # populated by a systemd EnvironmentFile.
+        irc_pass = "$CLBOT_PASS";
       };
     };
   };
