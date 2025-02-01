@@ -217,6 +217,29 @@ in
 
   services.fwupd.enable = true;
 
+  services.postgresql = {
+    enable = true;
+    enableTCPIP = true;
+    package = pkgs.postgresql_16;
+
+    authentication = lib.mkForce ''
+      local all all trust
+      host all all 127.0.0.1/32 password
+      host all all ::1/128 password
+      hostnossl all all 127.0.0.1/32 password
+      hostnossl all all ::1/128  password
+    '';
+
+    ensureDatabases = [
+      "panettone"
+    ];
+
+    ensureUsers = [{
+      name = "panettone";
+      ensureDBOwnership = true;
+    }];
+  };
+
   # Join TVL Tailscale network at net.tvl.fyi
   services.tailscale = {
     enable = true;
