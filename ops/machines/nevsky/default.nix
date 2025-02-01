@@ -8,6 +8,8 @@ in
   imports = [
     (mod "builderball.nix")
     (mod "clbot.nix")
+    (mod "cgit.nix")
+    (mod "josh.nix")
     (mod "harmonia.nix")
     (mod "irccat.nix")
     (mod "known-hosts.nix")
@@ -19,6 +21,7 @@ in
     (mod "tvl-users.nix")
     (mod "www/cache.tvl.fyi.nix")
     (mod "www/cl.tvl.fyi.nix")
+    (mod "www/code.tvl.fyi.nix")
     (mod "www/self-cache.tvl.fyi.nix")
     (mod "www/self-redirect.nix")
     (depot.third_party.agenix.src + "/modules/age.nix")
@@ -308,6 +311,14 @@ in
       maxFreed = 420; # GiB
       preserveGenerations = "60d";
     };
+
+    # Run cgit & josh to serve git
+    cgit = {
+      enable = true;
+      user = "git"; # run as the same user as gerrit
+    };
+
+    josh.enable = true;
 
     # Run a handful of Buildkite agents to support parallel builds.
     buildkite = {
