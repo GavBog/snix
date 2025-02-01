@@ -8,6 +8,7 @@ in
   imports = [
     (mod "builderball.nix")
     (mod "cgit.nix")
+    (mod "cheddar.nix")
     (mod "clbot.nix")
     (mod "harmonia.nix")
     (mod "irccat.nix")
@@ -16,14 +17,19 @@ in
     (mod "livegrep.nix")
     (mod "monorepo-gerrit.nix")
     (mod "owothia.nix")
+    (mod "panettone.nix")
+    (mod "paroxysm.nix")
     (mod "restic.nix")
     (mod "smtprelay.nix")
     (mod "tvl-buildkite.nix")
     (mod "tvl-slapd/default.nix")
     (mod "tvl-users.nix")
+    (mod "www/auth.tvl.fyi.nix")
+    (mod "www/b.tvl.fyi.nix")
     (mod "www/cache.tvl.fyi.nix")
     (mod "www/cl.tvl.fyi.nix")
     (mod "www/code.tvl.fyi.nix")
+    (mod "www/cs.tvl.fyi.nix")
     (mod "www/grep.tvl.fyi.nix")
     (mod "www/self-cache.tvl.fyi.nix")
     (mod "www/self-redirect.nix")
@@ -307,6 +313,9 @@ in
 
     builderball.enable = true;
 
+    # Run Markdown/code renderer
+    cheddar.enable = true;
+
     # Run a livegrep code search instance
     livegrep.enable = true;
 
@@ -332,6 +341,17 @@ in
       enable = true;
       agentCount = 16;
     };
+
+    # Run the Panettone issue tracker
+    panettone = {
+      enable = true;
+      dbUser = "panettone";
+      dbName = "panettone";
+      irccatChannel = "#tvl";
+    };
+
+    # Run the first cursed bot (quote bot)
+    paroxysm.enable = true;
 
     # make our channel more owo
     owothia = {
@@ -431,6 +451,33 @@ in
         SSL = false;
       };
     };
+  };
+
+  services.keycloak = {
+    enable = true;
+
+    settings = {
+      http-port = 5925; # kycl
+      hostname = "auth.tvl.fyi";
+      http-relative-path = "/auth";
+      proxy-headers = "xforwarded";
+      http-enabled = true;
+    };
+
+    database = {
+      type = "postgresql";
+      passwordFile = config.age.secretsDir + "/keycloak-db";
+      createLocally = false;
+    };
+  };
+
+  services.postgresqlBackup = {
+    enable = true;
+    databases = [
+      "keycloak"
+      "panettone"
+      "tvldb"
+    ];
   };
 
   # Use TVL cache locally through the proxy; for cross-builder substitution.
