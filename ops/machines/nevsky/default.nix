@@ -7,21 +7,23 @@ in
 {
   imports = [
     (mod "builderball.nix")
-    (mod "clbot.nix")
     (mod "cgit.nix")
-    (mod "josh.nix")
+    (mod "clbot.nix")
     (mod "harmonia.nix")
     (mod "irccat.nix")
+    (mod "josh.nix")
     (mod "known-hosts.nix")
+    (mod "livegrep.nix")
     (mod "monorepo-gerrit.nix")
     (mod "owothia.nix")
-    (mod "smtprelay.nix")
     (mod "restic.nix")
+    (mod "smtprelay.nix")
     (mod "tvl-buildkite.nix")
     (mod "tvl-users.nix")
     (mod "www/cache.tvl.fyi.nix")
     (mod "www/cl.tvl.fyi.nix")
     (mod "www/code.tvl.fyi.nix")
+    (mod "www/grep.tvl.fyi.nix")
     (mod "www/self-cache.tvl.fyi.nix")
     (mod "www/self-redirect.nix")
     (depot.third_party.agenix.src + "/modules/age.nix")
@@ -302,6 +304,9 @@ in
     };
 
     builderball.enable = true;
+
+    # Run a livegrep code search instance
+    livegrep.enable = true;
 
     # Automatically collect garbage from the Nix store.
     automatic-gc = {
