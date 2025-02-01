@@ -29,14 +29,14 @@ resource "glesys_dnsdomain_record" "tvl_su_apex_A" {
   domain = glesys_dnsdomain.tvl_su.id
   host   = "@"
   type   = "A"
-  data   = var.whitby_ipv4
+  data   = var.bugry_ipv4
 }
 
 resource "glesys_dnsdomain_record" "tvl_su_apex_AAAA" {
   domain = glesys_dnsdomain.tvl_su.id
   host   = "@"
   type   = "AAAA"
-  data   = var.whitby_ipv6
+  data   = var.bugry_ipv6
 }
 
 resource "glesys_dnsdomain_record" "tvl_su_whitby_A" {
@@ -88,7 +88,7 @@ resource "glesys_dnsdomain_record" "tvl_su_whitby_services" {
 resource "glesys_dnsdomain_record" "tvl_su_nevsky_services" {
   domain   = glesys_dnsdomain.tvl_su.id
   type     = "CNAME"
-  data     = "nevsky.tvl.su."
+  data     = "nevsky.tvl.fyi."
   host     = each.key
   ttl      = 600
   for_each = toset(local.nevsky_services)
@@ -98,7 +98,7 @@ resource "glesys_dnsdomain_record" "tvl_su_nevsky_services" {
 resource "glesys_dnsdomain_record" "tvl_su_bugry_services" {
   domain   = glesys_dnsdomain.tvl_su.id
   type     = "CNAME"
-  data     = "bugry.tvl.su."
+  data     = "bugry.tvl.fyi."
   host     = each.key
   ttl      = 600
   for_each = toset(local.bugry_services)

@@ -8,28 +8,28 @@ resource "glesys_dnsdomain_record" "tvix_dev_apex_A" {
   domain = glesys_dnsdomain.tvix_dev.id
   host   = "@"
   type   = "A"
-  data   = var.whitby_ipv4
+  data   = var.bugry_ipv4
 }
 
 resource "glesys_dnsdomain_record" "tvix_dev_apex_AAAA" {
   domain = glesys_dnsdomain.tvix_dev.id
   host   = "@"
   type   = "AAAA"
-  data   = var.whitby_ipv6
+  data   = var.bugry_ipv6
 }
 
 resource "glesys_dnsdomain_record" "tvix_dev_bolt_CNAME" {
   domain = glesys_dnsdomain.tvix_dev.id
   host   = "bolt"
   type   = "CNAME"
-  data   = "whitby.tvl.su."
+  data   = "bugry.tvl.fyi."
 }
 
 resource "glesys_dnsdomain_record" "tvix_dev_docs_CNAME" {
   domain = glesys_dnsdomain.tvix_dev.id
   host   = "docs"
   type   = "CNAME"
-  data   = "whitby.tvl.fyi."
+  data   = "bugry.tvl.fyi."
 }
 
 resource "glesys_dnsdomain_record" "tvix_dev_NS1" {

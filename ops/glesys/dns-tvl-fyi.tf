@@ -29,14 +29,14 @@ resource "glesys_dnsdomain_record" "tvl_fyi_apex_A" {
   domain = glesys_dnsdomain.tvl_fyi.id
   host   = "@"
   type   = "A"
-  data   = var.whitby_ipv4
+  data   = var.bugry_ipv4
 }
 
 resource "glesys_dnsdomain_record" "tvl_fyi_apex_AAAA" {
   domain = glesys_dnsdomain.tvl_fyi.id
   host   = "@"
   type   = "AAAA"
-  data   = var.whitby_ipv6
+  data   = var.bugry_ipv6
 }
 
 resource "glesys_dnsdomain_record" "tvl_fyi_whitby_A" {

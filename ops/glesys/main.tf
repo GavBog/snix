@@ -94,18 +94,13 @@ variable "sanduny_ipv6" {
 locals {
   # Hostnames of all public services on whitby
   whitby_services = [
-    "at",
-    "atward",
     "auth",
     "b",
     "cl",
     "code",
     "cs",
     "deploys",
-    "signup",
-    "static",
     "status",
-    "todo",
   ]
 
   # Hostnames of all public services on nevsky
@@ -114,5 +109,10 @@ locals {
 
   # Hostnames of all public services on bugry
   bugry_services = [
+    "at",
+    "atward",
+    "signup",
+    "static",
+    "todo",
   ]
 }
