@@ -98,8 +98,15 @@ in
       secretFile = name: depot.ops.secrets."${name}.age";
     in
     {
+      clbot.file = secretFile "clbot";
+      gerrit-autosubmit.file = secretFile "gerrit-autosubmit";
+      grafana.file = secretFile "grafana";
       irccat.file = secretFile "irccat";
+      keycloak-db.file = secretFile "keycloak-db";
       owothia.file = secretFile "owothia";
+      panettone.file = secretFile "panettone";
+      smtprelay.file = secretFile "smtprelay";
+      teleirc.file = secretFile "teleirc";
       wg-privkey.file = depot.ops.secrets."wg-nevsky.age";
 
       nix-cache-priv = {
@@ -136,6 +143,31 @@ in
         file = secretFile "buildkite-ssh-private-key";
         mode = "0440";
         group = "buildkite-agents";
+      };
+
+      gerrit-besadii-config = {
+        file = secretFile "besadii";
+        owner = "git";
+      };
+
+      gerrit-secrets = {
+        file = secretFile "gerrit-secrets";
+        path = "/var/lib/gerrit/etc/secure.config";
+        owner = "git";
+        mode = "0400";
+      };
+
+      clbot-ssh = {
+        file = secretFile "clbot-ssh";
+        owner = "clbot";
+      };
+
+      depot-replica-key = {
+        file = secretFile "depot-replica-key";
+        mode = "0500";
+        owner = "git";
+        group = "git";
+        path = "/var/lib/git/.ssh/id_ed25519";
       };
     };
 
