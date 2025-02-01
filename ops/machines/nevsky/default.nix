@@ -11,11 +11,14 @@ in
     (mod "harmonia.nix")
     (mod "irccat.nix")
     (mod "known-hosts.nix")
+    (mod "monorepo-gerrit.nix")
     (mod "owothia.nix")
     (mod "smtprelay.nix")
+    (mod "restic.nix")
     (mod "tvl-buildkite.nix")
     (mod "tvl-users.nix")
     (mod "www/cache.tvl.fyi.nix")
+    (mod "www/cl.tvl.fyi.nix")
     (mod "www/self-cache.tvl.fyi.nix")
     (mod "www/self-redirect.nix")
     (depot.third_party.agenix.src + "/modules/age.nix")
@@ -224,7 +227,7 @@ in
       "8.8.4.4"
     ];
 
-    firewall.allowedTCPPorts = [ 22 80 443 ];
+    firewall.allowedTCPPorts = [ 22 80 443 29418 ];
     firewall.allowedUDPPorts = [ 51820 ];
   };
 
@@ -420,6 +423,17 @@ in
     groups = [ "wheel" ];
     commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }];
   }];
+
+  users = {
+    # Set up a user & group for git shenanigans
+    groups.git = { };
+    users.git = {
+      group = "git";
+      isSystemUser = true;
+      createHome = true;
+      home = "/var/lib/git";
+    };
+  };
 
   zramSwap.enable = true;
 
