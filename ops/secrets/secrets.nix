@@ -53,6 +53,9 @@ in
   "nix-cache-pub.age" = for [ whitby nevsky ];
   "owothia.age" = for [ whitby nevsky ];
   "panettone.age" = for [ whitby nevsky ];
+  "restic-bugry.age" = for [ bugry ];
+  "restic-nevsky.age" = for [ nevsky ];
+  "restic-sanduny.age" = for [ sanduny ];
   "smtprelay.age" = for [ whitby nevsky ];
   "teleirc.age" = for [ whitby nevsky ];
   "tf-buildkite.age" = for [ /* humans only */ ];
@@ -61,4 +64,5 @@ in
   "tvl-alerts-bot-telegram-token.age" = for [ whitby nevsky ];
   "wg-bugry.age" = for [ bugry ];
   "wg-nevsky.age" = for [ nevsky ];
+  "yc-restic.age" = for [ nevsky sanduny bugry ];
 }

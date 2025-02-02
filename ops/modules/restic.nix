@@ -1,15 +1,13 @@
 # Configure restic backups to S3-compatible storage, in our case
-# GleSYS object storage.
+# Yandex Cloud Storage.
 #
-# Conventions:
-# - restic's cache lives in /var/backup/restic/cache
-# - repository password lives in /var/backup/restic/secret
-# - object storage credentials in /var/backup/restic/glesys-key
-{ config, lib, pkgs, ... }:
+# When adding a new machine, the repository has to be initialised once. Refer to
+# the Restic documentation for details on this process.
+{ config, depot, lib, pkgs, ... }:
 
 let
   cfg = config.services.depot.restic;
-  description = "Restic backups to GleSYS";
+  description = "Restic backups to Yandex Cloud";
   mkStringOption = default: lib.mkOption {
     inherit default;
     type = lib.types.str;
@@ -18,9 +16,9 @@ in
 {
   options.services.depot.restic = {
     enable = lib.mkEnableOption description;
-    bucketEndpoint = mkStringOption "objects.dc-sto1.glesys.net";
-    bucketName = mkStringOption "aged-resonance";
-    bucketCredentials = mkStringOption "/var/backup/restic/glesys-key";
+    bucketEndpoint = mkStringOption "storage.yandexcloud.net";
+    bucketName = mkStringOption "tvl-backups";
+    bucketCredentials = mkStringOption "/run/agenix/yc-restic";
     repository = mkStringOption config.networking.hostName;
     interval = mkStringOption "hourly";
 
@@ -36,15 +34,20 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    age.secrets = {
+      restic-password.file = depot.ops.secrets."restic-${config.networking.hostName}.age";
+      yc-restic.file = depot.ops.secrets."yc-restic.age";
+    };
+
     systemd.services.restic = {
-      description = "Backups to GleSYS";
+      description = "Backups to Yandex Cloud";
 
       script = "${pkgs.restic}/bin/restic backup ${lib.concatStringsSep " " cfg.paths}";
 
       environment = {
         RESTIC_REPOSITORY = "s3:${cfg.bucketEndpoint}/${cfg.bucketName}/${cfg.repository}";
         AWS_SHARED_CREDENTIALS_FILE = cfg.bucketCredentials;
-        RESTIC_PASSWORD_FILE = "/var/backup/restic/secret";
+        RESTIC_PASSWORD_FILE = "/run/agenix/restic-password";
         RESTIC_CACHE_DIR = "/var/backup/restic/cache";
 
         RESTIC_EXCLUDE_FILE =
