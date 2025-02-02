@@ -4812,9 +4812,9 @@ rec {
       };
       "wasm-bindgen" = rec {
         crateName = "wasm-bindgen";
-        version = "0.2.95";
+        version = "0.2.100";
         edition = "2021";
-        sha256 = "0bpbvmxhil380gpv53smaypl8wc7sy7rq8apxfw349pn78v1x38j";
+        sha256 = "1x8ymcm6yi3i1rwj78myl1agqv2m86i648myy3lc97s9swlqkp0y";
         libName = "wasm_bindgen";
         authors = [
           "The wasm-bindgen Developers"
@@ -4827,29 +4827,42 @@ rec {
           {
             name = "once_cell";
             packageId = "once_cell";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "rustversion";
+            packageId = "rustversion";
+            optional = true;
           }
           {
             name = "wasm-bindgen-macro";
             packageId = "wasm-bindgen-macro";
           }
         ];
+        devDependencies = [
+          {
+            name = "once_cell";
+            packageId = "once_cell";
+          }
+        ];
         features = {
-          "default" = [ "spans" "std" ];
+          "default" = [ "std" "msrv" ];
           "enable-interning" = [ "std" ];
+          "msrv" = [ "rustversion" ];
+          "rustversion" = [ "dep:rustversion" ];
           "serde" = [ "dep:serde" ];
           "serde-serialize" = [ "serde" "serde_json" "std" ];
           "serde_json" = [ "dep:serde_json" ];
-          "spans" = [ "wasm-bindgen-macro/spans" ];
           "strict-macro" = [ "wasm-bindgen-macro/strict-macro" ];
           "xxx_debug_only_print_generated_code" = [ "wasm-bindgen-macro/xxx_debug_only_print_generated_code" ];
         };
-        resolvedDefaultFeatures = [ "default" "spans" "std" ];
+        resolvedDefaultFeatures = [ "default" "msrv" "rustversion" "std" ];
       };
       "wasm-bindgen-backend" = rec {
         crateName = "wasm-bindgen-backend";
-        version = "0.2.95";
+        version = "0.2.100";
         edition = "2021";
-        sha256 = "0n53wgy78bgzgjwk0z69zbspzhv8p2a4zh69s4fzvpqdrb9x8vfb";
+        sha256 = "1ihbf1hq3y81c4md9lyh6lcwbx6a5j0fw4fygd423g62lm8hc2ig";
         libName = "wasm_bindgen_backend";
         authors = [
           "The wasm-bindgen Developers"
@@ -4862,10 +4875,6 @@ rec {
           {
             name = "log";
             packageId = "log";
-          }
-          {
-            name = "once_cell";
-            packageId = "once_cell";
           }
           {
             name = "proc-macro2";
@@ -4888,7 +4897,6 @@ rec {
         features = {
           "extra-traits" = [ "syn/extra-traits" ];
         };
-        resolvedDefaultFeatures = [ "spans" ];
       };
       "wasm-bindgen-futures" = rec {
         crateName = "wasm-bindgen-futures";
@@ -4926,9 +4934,9 @@ rec {
       };
       "wasm-bindgen-macro" = rec {
         crateName = "wasm-bindgen-macro";
-        version = "0.2.95";
+        version = "0.2.100";
         edition = "2021";
-        sha256 = "0mic8b2vab1a91m6x3hjxkwz23094bq1cwhnszarsnlggyz894z7";
+        sha256 = "01xls2dvzh38yj17jgrbiib1d3nyad7k2yw9s0mpklwys333zrkz";
         procMacro = true;
         libName = "wasm_bindgen_macro";
         authors = [
@@ -4945,16 +4953,14 @@ rec {
           }
         ];
         features = {
-          "spans" = [ "wasm-bindgen-macro-support/spans" ];
           "strict-macro" = [ "wasm-bindgen-macro-support/strict-macro" ];
         };
-        resolvedDefaultFeatures = [ "spans" ];
       };
       "wasm-bindgen-macro-support" = rec {
         crateName = "wasm-bindgen-macro-support";
-        version = "0.2.95";
+        version = "0.2.100";
         edition = "2021";
-        sha256 = "0s7g6glb85lyx2pj83shbmg4d50mvqhb2c2qk2j28yigaxbspii6";
+        sha256 = "1plm8dh20jg2id0320pbmrlsv6cazfv6b6907z19ys4z1jj7xs4a";
         libName = "wasm_bindgen_macro_support";
         authors = [
           "The wasm-bindgen Developers"
@@ -4984,19 +4990,23 @@ rec {
         ];
         features = {
           "extra-traits" = [ "syn/extra-traits" ];
-          "spans" = [ "wasm-bindgen-backend/spans" ];
         };
-        resolvedDefaultFeatures = [ "spans" ];
       };
       "wasm-bindgen-shared" = rec {
         crateName = "wasm-bindgen-shared";
-        version = "0.2.95";
+        version = "0.2.100";
         edition = "2021";
         links = "wasm_bindgen";
-        sha256 = "1386q7mvv5ky003hcc6yyxpid3y1m7fy0l920i3z3ab60vqhkz35";
+        sha256 = "0gffxvqgbh9r9xl36gprkfnh3w9gl8wgia6xrin7v11sjcxxf18s";
         libName = "wasm_bindgen_shared";
         authors = [
           "The wasm-bindgen Developers"
+        ];
+        dependencies = [
+          {
+            name = "unicode-ident";
+            packageId = "unicode-ident";
+          }
         ];
 
       };

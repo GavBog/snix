@@ -33,6 +33,9 @@
       };
     };
 
+    # TODO(aspen): remove after https://github.com/NixOS/nixpkgs/pull/378830/
+    kernelPackages = pkgs.linuxKernel.packages.linux_6_11;
+
     kernelModules = [ "kvm-intel" ];
     blacklistedKernelModules = [ "psmouse" ];
     extraModulePackages = [

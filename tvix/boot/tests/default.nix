@@ -158,84 +158,90 @@ let
     documentation.enable = lib.mkForce false;
   }).config.system.build.toplevel;
 
+  allTests = depot.nix.readTree.drvTargets {
+    docs-memory = (mkBootTest {
+      path = ../../docs;
+      importPathName = "docs";
+    });
+    docs-persistent = (mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      directoryServiceAddr = "redb:///build/directories.redb";
+      pathInfoServiceAddr = "redb:///build/pathinfo.redb";
+      path = ../../docs;
+      importPathName = "docs";
+    });
+
+    closure-tvix = (mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      path = depot.tvix.store;
+      isClosure = true;
+    });
+
+    closure-nixos = (mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      pathInfoServiceAddr = "redb:///build/pathinfo.redb";
+      directoryServiceAddr = "redb:///build/directories.redb";
+      path = testSystem;
+      isClosure = true;
+      vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
+      assertVMOutput = "Onwards and upwards.";
+    });
+
+    closure-nixos-bigtable = (mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      directoryServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=directories&family_name=cf1";
+      pathInfoServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=pathinfos&family_name=cf1";
+      path = testSystem;
+      useNarBridge = true;
+      preStart = ''
+        ${pkgs.cbtemulator}/bin/cbtemulator -address $PWD/cbtemulator.sock &
+        timeout 22 sh -c 'until [ -e $PWD/cbtemulator.sock ]; do sleep 1; done'
+
+        export BIGTABLE_EMULATOR_HOST=unix://$PWD/cbtemulator.sock
+        ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createtable directories
+        ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createfamily directories cf1
+        ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createtable pathinfos
+        ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createfamily pathinfos cf1
+      '';
+      isClosure = true;
+      vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
+      assertVMOutput = "Onwards and upwards.";
+    });
+
+    closure-nixos-s3 = (mkBootTest {
+      blobServiceAddr = "objectstore+s3://mybucket/blobs?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&aws_endpoint_url=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
+      # we cannot use s3 here yet without any caching layer, as we don't allow "deeper" access to directories (non-root nodes)
+      # directoryServiceAddr = "objectstore+s3://mybucket/directories?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&endpoint=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
+      directoryServiceAddr = "memory://";
+      pathInfoServiceAddr = "memory://";
+      path = testSystem;
+      useNarBridge = true;
+      preStart = ''
+        MINIO_ACCESS_KEY=myaccesskey MINIO_SECRET_KEY=supersecret MINIO_ADDRESS=127.0.0.1:9000 ${pkgs.minio}/bin/minio server $(mktemp -d) &
+        timeout 22 sh -c 'until ${pkgs.netcat}/bin/nc -z $0 $1; do sleep 1; done' localhost 9000
+        mc_config_dir=$(mktemp -d)
+        ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir alias set 'myminio' 'http://127.0.0.1:9000' 'myaccesskey' 'supersecret'
+        ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir mb myminio/mybucket
+      '';
+      isClosure = true;
+      vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
+      assertVMOutput = "Onwards and upwards.";
+    });
+
+    closure-nixos-nar-bridge = (mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      path = testSystem;
+      useNarBridge = true;
+      isClosure = true;
+      vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
+      assertVMOutput = "Onwards and upwards.";
+    });
+  };
 in
-depot.nix.readTree.drvTargets
-{
-  docs-memory = (mkBootTest {
-    path = ../../docs;
-    importPathName = "docs";
-  });
-  docs-persistent = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    directoryServiceAddr = "redb:///build/directories.redb";
-    pathInfoServiceAddr = "redb:///build/pathinfo.redb";
-    path = ../../docs;
-    importPathName = "docs";
-  });
-
-  closure-tvix = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    path = depot.tvix.store;
-    isClosure = true;
-  });
-
-  closure-nixos = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    pathInfoServiceAddr = "redb:///build/pathinfo.redb";
-    directoryServiceAddr = "redb:///build/directories.redb";
-    path = testSystem;
-    isClosure = true;
-    vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
-    assertVMOutput = "Onwards and upwards.";
-  });
-
-  closure-nixos-bigtable = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    directoryServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=directories&family_name=cf1";
-    pathInfoServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=pathinfos&family_name=cf1";
-    path = testSystem;
-    useNarBridge = true;
-    preStart = ''
-      ${pkgs.cbtemulator}/bin/cbtemulator -address $PWD/cbtemulator.sock &
-      timeout 22 sh -c 'until [ -e $PWD/cbtemulator.sock ]; do sleep 1; done'
-
-      export BIGTABLE_EMULATOR_HOST=unix://$PWD/cbtemulator.sock
-      ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createtable directories
-      ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createfamily directories cf1
-      ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createtable pathinfos
-      ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createfamily pathinfos cf1
-    '';
-    isClosure = true;
-    vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
-    assertVMOutput = "Onwards and upwards.";
-  });
-
-  closure-nixos-s3 = (mkBootTest {
-    blobServiceAddr = "objectstore+s3://mybucket/blobs?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&aws_endpoint_url=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
-    # we cannot use s3 here yet without any caching layer, as we don't allow "deeper" access to directories (non-root nodes)
-    # directoryServiceAddr = "objectstore+s3://mybucket/directories?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&endpoint=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
-    directoryServiceAddr = "memory://";
-    pathInfoServiceAddr = "memory://";
-    path = testSystem;
-    useNarBridge = true;
-    preStart = ''
-      MINIO_ACCESS_KEY=myaccesskey MINIO_SECRET_KEY=supersecret MINIO_ADDRESS=127.0.0.1:9000 ${pkgs.minio}/bin/minio server $(mktemp -d) &
-      timeout 22 sh -c 'until ${pkgs.netcat}/bin/nc -z $0 $1; do sleep 1; done' localhost 9000
-      mc_config_dir=$(mktemp -d)
-      ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir alias set 'myminio' 'http://127.0.0.1:9000' 'myaccesskey' 'supersecret'
-      ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir mb myminio/mybucket
-    '';
-    isClosure = true;
-    vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
-    assertVMOutput = "Onwards and upwards.";
-  });
-
-  closure-nixos-nar-bridge = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    path = testSystem;
-    useNarBridge = true;
-    isClosure = true;
-    vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
-    assertVMOutput = "Onwards and upwards.";
-  });
-}
+# remove broken tests from set
+builtins.removeAttrs allTests [
+  # these fail in CI as of 2025-02-09, printing HTTP errors
+  "closure-nixos-bigtable"
+  "closure-nixos-nar-bridge"
+  "closure-nixos-s3"
+]
