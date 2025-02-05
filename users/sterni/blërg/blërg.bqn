@@ -51,7 +51,7 @@ MailNotesBackend ← {𝕊 mailDir:
     {𝕊 ·‿uuid‿title‿time‿path:
       title ⇐ ⋄ time ⇐
       id ⇐ AsciiDown uuid
-      Render ⇐ {"execline-cd"‿𝕩‿"mshow"‿"-x"‿path ⋄ R "mn2html"‿path}
+      Render ⇐ {R "execline-cd"‿𝕩‿"mshow"‿"-x"‿path ⋄ R "mn2html"‿path}
     }˘ ah
   }
 }
