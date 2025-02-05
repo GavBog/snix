@@ -42,7 +42,7 @@ LR ← Lines∘R
 GetEnv ← {R "importas"‿"env"‿𝕩‿"printf"‿"%s"‿"$env"}
 
 RelPath ← •wdpath⊸•file.At
-SplitExt ← ((∊⌾⌽(∨`∘∧+¯2⊸×∘∧)=⟜'.')⊔⊢) •file.Name
+SplitExt ← (∊⌾⌽(∨`∘∧+¯2⊸×∘∧)=⟜'.')⊔⊢
 
 # 3p dependencies
 
@@ -108,10 +108,10 @@ GitBackend ← {𝕊 config:
   Entries ⇐ {𝕤⋄
     blobs ← ∘‿2⥊@ SplitChar R GitCmd "ls-tree"‿"-zr"‿"--format=%(path)%x00%(objectname)"‿rev‿path
     {𝕊 p‿b:
-      name‿ext ← SplitExt p
-      id ⇐ Slugify path DropPrefix p
+      extlessp‿ext ← SplitExt p
+      id ⇐ Slugify path DropPrefix extlessp
       # TODO(sterni): extract from file if possible
-      title ⇐ name
+      title ⇐ •file.Name extlessp
       time ⇐ PathDate p
       Render ⇐ {𝕤
         conv ← converters j.ObjGet ext
