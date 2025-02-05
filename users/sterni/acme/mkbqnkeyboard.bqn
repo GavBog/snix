@@ -17,8 +17,7 @@ IsAscii ← 127⊸≥-⟜@
 # Parse CLI
 opts ← {
  flags‿args ← 2↑'-' ((≠⟜⊑)¨⊔⊢) 𝕩
- # TODO(sterni): support multiple flags in one argument, e.g. -si
- ⟨sort,help,inPlace⟩ ⇐ flags∊˜⟨"-s","-h","-i"⟩
+ ⟨sort,help,inPlace⟩ ⇐ "shi"∊∾1⊸↓¨flags
 
  argCount ← 2
  {𝕤

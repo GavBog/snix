@@ -9,7 +9,7 @@ let
         (builtins.readDir dir));
 
   mkbqnkeyboard' = pkgs.writeShellScript "mkbqnkeyboard'" ''
-    exec ${pkgs.cbqn}/bin/BQN ${../mkbqnkeyboard.bqn} -s -i \
+    exec ${pkgs.cbqn}/bin/BQN ${../mkbqnkeyboard.bqn} -si \
       "${pkgs.srcOnly pkgs.mbqn}/editors/inputrc" "$1"
   '';
 
