@@ -39,20 +39,6 @@ resource "glesys_dnsdomain_record" "tvl_su_apex_AAAA" {
   data   = var.bugry_ipv6
 }
 
-resource "glesys_dnsdomain_record" "tvl_su_whitby_A" {
-  domain = glesys_dnsdomain.tvl_su.id
-  host   = "whitby"
-  type   = "A"
-  data   = var.whitby_ipv4
-}
-
-resource "glesys_dnsdomain_record" "tvl_su_whitby_AAAA" {
-  domain = glesys_dnsdomain.tvl_su.id
-  host   = "whitby"
-  type   = "AAAA"
-  data   = var.whitby_ipv6
-}
-
 resource "glesys_dnsdomain_record" "tvl_su_sanduny_A" {
   domain = glesys_dnsdomain.tvl_su.id
   host   = "sanduny"

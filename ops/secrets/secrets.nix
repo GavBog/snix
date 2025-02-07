@@ -24,44 +24,43 @@ let
   flokli = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPTVTXOutUZZjXLB0lUSgeKcSY/8mxKkC0ingGK1whD2 flokli";
 
   sanduny = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOag0XhylaTVhmT6HB8EN2Fv5Ymrc4ZfypOXONUkykTX";
-  whitby = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILNh/w4BSKov0jdz3gKBc98tpoLta5bb87fQXWBhAl2I";
   nevsky = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHQe7M+G8Id3ZD7j+I07TCUV1o12q1vpsOXHRlcPSEfa";
   bugry = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGqG6sITyJ/UsQ/RtYqmmMvTT4r4sppadoQIz5SvA+5J";
 
   admins = tazjin ++ aspen ++ sterni;
-  allHosts = [ whitby sanduny nevsky bugry ];
+  allHosts = [ sanduny nevsky bugry ];
   for = hosts: {
     publicKeys = hosts ++ admins;
   };
 in
 {
-  "besadii.age" = for [ whitby nevsky ];
-  "buildkite-agent-token.age" = for [ whitby nevsky ];
-  "buildkite-graphql-token.age" = for [ whitby nevsky ];
-  "buildkite-ssh-private-key.age" = for [ whitby nevsky ];
-  "clbot-ssh.age" = for [ whitby nevsky ];
-  "clbot.age" = for [ whitby nevsky ];
+  "besadii.age" = for [ nevsky ];
+  "buildkite-agent-token.age" = for [ nevsky ];
+  "buildkite-graphql-token.age" = for [ nevsky ];
+  "buildkite-ssh-private-key.age" = for [ nevsky ];
+  "clbot-ssh.age" = for [ nevsky ];
+  "clbot.age" = for [ nevsky ];
   "depot-inbox-imap.age" = for [ sanduny ];
-  "depot-replica-key.age" = for [ whitby nevsky ];
-  "gerrit-autosubmit.age" = for [ whitby nevsky ];
-  "gerrit-secrets.age" = for [ whitby nevsky ];
-  "grafana.age" = for [ whitby nevsky ];
-  "irccat.age" = for [ whitby nevsky ];
+  "depot-replica-key.age" = for [ nevsky ];
+  "gerrit-autosubmit.age" = for [ nevsky ];
+  "gerrit-secrets.age" = for [ nevsky ];
+  "grafana.age" = for [ nevsky ];
+  "irccat.age" = for [ nevsky ];
   "journaldriver.age" = for allHosts;
-  "keycloak-db.age" = for [ whitby nevsky ];
-  "nix-cache-priv.age" = for [ whitby nevsky ];
-  "nix-cache-pub.age" = for [ whitby nevsky ];
-  "owothia.age" = for [ whitby nevsky ];
-  "panettone.age" = for [ whitby nevsky ];
+  "keycloak-db.age" = for [ nevsky ];
+  "nix-cache-priv.age" = for [ nevsky ];
+  "nix-cache-pub.age" = for [ nevsky ];
+  "owothia.age" = for [ nevsky ];
+  "panettone.age" = for [ nevsky ];
   "restic-bugry.age" = for [ bugry ];
   "restic-nevsky.age" = for [ nevsky ];
   "restic-sanduny.age" = for [ sanduny ];
-  "smtprelay.age" = for [ whitby nevsky ];
-  "teleirc.age" = for [ whitby nevsky ];
+  "smtprelay.age" = for [ nevsky ];
+  "teleirc.age" = for [ nevsky ];
   "tf-buildkite.age" = for [ /* humans only */ ];
   "tf-glesys.age" = for [ /* humans only */ ];
   "tf-keycloak.age" = for [ flokli ];
-  "tvl-alerts-bot-telegram-token.age" = for [ whitby nevsky ];
+  "tvl-alerts-bot-telegram-token.age" = for [ nevsky ];
   "wg-bugry.age" = for [ bugry ];
   "wg-nevsky.age" = for [ nevsky ];
   "yc-restic.age" = for [ nevsky sanduny bugry ];

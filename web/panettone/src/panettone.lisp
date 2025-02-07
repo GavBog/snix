@@ -675,7 +675,7 @@ given subject an body (in a thread, to avoid blocking)"
 (comment
  (setq hunchentoot:*catch-errors-p* nil)
  ;; to setup an ssh tunnel to cheddar+irccat for development:
- ;; ssh -N -L 4238:localhost:4238 -L 4722:localhost:4722 whitby.tvl.fyi
+ ;; ssh -N -L 4238:localhost:4238 -L 4722:localhost:4722 nevsky.tvl.fyi
  (start-panettone :port 6161
                   :session-secret "session-secret")
  )

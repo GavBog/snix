@@ -39,20 +39,6 @@ resource "glesys_dnsdomain_record" "tvl_fyi_apex_AAAA" {
   data   = var.bugry_ipv6
 }
 
-resource "glesys_dnsdomain_record" "tvl_fyi_whitby_A" {
-  domain = glesys_dnsdomain.tvl_fyi.id
-  host   = "whitby"
-  type   = "A"
-  data   = var.whitby_ipv4
-}
-
-resource "glesys_dnsdomain_record" "tvl_fyi_whitby_AAAA" {
-  domain = glesys_dnsdomain.tvl_fyi.id
-  host   = "whitby"
-  type   = "AAAA"
-  data   = var.whitby_ipv6
-}
-
 resource "glesys_dnsdomain_record" "tvl_fyi_nevsky_A" {
   domain = glesys_dnsdomain.tvl_fyi.id
   host   = "nevsky"
@@ -113,7 +99,7 @@ resource "glesys_dnsdomain_record" "cache_tvl_fyi_A" {
   host     = "cache"
   type     = "A"
   data     = each.key
-  for_each = toset([var.whitby_ipv4, var.nevsky_ipv4])
+  for_each = toset([var.nevsky_ipv4])
 }
 
 resource "glesys_dnsdomain_record" "cache_tvl_fyi_AAAA" {
@@ -121,17 +107,10 @@ resource "glesys_dnsdomain_record" "cache_tvl_fyi_AAAA" {
   host     = "cache"
   type     = "AAAA"
   data     = each.key
-  for_each = toset([var.whitby_ipv6, var.nevsky_ipv6])
+  for_each = toset([var.nevsky_ipv6])
 }
 
 # Builderball cache records
-
-resource "glesys_dnsdomain_record" "tvl_fyi_cache_whitby_CNAME" {
-  domain = glesys_dnsdomain.tvl_fyi.id
-  type   = "CNAME"
-  data   = "whitby.tvl.fyi."
-  host   = "whitby.cache"
-}
 
 resource "glesys_dnsdomain_record" "tvl_fyi_cache_nevsky_CNAME" {
   domain = glesys_dnsdomain.tvl_fyi.id

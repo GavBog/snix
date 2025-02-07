@@ -4,7 +4,7 @@
 let
   cfg = config.services.gerrit;
 
-  besadiiWithConfig = name: pkgs.writeShellScript "besadii-whitby" ''
+  besadiiWithConfig = name: pkgs.writeShellScript "besadii-hook" ''
     export BESADII_CONFIG=/run/agenix/gerrit-besadii-config
     exec -a ${name} ${depot.ops.besadii}/bin/besadii "$@"
   '';

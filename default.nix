@@ -27,13 +27,12 @@ let
     '';
 
     exceptions = [
-      # whitby is allowed to access //users for several reasons:
+      # machines is allowed to access //users for several reasons:
       #
       # 1. User SSH keys are set in //users.
-      # 2. Some personal websites or demo projects are served from it.
+      # 2. Some personal websites or demo projects are served from there.
       [ "ops" "machines" "bugry" ]
       [ "ops" "machines" "nevsky" ]
-      [ "ops" "machines" "whitby" ]
 
       # Due to evaluation order this also affects these targets.
       # TODO(tazjin): Can this one be removed somehow?
@@ -51,9 +50,8 @@ let
     '';
 
     exceptions = [
-      # For the same reason as above, whitby is exempt to serve the
-      # corp website.
-      [ "ops" "machines" "whitby" ]
+      # For the same reason as above, machines are exempt to serve the corp
+      # website.
       [ "ops" "nixos" ]
       [ "ops" "machines" "all-systems" ]
     ];

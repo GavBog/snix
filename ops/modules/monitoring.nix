@@ -25,7 +25,7 @@
       nginx = {
         enable = true;
         sslVerify = false;
-        constLabels = [ "host=whitby" ];
+        constLabels = [ "host=${config.networking.hostName}" ];
       };
     };
 

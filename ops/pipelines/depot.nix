@@ -28,7 +28,7 @@ let
           nix-build -A ci.gcroot --out-link /nix/var/nix/gcroots/depot/canon
         '';
 
-        # Ensure that anchoring happens on whitby, so that cache.tvl.su always
+        # Ensure that anchoring happens on nevsky, so that cache.tvl.su always
         # has the full cache. Unanchored machines may garbage collect live
         # paths.
         agents.hostname = "nevsky";

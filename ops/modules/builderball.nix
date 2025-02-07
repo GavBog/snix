@@ -18,7 +18,6 @@ in
       description = "Public addresses of caches to use";
 
       default = [
-        "whitby.cache.tvl.fyi"
         "nevsky.cache.tvl.fyi"
       ];
     };
