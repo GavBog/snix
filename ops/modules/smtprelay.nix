@@ -47,7 +47,7 @@ in
   config = mkIf cfg.enable {
     systemd.services.smtprelay = {
       inherit description;
-      script = "${depot.third_party.smtprelay}/bin/smtprelay ${prepareArgs cfg.args}";
+      script = "${pkgs.smtprelay}/bin/smtprelay ${prepareArgs cfg.args}";
       wantedBy = [ "multi-user.target" ];
 
       serviceConfig = {
