@@ -344,7 +344,8 @@ in
     # Run a handful of Buildkite agents to support parallel builds.
     buildkite = {
       enable = true;
-      agentCount = 16;
+      agentCount = 24;
+      largeSlots = 6;
     };
 
     # Run the Panettone issue tracker
