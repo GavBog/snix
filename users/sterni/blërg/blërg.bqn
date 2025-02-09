@@ -93,7 +93,7 @@ converters ← ⍉>⟨
 PipelineCmd ← {⟨"pipeline"⟩∾(' '⊸∾¨𝕨)∾⟨""⟩∾𝕩}
 
 GitBackend ← {𝕊 config:
-  repo ← RelPath •file.At config j.ObjGet "repository"
+  repo ← RelPath config j.ObjGet "repository"
   path ← ∾⟜'/' '/' StripRight config "." j._ObjGetDef "path"
 
   # We use zero separated fields when dealing with paths, so quoting is unnecessary
