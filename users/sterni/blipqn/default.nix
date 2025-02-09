@@ -25,6 +25,7 @@ let
       runHook preCheck
       nc -lu 2323 > raw &
       BQN ./examples.bqn localhost 2323 32 10 235
+      sleep .5
       kill %1
       base64 raw > received
       diff -u received - <<EOF

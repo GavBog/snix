@@ -20,3 +20,12 @@ serde = { version = "1.0", features = [ "derive" ] }
 [dependencies.diesel]
 features = [ "postgres", "chrono", "r2d2" ]
 version = "1.4"
+
+# Add bogus dependency on any version of pq-sys, so we can force the pkg-config
+# flag since pg_config reports an incorrect libdir in pkgs.libpq
+# https://github.com/NixOS/nixpkgs/pull/359659#issuecomment-2660995914
+# https://github.com/NixOS/nixpkgs/pull/382380
+# https://github.com/sgrif/pq-sys/issues/75
+[dependencies.pq-sys]
+features = [ "pkg-config" ]
+version = "*"

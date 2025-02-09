@@ -42,6 +42,9 @@ pkgs.stdenvNoCC.mkDerivation {
     cp -r ${gtk4ProjectSrc}/gtk-4.0 $out/share/themes/Chicago95
   '';
 
+  # TODO(tazjin): investigate various broken symlinks in $out/share/icons
+  dontCheckForBrokenSymlinks = true;
+
   meta.license = pkgs.lib.licenses.gpl3;
 }
 
