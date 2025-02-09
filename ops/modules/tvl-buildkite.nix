@@ -27,9 +27,16 @@ in
 {
   options.services.depot.buildkite = {
     enable = lib.mkEnableOption description;
+
     agentCount = lib.mkOption {
       type = lib.types.int;
       description = "Number of Buildkite agents to launch";
+    };
+
+    largeSlots = lib.mkOption {
+      type = lib.types.int;
+      default = cfg.agentCount;
+      description = "Number of agents with 'large=true'";
     };
   };
 
@@ -50,6 +57,9 @@ in
 
           tags.hostname = hostname;
 
+          # all agents support small jobs
+          tags.small = "true";
+
           runtimePackages = with pkgs; [
             bash
             coreutils
@@ -61,7 +71,9 @@ in
             jq
             nix
           ];
-        };
+        } // (lib.optionalAttrs (n <= cfg.largeSlots) {
+          tags.large = "true";
+        });
       })
       agents);
 
