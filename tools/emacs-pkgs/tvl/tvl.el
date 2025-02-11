@@ -1,11 +1,11 @@
 ;;; tvl.el --- description -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2020 Griffin Smith
-;; Copyright (C) 2020 The TVL Contributors
+;; Copyright (C) 2020-2023, 2025 The TVL Contributors
 ;;
 ;; Author: Griffin Smith <grfn@gws.fyi>
 ;; Version: 0.0.1
-;; Package-Requires: (cl s magit)
+;; Package-Requires: (s magit)
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -17,7 +17,6 @@
 
 (require 'magit)
 (require 's)
-(require 'cl) ; TODO(tazjin): replace lexical-let* with non-deprecated alternative
 
 (defgroup tvl nil
   "Customisation options for TVL functionality.")
@@ -213,14 +212,14 @@ passes. This is potentially dangerous, use with care."
 
      (interactive (list (read-string "Attribute: ")
                         (yes-or-no-p "Only include dependencies? ")))
-     (lexical-let* ((outbuf (get-buffer-create (format "*depot-out/%s*" attribute)))
-                    (errbuf (get-buffer-create (format "*depot-errors/%s*" attribute)))
-                    (attr-display (if only-deps attribute (format "dependencies of %s" attribute)))
-                    (expression (if only-deps
-                                    (format "let d = import <depot> {}; in d.nix.buildLisp.sbcl.lispWith d.%s.lispDeps"
-                                            attribute)
-                                    (format "(import <depot> {}).%s.repl" attribute)))
-                    (command (list "nix-build" "--no-out-link" "-I" (format "depot=%s" tvl-depot-path) "-E" expression)))
+     (let* ((outbuf (get-buffer-create (format "*depot-out/%s*" attribute)))
+            (errbuf (get-buffer-create (format "*depot-errors/%s*" attribute)))
+            (attr-display (if only-deps attribute (format "dependencies of %s" attribute)))
+            (expression (if only-deps
+                            (format "let d = import <depot> {}; in d.nix.buildLisp.sbcl.lispWith d.%s.lispDeps"
+                                    attribute)
+                          (format "(import <depot> {}).%s.repl" attribute)))
+            (command (list "nix-build" "--no-out-link" "-I" (format "depot=%s" tvl-depot-path) "-E" expression)))
        (message "Acquiring Lisp for <depot>.%s" attr-display)
        (make-process :name (format "depot-nix-build/%s" attribute)
                      :buffer outbuf
