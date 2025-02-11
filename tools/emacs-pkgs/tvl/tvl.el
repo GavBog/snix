@@ -165,7 +165,7 @@ passes. This is potentially dangerous, use with care."
   (while (and magit-this-process
               (eq (process-status magit-this-process) 'run))
     (sleep-for 0.005))
-  (magit-checkout "FETCH_HEAD" (magit-branch-arguments))
+  (magit--checkout "FETCH_HEAD" (magit-branch-arguments))
   (message "HEAD detached at %s" cl-refspec))
 
 
