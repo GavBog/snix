@@ -22,7 +22,7 @@
   "Customisation options for TVL functionality.")
 
 (defcustom tvl-gerrit-remote "origin"
-  "Name of the git remote for gerrit"
+  "Name of the git remote for gerrit."
   :type '(string)
   :group 'tvl)
 
@@ -32,7 +32,7 @@
   :group 'tvl)
 
 (defcustom tvl-target-branch "canon"
-  "Branch to use to target CLs"
+  "Branch to use to target CLs."
   :group 'tvl
   :type '(string)
   :safe (lambda (_) t))
@@ -226,7 +226,7 @@ passes. This is potentially dangerous, use with care."
                      :stderr errbuf
                      :command command
                      :sentinel
-                     (lambda (process event)
+                     (lambda (_process event)
                        (unwind-protect
                            (pcase event
                              ("finished\n"
