@@ -7,7 +7,18 @@ depot.nix.readTree.drvTargets {
   nix_2_3 = (super.nix_2_3.override {
     # flaky tests, long painful build, see https://github.com/NixOS/nixpkgs/pull/266443
     withAWS = false;
+  }).overrideAttrs (_: {
+    # use TVL maintenance branch for 2.3, which has more fixes than upstream
+    CXXFLAGS = "--std=c++20 -g";
+    dontStrip = true;
+    src = self.fetchFromGitHub {
+      owner = "tvlfyi";
+      repo = "nix";
+      rev = "d516e2826128c09588535b67aa27fd3e24288b5f";
+      sha256 = "04yxxhhq4542gakfh2kylnhq9fagfzv63shrq0qvf8rajflwxr22";
+    };
   });
+
   nix = self.nix_2_3 // {
     # avoid duplicate pipeline step
     meta = self.nix_2_3.meta or { } // {
@@ -16,6 +27,7 @@ depot.nix.readTree.drvTargets {
       };
     };
   };
+
   nix_latest_stable = super.nix.override ({
     # flaky tests, long painful build, see https://github.com/NixOS/nixpkgs/pull/266443
     withAWS = false;
