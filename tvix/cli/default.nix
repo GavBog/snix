@@ -52,16 +52,19 @@ let
   mkNixpkgsEvalTest =
     { attrPath ? null # An attribute that must already be accessible from `pkgs`. Should evaluate to a store path.
     , expr ? null # A Nix expression that should evaluate to a store path.
-    , expectedPath # The expected store path that should match one of the above.
-    }:
+    , expectedPath ? null # The expected store path that should match one of the above.
+    }@args:
       assert lib.assertMsg (attrPath != null || expr != null) "Either 'attrPath' or 'expr' must be set.";
+      assert lib.assertMsg (expr != null -> expectedPath != null) "For 'expr', 'expectedPath' must be given explicitly.";
       let
-        name = "tvix-eval-test-${builtins.replaceStrings [".drv"] ["-drv"] (if expr != null then "custom-expr" else attrPath)}";
+        expectedPath' = args.expectedPath or (lib.getAttrFromPath attrPath (import pkgs.path { }));
+        renderedAttrPath = lib.concatStringsSep "." attrPath;
+        name = "tvix-eval-test-${builtins.replaceStrings [".drv"] ["-drv"] (if expr != null then "custom-expr" else renderedAttrPath)}";
       in
       (pkgs.runCommand name { } ''
         export SSL_CERT_FILE=/dev/null
-        TVIX_OUTPUT=$(${tvix-cli}/bin/tvix --no-warnings -E '${if expr != null then expr else "(import ${pkgs.path} {}).${attrPath}"}')
-        EXPECTED='${/* the verbatim expected Tvix output: */ "=> \"${builtins.unsafeDiscardStringContext expectedPath}\" :: string"}'
+        TVIX_OUTPUT=$(${tvix-cli}/bin/tvix --no-warnings -E '${if expr != null then expr else "(import ${pkgs.path} {}).${renderedAttrPath}"}')
+        EXPECTED='${/* the verbatim expected Tvix output: */ "=> \"${builtins.unsafeDiscardStringContext expectedPath'}\" :: string"}'
 
         echo "Tvix output: ''${TVIX_OUTPUT}"
         if [ "$TVIX_OUTPUT" != "$EXPECTED" ]; then
@@ -84,13 +87,13 @@ let
   };
 
   evalTests = {
-    eval-nixpkgs-stdenv-drvpath = (mkNixpkgsEvalTest { attrPath = "stdenv.drvPath"; expectedPath = pkgs.stdenv.drvPath; });
-    eval-nixpkgs-stdenv-outpath = (mkNixpkgsEvalTest { attrPath = "stdenv.outPath"; expectedPath = pkgs.stdenv.outPath; });
-    eval-nixpkgs-hello-outpath = (mkNixpkgsEvalTest { attrPath = "hello.outPath"; expectedPath = pkgs.hello.outPath; });
-    eval-nixpkgs-firefox-outpath = (mkNixpkgsEvalTest { attrPath = "firefox.outPath"; expectedPath = pkgs.firefox.outPath; });
-    eval-nixpkgs-firefox-drvpath = (mkNixpkgsEvalTest { attrPath = "firefox.drvPath"; expectedPath = pkgs.firefox.drvPath; });
-    eval-nixpkgs-cross-stdenv-outpath = (mkNixpkgsEvalTest { attrPath = "pkgsCross.aarch64-multiplatform.stdenv.outPath"; expectedPath = pkgs.pkgsCross.aarch64-multiplatform.stdenv.outPath; });
-    eval-nixpkgs-cross-hello-outpath = (mkNixpkgsEvalTest { attrPath = "pkgsCross.aarch64-multiplatform.hello.outPath"; expectedPath = pkgs.pkgsCross.aarch64-multiplatform.hello.outPath; });
+    eval-nixpkgs-stdenv-drvpath = (mkNixpkgsEvalTest { attrPath = [ "stdenv" "drvPath" ]; });
+    eval-nixpkgs-stdenv-outpath = (mkNixpkgsEvalTest { attrPath = [ "stdenv" "outPath" ]; });
+    eval-nixpkgs-hello-outpath = (mkNixpkgsEvalTest { attrPath = [ "hello" "outPath" ]; });
+    eval-nixpkgs-firefox-outpath = (mkNixpkgsEvalTest { attrPath = [ "firefox" "outPath" ]; });
+    eval-nixpkgs-firefox-drvpath = (mkNixpkgsEvalTest { attrPath = [ "firefox" "drvPath" ]; });
+    eval-nixpkgs-cross-stdenv-outpath = (mkNixpkgsEvalTest { attrPath = [ "pkgsCross" "aarch64-multiplatform" "stdenv" "outPath" ]; });
+    eval-nixpkgs-cross-hello-outpath = (mkNixpkgsEvalTest { attrPath = [ "pkgsCross" "aarch64-multiplatform" "hello" "outPath" ]; });
     # Our CI runner currently uses Nix version lower than 2.12, which means it uses the old JSON library.
     # The NixOS docs generate a JSON file with all the NixOS options, and so output is different between Tvix (and Nix 2.12+) and our CI runner's Nix version,
     # so we disable the NixOS docs generation for now. TODO(kranzes): Re-enable NixOS docs once the CI runner is using a newer Nix version.
