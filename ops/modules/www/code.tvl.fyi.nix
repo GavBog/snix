@@ -13,6 +13,10 @@
       forceSSL = true;
 
       extraConfig = ''
+        if ($http_user_agent ~ (ClaudeBot|GPTBot|Amazonbot)) {
+            return 403;
+        }
+
         location = /go-get/tvix/build-go {
             alias ${pkgs.writeText "go-import-metadata.html" ''<html><meta name="go-import" content="code.tvl.fyi/tvix/build-go git https://code.tvl.fyi/depot.git:/tvix/build-go.git"></html>''};
         }
