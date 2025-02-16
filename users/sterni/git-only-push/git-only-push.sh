@@ -107,7 +107,7 @@ fi
 
 for arg in "$@"; do
   # Resolve ranges, get them into chronological order
-  revs="$(git -C "$repo" rev-list --no-walk "$arg" | tac)"
+  revs="$(git -C "$repo" rev-list --reverse --no-walk "$arg")"
 
   for rev in $revs; do
     if $dry; then
