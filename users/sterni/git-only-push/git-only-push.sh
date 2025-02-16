@@ -89,26 +89,23 @@ if [ "$#" -eq 0 ]; then
   die 100 "Missing commits"
 fi
 
+# Resolve ranges, get them into chronological order
+repo="$(git rev-parse --show-toplevel)"
+revs="$(git -C "$repo" rev-list --no-walk "$@" | tac)"
+
 worktree=
 
 cleanup() {
-  cd "$repo"
   test -n "$worktree" && test -e "$worktree" \
-    && git worktree remove "$worktree"
+    && git -C "$repo" worktree remove "$worktree"
 }
 trap cleanup EXIT
-
-# Resolve ranges, get them into chronological order
-revs="$(git rev-list --no-walk "$@" | tac)"
-repo="$(git rev-parse --show-toplevel)"
 
 if $dry; then
   printf 'Would create worktree and checkout %s\n' "$base" >&2
 else
   worktree="$(mktemp -d)"
-  git worktree add "$worktree" "$base"
-
-  cd "$worktree"
+  git -C "$repo" worktree add "$worktree" "$base"
 fi
 
 for rev in $revs; do
@@ -116,7 +113,7 @@ for rev in $revs; do
     printf 'Would cherry pick %s\n' "$rev" >&2
   else
     no_cherry_pick=false
-    git cherry-pick ${cherry_pick_x:+-x} "$rev" || no_cherry_pick=true
+    git -C "$worktree" cherry-pick ${cherry_pick_x:+-x} "$rev" || no_cherry_pick=true
     if $no_cherry_pick; then
       tmp="$worktree"
       # Prevent cleanup from removing the worktree
@@ -129,5 +126,5 @@ done
 if $dry; then
   printf 'Would push resulting HEAD to %s on %s\n' "$to" "$remote" >&2
 else
-  git push ${push_f:+-f} "$remote" "HEAD:$to"
+  git -C "$worktree" push ${push_f:+-f} "$remote" "HEAD:$to"
 fi
