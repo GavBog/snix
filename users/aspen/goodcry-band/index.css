@@ -93,6 +93,20 @@ h2 {
     margin-bottom: 1.7rem;
 }
 
+.music-embed {
+    margin-left: -30px;
+    margin-right: -30px;
+}
+
+.streaming-links {
+    text-align: center;
+    color: var(--gray);
+}
+
+.streaming-links a {
+    color: var(--gray);
+}
+
 a {
     color: var(--blue);
     text-decoration: none;
