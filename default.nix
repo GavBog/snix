@@ -11,10 +11,6 @@
 }@args:
 
 let
-  inherit (builtins)
-    filter
-    ;
-
   readTree = import ./nix/readTree { };
 
   # Disallow access to //users from other depot parts.
