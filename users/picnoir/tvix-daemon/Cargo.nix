@@ -2500,6 +2500,10 @@ rec {
             packageId = "serde_json";
           }
           {
+            name = "serde_repr";
+            packageId = "serde_repr";
+          }
+          {
             name = "sha2";
             packageId = "sha2";
           }
@@ -2526,10 +2530,6 @@ rec {
           {
             name = "mimalloc";
             packageId = "mimalloc";
-          }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
           }
         ];
         features = {
@@ -3305,6 +3305,31 @@ rec {
         ];
 
       };
+      "serde_repr" = rec {
+        crateName = "serde_repr";
+        version = "0.1.19";
+        edition = "2021";
+        sha256 = "1sb4cplc33z86pzlx38234xr141wr3cmviqgssiadisgl8dlar3c";
+        procMacro = true;
+        authors = [
+          "David Tolnay <dtolnay@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "proc-macro2";
+            packageId = "proc-macro2";
+          }
+          {
+            name = "quote";
+            packageId = "quote";
+          }
+          {
+            name = "syn";
+            packageId = "syn";
+          }
+        ];
+
+      };
       "serde_urlencoded" = rec {
         crateName = "serde_urlencoded";
         version = "0.7.1";
@@ -3571,9 +3596,9 @@ rec {
       };
       "syn" = rec {
         crateName = "syn";
-        version = "2.0.79";
+        version = "2.0.87";
         edition = "2021";
-        sha256 = "147mk4sgigmvsb9l8qzj199ygf0fgb0bphwdsghn8205pz82q4w9";
+        sha256 = "0bd3mfcswvn4jkrp7ich5kk58kmpph8412yxd36nsfnh8vilrai5";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -3630,9 +3655,9 @@ rec {
       };
       "thiserror" = rec {
         crateName = "thiserror";
-        version = "1.0.64";
+        version = "2.0.11";
         edition = "2021";
-        sha256 = "114s8lmssxl0c2480s671am88vzlasbaikxbvfv8pyqrq6mzh2nm";
+        sha256 = "1z0649rpa8c2smzx129bz4qvxmdihj30r2km6vfpcv9yny2g4lnl";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -3642,13 +3667,16 @@ rec {
             packageId = "thiserror-impl";
           }
         ];
-
+        features = {
+          "default" = [ "std" ];
+        };
+        resolvedDefaultFeatures = [ "default" "std" ];
       };
       "thiserror-impl" = rec {
         crateName = "thiserror-impl";
-        version = "1.0.64";
+        version = "2.0.11";
         edition = "2021";
-        sha256 = "1hvzmjx9iamln854l74qyhs0jl2pg3hhqzpqm9p8gszmf9v4x408";
+        sha256 = "1hkkn7p2y4cxbffcrprybkj0qy1rl1r6waxmxqvr764axaxc3br6";
         procMacro = true;
         libName = "thiserror_impl";
         authors = [

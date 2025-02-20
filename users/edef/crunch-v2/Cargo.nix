@@ -4178,10 +4178,6 @@ rec {
             name = "mimalloc";
             packageId = "mimalloc";
           }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
-          }
         ];
         features = {
           "async" = [ "tokio" ];
