@@ -39,6 +39,16 @@ Run ← {
 R ← {𝕊 exit‿stdout‿stderr: stderr!0=exit ⋄ stdout}∘Run
 LR ← Lines∘R
 
+# see execline-block(7)
+Execline ← ∾ {
+  # Not a string nor any other list
+  𝕩: 0≠•Type𝕩? ⋈•Fmt 𝕩;
+  # List, but not a string (i.e. block)
+  𝕩: 2≠•Type⊑𝕩? ⟨""⟩∾˜∾(' '⊸∾¨ 𝕊)¨𝕩;
+  # String (i.e. arg)
+  ⋈𝕩
+}¨
+
 GetEnv ← {R "importas"‿"env"‿𝕩‿"printf"‿"%s"‿"$env"}
 
 RelPath ← •wdpath⊸•file.At
@@ -88,9 +98,8 @@ converters ← ⍉>⟨
   ⟨"org", "pandoc"‿"-f"‿"org"‿"-t"‿"html5"⟩,
 ⟩
 
-# TODO(sterni): don't assemble blocks in this ad hoc fashion
 # TODO(sterni): pipefail
-PipelineCmd ← {⟨"pipeline"⟩∾(' '⊸∾¨𝕨)∾⟨""⟩∾𝕩}
+PipelineCmd ← {Execline "pipeline"‿𝕨∾𝕩}
 
 GitBackend ← {𝕊 config:
   repo ← RelPath config j.ObjGet "repository"
