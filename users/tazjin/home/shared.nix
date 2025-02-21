@@ -61,6 +61,11 @@ in
     };
   };
 
+  # workaround for https://github.com/nix-community/home-manager/issues/4199
+  home.activation.backupWorkaround = lib.hm.dag.entryBefore [ "linkGeneration" ] ''
+    run rm -f ~/.config/mimeapps.list.backup
+  '';
+
   # put Niri (& related tools) configuration in place
   xdg.configFile."niri/config.kdl".source = depot.users.tazjin.dotfiles.niri;
   xdg.configFile."fuzzel/fuzzel.ini".source = depot.users.tazjin.dotfiles.fuzzel;
