@@ -38,7 +38,8 @@ in
     (usermod "laptop.nix")
     (usermod "physical.nix")
     (usermod "systemd-unfreeze.nix")
-    (pkgs.home-manager.src + "/nixos")
+
+    ((pkgs.srcOnly pkgs.home-manager) + "/nixos")
   ] ++ yandexConfigIncludes;
 
   # from hardware-configuration.nix

@@ -22,7 +22,7 @@ in
     (usermod "persistence.nix")
     (usermod "physical.nix")
 
-    (pkgs.home-manager.src + "/nixos")
+    ((pkgs.srcOnly pkgs.home-manager) + "/nixos")
   ] ++ lib.optional (builtins.pathExists ./local-config.nix) ./local-config.nix;
 
   tvl.cache.enable = true;

@@ -20,7 +20,7 @@ in
     (usermod "laptop.nix")
     (usermod "persistence.nix")
     (usermod "physical.nix")
-    (pkgs.home-manager.src + "/nixos")
+    ((pkgs.srcOnly pkgs.home-manager) + "/nixos")
   ];
 
   tvl.cache.enable = true;
