@@ -83,7 +83,7 @@ in
     };
 
     systemd.services.livegrep-reindex = {
-      script = "${pkgs.docker}/bin/docker exec livegrep-codesearch /livegrep/bin/livegrep-reload localhost:5427";
+      script = "${pkgs.podman}/bin/podman exec livegrep-codesearch /livegrep/bin/livegrep-reload localhost:5427";
       serviceConfig.Type = "oneshot";
     };
 
@@ -100,7 +100,3 @@ in
     };
   };
 }
-
-
-# sudo docker exec -ti livegrep /livegrep/bin/codesearch -reload_rpc -revparse /var/lib/livegrep/config.jsno
-# sudo docker run -d --ip 172.17.0.3 --name livegrep -v /var/lib/livegrep:/varlib/livegrep -v /var/lib/gerrit/git/depot.git:/depot:ro -v /home/tazjin/livegrep-web:/livegrep/web:ro ghcr.io/livegrep/livegrep/base /livegrep/bin/livegrep -listen 0.0.0.0:8910 -reload -docroot /livegrep/webbsudo docker run -d --ip 172.17.0.3 --name livegrep -v /var/lib/livegrep:/varlib/livegrep -v /var/lib/gerrit/git/depot.git:/depot:ro -v /home/tazjin/livegrep-web:/livegrep/web:ro ghcr.io/livegrep/livegrep/base /livegrep/bin/livegrep -listen 0.0.0.0:8910 -reload -docroot /livegrep/webb
