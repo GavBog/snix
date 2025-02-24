@@ -13,7 +13,6 @@ let
     isDirectory
     isRegularFile
     isSymlink
-    pathType
     storePathName
     ;
 
@@ -71,20 +70,20 @@ let
       (isSymlink ./does-not-exist))
   ]);
 
-  cheddarStorePath =
-    builtins.unsafeDiscardStringContext depot.tools.cheddar.outPath;
+  magratheaStorePath =
+    builtins.unsafeDiscardStringContext depot.tools.magrathea.outPath;
 
   cleanedSource = lib.cleanSource ./.;
 
   storePathNameTests = it "correctly gets the basename of a store path" [
     (assertEq "base name of a derivation"
-      (storePathName depot.tools.cheddar)
-      depot.tools.cheddar.name)
+      (storePathName depot.tools.magrathea)
+      depot.tools.magrathea.name)
     (assertEq "base name of a store path string"
-      (storePathName cheddarStorePath)
-      depot.tools.cheddar.name)
+      (storePathName magratheaStorePath)
+      depot.tools.magrathea.name)
     (assertEq "base name of a path within a store path"
-      (storePathName "${cheddarStorePath}/bin/cheddar") "cheddar")
+      (storePathName "${magratheaStorePath}/bin/mg") "mg")
     (assertEq "base name of a path"
       (storePathName ../default.nix) "default.nix")
     (assertEq "base name of a cleanSourced path"
