@@ -46,14 +46,14 @@ lib.fix (self: {
       enable32Bit = true;
     };
 
-    pulseaudio = {
-      enable = true;
-      package = pkgs.pulseaudioFull;
-    };
-
     bluetooth = {
       enable = true;
     };
+  };
+
+  services.pulseaudio = {
+    enable = true;
+    package = pkgs.pulseaudioFull;
   };
 
   nix.settings = {

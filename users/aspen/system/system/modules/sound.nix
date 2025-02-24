@@ -2,7 +2,7 @@
 
 {
   # Enable sound.
-  hardware.pulseaudio.enable = true;
+  services.pulseaudio.enable = true;
   services.pipewire.enable = false;
 
   environment.systemPackages = with pkgs; [
@@ -12,5 +12,5 @@
     pavucontrol
   ];
 
-  hardware.pulseaudio.package = pkgs.pulseaudioFull;
+  services.pulseaudio.package = pkgs.pulseaudioFull;
 }
