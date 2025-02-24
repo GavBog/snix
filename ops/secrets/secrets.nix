@@ -1,3 +1,5 @@
+# This file is read by agenix standalone, to know which audiences to (re)encrypt secrets to.
+
 let
   raito = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICaw9ihTG7ucB8P38XdalEWev8+q96e2yNm4B+/I9IJp"

@@ -1,14 +1,6 @@
 { depot, pkgs, lib, ... }:
 
 let
-
-  bins =
-    depot.nix.getBins pkgs.cargo-audit [ "cargo-audit" ]
-    // depot.nix.getBins pkgs.jq [ "jq" ]
-    // depot.nix.getBins pkgs.findutils [ "find" ]
-    // depot.nix.getBins pkgs.gnused [ "sed" ]
-  ;
-
   our-crates = lib.filter (v: v ? outPath)
     (builtins.attrValues depot.third_party.rust-crates);
 
@@ -36,10 +28,10 @@ let
       exit 100
     fi
 
-    "${bins.cargo-audit}" audit --json --no-fetch \
+    ${pkgs.cargo-audit}/bin/cargo-audit audit --json --no-fetch \
       --db "${depot.third_party.rustsec-advisory-db}" \
       --file "$2" \
-    | "${bins.jq}" --raw-output --join-output \
+    | ${pkgs.jq}/bin/jq --raw-output --join-output \
       --from-file "${./format-audit-result.jq}" \
       --arg maintainers "''${4:-}" \
       --argjson checklist "''${3:-false}" \
@@ -56,9 +48,9 @@ let
 
     # Find prints the found lockfiles as <DEPOT ROOT>\t<LOCKFILE DIR>\t<LOCKFILE PATH>\0
     while IFS=$'\t' read -r -d $'\0' entryPoint dir lockFile; do
-      label="$(printf '%s' "$dir" | "${bins.sed}" "s|^$entryPoint|/|")"
+      label="$(printf '%s' "$dir" | ${pkgs.gnused}/bin/sed "s|^$entryPoint|/|")"
       "${lock-file-report}" "$label" "$lockFile" || status=1
-    done < <("${bins.find}" "$root" -type f -name Cargo.lock -printf '%H\t%h\t%p\0' )
+    done < <(${pkgs.findutils}/bin/find "$root" -type f -name Cargo.lock -printf '%H\t%h\t%p\0' )
 
     exit $status
   '';
