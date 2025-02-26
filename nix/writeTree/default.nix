@@ -1,12 +1,7 @@
 { depot, lib, pkgs, ... }:
 let
   inherit (lib) fix pipe mapAttrsToList isAttrs concatLines isString isDerivation isPath;
-
-  # TODO(sterni): move to //nix/utils with clearer naming and alternative similar to lib.types.path
-  isPathLike = value:
-    isPath value
-    || isDerivation value
-    || (isString value && builtins.hasContext value);
+  inherit (depot.nix.utils) isReferencablePath;
 
   esc = s: lib.escapeShellArg /* ensure paths import into store */ "${s}";
 
@@ -16,7 +11,7 @@ let
     ''
     + pipe tree [
       (mapAttrsToList (k: v:
-        if isPathLike v then
+        if isReferencablePath v then
           "cp -R --reflink=auto ${esc "${v}"} \"$out/\"${esc path}/${esc k}"
         else if lib.isAttrs v then
           writeTreeAtPath (path + "/" + k) v

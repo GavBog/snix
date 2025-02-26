@@ -148,6 +148,27 @@ let
   */
   isSymlink = path: pathType' path ? symlink;
 
+  /* Checks whether the given value is (or contains) a reference to a
+     path that will be retained in the store path resulting from a derivation.
+     So if isReferencablePath returns true, the given value may be used in a
+     way that allows accessing it at runtime of any Nix built program.
+
+     Returns true for:
+
+     - Strings with context (if the string is/contains a single path is not verified!)
+     - Path values
+     - Derivations
+
+     Note that the value still needs to used in a way that forces string context
+     (and thus reference tracking) to be created, e.g. in string interpolation.
+
+     Type: any -> bool
+  */
+  isReferencablePath = value:
+    builtins.isPath value
+    || lib.isDerivation value
+    || (builtins.isString value && builtins.hasContext value);
+
 in
 {
   inherit
@@ -156,5 +177,6 @@ in
     isDirectory
     isRegularFile
     isSymlink
+    isReferencablePath
     ;
 }
