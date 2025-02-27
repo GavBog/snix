@@ -37,8 +37,8 @@ depot.nix.buildLisp.library {
     "util.lisp"
   ] ++ [
     { sbcl = getSrc "opt/sbcl/fndb.lisp"; }
-    { sbcl = getSrc "opt/sbcl/cpu-features.lisp"; }
     { sbcl = getSrc "opt/sbcl/x86oid-vm.lisp"; }
+    { sbcl = getSrc "opt/sbcl/cpu-features.lisp"; }
 
     { ecl = getSrc "opt/ecl/c-functions.lisp"; }
 
@@ -50,6 +50,18 @@ depot.nix.buildLisp.library {
     "ciphers/padding.lisp"
     "ciphers/make-cipher.lisp"
     "ciphers/modes.lisp"
+
+    "digests/digest.lisp"
+    "macs/mac.lisp"
+    "prng/prng.lisp"
+    "prng/os-prng.lisp"
+    "math.lisp"
+    "octet-stream.lisp"
+    "aead/aead.lisp"
+    "kdf/kdf.lisp"
+    "public-key/public-key.lisp"
+    "public-key/pkcs1.lisp"
+    "public-key/elliptic-curve.lisp"
 
     # subsystem def ironclad/ciphers
     "ciphers/aes.lisp"
@@ -82,7 +94,6 @@ depot.nix.buildLisp.library {
     "ciphers/xsalsa20.lisp"
     "ciphers/xtea.lisp"
 
-    "digests/digest.lisp"
     # subsystem def ironclad/digests
     "digests/adler32.lisp"
     "digests/blake2.lisp"
@@ -119,7 +130,6 @@ depot.nix.buildLisp.library {
     "digests/tree-hash.lisp"
     "digests/whirlpool.lisp"
 
-    "macs/mac.lisp"
     # subsystem def ironclad/macs
     "macs/blake2-mac.lisp"
     "macs/blake2s-mac.lisp"
@@ -130,22 +140,15 @@ depot.nix.buildLisp.library {
     "macs/siphash.lisp"
     "macs/skein-mac.lisp"
 
-    "prng/prng.lisp"
-    "prng/os-prng.lisp"
+    # subsystem def ironclad/prngs
     "prng/generator.lisp"
     "prng/fortuna.lisp"
 
-    "math.lisp"
-
-    "octet-stream.lisp"
-
-    "aead/aead.lisp"
-    # subsystem def ironclad/aead
+    # subsystem def ironclad/aeads
     "aead/eax.lisp"
     "aead/etm.lisp"
     "aead/gcm.lisp"
 
-    "kdf/kdf.lisp"
     # subsystem def ironclad/kdfs
     "kdf/argon2.lisp"
     "kdf/bcrypt.lisp"
@@ -154,9 +157,6 @@ depot.nix.buildLisp.library {
     "kdf/password-hash.lisp"
     "kdf/scrypt.lisp"
 
-    "public-key/public-key.lisp"
-    "public-key/pkcs1.lisp"
-    "public-key/elliptic-curve.lisp"
     # subsystem def ironclad/public-keys
     "public-key/dsa.lisp"
     "public-key/rsa.lisp"
