@@ -37,10 +37,7 @@ the user, however email addresses are temporarily not available."
 (defvar *oauth2-token-endpoint* nil)
 (defvar *oauth2-client-id* nil)
 (defvar *oauth2-client-secret* nil)
-
-(defvar *oauth2-redirect-uri*
-  (or (uiop:getenv "OAUTH2_REDIRECT_URI")
-      "https://b.tvl.fyi/auth"))
+(defvar *oauth2-redirect-uri* nil)
 
 (comment
  (setq *oauth2-redirect-uri* "http://localhost:6161/auth")
@@ -63,6 +60,10 @@ the user, however email addresses are temporarily not available."
         (or *oauth2-client-id*
             (uiop:getenv "OAUTH2_CLIENT_ID")
             "panettone"))
+
+  (setq *oauth2-redirect-uri*
+        (or (uiop:getenv "OAUTH2_REDIRECT_URI")
+            "https://b.tvl.fyi/auth"))
 
   (setq *oauth2-client-secret*
         (or *oauth2-client-secret*
