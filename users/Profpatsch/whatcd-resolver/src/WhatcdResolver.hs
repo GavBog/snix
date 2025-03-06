@@ -7,6 +7,8 @@ import AppT
 import Arg
 import Builder
 import Comparison
+import Conduit (ConduitT)
+import Conduit qualified
 import Control.Category qualified as Cat
 import Control.Monad.Catch.Pure (runCatch)
 import Control.Monad.Logger.CallStack
@@ -15,6 +17,7 @@ import Data.Aeson qualified as Json
 import Data.Aeson.BetterErrors qualified as Json
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.CaseInsensitive (CI)
+import Data.Conduit ((.|))
 import Data.Error.Tree
 import Data.HashMap.Strict qualified as HashMap
 import Data.List qualified as List
@@ -68,6 +71,8 @@ import Text.Blaze.Html5 qualified as Html
 import Tool (readTool, readTools)
 import Transmission
 import UnliftIO hiding (Handler)
+import UnliftIO.Async qualified as Async
+import UnliftIO.Concurrent (threadDelay)
 import Prelude hiding (span)
 
 main :: IO ()
@@ -92,6 +97,8 @@ htmlUi = do
         |]
         ()
         (Dec.fromField @Text)
+
+  (counterHtmlM, counterHandler, _counterAsync) <- testCounter (label @"endpoint" "counter")
 
   withRunInIO $ \runInIO -> Warp.run 9093 $ \req respondOrig -> do
     let catchAppException act =
@@ -123,7 +130,11 @@ htmlUi = do
       let handlers :: Handlers (AppT IO)
           handlers =
             Map.fromList
-              [ ("", Html (mainHtml uniqueRunId)),
+              [ ( "",
+                  Html $ \span -> do
+                    counterHtml <- counterHtmlM
+                    mainHtml counterHtml uniqueRunId span
+                ),
                 ( "snips/redacted/search",
                   Html $
                     \span -> do
@@ -237,6 +248,7 @@ htmlUi = do
                           pure $ renderJsonld jsonld
                       )
                 ),
+                ("counter", counterHandler),
                 ( "settings",
                   PostAndRedirect
                     ( do
@@ -301,7 +313,10 @@ htmlUi = do
               ]
       runInIO $
         runHandlers
-          (Html $ mainHtml uniqueRunId)
+          ( Html $ \span -> do
+              counterHtml <- counterHtmlM
+              mainHtml counterHtml uniqueRunId span
+          )
           handlers
           req
           respondOrig
@@ -309,8 +324,8 @@ htmlUi = do
     everySecond :: Text -> Enc -> Html -> Html
     everySecond call extraData innerHtml = [hsx|<div hx-trigger="every 1s" hx-swap="outerHTML" hx-post={call} hx-vals={Enc.encToBytesUtf8 extraData}>{innerHtml}</div>|]
 
-    mainHtml :: Text -> Otel.Span -> AppT IO Html
-    mainHtml uniqueRunId _span = runTransaction $ do
+    mainHtml :: Html -> Text -> Otel.Span -> AppT IO Html
+    mainHtml counterHtml uniqueRunId _span = runTransaction $ do
       -- jsonld <-
       --   httpGetJsonLd
       --     ( URI.parseURI "https://musicbrainz.org/work/92000fd4-d304-406d-aeb4-6bdbeed318ec" & annotate "not an URI" & unwrapError,
@@ -326,8 +341,11 @@ htmlUi = do
       pure $
         htmlPageChrome
           "whatcd-resolver"
-          [hsx|
+          ( [hsx|
+            {counterHtml}
             {settingButtons returnUrl settings}
+          |]
+              <> [hsx|
             <form
               hx-post="/snips/redacted/search"
               hx-target="#redacted-search-results">
@@ -353,7 +371,8 @@ htmlUi = do
                 hx-trigger="every 5s"
                 hx-swap="none"
             />
-        |]
+            |]
+          )
 
 -- | Run two actions concurrently, and add them to the current Otel trace
 concurrentlyTraced :: (MonadUnliftIO m) => m a -> m b -> m (a, b)
@@ -755,10 +774,12 @@ mkBestTorrentsTable opts fresh = do
         |]
         InTransmission info -> [hsx|{info.transmissionInfo.percentDone.unPercentage}% done|]
         NotInTransmissionYet -> [hsx|<button hx-post="snips/redacted/startTorrentFile" hx-swap="outerHTML" hx-vals={Enc.encToBytesUtf8 $ Enc.object [("torrent-id", Enc.int b.torrentId)]}>Start Torrent</button>|]
-  let bestRows rowData =
+  let bestRows :: NonEmpty (TorrentData (Label "percentDone" Percentage)) -> Html
+      bestRows rowData =
         rowData
           & foldMap
             ( \b -> do
+                let torrentPosition :: Text = [fmt|torrent-{b.torrentId}|]
                 let artists =
                       b.artists
                         <&> ( \a ->
@@ -769,7 +790,7 @@ mkBestTorrentsTable opts fresh = do
                         & mkLinkList
 
                 [hsx|
-                  <tr>
+                  <tr id={torrentPosition}>
                   <td>{localTorrent b}</td>
                   <td>{Html.toHtml @Int b.groupId}</td>
                   <td>
@@ -788,7 +809,8 @@ mkBestTorrentsTable opts fresh = do
                   </tr>
                 |]
             )
-  let section rows = do
+  let section :: NonEmpty (TorrentData (Label "percentDone" Percentage)) -> Html
+      section rows = do
         let releaseType = rows & NonEmpty.head & (.releaseType.unReleaseType)
         [hsx|
         <h2>{releaseType}s</h2>
@@ -1167,3 +1189,56 @@ writeSettings settings = inSpan' "Write Settings" $ \span -> do
     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
   |]
     (settings & unzipPGArray @"key" @Text @"val" @Json.Value)
+
+-- | Given a conduit that produces Html,
+-- return a htmx html snippet which will regularly poll for new results in the conduit,
+-- and a handler endpoint that returns the newest output when it happens.
+conduitToHtmx ::
+  (HasField "endpoint" opts Text, MonadUnliftIO m) =>
+  opts ->
+  -- | initial inner html
+  Html ->
+  ConduitT () Html m () ->
+  m (m Html, HandlerResponse m, Async.Async ())
+conduitToHtmx opts init' conduit = do
+  let htmlPolling inner =
+        [hsx|
+     <div hx-get={opts.endpoint} hx-trigger="every 1s" hx-swap="outerHTML">
+        {inner :: Html}
+     </div>
+    |]
+  currentHtml <- newIORef $! htmlPolling init'
+  collectorHandle <- Async.async $ do
+    liftIO $ putStderrLn "spawned async collector"
+    lastVal <-
+      conduit
+        .| Conduit.mapMC
+          ( \html -> do
+              atomicWriteIORef currentHtml $! (htmlPolling html)
+              pure html
+          )
+        .| Conduit.lastDefC init'
+          & Conduit.runConduit
+    -- when the original conduit finishes, we stop polling for updates.
+    atomicWriteIORef currentHtml $! [hsx|<div>{lastVal}</div>|]
+
+  let handler = Html $ \_span -> do
+        -- TODO: can we use Etags here and return 304 instead?
+        readIORef currentHtml
+
+  pure (readIORef currentHtml, handler, collectorHandle)
+
+testCounter ::
+  (HasField "endpoint" opts Text, MonadUnliftIO m) =>
+  opts ->
+  m (m Html, HandlerResponse m, Async ())
+testCounter opts = conduitToHtmx opts [hsx|<p>0</p>|] counterConduit
+
+counterConduit :: (MonadIO m) => ConduitT i Html m ()
+counterConduit =
+  Conduit.yieldMany [0 .. 100]
+    .| Conduit.awaitForever
+      ( \(i :: Int) -> do
+          threadDelay 300_000
+          Conduit.yield [hsx|<p>{i}</p>|]
+      )
