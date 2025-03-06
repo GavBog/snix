@@ -11,6 +11,7 @@ import Data.Aeson.BetterErrors qualified as Json
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Aeson.Types qualified
+import Data.ByteString.Base64 qualified as Base64
 import Data.Error.Tree
 import Data.Map.Strict qualified as Map
 import Data.Maybe (catMaybes)
@@ -332,6 +333,10 @@ instance ToJSON EmptyObject where
 -- | Create a json array from a list of json values.
 mkJsonArray :: [Value] -> Value
 mkJsonArray xs = xs & Vector.fromList & Array
+
+-- | Encode a 'ByteString' as a base64-encoded json string
+mkBase64Bytes :: ByteString -> Value
+mkBase64Bytes = String . bytesToTextUtf8Unsafe . Base64.encode
 
 data RestrictJsonOpts = RestrictJsonOpts
   { maxDepth :: Natural,

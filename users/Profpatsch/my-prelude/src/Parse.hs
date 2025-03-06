@@ -7,6 +7,7 @@ import Control.Selective (Selective)
 import Data.Error.Tree
 import Data.Functor.Compose
 import Data.List qualified as List
+import Data.Map.Strict qualified as Map
 import Data.Monoid (First (..))
 import Data.Semigroup.Traversable
 import Data.Semigroupoid qualified as Semigroupoid
@@ -72,8 +73,8 @@ mkParsePushContext toPush f = Parse $ \(ctx, from) -> case f (ctx, from) of
   Right to -> Success (addContext toPush ctx, to)
   Left err -> Failure $ singleton err
 
-mkParseNoContext :: (from -> Either ErrorTree to) -> Parse from to
-mkParseNoContext f = Parse $ \(ctx, from) -> case f from of
+mkParseNoContext :: ((Context, from) -> Either ErrorTree to) -> Parse from to
+mkParseNoContext f = Parse $ \(ctx, from) -> case f (ctx, from) of
   Right to -> Success (ctx, to)
   Left err -> Failure $ singleton err
 
@@ -160,6 +161,24 @@ findAll inner = Parse $ \(ctx, xs) ->
         -- in this case we just arbitrarily forward the original context …
         Success (ctx, [])
       (_miss, (hitCtx, hit) : hits) -> Success (hitCtx, hit : (hits <&> snd))
+
+-- | Find the given element in the map, and parse it with the given parser.
+mapLookup :: (Coercible Text key, Ord key) => key -> Parse from to -> Parse (Map key from) to
+mapLookup key inner = do
+  let keyT :: Text = coerce key
+  Parse $ \(ctx, m) -> case Map.lookup (coerce key) m of
+    Nothing -> Failure $ singleton [fmt|Key "{keyT}" not found in map at {showContext ctx}|]
+    Just a -> runParse' inner (addContext keyT ctx, a)
+
+-- | Find the given element in the map, and parse it with the given parser.
+--
+-- Use this instead of `rmap` to add the map key to the error context.
+mapLookupMay :: (Coercible Text key, Ord key) => key -> Parse from to -> Parse (Map key from) (Maybe to)
+mapLookupMay key inner = do
+  let keyT :: Text = coerce key
+  Parse $ \(ctx, m) -> case Map.lookup (coerce key) m of
+    Nothing -> Success (addContext keyT ctx, Nothing)
+    Just a -> runParse' (Just <$> inner) (addContext keyT ctx, a)
 
 -- | convert a 'FieldParser' into a 'Parse'.
 fieldParser :: FieldParser from to -> Parse from to

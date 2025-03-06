@@ -12,6 +12,7 @@ let
       ./Main.hs
       ./src/WhatcdResolver.hs
       ./src/AppT.hs
+      ./src/Bencode.hs
       ./src/JsonLd.hs
       ./src/Optional.hs
       ./src/Html.hs
@@ -29,6 +30,7 @@ let
       pkgs.haskellPackages.pa-field-parser
       pkgs.haskellPackages.pa-run-command
       pkgs.haskellPackages.aeson-better-errors
+      pkgs.haskellPackages.bencode
       pkgs.haskellPackages.blaze-html
       pkgs.haskellPackages.hs-opentelemetry-sdk
       pkgs.haskellPackages.http-conduit

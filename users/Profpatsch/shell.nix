@@ -14,6 +14,7 @@ pkgs.mkShell {
       h.async
       h.aeson-better-errors
       h.blaze-html
+      h.bencode
       h.conduit-extra
       h.error
       h.monad-logger

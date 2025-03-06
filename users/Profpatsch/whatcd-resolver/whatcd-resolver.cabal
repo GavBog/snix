@@ -65,6 +65,7 @@ library
     exposed-modules:
        WhatcdResolver
        AppT
+       Bencode
        JsonLd
        Optional
        Http
@@ -84,6 +85,7 @@ library
         pa-run-command,
         aeson-better-errors,
         aeson,
+        bencode,
         blaze-html,
         bytestring,
         case-insensitive,
@@ -108,7 +110,9 @@ library
         postgresql-simple,
         punycode,
         tmp-postgres,
+        time,
         unliftio,
+        selective,
         wai-extra,
         wai,
         warp,

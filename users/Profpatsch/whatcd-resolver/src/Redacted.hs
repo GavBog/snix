@@ -4,6 +4,7 @@ module Redacted where
 
 import AppT
 import Arg
+import Bencode
 import Builder
 import Comparison
 import Control.Monad.Logger.CallStack
@@ -12,10 +13,14 @@ import Data.Aeson qualified as Json
 import Data.Aeson.BetterErrors qualified as Json
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap qualified as KeyMap
+import Data.BEncode (BEncode)
 import Data.Error.Tree
 import Data.List qualified as List
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (catMaybes)
+import Data.Text.IO qualified as Text.IO
+import Data.Time (NominalDiffTime, UTCTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Database.PostgreSQL.Simple (Binary (Binary), Only (..))
 import Database.PostgreSQL.Simple.Types (PGArray (PGArray))
 import FieldParser qualified as Field
@@ -27,10 +32,12 @@ import Network.HTTP.Types
 import Network.Wai.Parse qualified as Wai
 import OpenTelemetry.Trace qualified as Otel hiding (getTracer, inSpan, inSpan')
 import Optional
+import Parse (Parse, mapLookup, mapLookupMay, runParse)
+import Parse qualified
 import Postgres.Decoder qualified as Dec
 import Postgres.MonadPostgres
 import Pretty
-import Prelude hiding (span)
+import Prelude hiding (length, span)
 
 class MonadRedacted m where
   getRedactedApiKey :: m ByteString
@@ -781,3 +788,93 @@ test =
       (Json.asValue)
       <&> Pretty.showPrettyJsonColored
       >>= liftIO . putStderrLn
+
+readTorrentFile :: (MonadIO m, MonadPostgres m) => m ()
+readTorrentFile = runTransaction $ do
+  torrentBytes <-
+    queryWith
+      [sql|
+    SELECT torrent_file from redacted.torrents where torrent_file is not null limit 10 |]
+      ()
+      Dec.bytea
+  liftIO $ for_ torrentBytes $ \b -> case testBencode b of
+    Left e -> do
+      Text.IO.putStrLn $ prettyErrorTree e
+    Right a -> printPretty a
+  liftIO $ print $ lengthNatural torrentBytes
+
+testBencode :: ByteString -> (Either ErrorTree TorrentFile)
+testBencode bs = Parse.runParse "cannot parse bencode" (parseBencode >>> bencodeTorrentParser) bs
+
+-- | A torrent file
+--
+-- from wikipedia:
+--
+-- * announce—the URL of the high tracker
+-- * info—this maps to a dictionary whose keys are very dependent on whether one or more files are being shared:
+--   - files—a list of dictionaries each corresponding to a file (only when multiple files are being shared). Each dictionary has the following keys:
+--     * length—size of the file in bytes.
+--     * path—a list of strings corresponding to subdirectory names, the last of which is the actual file name
+--   - length—size of the file in bytes (only when one file is being shared though)
+--   - name—suggested filename where the file is to be saved (if one file)/suggested directory name where the files are to be saved (if multiple files)
+--   - piece length—number of bytes per piece. This is commonly 28 KiB = 256 KiB = 262,144 B.
+--   - pieces—a hash list, i.e., a concatenation of each piece's SHA-1 hash. As SHA-1 returns a 160-bit hash, pieces will be a string whose length is a multiple of 20 bytes. If the torrent contains multiple files, the pieces are formed by concatenating the files in the order they appear in the files dictionary (i.e., all pieces in the torrent are the full piece length except for the last piece, which may be shorter).
+data TorrentFile = TorrentFile
+  { announce :: Text,
+    comment :: Maybe Text,
+    createdBy :: Maybe Text,
+    creationDate :: Maybe UTCTime,
+    encoding :: Maybe Text,
+    info :: Info
+  }
+  deriving stock (Eq, Show)
+
+data Info = Info
+  { name :: Text,
+    files :: [File],
+    pieceLength :: Natural,
+    pieces :: ByteString,
+    private :: Maybe Bool,
+    source :: Maybe Text
+  }
+  deriving stock (Eq, Show)
+
+data File = File
+  { length_ :: Natural,
+    path :: [Text]
+  }
+  deriving stock (Eq, Show)
+
+bencodeTorrentParser :: Parse BEncode TorrentFile
+bencodeTorrentParser =
+  bencodeDict >>> do
+    announce <- mapLookup "announce" bencodeTextLenient
+    comment <- mapLookupMay "comment" bencodeTextLenient
+    createdBy <- mapLookupMay "created by" bencodeTextLenient
+    creationDate <- mapLookupMay "creation date" (bencodeInteger <&> posixSecondsToUTCTime . fromInteger @NominalDiffTime)
+    encoding <- mapLookupMay "encoding" bencodeTextLenient
+    info <-
+      mapLookup "info" $
+        bencodeDict >>> do
+          name <- mapLookup "name" bencodeTextLenient
+          files <-
+            mapLookup "files" $
+              bencodeList
+                >>> ( Parse.multiple $
+                        bencodeDict >>> do
+                          length_ <- mapLookup "length" bencodeNatural
+                          path <- mapLookup "path" $ bencodeList >>> Parse.multiple bencodeTextLenient
+                          pure $ File {..}
+                    )
+          pieceLength <- mapLookup "piece length" bencodeNatural
+          pieces <- mapLookup "pieces" bencodeBytes
+          private <-
+            mapLookupMay "private" bencodeInteger
+              <&> fmap
+                ( \case
+                    0 -> False
+                    _ -> True
+                )
+          source <- mapLookupMay "source" bencodeTextLenient
+          pure Info {..}
+    pure TorrentFile {..}

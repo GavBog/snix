@@ -54,7 +54,7 @@ import OpenTelemetry.Attributes qualified as Otel
 import OpenTelemetry.Context.ThreadLocal qualified as Otel
 import OpenTelemetry.Trace qualified as Otel hiding (getTracer, inSpan, inSpan')
 import OpenTelemetry.Trace.Monad qualified as Otel
-import Parse (Parse)
+import Parse (Parse, showContext)
 import Parse qualified
 import Postgres.Decoder qualified as Dec
 import Postgres.MonadPostgres
@@ -650,17 +650,17 @@ textToURI =
 uriToHttpClientRequest :: Parse URI Http.Request
 uriToHttpClientRequest =
   Parse.mkParseNoContext
-    ( \url ->
+    ( \(ctx, url) ->
         (url & Http.requestFromURI)
           & runCatch
           & first (checkException @Http.HttpException)
           & \case
             Left (Right (Http.InvalidUrlException urlText reason)) ->
-              Left [fmt|Unable to set the url "{urlText}" as request URL, reason: {reason}|]
+              Left [fmt|Unable to set the url "{urlText}" as request URL, reason: {reason}, at {Parse.showContext ctx}|]
             Left (Right exc@(Http.HttpExceptionRequest _ _)) ->
-              Left [fmt|Weird! Should not get a HttpExceptionRequest when parsing an URL (bad library design), was {exc & displayException}|]
+              Left [fmt|Weird! Should not get a HttpExceptionRequest when parsing an URL (bad library design), was {exc & displayException}, at {Parse.showContext ctx}|]
             Left (Left someExc) ->
-              Left [fmt|Weird! Should not get anyhting but a HttpException when parsing an URL (bad library design), was {someExc & displayException}|]
+              Left [fmt|Weird! Should not get anyhting but a HttpException when parsing an URL (bad library design), was {someExc & displayException}, at {Parse.showContext ctx}|]
             Right req -> pure req
     )
 
