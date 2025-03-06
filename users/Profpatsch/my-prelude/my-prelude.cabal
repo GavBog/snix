@@ -70,6 +70,7 @@ library
       Test
       Postgres.Decoder
       Postgres.MonadPostgres
+      RevList
       ValidationParseT
       Parse
       Pretty
