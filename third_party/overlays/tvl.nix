@@ -90,16 +90,26 @@ depot.nix.readTree.drvTargets {
         };
       };
 
-      # Override telega sources until MELPA updates in nixpkgs resume.
-      telega = esuper.telega.overrideAttrs (_: {
-        version = "0.8.291"; # unstable
-        src = self.fetchFromGitHub {
-          owner = "zevlg";
-          repo = "telega.el";
-          rev = "58b4963b292ceb723d665df100b519eb5a99c676";
-          sha256 = "1q3ydbm0jhrsyvvdn0mpmxvskq0l53jkh40a5hlx7i3qkinbhbry";
-        };
-      });
+      # Override telega sources to specific commits, and check its exact tdlib version requirement.
+      checkedTelega =
+        let
+          pinned = esuper.telega.overrideAttrs (_: {
+            version = "0.8.999"; # unstable
+            src = self.fetchFromGitHub {
+              owner = "zevlg";
+              repo = "telega.el";
+              rev = "431c8d8c6388b8e77548d68da70a1eb44f562a98";
+              sha256 = "0q6ljzlfzkf59rd86qd47yilny17k9gq4plv20lisk4i3213fzdh";
+            };
+          });
+
+          requiredTdlibFile = self.runCommandNoCC "required-tdlib" { } ''
+            ${self.ripgrep}/bin/rg -o -r '$1' 'tdlib_version=v(.*)$' ${pinned.src}/etc/Dockerfile > $out
+          '';
+
+          requiredTdlib = self.lib.strings.trim (builtins.readFile "${requiredTdlibFile}");
+        in
+        assert requiredTdlib == self.tdlib.version; pinned; # ping tazjin if this fails
     })
   );
 

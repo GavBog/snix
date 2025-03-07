@@ -8,13 +8,9 @@ pkgs.makeOverridable
     emacsPackages = (pkgs.emacsPackagesFor emacs);
     emacsWithPackages = emacsPackages.emacsWithPackages;
 
-    # If switching telega versions, use this variable because it will
-    # keep the version check, binary path and so on in sync.
-    currentTelega = epkgs: epkgs.telega;
-
     # $PATH for binaries that need to be available to Emacs
     emacsBinPath = lib.makeBinPath [
-      (currentTelega pkgs.emacsPackages)
+      emacsPackages.checkedTelega
       pkgs.libwebp # for dwebp, required by telega
     ];
 
@@ -105,7 +101,7 @@ pkgs.makeOverridable
       zoxide
 
       # Wonky stuff
-      (currentTelega epkgs)
+      checkedTelega
       customTreesitGrammars # TODO(tazjin): how is this *supposed* to work?!
 
       # Custom depot packages (either ours, or overridden ones)
@@ -121,29 +117,6 @@ pkgs.makeOverridable
       # Dynamic/native modules
       depot.users.tazjin.gio-list-apps
     ])));
-
-    # Tired of telega.el runtime breakages through tdlib
-    # incompatibility. Target to make that a build failure instead.
-    tdlibCheck =
-      let
-        tgEmacs = emacsWithPackages (epkgs: [ (currentTelega epkgs) ]);
-        verifyTdlibVersion = builtins.toFile "verify-tdlib-version.el" ''
-          (require 'telega)
-          (defvar tdlib-version "${pkgs.tdlib.version}")
-          (when (or (version< tdlib-version
-                              telega-tdlib-min-version)
-                    (and telega-tdlib-max-version
-                          (version< telega-tdlib-max-version
-                                    tdlib-version)))
-             (message "Found TDLib version %s, but require %s to %s"
-                     tdlib-version telega-tdlib-min-version telega-tdlib-max-version)
-            (kill-emacs 1))
-        '';
-      in
-      pkgs.runCommand "tdlibCheck" { } ''
-        export PATH="${emacsBinPath}:$PATH"
-        ${tgEmacs}/bin/emacs --script ${verifyTdlibVersion} && touch $out
-      '';
   in
   lib.fix
     (self: l: f: (pkgs.writeShellScriptBin "tazjins-emacs" ''
@@ -173,11 +146,6 @@ pkgs.makeOverridable
           # Call withLocalConfig with the path to a *folder* containing a
           # `local.el` which provides local system configuration.
           withLocalConfig = confDir: self confDir f;
-
-          # Expose telega/tdlib version check as a target that is built in
-          # CI.
-          inherit tdlibCheck;
-          meta.ci.targets = [ "tdlibCheck" ];
         };
       }))
     null
