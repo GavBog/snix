@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module WhatcdResolver where
 
@@ -30,6 +32,9 @@ import Database.PostgreSQL.Simple.Types (PGArray (PGArray))
 import Database.Postgres.Temp qualified as TmpPg
 import FieldParser (FieldParser)
 import FieldParser qualified as Field
+import GHC.OverloadedLabels (IsLabel (fromLabel))
+import GHC.Records (HasField (..))
+import GHC.TypeLits (Symbol)
 import Html qualified
 import Http
 import IHP.HSX.QQ (hsx)
@@ -1332,49 +1337,82 @@ prefetchResourceIntegrity dat = inSpan' [fmt|prefetching resource {dat.integrity
             let !bodyStrict = resp & Http.responseBody
             let !bodyLength = bodyStrict & ByteString.length
             if
-              | statusCode == 200 ->
-                  case dat.isTag of
-                    E21 l -> do
-                      let _ = l.link
-                      pure
-                        ( -- hsx does not understand the `as` attr
-                          ( Html.link
-                              ! HtmlA.rel "preload"
-                              ! HtmlA.href (Html.textValue dat.localPath)
-                              ! Html.customAttribute "as" "style"
-                          )
-                            <> [hsx|
-                             <link rel="stylesheet" href={dat.localPath} integrity={dat.integrityHash} crossorigin="anonymous">
-                             |],
-                          Plain $
-                            pure $
-                              Wai.responseLBS
-                                Http.ok200
-                                [ ("Content-Type", mContentType & fromMaybe "text/css; charset=UTF-8"),
-                                  ("Content-Length", buildBytes intDecimalB bodyLength)
-                                ]
-                                (toLazyBytes $ bodyStrict)
-                        )
-                    E22 l -> do
-                      let _ = l.script
-                      pure
-                        ( ( -- hsx does not understand the `as` attr
-                            Html.link
-                              ! HtmlA.rel "preload"
-                              ! HtmlA.href (Html.textValue dat.localPath)
-                              ! Html.customAttribute "as" "script"
-                          )
-                            <> [hsx|
-                             <script src={dat.localPath} integrity={dat.integrityHash} crossorigin="anonymous"></script>
-                            |],
-                          Plain $
-                            pure $
-                              Wai.responseLBS
-                                Http.ok200
-                                [ ("Content-Type", mContentType & fromMaybe "text/javascript; charset=UTF-8"),
-                                  ("Content-Length", buildBytes intDecimalB bodyLength)
-                                ]
-                                (toLazyBytes $ bodyStrict)
-                        )
+              | statusCode == 200 -> do
+                  let tagMatch prx1 val1 prx2 val2 =
+                        dat.isTag
+                          & caseE2
+                            ( t2
+                                prx1
+                                (\() -> val1)
+                                prx2
+                                (\() -> val2)
+                            )
+                  pure
+                    ( -- hsx does not understand the `as` attr
+                      ( Html.link
+                          ! HtmlA.rel "preload"
+                          ! HtmlA.href (Html.textValue dat.localPath)
+                          ! Html.customAttribute
+                            "as"
+                            ( tagMatch
+                                #link
+                                "style"
+                                #script
+                                "script"
+                            )
+                      )
+                        <> ( tagMatch
+                               #link
+                               [hsx|<link rel="stylesheet" href={dat.localPath} integrity={dat.integrityHash} crossorigin="anonymous">|]
+                               #script
+                               [hsx|<script src={dat.localPath} integrity={dat.integrityHash} crossorigin="anonymous"></script>|]
+                           ),
+                      Plain $
+                        pure $
+                          Wai.responseLBS
+                            Http.ok200
+                            [ ( "Content-Type",
+                                mContentType
+                                  & fromMaybe
+                                    ( tagMatch
+                                        #script
+                                        "text/javascript; charset=UTF-8"
+                                        #link
+                                        "text/css; charset=UTF-8"
+                                    )
+                              ),
+                              ("Content-Length", buildBytes intDecimalB bodyLength)
+                            ]
+                            (toLazyBytes $ bodyStrict)
+                    )
               | code <- statusCode -> appThrow span $ AppExceptionPretty [[fmt|Server returned an non-200 error code, code {code}:|], pretty resp]
         )
+
+-- case-match on an e2 with a t2 that provides the relevant functions
+caseE2 ::
+  forall l1 t1 l2 t2 matcher r.
+  ( HasField l1 matcher (t1 -> r),
+    HasField l2 matcher (t2 -> r)
+  ) =>
+  matcher ->
+  E2 l1 t1 l2 t2 ->
+  r
+{-# INLINE caseE2 #-}
+caseE2 m e2 = do
+  let f1 = getField @l1 m
+  let f2 = getField @l2 m
+  case e2 of
+    E21 a -> f1 $ getField @l1 a
+    E22 b -> f2 $ getField @l2 b
+
+t2 :: forall l1 t1 l2 t2. LabelPrx l1 -> t1 -> LabelPrx l2 -> t2 -> T2 l1 t1 l2 t2
+{-# INLINE t2 #-}
+t2 LabelPrx a LabelPrx b = T2 (label @l1 a) (label @l2 b)
+
+data LabelPrx (l :: Symbol) = LabelPrx
+
+instance (l ~ l') => IsLabel l (LabelPrx l') where
+  fromLabel = LabelPrx
+
+instance (t ~ t') => IsLabel l (t -> (Label l t')) where
+  fromLabel = label @l
