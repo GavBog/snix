@@ -136,9 +136,9 @@ htmlUi = do
                     mainHtml counterHtml uniqueRunId span
                 ),
                 ( "redacted-search",
-                  HtmlWithQueryArgs (singleQueryArgument "searchstr" Cat.id) $
-                    \searchstr _span -> do
-                      t <- redactedSearchAndInsert [("searchstr", searchstr)]
+                  HtmlWithQueryArgs (label @"searchstr" <$> singleQueryArgument "searchstr" Cat.id) $
+                    \dat _span -> do
+                      t <- redactedSearchAndInsert [("searchstr", dat.queryArgs.searchstr)]
                       runTransaction $ do
                         res <- t
                         (table, settings) <-
@@ -162,16 +162,16 @@ htmlUi = do
                         pure $
                           mainHtml'
                             ( MainHtml
-                                { pageTitle = [fmt|whatcd-resolver – Search – {searchstr & bytesToTextUtf8Lenient}|],
+                                { pageTitle = [fmt|whatcd-resolver – Search – {dat.queryArgs.searchstr & bytesToTextUtf8Lenient}|],
+                                  returnUrl = dat.returnUrl,
                                   counterHtml = "",
                                   mainContent =
-                                    [hsx|<h1>Search results for <pre>{searchstr}</pre></h1>{table}|],
+                                    [hsx|<h1>Search results for <pre>{dat.queryArgs.searchstr}</pre></h1>{table}|],
                                   uniqueRunId,
-                                  searchFieldContent = searchstr & bytesToTextUtf8Lenient,
+                                  searchFieldContent = dat.queryArgs.searchstr & bytesToTextUtf8Lenient,
                                   settings
                                 }
                             )
-                            _span
                 ),
                 ( "snips/redacted/torrentDataJson",
                   Html $ \span -> do
@@ -249,8 +249,8 @@ htmlUi = do
                                   & Parse.andParse uriToHttpClientRequest
                               )
                       )
-                      ( \qry _span -> do
-                          jsonld <- httpGetJsonLd (qry.target)
+                      ( \dat _span -> do
+                          jsonld <- httpGetJsonLd (dat.queryArgs.target)
                           pure $ renderJsonld jsonld
                       )
                 ),
@@ -281,8 +281,8 @@ htmlUi = do
                       ( label @"artistRedactedId"
                           <$> (singleQueryArgument "redacted_id" (Field.utf8 >>> Field.decimalNatural))
                       )
-                      $ \qry _span -> do
-                        artistPage qry
+                      $ \dat _span -> do
+                        artistPage (T2 dat.queryArgs (label @"uniqueRunId" uniqueRunId))
                 ),
                 ( "artist/refresh",
                   HtmlOrRedirect $
@@ -347,6 +347,7 @@ htmlUi = do
         mainHtml'
           ( MainHtml
               { pageTitle = "whatcd-resolver",
+                returnUrl = "/",
                 counterHtml,
                 mainContent = bestTorrentsTable,
                 uniqueRunId,
@@ -354,10 +355,10 @@ htmlUi = do
                 searchFieldContent = ""
               }
           )
-          _span
 
 data MainHtml = MainHtml
   { pageTitle :: Text,
+    returnUrl :: ByteString,
     counterHtml :: Html,
     mainContent :: Html,
     searchFieldContent :: Text,
@@ -365,16 +366,14 @@ data MainHtml = MainHtml
     settings :: Settings
   }
 
-mainHtml' :: MainHtml -> Otel.Span -> Html
-mainHtml' dat _span = do
+mainHtml' :: MainHtml -> Html
+mainHtml' dat = do
   -- transmissionTorrentsTable <- lift @Transaction getTransmissionTorrentsTable
-  let returnUrl = (label @"returnUrl" "/")
-
   htmlPageChrome
     dat.pageTitle
     ( [hsx|
             {dat.counterHtml}
-            {settingButtons returnUrl dat.settings}
+            {settingButtons dat dat.settings}
           |]
         <> [hsx|
             <form action="redacted-search">
@@ -477,6 +476,7 @@ htmlPageChrome title body =
 
 artistPage ::
   ( HasField "artistRedactedId" dat Natural,
+    HasField "uniqueRunId" dat Text,
     MonadPostgres m,
     MonadOtel m,
     MonadLogger m,
@@ -496,16 +496,13 @@ artistPage dat = runTransaction $ do
   let torrents = mkBestTorrentsTable (label @"groupByReleaseType" True) fresh
 
   let returnUrl =
-        label @"returnUrl" $
+        textToBytesUtf8 $
           mkArtistLink (label @"artistId" (dat.artistRedactedId & fromIntegral @Natural @Int))
-  pure $
-    htmlPageChrome
-      ( case artistName of
-          Nothing -> "whatcd-resolver"
-          Just a -> [fmt|{a} - Artist Page - whatcd-resolver|]
-      )
-      [hsx|
-        {settingButtons returnUrl settings}
+  let pageTitle = case artistName of
+        Nothing -> "whatcd-resolver"
+        Just a -> [fmt|{a} - Artist Page - whatcd-resolver|]
+  let mainContent =
+        [hsx|
         <p>Artist ID: {dat.artistRedactedId}</p>
 
         <div id="artist-torrents">
@@ -523,8 +520,25 @@ artistPage dat = runTransaction $ do
           <div class="htmx-indicator">Refreshing!</div>
         </form>
       |]
+  pure $
+    mainHtml'
+      ( MainHtml
+          { pageTitle,
+            returnUrl,
+            counterHtml = "",
+            mainContent,
+            uniqueRunId = dat.uniqueRunId,
+            searchFieldContent = "",
+            settings
+          }
+      )
 
 type Handlers m = Map Text (HandlerResponse m)
+
+data QueryArgsDat a = QueryArgsDat
+  { queryArgs :: a,
+    returnUrl :: ByteString
+  }
 
 data HandlerResponse m where
   -- | render html
@@ -532,7 +546,7 @@ data HandlerResponse m where
   -- | either render html or redirect to another page
   HtmlOrRedirect :: (Otel.Span -> m (E2 "respond" Html "redirectTo" ByteString)) -> HandlerResponse m
   -- | render html after parsing some query arguments
-  HtmlWithQueryArgs :: Parse Query a -> (a -> Otel.Span -> m Html) -> HandlerResponse m
+  HtmlWithQueryArgs :: Parse Query a -> (QueryArgsDat a -> Otel.Span -> m Html) -> HandlerResponse m
   -- | render html or reload the page via the Referer header if no htmx
   HtmlOrReferer :: (Otel.Span -> m Html) -> HandlerResponse m
   -- | parse the request as POST submission, then redirect to the given endpoint
@@ -596,7 +610,7 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
             liftIO $ respond (Wai.responseLBS Http.methodNotAllowed405 [] "")
   let htmlWithQueryArgs parser act =
         case req & Parse.runParse "Unable to find the right request query arguments" (lmap Wai.queryString parser) of
-          Right a -> html (act a)
+          Right queryArgs -> html (act $ QueryArgsDat {queryArgs, returnUrl = (req & Wai.rawPathInfo) <> (req & Wai.rawQueryString)})
           Left err ->
             html
               ( \span -> do
@@ -1140,7 +1154,7 @@ instance Semigroup Settings where
 instance Monoid Settings where
   mempty = Settings {useFreeleechTokens = False}
 
-submitSettingForm :: (HasField "returnUrl" r Text, ToHtml a) => r -> a -> Html
+submitSettingForm :: (HasField "returnUrl" r ByteString, ToHtml a) => r -> a -> Html
 submitSettingForm opts inputs =
   [hsx|
   <form
@@ -1152,7 +1166,7 @@ submitSettingForm opts inputs =
   </form>
   |]
 
-settingButtons :: (HasField "returnUrl" opts Text) => opts -> Settings -> Html
+settingButtons :: (HasField "returnUrl" opts ByteString) => opts -> Settings -> Html
 settingButtons opts s =
   if s.useFreeleechTokens
     then
