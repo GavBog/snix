@@ -1,7 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Http
-  ( doRequestJson,
+  ( textToURI,
+    uriToHttpClientRequest,
+    doRequestJson,
     RequestOptions (..),
     mkRequestOptions,
     httpJson,
@@ -19,6 +22,8 @@ module Http
 where
 
 import AppT
+import Control.Exception (Exception (..), SomeException)
+import Control.Monad.Catch.Pure (runCatch)
 import Data.Aeson qualified as Json
 import Data.Aeson.BetterErrors qualified as Json
 import Data.CaseInsensitive (CI (original))
@@ -29,6 +34,7 @@ import Data.List.NonEmpty qualified as NonEmpty
 import Data.Ord (clamp)
 import Data.Text qualified as Text
 import Data.Text.Punycode qualified as Punycode
+import FieldParser (FieldParser' (..))
 import FieldParser qualified as Field
 import Json qualified
 import Json.Enc qualified as Enc
@@ -38,11 +44,50 @@ import Network.HTTP.Client
 import Network.HTTP.Client qualified as Http
 import Network.HTTP.Simple qualified as Http
 import Network.HTTP.Types.Status (Status (..))
+import Network.URI (URI, parseURI)
 import Network.Wai.Parse qualified as Wai
 import Optional
+import Parse (Parse)
+import Parse qualified
 import Pretty
 import UnliftIO.Concurrent (threadDelay)
 import Prelude hiding (span)
+
+-- | Make sure we can parse the given Text into an URI.
+textToURI :: Parse Text URI
+textToURI =
+  Parse.fieldParser
+    ( FieldParser $ \text ->
+        text
+          & textToString
+          & Network.URI.parseURI
+          & annotate [fmt|Cannot parse this as a URL: "{text}"|]
+    )
+
+-- | Make sure we can parse the given URI into a Request.
+--
+-- This tries to work around the horrible, horrible interface in Http.Client.
+uriToHttpClientRequest :: Parse URI Http.Request
+uriToHttpClientRequest =
+  Parse.mkParseNoContext
+    ( \(ctx, url) ->
+        (url & Http.requestFromURI)
+          & runCatch
+          & first (checkException @Http.HttpException)
+          & \case
+            Left (Right (Http.InvalidUrlException urlText reason)) ->
+              Left [fmt|Unable to set the url "{urlText}" as request URL, reason: {reason}, at {Parse.showContext ctx}|]
+            Left (Right exc@(Http.HttpExceptionRequest _ _)) ->
+              Left [fmt|Weird! Should not get a HttpExceptionRequest when parsing an URL (bad library design), was {exc & displayException}, at {Parse.showContext ctx}|]
+            Left (Left someExc) ->
+              Left [fmt|Weird! Should not get anyhting but a HttpException when parsing an URL (bad library design), was {someExc & displayException}, at {Parse.showContext ctx}|]
+            Right req -> pure req
+    )
+  where
+    checkException :: (Exception b) => SomeException -> Either SomeException b
+    checkException some = case fromException some of
+      Nothing -> Left some
+      Just e -> Right e
 
 data RequestOptions = RequestOptions
   { method :: ByteString,

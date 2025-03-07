@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Parse where
 
@@ -14,6 +15,7 @@ import Data.Semigroupoid qualified as Semigroupoid
 import Data.Text qualified as Text
 import FieldParser (FieldParser)
 import FieldParser qualified as Field
+import Language.Haskell.TH.Syntax qualified as TH
 import PossehlAnalyticsPrelude
 import Validation (partitionValidations)
 import Prelude hiding (init, maybe)
@@ -191,3 +193,18 @@ zipNonEmpty (x :| xs) (y :| ys) = (x, y) :| zip xs ys
 
 zipIndex :: NonEmpty b -> NonEmpty (Natural, b)
 zipIndex = zipNonEmpty (1 :| [2 :: Natural ..])
+
+-- | Parse a literal value at compile time. This is used with Template Haskell, like so:
+--
+-- > $$("2023-07-27" & literal hyphenatedDay) :: Time.Day
+--
+-- You need the double @$$@!
+--
+-- ATTN: This needs an instance of the 'TH.Lift' class for the output type.
+-- Many library types don’t yet implement this class, so we have to provide the instances ourselves.
+-- See NOTE: Lift for library types
+literal :: forall from to. (TH.Lift to) => Parse from to -> from -> TH.Code TH.Q to
+literal parser s = do
+  case runParse "Literal parse failed" parser s of
+    Right a -> [||a||]
+    Left err -> TH.liftCode (err & prettyErrorTree & textToString & fail)

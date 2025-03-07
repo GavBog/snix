@@ -173,6 +173,7 @@ module MyPrelude
     HasCallStack,
     module Data.Error,
     symbolText,
+    unwrapErrorTree,
   )
 where
 
@@ -199,6 +200,7 @@ import Data.Char qualified
 import Data.Coerce (Coercible, coerce)
 import Data.Data (Proxy (Proxy))
 import Data.Error
+import Data.Error.Tree (ErrorTree, prettyErrorTree)
 import Data.Foldable (Foldable (foldMap', toList), fold, foldl', for_, sequenceA_, traverse_)
 import Data.Foldable qualified as Foldable
 import Data.Function ((&))
@@ -833,3 +835,7 @@ symbolText :: forall sym. (KnownSymbol sym) => Text
 symbolText = do
   symbolVal (Proxy :: Proxy sym)
     & stringToText
+
+-- | Like 'unwrapError', but for 'ErrorTree'. Will crash with an uncatchable exception if 'Left'.
+unwrapErrorTree :: (HasCallStack) => Either ErrorTree a -> a
+unwrapErrorTree e = e & first (newError . prettyErrorTree) & unwrapError
