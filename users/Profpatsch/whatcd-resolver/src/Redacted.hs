@@ -539,53 +539,64 @@ data TorrentData transmissionInfo = TorrentData
   }
 
 -- | https://redacted.sh/wiki.php?action=article&id=455#_1804298149
-newtype ReleaseType = ReleaseType {unReleaseType :: Text}
+data ReleaseType = ReleaseType {intKey :: Int, stringKey :: Text}
   deriving stock (Eq, Show)
 
+releaseTypeFromTextOrIntKey :: Text -> ReleaseType
+releaseTypeFromTextOrIntKey t =
+  allReleaseTypesSorted
+    & List.find
+      ( \rt -> do
+          rt.stringKey == t || buildText intDecimalT rt.intKey == t
+      )
+    & fromMaybe (ReleaseType {intKey = (-1), stringKey = t})
+
 releaseTypeComparison :: Comparison ReleaseType
-releaseTypeComparison =
-  listIndexComparison
-    [ releaseTypeAlbum,
-      releaseTypeLiveAlbum,
-      releaseTypeAnthology,
-      releaseTypeSoundtrack,
-      releaseTypeEP,
-      releaseTypeCompilation,
-      releaseTypeSingle,
-      releaseTypeRemix,
-      releaseTypeBootleg,
-      releaseTypeInterview,
-      releaseTypeMixtape,
-      releaseTypeDemo,
-      releaseTypeConcertRecording,
-      releaseTypeDJMix,
-      releaseTypeUnknown,
-      releaseTypeProducedBy,
-      releaseTypeComposition,
-      releaseTypeRemixedBy,
-      releaseTypeGuestAppearance
-    ]
+releaseTypeComparison = listIndexComparison allReleaseTypesSorted
+
+allReleaseTypesSorted :: [ReleaseType]
+allReleaseTypesSorted =
+  [ releaseTypeAlbum,
+    releaseTypeLiveAlbum,
+    releaseTypeAnthology,
+    releaseTypeSoundtrack,
+    releaseTypeEP,
+    releaseTypeCompilation,
+    releaseTypeSingle,
+    releaseTypeRemix,
+    releaseTypeBootleg,
+    releaseTypeInterview,
+    releaseTypeMixtape,
+    releaseTypeDemo,
+    releaseTypeConcertRecording,
+    releaseTypeDJMix,
+    releaseTypeUnknown,
+    releaseTypeProducedBy,
+    releaseTypeComposition,
+    releaseTypeRemixedBy,
+    releaseTypeGuestAppearance
+  ]
 
 releaseTypeAlbum, releaseTypeSoundtrack, releaseTypeEP, releaseTypeAnthology, releaseTypeCompilation, releaseTypeSingle, releaseTypeLiveAlbum, releaseTypeRemix, releaseTypeBootleg, releaseTypeInterview, releaseTypeMixtape, releaseTypeDemo, releaseTypeConcertRecording, releaseTypeDJMix, releaseTypeUnknown, releaseTypeProducedBy, releaseTypeComposition, releaseTypeRemixedBy, releaseTypeGuestAppearance :: ReleaseType
-releaseTypeAlbum = ReleaseType "Album"
-releaseTypeSoundtrack = ReleaseType "Soundtrack"
-releaseTypeEP = ReleaseType "EP"
-releaseTypeAnthology = ReleaseType "Anthology"
-releaseTypeCompilation = ReleaseType "Compilation"
-releaseTypeSingle = ReleaseType "Single"
-releaseTypeLiveAlbum = ReleaseType "Live album"
-releaseTypeRemix = ReleaseType "Remix"
-releaseTypeBootleg = ReleaseType "Bootleg"
-releaseTypeInterview = ReleaseType "Interview"
-releaseTypeMixtape = ReleaseType "Mixtape"
-releaseTypeDemo = ReleaseType "Demo"
-releaseTypeConcertRecording = ReleaseType "Concert Recording"
-releaseTypeDJMix = ReleaseType "DJ Mix"
-releaseTypeUnknown = ReleaseType "Unknown"
-releaseTypeProducedBy = ReleaseType "Produced By"
-releaseTypeComposition = ReleaseType "Composition"
-releaseTypeRemixedBy = ReleaseType "Remixed By"
-releaseTypeGuestAppearance = ReleaseType "Guest Appearance"
+releaseTypeAlbum = ReleaseType 1 "Album"
+releaseTypeSoundtrack = ReleaseType 3 "Soundtrack"
+releaseTypeEP = ReleaseType 5 "EP"
+releaseTypeAnthology = ReleaseType 6 "Anthology"
+releaseTypeCompilation = ReleaseType 7 "Compilation"
+releaseTypeSingle = ReleaseType 9 "Single"
+releaseTypeLiveAlbum = ReleaseType 11 "Live album"
+releaseTypeRemix = ReleaseType 13 "Remix"
+releaseTypeBootleg = ReleaseType 14 "Bootleg"
+releaseTypeInterview = ReleaseType 15 "Interview"
+releaseTypeMixtape = ReleaseType 16 "Mixtape"
+releaseTypeDemo = ReleaseType 17 "Demo"
+releaseTypeConcertRecording = ReleaseType 18 "Concert Recording"
+releaseTypeDJMix = ReleaseType 19 "DJ Mix"
+releaseTypeUnknown = ReleaseType 21 "Unknown"
+releaseTypeProducedBy = ReleaseType 1021 "Produced By"
+releaseTypeComposition = ReleaseType 1022 "Composition"
+releaseTypeRemixedBy = ReleaseType 1023 "Remixed By"
+releaseTypeGuestAppearance = ReleaseType 1024 "Guest Appearance"
 
 data TorrentGroupJson = TorrentGroupJson
   { groupName :: Text,
@@ -684,7 +695,7 @@ getBestTorrents opts = do
         groupId <- Dec.fromField @Int
         torrentId <- Dec.fromField @Int
         seedingWeight <- Dec.fromField @Int
-        releaseType <- ReleaseType <$> Dec.text
+        releaseType <- releaseTypeFromTextOrIntKey <$> Dec.text
         artists <- Dec.json $
           Json.eachInArray $ do
             id_ <- Json.keyLabel @"artistId" "id" (Json.asIntegral @_ @Int)

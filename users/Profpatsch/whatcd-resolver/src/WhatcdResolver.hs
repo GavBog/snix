@@ -941,7 +941,7 @@ mkBestTorrentsTable opts fresh = do
                       {Html.toHtml @Text b.torrentGroupJson.groupName}
                     </a>
                   </td>
-                  <td>{Html.toHtml @Text b.releaseType.unReleaseType}</td>
+                  <td>{Html.toHtml @Text b.releaseType.stringKey}</td>
                   <td>{Html.toHtml @Natural b.torrentGroupJson.groupYear}</td>
                   <td>{Html.toHtml @Int b.seedingWeight}</td>
                   <td>{Html.toHtml @Text b.torrentFormat}</td>
@@ -951,7 +951,7 @@ mkBestTorrentsTable opts fresh = do
             )
   let section :: NonEmpty (TorrentData (Label "percentDone" Percentage)) -> Html
       section rows = do
-        let releaseType = rows & NonEmpty.head & (.releaseType.unReleaseType)
+        let releaseType = rows & NonEmpty.head & (.releaseType.stringKey)
         [hsx|
         <h2>{releaseType}s</h2>
         <table class="table">
