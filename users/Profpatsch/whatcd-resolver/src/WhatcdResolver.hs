@@ -72,9 +72,7 @@ import System.Environment qualified as Env
 import System.FilePath ((</>))
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Utf8 qualified as Html
-import Text.Blaze.Html5 ((!))
 import Text.Blaze.Html5 qualified as Html
-import Text.Blaze.Html5.Attributes qualified as HtmlA
 import Tool (readTool, readTools)
 import Transmission
 import UnliftIO hiding (Handler)
@@ -141,48 +139,52 @@ htmlUi = do
             Map.fromList $
               ourHtmlIntegrities.handlers
                 <> [ ( "",
-                       Html $ \span -> do
-                         counterHtml <- counterHtmlM
-                         mainHtml ourHtmlIntegrities counterHtml uniqueRunId span
+                       HtmlStream (pure ()) $ \_dat span ->
+                         ( pure $ htmlPageChrome ourHtmlIntegrities "whatcd-resolver",
+                           do
+                             counterHtml <- counterHtmlM
+                             mainHtml counterHtml uniqueRunId span
+                         )
                      ),
                      ( "redacted-search",
-                       HtmlWithQueryArgs (label @"searchstr" <$> singleQueryArgument "searchstr" Cat.id) $
-                         \dat _span -> do
-                           t <- redactedSearchAndInsert [("searchstr", dat.queryArgs.searchstr)]
-                           runTransaction $ do
-                             res <- t
-                             (table, settings) <-
-                               concurrentlyTraced
-                                 ( getBestTorrentsTable
-                                     (label @"groupByReleaseType" True)
-                                     ( Just
-                                         ( E21
-                                             (label @"onlyTheseTorrents" res.newTorrents)
-                                         ) ::
-                                         Maybe
-                                           ( E2
-                                               "onlyTheseTorrents"
-                                               [Label "torrentId" Int]
-                                               "artistRedactedId"
-                                               Natural
-                                           )
+                       HtmlStream (label @"searchstr" <$> singleQueryArgument "searchstr" Cat.id) $
+                         \dat _span ->
+                           ( pure $ htmlPageChrome ourHtmlIntegrities [fmt|whatcd-resolver – Search – {dat.queryArgs.searchstr & bytesToTextUtf8Lenient}|],
+                             do
+                               t <- redactedSearchAndInsert [("searchstr", dat.queryArgs.searchstr)]
+                               runTransaction $ do
+                                 res <- t
+                                 (table, settings) <-
+                                   concurrentlyTraced
+                                     ( getBestTorrentsTable
+                                         (t2 #groupByReleaseType True #limitResults Nothing)
+                                         ( Just
+                                             ( E21
+                                                 (label @"onlyTheseTorrents" res.newTorrents)
+                                             ) ::
+                                             Maybe
+                                               ( E2
+                                                   "onlyTheseTorrents"
+                                                   [Label "torrentId" Int]
+                                                   "artistRedactedId"
+                                                   Int
+                                               )
+                                         )
                                      )
-                                 )
-                                 (getSettings)
-                             pure $
-                               mainHtml'
-                                 ourHtmlIntegrities
-                                 ( MainHtml
-                                     { pageTitle = [fmt|whatcd-resolver – Search – {dat.queryArgs.searchstr & bytesToTextUtf8Lenient}|],
-                                       returnUrl = dat.returnUrl,
-                                       counterHtml = "",
-                                       mainContent =
-                                         [hsx|<h1>Search results for <pre>{dat.queryArgs.searchstr}</pre></h1>{table}|],
-                                       uniqueRunId,
-                                       searchFieldContent = dat.queryArgs.searchstr & bytesToTextUtf8Lenient,
-                                       settings
-                                     }
-                                 )
+                                     (getSettings)
+                                 pure $
+                                   mainHtml'
+                                     ( MainHtml
+                                         { returnUrl = dat.returnUrl,
+                                           counterHtml = "",
+                                           mainContent =
+                                             [hsx|<h1>Search results for <pre>{dat.queryArgs.searchstr}</pre></h1>{table}|],
+                                           uniqueRunId,
+                                           searchFieldContent = dat.queryArgs.searchstr & bytesToTextUtf8Lenient,
+                                           settings
+                                         }
+                                     )
+                           )
                      ),
                      ( "snips/redacted/torrentDataJson",
                        Html $ \span -> do
@@ -288,12 +290,28 @@ htmlUi = do
                      ),
                      ( "artist",
                        do
-                         HtmlWithQueryArgs
+                         HtmlStream
                            ( label @"artistRedactedId"
-                               <$> (singleQueryArgument "redacted_id" (Field.utf8 >>> Field.decimalNatural))
+                               <$> ( singleQueryArgument
+                                       "redacted_id"
+                                       ( Field.utf8
+                                           >>> (Field.decimalNatural <&> toInteger)
+                                           >>> (Field.bounded @Int "Int")
+                                       )
+                                   )
                            )
-                           $ \dat _span -> do
-                             artistPage ourHtmlIntegrities (T2 dat.queryArgs (label @"uniqueRunId" uniqueRunId))
+                           $ \dat _span ->
+                             ( do
+                                 runTransaction $ inSpan' "finding artist name" $ \span -> do
+                                   addAttribute span "artist-redacted-id" (dat.queryArgs.artistRedactedId, intDecimalT)
+                                   mArtistName <- getArtistNameById (lbl #artistId dat.queryArgs.artistRedactedId)
+                                   let pageTitle = case mArtistName of
+                                         Nothing -> "whatcd-resolver"
+                                         Just a -> [fmt|{a} - Artist Page - whatcd-resolver|]
+                                   pure $ htmlPageChrome ourHtmlIntegrities pageTitle,
+                               do
+                                 artistPage (T2 dat.queryArgs (label @"uniqueRunId" uniqueRunId))
+                             )
                      ),
                      ( "artist/refresh",
                        HtmlOrRedirect $
@@ -302,11 +320,18 @@ htmlUi = do
                              parseMultipartOrThrow
                                span
                                req
-                               (label @"artistId" <$> Multipart.field "artist-id" Field.utf8)
+                               ( label @"artistId"
+                                   <$> Multipart.field
+                                     "artist-id"
+                                     ( Field.utf8
+                                         >>> (Field.decimalNatural <&> toInteger)
+                                         >>> (Field.bounded @Int "Int")
+                                     )
+                               )
                            t <- redactedRefreshArtist dat
                            runTransaction $ do
                              t
-                           pure $ E22 (label @"redirectTo" [fmt|/artist?redacted_id={dat.artistId}|])
+                           pure $ E22 (label @"redirectTo" $ textToBytesUtf8 $ mkArtistLink dat)
                      ),
                      ( "autorefresh",
                        Plain $ do
@@ -332,7 +357,7 @@ htmlUi = do
         runHandlers
           ( Html $ \span -> do
               counterHtml <- counterHtmlM
-              mainHtml ourHtmlIntegrities counterHtml uniqueRunId span
+              mainHtml counterHtml uniqueRunId span
           )
           handlers
           req
@@ -341,8 +366,8 @@ htmlUi = do
     everySecond :: Text -> Enc -> Html -> Html
     everySecond call extraData innerHtml = [hsx|<div hx-trigger="every 1s" hx-swap="outerHTML" hx-post={call} hx-vals={Enc.encToBytesUtf8 extraData}>{innerHtml}</div>|]
 
-    mainHtml :: OurHtmlIntegrities (AppT IO) -> Html -> Text -> Otel.Span -> AppT IO Html
-    mainHtml ourHtmlIntegrities counterHtml uniqueRunId _span = runTransaction $ do
+    mainHtml :: Html -> Text -> Otel.Span -> AppT IO Html
+    mainHtml counterHtml uniqueRunId _span = runTransaction $ do
       -- jsonld <-
       --   httpGetJsonLd
       --     ( URI.parseURI "https://musicbrainz.org/work/92000fd4-d304-406d-aeb4-6bdbeed318ec" & annotate "not an URI" & unwrapError,
@@ -351,15 +376,13 @@ htmlUi = do
       --     <&> renderJsonld
       (bestTorrentsTable, settings) <-
         concurrentlyTraced
-          (getBestTorrentsTable (label @"groupByReleaseType" False) Nothing)
+          (getBestTorrentsTable (t2 #groupByReleaseType False #limitResults (Just 1000)) Nothing)
           (getSettings)
       -- transmissionTorrentsTable <- lift @Transaction getTransmissionTorrentsTable
       pure $
         mainHtml'
-          ourHtmlIntegrities
           ( MainHtml
-              { pageTitle = "whatcd-resolver",
-                returnUrl = "/",
+              { returnUrl = "/",
                 counterHtml,
                 mainContent = bestTorrentsTable,
                 uniqueRunId,
@@ -369,8 +392,7 @@ htmlUi = do
           )
 
 data MainHtml = MainHtml
-  { pageTitle :: Text,
-    returnUrl :: ByteString,
+  { returnUrl :: ByteString,
     counterHtml :: Html,
     mainContent :: Html,
     searchFieldContent :: Text,
@@ -378,17 +400,12 @@ data MainHtml = MainHtml
     settings :: Settings
   }
 
-mainHtml' :: OurHtmlIntegrities m -> MainHtml -> Html
-mainHtml' integrities dat = do
-  -- transmissionTorrentsTable <- lift @Transaction getTransmissionTorrentsTable
-  htmlPageChrome
-    integrities
-    dat.pageTitle
-    ( [hsx|
+mainHtml' :: MainHtml -> Html
+mainHtml' dat = do
+  [hsx|
             {dat.counterHtml}
-            {settingButtons dat dat.settings}
-          |]
-        <> [hsx|
+            {settingButtons dat}
+
             <form action="redacted-search">
               <label for="redacted-search-input">Redacted Search</label>
               <input
@@ -414,7 +431,16 @@ mainHtml' integrities dat = do
                 hx-swap="none"
             />
             |]
+
+withAsyncTraced :: (MonadUnliftIO m) => m a -> (Async a -> m b) -> m b
+withAsyncTraced act f = do
+  ctx <- Otel.getContext
+  withAsync
+    ( do
+        _old <- Otel.attachContext ctx
+        act
     )
+    f
 
 -- | Run two actions concurrently, and add them to the current Otel trace
 concurrentlyTraced :: (MonadUnliftIO m) => m a -> m b -> m (a, b)
@@ -429,6 +455,16 @@ concurrentlyTraced act1 act2 = do
         _old <- Otel.attachContext ctx
         act2
     )
+
+mapConcurrentlyTraced :: (MonadUnliftIO m, Traversable t) => (a -> m b) -> t a -> m (t b)
+mapConcurrentlyTraced f t = do
+  ctx <- Otel.getContext
+  mapConcurrently
+    ( \a -> do
+        _old <- Otel.attachContext ctx
+        f a
+    )
+    t
 
 parseMultipartOrThrow :: (MonadLogger m, MonadIO m, MonadThrow m) => Otel.Span -> Wai.Request -> Multipart.MultipartParseT m a -> m a
 parseMultipartOrThrow span req parser =
@@ -456,13 +492,12 @@ redirectOrFallback target responseFn req = do
     Just _ -> responseFn Http.ok200 ("Hx-Redirect", target)
     Nothing -> responseFn Http.seeOther303 ("Location", target)
 
-htmlPageChrome :: (ToHtml a) => OurHtmlIntegrities m -> Text -> a -> Html
-htmlPageChrome integrities title body =
-  Html.docTypeHtml $
-    [hsx|
-      <head>
-        <!-- TODO: set nice page title for each page -->
-        <title>{title}</title>
+htmlPageChrome :: OurHtmlIntegrities m -> Text -> HtmlHead
+htmlPageChrome integrities title =
+  HtmlHead
+    { title,
+      headContent =
+        [hsx|
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!--
@@ -479,11 +514,8 @@ htmlPageChrome integrities title body =
             border: thin solid;
           }
         </style>
-      </head>
-      <body>
-        {body}
-      </body>
     |]
+    }
 
 data OurHtmlIntegrities m = OurHtmlIntegrities
   { html :: Html,
@@ -498,6 +530,7 @@ prefetchHtmlIntegrities = do
               integrityUrl = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css",
               integrityHash = "sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM",
               localPath = "resources/bootstrap.min.css",
+              provideSourceMap = True,
               isTag = E21 (label @"link" ())
             },
           HtmlIntegrity
@@ -505,6 +538,7 @@ prefetchHtmlIntegrities = do
               integrityUrl = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
               integrityHash = "sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz",
               localPath = "resources/bootstrap.bundle.min.js",
+              provideSourceMap = True,
               isTag = E22 (label @"script" ())
             },
           HtmlIntegrity
@@ -512,22 +546,27 @@ prefetchHtmlIntegrities = do
               integrityUrl = "https://unpkg.com/htmx.org@1.9.2",
               integrityHash = "sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h",
               localPath = "resources/htmx.js",
+              provideSourceMap = False,
               isTag = E22 (label @"script" ())
             }
         ]
   resources
-    & traverse
+    & mapConcurrentlyTraced
       ( \r ->
           prefetchResourceIntegrity r <&> \(html, handler) ->
             ( html,
-              [(r.localPath, handler)]
+              [(r.localPath, handler (Arg @"giveSourceMap" False))]
+                -- a little hacky, we provide an extra handler if there is a source map
+                <> ifTrue
+                  (r.provideSourceMap)
+                  [(r.localPath <> ".map", handler (Arg @"giveSourceMap" True))]
             )
       )
     <&> fold
     <&> \(html, handlers) -> OurHtmlIntegrities {..}
 
 artistPage ::
-  ( HasField "artistRedactedId" dat Natural,
+  ( HasField "artistRedactedId" dat Int,
     HasField "uniqueRunId" dat Text,
     MonadPostgres m,
     MonadOtel m,
@@ -535,25 +574,22 @@ artistPage ::
     MonadThrow m,
     MonadTransmission m
   ) =>
-  OurHtmlIntegrities m ->
   dat ->
   m Html
-artistPage ourHtmlIntegrities dat = runTransaction $ do
+artistPage dat = runTransaction $ do
   (fresh, settings) <-
     concurrentlyTraced
       ( getBestTorrentsData
+          (label @"limitResults" Nothing)
           (Just $ E22 (getLabel @"artistRedactedId" dat))
       )
       (getSettings)
-  let artistName = fresh & findMaybe (\t -> t.artists & findMaybe (\a -> if a.artistId == (dat.artistRedactedId & fromIntegral @Natural @Int) then Just a.artistName else Nothing))
   let torrents = mkBestTorrentsTable (label @"groupByReleaseType" True) fresh
 
   let returnUrl =
         textToBytesUtf8 $
-          mkArtistLink (label @"artistId" (dat.artistRedactedId & fromIntegral @Natural @Int))
-  let pageTitle = case artistName of
-        Nothing -> "whatcd-resolver"
-        Just a -> [fmt|{a} - Artist Page - whatcd-resolver|]
+          mkArtistLink (label @"artistId" (dat.artistRedactedId))
+
   let mainContent =
         [hsx|
         <div id="artist-torrents">
@@ -565,7 +601,7 @@ artistPage ourHtmlIntegrities dat = runTransaction $ do
             hidden
             type="text"
             name="artist-id"
-            value={dat.artistRedactedId & buildText naturalDecimalT}
+            value={dat.artistRedactedId & buildText intDecimalT}
             />
           <button type="submit" hx-disabled-elt="this">Refresh Artist Page</button>
           <div class="htmx-indicator">Refreshing!</div>
@@ -573,9 +609,8 @@ artistPage ourHtmlIntegrities dat = runTransaction $ do
       |]
   pure $
     mainHtml'
-      ourHtmlIntegrities
       ( MainHtml
-          { pageTitle,
+          { -- pageTitle,
             returnUrl,
             counterHtml = "",
             mainContent,
@@ -592,6 +627,11 @@ data QueryArgsDat a = QueryArgsDat
     returnUrl :: ByteString
   }
 
+data HtmlHead = HtmlHead
+  { title :: Text,
+    headContent :: Html
+  }
+
 data HandlerResponse m where
   -- | render html
   Html :: (Otel.Span -> m Html) -> HandlerResponse m
@@ -601,6 +641,8 @@ data HandlerResponse m where
   HtmlWithQueryArgs :: Parse Query a -> (QueryArgsDat a -> Otel.Span -> m Html) -> HandlerResponse m
   -- | render html or reload the page via the Referer header if no htmx
   HtmlOrReferer :: (Otel.Span -> m Html) -> HandlerResponse m
+  -- | render html and stream the head before even doing any work in the handler
+  HtmlStream :: Parse Query a -> (QueryArgsDat a -> Otel.Span -> (m HtmlHead, m Html)) -> HandlerResponse m
   -- | parse the request as POST submission, then redirect to the given endpoint
   PostAndRedirect ::
     m (MultipartParseT m dat) ->
@@ -660,11 +702,11 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
             liftIO $ respond (Wai.responseLBS Http.seeOther303 [("Location", res.redirectTo)] "")
           else do
             liftIO $ respond (Wai.responseLBS Http.methodNotAllowed405 [] "")
-  let htmlWithQueryArgs parser act =
+  let htmlWithQueryArgs' parser =
         case req & Parse.runParse "Unable to find the right request query arguments" (lmap Wai.queryString parser) of
-          Right queryArgs -> html (act $ QueryArgsDat {queryArgs, returnUrl = (req & Wai.rawPathInfo) <> (req & Wai.rawQueryString)})
+          Right queryArgs -> Right $ QueryArgsDat {queryArgs, returnUrl = (req & Wai.rawPathInfo) <> (req & Wai.rawQueryString)}
           Left err ->
-            html
+            Left
               ( \span -> do
                   recordException
                     span
@@ -679,6 +721,39 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
                               <pre>{err & prettyErrorTree}</pre>
                             |]
               )
+  let htmlWithQueryArgs parser act = case htmlWithQueryArgs' parser of
+        Right dat -> html (act dat)
+        Left act' -> html act'
+
+  let htmlStream :: Parse Query a -> (QueryArgsDat a -> Otel.Span -> (m HtmlHead, m Html)) -> m ResponseReceived
+      htmlStream parser act = inRouteSpan $ \span -> do
+        case htmlWithQueryArgs' parser of
+          Left act' -> html act'
+          Right dat -> do
+            let (mkHead, mkBody) = act dat span
+            -- start the body work (heh) immediately, but stream the head first
+            withAsyncTraced mkBody $ \bodyAsync -> do
+              withRunInIO $ \runInIO' -> respond $ Wai.responseStream Http.ok200 [("Content-Type", "text/html")] $ \send flush -> do
+                runInIO' $ inSpan "sending <head>" $ do
+                  htmlHead <- mkHead
+                  liftIO $ do
+                    send "<!DOCTYPE html>\n"
+                    send "<html>\n"
+                    send $
+                      Html.renderHtmlBuilder $
+                        [hsx|
+                            <head>
+                              <title>{htmlHead.title}</title>
+                              {htmlHead.headContent}
+                            </head>
+                        |]
+                    flush
+                htmlBody <- liftIO $ wait bodyAsync
+                send "<body>\n"
+                send $ Html.renderHtmlBuilder htmlBody
+                send "</body>\n"
+                send "</html>\n"
+                flush
 
   let handler =
         handlers
@@ -689,6 +764,7 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
             HtmlOrRedirect act -> htmlOrRedirect act
             HtmlWithQueryArgs parser act -> htmlWithQueryArgs parser act
             HtmlOrReferer act -> htmlOrReferer act
+            HtmlStream parser act -> htmlStream parser act
             PostAndRedirect mParser act -> mParser >>= \parser -> postAndRedirect parser act
             Plain act -> liftIO $ runInIO act >>= respond
   runInIO handler
@@ -739,13 +815,14 @@ getBestTorrentsTable ::
     MonadLogger m,
     MonadPostgres m,
     MonadOtel m,
-    HasField "groupByReleaseType" opts Bool
+    HasField "groupByReleaseType" opts Bool,
+    HasField "limitResults" opts (Maybe Natural)
   ) =>
   opts ->
-  Maybe (E2 "onlyTheseTorrents" [Label "torrentId" Int] "artistRedactedId" Natural) ->
+  Maybe (E2 "onlyTheseTorrents" [Label "torrentId" Int] "artistRedactedId" Int) ->
   Transaction m Html
 getBestTorrentsTable opts dat = do
-  fresh <- getBestTorrentsData dat
+  fresh <- getBestTorrentsData opts dat
   pure $ mkBestTorrentsTable opts fresh
 
 doIfJust :: (Applicative f) => (a -> f ()) -> Maybe a -> f ()
@@ -756,15 +833,18 @@ getBestTorrentsData ::
     MonadThrow m,
     MonadLogger m,
     MonadPostgres m,
-    MonadOtel m
+    MonadOtel m,
+    HasField "limitResults" opts (Maybe Natural)
   ) =>
-  Maybe (E2 "onlyTheseTorrents" [Label "torrentId" Int] "artistRedactedId" Natural) ->
+  opts ->
+  Maybe (E2 "onlyTheseTorrents" [Label "torrentId" Int] "artistRedactedId" Int) ->
   Transaction m [TorrentData (Label "percentDone" Percentage)]
-getBestTorrentsData filters = inSpan' "get torrents table data" $ \span -> do
+getBestTorrentsData opts filters = inSpan' "get torrents table data" $ \span -> do
   let onlyArtist = label @"artistRedactedId" <$> (filters >>= getE22 @"artistRedactedId")
-  onlyArtist & doIfJust (\a -> addAttribute span "artist-filter.redacted-id" (a.artistRedactedId, naturalDecimalT))
+  onlyArtist & doIfJust (\a -> addAttribute span "artist-filter.redacted-id" (a.artistRedactedId, intDecimalT))
   let onlyTheseTorrents = filters >>= getE21 @"onlyTheseTorrents"
   onlyTheseTorrents & doIfJust (\a -> addAttribute span "torrent-filter.ids" (a <&> (getLabel @"torrentId") & showToText & Otel.toAttribute))
+  let limitResults = getField @"limitResults" opts
 
   let getBest = getBestTorrents GetBestTorrentsFilter {onlyDownloaded = False, ..}
   bestStale :: [TorrentData ()] <- getBest
@@ -1182,9 +1262,9 @@ submitSettingForm opts inputs =
   </form>
   |]
 
-settingButtons :: (HasField "returnUrl" opts ByteString) => opts -> Settings -> Html
-settingButtons opts s =
-  if s.useFreeleechTokens
+settingButtons :: (HasField "returnUrl" opts ByteString, HasField "settings" opts Settings) => opts -> Html
+settingButtons opts =
+  if opts.settings.useFreeleechTokens
     then
       submitSettingForm
         opts
@@ -1312,81 +1392,102 @@ data HtmlIntegrity = HtmlIntegrity
     integrityHash :: Text,
     -- | The local url path to fetch the cached resource from the frontend
     localPath :: Text,
+    -- | Whether there is a resource map at the URL + `.map`
+    provideSourceMap :: Bool,
     -- | is @<link>@ or @<script>@ tag?
     isTag :: E2 "link" () "script" ()
   }
 
 -- | Fetch a resource, calculate its integrity hash, and return a html @<link>@ snippet and a handler to return the resource.
-prefetchResourceIntegrity :: (MonadOtel m, MonadThrow m) => HtmlIntegrity -> m (Html, HandlerResponse m)
+prefetchResourceIntegrity :: forall m. (MonadOtel m, MonadThrow m) => HtmlIntegrity -> m (Html, (Arg "giveSourceMap" Bool) -> HandlerResponse m)
 prefetchResourceIntegrity dat = inSpan' [fmt|prefetching resource {dat.integrityName}|] $ \span -> do
   let x =
         dat.integrityUrl
           & Parse.runParse "Failed to parse URI" (textToURI >>> uriToHttpClientRequest)
           & unwrapErrorTree
 
-  Http.httpBS x
-    >>= ( \resp -> do
-            let !statusCode = resp & Http.responseStatus & (.statusCode)
-            let !mContentType =
-                  resp
-                    & Http.responseHeaders
-                    & List.lookup "content-type"
-                    <&> parseContentType
-                    <&> (\(!ct, _mimeAttributes) -> ct)
+  resp <- Http.httpBS x
+  let !statusCode = resp & Http.responseStatus & (.statusCode)
+  let !mContentType =
+        resp
+          & Http.responseHeaders
+          & List.lookup "content-type"
+          <&> parseContentType
+          <&> (\(!ct, _mimeAttributes) -> ct)
 
-            let !bodyStrict = resp & Http.responseBody
-            let !bodyLength = bodyStrict & ByteString.length
-            if
-              | statusCode == 200 -> do
-                  let tagMatch prx1 val1 prx2 val2 =
-                        dat.isTag
-                          & caseE2
-                            ( t2
-                                prx1
-                                (\() -> val1)
-                                prx2
-                                (\() -> val2)
-                            )
-                  pure
-                    ( -- hsx does not understand the `as` attr
-                      ( Html.link
-                          ! HtmlA.rel "preload"
-                          ! HtmlA.href (Html.textValue dat.localPath)
-                          ! Html.customAttribute
-                            "as"
-                            ( tagMatch
-                                #link
-                                "style"
-                                #script
-                                "script"
-                            )
-                      )
-                        <> ( tagMatch
-                               #link
-                               [hsx|<link rel="stylesheet" href={dat.localPath} integrity={dat.integrityHash} crossorigin="anonymous">|]
-                               #script
-                               [hsx|<script src={dat.localPath} integrity={dat.integrityHash} crossorigin="anonymous"></script>|]
-                           ),
-                      Plain $
-                        pure $
-                          Wai.responseLBS
-                            Http.ok200
-                            [ ( "Content-Type",
-                                mContentType
-                                  & fromMaybe
-                                    ( tagMatch
-                                        #script
-                                        "text/javascript; charset=UTF-8"
-                                        #link
-                                        "text/css; charset=UTF-8"
-                                    )
-                              ),
-                              ("Content-Length", buildBytes intDecimalB bodyLength)
-                            ]
-                            (toLazyBytes $ bodyStrict)
-                    )
-              | code <- statusCode -> appThrow span $ AppExceptionPretty [[fmt|Server returned an non-200 error code, code {code}:|], pretty resp]
-        )
+  let !bodyStrict = resp & Http.responseBody
+  let !bodyLength = bodyStrict & ByteString.length
+  if
+    | statusCode == 200 -> do
+        let tagMatch prx1 val1 prx2 val2 =
+              dat.isTag
+                & caseE2
+                  ( t2
+                      prx1
+                      (\() -> val1)
+                      prx2
+                      (\() -> val2)
+                  )
+        mSourceMap <-
+          if
+            | dat.provideSourceMap -> do
+                inSpan' [fmt|Get Source Map for {dat.integrityName}|] $ \span' -> do
+                  let sourceMapUrl = dat.integrityUrl <> ".map"
+                  let x' =
+                        sourceMapUrl
+                          & Parse.runParse "Failed to parse URI" (textToURI >>> uriToHttpClientRequest)
+                          & unwrapErrorTree
+                  resp' <- Http.httpBS x'
+                  let !statusCode' = resp' & Http.responseStatus & (.statusCode)
+                  if
+                    | statusCode' == 200 -> do
+                        pure $ Just <$> resp' & Http.responseBody
+                    -- if it does not exist, let’s 404 as well
+                    | statusCode' == 404 -> do
+                        pure Nothing
+                    | otherwise -> do
+                        appThrow span' $ AppExceptionPretty [[fmt|Failed to fetch source map, got status code {statusCode'}|]]
+            | otherwise -> pure Nothing
+        pure
+          ( tagMatch
+              #link
+              [hsx|<link rel="stylesheet" href={dat.localPath} integrity={dat.integrityHash} crossorigin="anonymous">|]
+              #script
+              [hsx|<script src={dat.localPath} integrity={dat.integrityHash} crossorigin="anonymous"></script>|],
+            \(Arg giveSourceMap) -> Plain $ do
+              if
+                | giveSourceMap,
+                  Just sourceMap <- mSourceMap -> do
+                    pure $
+                      Wai.responseLBS
+                        Http.ok200
+                        [ ( "Content-Type",
+                            "application/json"
+                          ),
+                          ("Content-Length", buildBytes intDecimalB (ByteString.length sourceMap))
+                        ]
+                        (toLazyBytes sourceMap)
+                | giveSourceMap -> do
+                    pure $ Wai.responseLBS Http.notFound404 [] ""
+                | otherwise -> do
+                    pure $
+                      Wai.responseLBS
+                        Http.ok200
+                        [ ( "Content-Type",
+                            mContentType
+                              & fromMaybe
+                                ( tagMatch
+                                    #script
+                                    "text/javascript; charset=UTF-8"
+                                    #link
+                                    "text/css; charset=UTF-8"
+                                )
+                          ),
+                          ("Content-Length", buildBytes intDecimalB bodyLength)
+                        ]
+                        (toLazyBytes $ bodyStrict)
+          )
+    | code <- statusCode -> appThrow span $ AppExceptionPretty [[fmt|Server returned an non-200 error code, code {code}:|], pretty resp]
 
 -- case-match on an e2 with a t2 that provides the relevant functions
 caseE2 ::
@@ -1408,6 +1509,10 @@ caseE2 m e2 = do
 t2 :: forall l1 t1 l2 t2. LabelPrx l1 -> t1 -> LabelPrx l2 -> t2 -> T2 l1 t1 l2 t2
 {-# INLINE t2 #-}
 t2 LabelPrx a LabelPrx b = T2 (label @l1 a) (label @l2 b)
+
+lbl :: forall l t. LabelPrx l -> t -> Label l t
+{-# INLINE lbl #-}
+lbl LabelPrx a = label @l a
 
 data LabelPrx (l :: Symbol) = LabelPrx
 

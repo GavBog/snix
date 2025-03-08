@@ -195,6 +195,22 @@ querySingleRowWith ::
 querySingleRowWith qry params decoder = do
   queryWith qry params decoder >>= ensureSingleRow
 
+-- | Return the first row, if any.
+queryFirstRowWithMaybe ::
+  ( MonadPostgres m,
+    ToRow qParams,
+    Typeable qParams,
+    Typeable a
+  ) =>
+  Query ->
+  qParams ->
+  Decoder a ->
+  Transaction m (Maybe a)
+queryFirstRowWithMaybe qry params decoder = do
+  queryWith qry params decoder >>= \case
+    [] -> pure Nothing
+    (one : _) -> pure $ Just one
+
 -- TODO: implement via fold, so that the result doesn’t have to be realized in memory
 querySingleRowMaybe ::
   ( MonadPostgres m,

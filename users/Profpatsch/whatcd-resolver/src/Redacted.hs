@@ -71,7 +71,7 @@ redactedGetArtist ::
   ( MonadOtel m,
     MonadThrow m,
     MonadRedacted m,
-    HasField "artistId" r Text,
+    HasField "artistId" r Int,
     HasField "page" r (Maybe Natural)
   ) =>
   r ->
@@ -83,7 +83,7 @@ redactedGetArtist dat parser =
       span
       ( T3
           (label @"action" "artist")
-          (label @"actionArgs" [("id", buildBytes utf8B dat.artistId)])
+          (label @"actionArgs" [("id", buildBytes intDecimalB dat.artistId)])
           (getLabel @"page" dat)
       )
       parser
@@ -184,7 +184,7 @@ redactedRefreshArtist ::
     MonadThrow m,
     MonadOtel m,
     MonadRedacted m,
-    HasField "artistId" dat Text
+    HasField "artistId" dat Int
   ) =>
   dat ->
   m (Transaction m (Label "newTorrents" [Label "torrentId" Int]))
@@ -610,8 +610,9 @@ getTorrentById dat = do
 
 data GetBestTorrentsFilter = GetBestTorrentsFilter
   { onlyDownloaded :: Bool,
-    onlyArtist :: Maybe (Label "artistRedactedId" Natural),
-    onlyTheseTorrents :: Maybe ([Label "torrentId" Int])
+    onlyArtist :: Maybe (Label "artistRedactedId" Int),
+    onlyTheseTorrents :: Maybe ([Label "torrentId" Int]),
+    limitResults :: Maybe Natural
   }
 
 -- | Find the best torrent for each torrent group (based on the seeding_weight)
@@ -662,6 +663,7 @@ getBestTorrents opts = do
       JOIN redacted.torrents t ON t.id = f.id
       JOIN redacted.torrent_groups tg ON tg.id = t.torrent_group
       ORDER BY seeding_weight DESC
+      LIMIT ?::int
     |]
     ( do
         let (onlyArtistB, onlyArtistId) = case opts.onlyArtist of
@@ -672,9 +674,10 @@ getBestTorrents opts = do
               Just a -> (False, a <&> (.torrentId) & PGArray)
         ( opts.onlyDownloaded :: Bool,
           onlyArtistB :: Bool,
-          onlyArtistId & fromIntegral @Natural @Int,
+          onlyArtistId :: Int,
           onlyTheseTorrentsB :: Bool,
-          onlyTheseTorrents
+          onlyTheseTorrents,
+          opts.limitResults <&> naturalToInteger :: Maybe Integer
           )
     )
     ( do
@@ -713,6 +716,29 @@ getBestTorrents opts = do
               ..
             }
     )
+
+getArtistNameById :: (MonadPostgres m, HasField "artistId" r Int) => r -> Transaction m (Maybe Text)
+getArtistNameById dat = do
+  queryFirstRowWithMaybe
+    [sql|
+       WITH json as (
+        SELECT
+          -- TODO: different endpoints handle this differently (e.g. action=search and action=artist), we should unify this while parsing
+          COALESCE(
+            t.full_json_result->'artists',
+            tg.full_json_result->'artists',
+            '[]'::jsonb
+          ) as artists
+        FROM redacted.torrents t
+        JOIN redacted.torrent_groups tg ON tg.id = t.torrent_group
+      )
+      select name from json
+        join lateral jsonb_to_recordset(artists) as x(id int, name text) on true
+        where id = ?::int
+        limit 1
+  |]
+    (getLabel @"artistId" dat)
+    (Dec.fromField @Text)
 
 -- | Do a request to the redacted API. If you know what that is, you know how to find the API docs.
 mkRedactedApiRequest ::
