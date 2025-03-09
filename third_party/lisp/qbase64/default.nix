@@ -2,12 +2,7 @@
 
 let
   src = pkgs.applyPatches {
-    src = pkgs.fetchFromGitHub {
-      owner = "chaitanyagupta";
-      repo = "qbase64";
-      rev = "4ac193ed6b35a867ca453ed74acc128c9a077407";
-      sha256 = "06daqqfdd51wkx0pyxgz7zq4ibzsqsgn3qs04jabx67gyybgnmjm";
-    };
+    src = pkgs.srcOnly pkgs.sbcl.pkgs.qbase64;
 
     patches = [
       # qbase64 expects macOS base64
