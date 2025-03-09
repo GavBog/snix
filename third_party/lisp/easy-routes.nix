@@ -2,14 +2,9 @@
 
 let
 
-  src = pkgs.fetchFromGitHub {
-    owner = "mmontone";
-    repo = "easy-routes";
-    rev = "dab613ff419a655036a00beecee026ab6e0ba430";
-    sha256 = "06lnipwc6mmg0v5gybcnr7wn5xmn5xfd1gs19vbima777245bfka";
-  };
-
+  src = pkgs.srcOnly pkgs.sbcl.pkgs.easy-routes;
 in
+
 depot.nix.buildLisp.library {
   name = "easy-routes";
   deps = with depot.third_party.lisp; [
