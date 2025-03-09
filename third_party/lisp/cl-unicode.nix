@@ -4,12 +4,7 @@ let
   inherit (pkgs) sbcl runCommand writeText;
   inherit (depot.nix.buildLisp) bundled;
 
-  src = pkgs.fetchFromGitHub {
-    owner = "edicl";
-    repo = "cl-unicode";
-    rev = "8073fc5634c9d4802888ac03abf11dfe383e16fa";
-    sha256 = "0ykx2s9lqfl74p1px0ik3l2izd1fc9jd1b4ra68s5x34rvjy0hza";
-  };
+  src = pkgs.srcOnly pkgs.sbcl.pkgs.cl-unicode;
 
   cl-unicode-base = depot.nix.buildLisp.library {
     name = "cl-unicode-base";
