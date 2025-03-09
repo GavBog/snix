@@ -620,8 +620,7 @@ getTorrentById dat = do
     >>= ensureSingleRow
 
 data GetBestTorrentsFilter = GetBestTorrentsFilter
-  { onlyDownloaded :: Bool,
-    onlyArtist :: Maybe (Label "artistRedactedId" Int),
+  { onlyArtist :: Maybe (Label "artistRedactedId" Int),
     onlyTheseTorrents :: Maybe ([Label "torrentId" Int]),
     limitResults :: Maybe Natural
   }
@@ -640,10 +639,7 @@ getBestTorrents opts = do
         FROM
           redacted.torrents
         WHERE
-          -- onlyDownloaded
-          ((NOT ?::bool) OR torrent_file IS NOT NULL)
           -- filter by artist id
-          AND
           (?::bool OR (to_jsonb(?::int) <@ (jsonb_path_query_array(full_json_result, '$.artists[*].id'))))
           -- filter by torrent ids
           AND
@@ -683,8 +679,7 @@ getBestTorrents opts = do
         let (onlyTheseTorrentsB, onlyTheseTorrents) = case opts.onlyTheseTorrents of
               Nothing -> (True, PGArray [])
               Just a -> (False, a <&> (.torrentId) & PGArray)
-        ( opts.onlyDownloaded :: Bool,
-          onlyArtistB :: Bool,
+        ( onlyArtistB :: Bool,
           onlyArtistId :: Int,
           onlyTheseTorrentsB :: Bool,
           onlyTheseTorrents,

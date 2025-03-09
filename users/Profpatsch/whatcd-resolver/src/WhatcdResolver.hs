@@ -846,7 +846,7 @@ getBestTorrentsData opts filters = inSpan' "get torrents table data" $ \span -> 
   onlyTheseTorrents & doIfJust (\a -> addAttribute span "torrent-filter.ids" (a <&> (getLabel @"torrentId") & showToText & Otel.toAttribute))
   let limitResults = getField @"limitResults" opts
 
-  let getBest = getBestTorrents GetBestTorrentsFilter {onlyDownloaded = False, ..}
+  let getBest = getBestTorrents GetBestTorrentsFilter {..}
   bestStale :: [TorrentData ()] <- getBest
   (statusInfo, transmissionStatus) <-
     getAndUpdateTransmissionTorrentsStatus
