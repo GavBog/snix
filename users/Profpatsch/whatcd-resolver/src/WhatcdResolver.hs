@@ -159,7 +159,7 @@ htmlUi = do
                                      ( do
                                          d <-
                                            getBestTorrentsData
-                                             (t2 #limitResults Nothing #ordering BySeedingWeight)
+                                             (t3 #limitResults Nothing #ordering BySeedingWeight #disallowedReleaseTypes [])
                                              ( Just
                                                  ( E21
                                                      (label @"onlyTheseTorrents" res.newTorrents)
@@ -380,9 +380,22 @@ htmlUi = do
       (bestTorrentsTable, settings) <-
         concurrentlyTraced
           ( do
-              d <- getBestTorrentsData (t2 #limitResults (Just 30) #ordering ByLastReleases) Nothing
+              d <-
+                getBestTorrentsData
+                  ( t3
+                      #limitResults
+                      (Just 100)
+                      #ordering
+                      ByLastReleases
+                      #disallowedReleaseTypes
+                      [ releaseTypeBootleg,
+                        releaseTypeGuestAppearance,
+                        releaseTypeRemix
+                      ]
+                  )
+                  Nothing
               pure $ case d & nonEmpty of
-                Nothing -> [hsx|<h1>Last Releases</h1><p>No torrents found</p>|]
+                Nothing -> [hsx|<h1>Latest Releases</h1><p>No torrents found</p>|]
                 Just d' -> mkBestTorrentsTableSection (lbl #sectionName "Last Releases") d'
           )
           (getSettings)
@@ -588,7 +601,7 @@ artistPage dat = runTransaction $ do
   (fresh, settings) <-
     concurrentlyTraced
       ( getBestTorrentsData
-          (t2 #limitResults Nothing #ordering BySeedingWeight)
+          (t3 #limitResults Nothing #ordering BySeedingWeight #disallowedReleaseTypes [])
           (Just $ E22 (getLabel @"artistRedactedId" dat))
       )
       (getSettings)
@@ -827,7 +840,8 @@ getBestTorrentsData ::
     MonadPostgres m,
     MonadOtel m,
     HasField "limitResults" opts (Maybe Natural),
-    HasField "ordering" opts BestTorrentsOrdering
+    HasField "ordering" opts BestTorrentsOrdering,
+    HasField "disallowedReleaseTypes" opts [ReleaseType]
   ) =>
   opts ->
   Maybe (E2 "onlyTheseTorrents" [Label "torrentId" Int] "artistRedactedId" Int) ->
@@ -840,6 +854,7 @@ getBestTorrentsData opts filters = inSpan' "get torrents table data" $ \span -> 
   let limitResults = getField @"limitResults" opts
 
   let ordering = opts.ordering
+  let disallowedReleaseTypes = opts.disallowedReleaseTypes
   let getBest = getBestTorrents GetBestTorrentsFilter {..}
   bestStale :: [TorrentData ()] <- getBest
   (statusInfo, transmissionStatus) <-
@@ -935,7 +950,7 @@ mkBestTorrentsTableSection opts torrents = do
                                   (label @"content" $ Html.toHtml @Text a.artistName)
                             )
                         & mkLinkList
-
+                let releaseTypeTooltip rt = [fmt|{rt.stringKey} (Release type ID: {rt.intKey})|] :: Text
                 [hsx|
                   <tr id={torrentPosition}>
                   <td>{localTorrent b}</td>
@@ -948,7 +963,7 @@ mkBestTorrentsTableSection opts torrents = do
                       {Html.toHtml @Text b.torrentGroupJson.groupName}
                     </a>
                   </td>
-                  <td>{Html.toHtml @Text b.releaseType.stringKey}</td>
+                  <td title={releaseTypeTooltip b.releaseType}>{Html.toHtml @Text b.releaseType.stringKey}</td>
                   <td>{Html.toHtml @Natural b.torrentGroupJson.groupYear}</td>
                   <td>{Html.toHtml @Int b.seedingWeight}</td>
                   <td>{Html.toHtml @Text b.torrentFormat}</td>

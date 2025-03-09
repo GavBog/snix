@@ -622,6 +622,7 @@ getTorrentById dat = do
 data GetBestTorrentsFilter = GetBestTorrentsFilter
   { onlyArtist :: Maybe (Label "artistRedactedId" Int),
     onlyTheseTorrents :: Maybe ([Label "torrentId" Int]),
+    disallowedReleaseTypes :: [ReleaseType],
     limitResults :: Maybe Natural,
     ordering :: BestTorrentsOrdering
   }
@@ -672,6 +673,7 @@ getBestTorrents opts = do
       FROM filtered_torrents f
       JOIN redacted.torrents t ON t.id = f.id
       JOIN redacted.torrent_groups tg ON tg.id = t.torrent_group
+      WHERE tg.full_json_result->>'releaseType' <> ALL (?::text[])
     |]
         <> case opts.ordering of
           BySeedingWeight -> [fmt|ORDER BY seeding_weight DESC|] <> "\n"
@@ -691,6 +693,7 @@ getBestTorrents opts = do
           onlyArtistId :: Int,
           onlyTheseTorrentsB :: Bool,
           onlyTheseTorrents,
+          (opts.disallowedReleaseTypes & concatMap (\rt -> [rt.stringKey, rt.intKey & buildText intDecimalT]) & PGArray :: PGArray Text),
           opts.limitResults <&> naturalToInteger :: Maybe Integer
           )
     )
