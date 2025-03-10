@@ -13,6 +13,7 @@ let
       ./src/WhatcdResolver.hs
       ./src/AppT.hs
       ./src/Bencode.hs
+      ./src/MyLabel.hs
       ./src/JsonLd.hs
       ./src/Optional.hs
       ./src/Html.hs

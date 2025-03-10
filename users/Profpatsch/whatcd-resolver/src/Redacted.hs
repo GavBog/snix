@@ -27,6 +27,7 @@ import FieldParser qualified as Field
 import Http qualified
 import Json qualified
 import Label
+import MyLabel
 import MyPrelude
 import Network.HTTP.Types
 import Network.Wai.Parse qualified as Wai
@@ -60,10 +61,13 @@ redactedSearch extraArguments dat parser =
   inSpan' "Redacted API Search" $ \span ->
     redactedPagedRequest
       span
-      ( T3
-          (label @"action" "browse")
-          (getLabel @"actionArgs" extraArguments)
-          (getLabel @"page" dat)
+      ( t3
+          #action
+          "browse"
+          #actionArgs
+          extraArguments.actionArgs
+          #page
+          dat.page
       )
       parser
 
@@ -81,10 +85,13 @@ redactedGetArtist dat parser =
   inSpan' "Redacted Get Artist" $ \span -> do
     redactedPagedRequest
       span
-      ( T3
-          (label @"action" "artist")
-          (label @"actionArgs" [("id", buildBytes intDecimalB dat.artistId)])
-          (getLabel @"page" dat)
+      ( t3
+          #action
+          "artist"
+          #actionArgs
+          [("id", buildBytes intDecimalB dat.artistId)]
+          #page
+          (dat.page)
       )
       parser
 
@@ -103,14 +110,15 @@ redactedPagedRequest ::
 redactedPagedRequest span dat parser =
   redactedApiRequestJson
     span
-    ( T2
-        (label @"action" dat.action)
-        ( label @"actionArgs" $
-            (dat.actionArgs <&> second Just)
-              <> ( dat.page
-                     & ifExists
-                       (\page -> ("page", Just $ buildBytes naturalDecimalB page))
-                 )
+    ( t2
+        #action
+        dat.action
+        #actionArgs
+        ( (dat.actionArgs <&> second Just)
+            <> ( dat.page
+                   & ifExists
+                     (\page -> ("page", Just $ buildBytes naturalDecimalB page))
+               )
         )
     )
     parser
@@ -149,7 +157,7 @@ mkRedactedTorrentLink torrentId = [fmt|https://redacted.sh/torrents.php?id={torr
 
 exampleSearch :: (MonadThrow m, MonadLogger m, MonadPostgres m, MonadOtel m, MonadRedacted m) => m (Transaction m ())
 exampleSearch = do
-  t1 <-
+  x1 <-
     redactedSearchAndInsert
       [ ("searchstr", "cherish"),
         ("artistname", "kirinji"),
@@ -158,7 +166,7 @@ exampleSearch = do
         -- ("releasetype", "album"),
         ("order_by", "year")
       ]
-  t3 <-
+  x3 <-
     redactedSearchAndInsert
       [ ("searchstr", "mouss et hakim"),
         ("artistname", "mouss et hakim"),
@@ -167,7 +175,7 @@ exampleSearch = do
         -- ("releasetype", "album"),
         ("order_by", "year")
       ]
-  t2 <-
+  x2 <-
     redactedSearchAndInsert
       [ ("searchstr", "thriller"),
         ("artistname", "michael jackson"),
@@ -176,7 +184,7 @@ exampleSearch = do
         -- ("releasetype", "album"),
         ("order_by", "year")
       ]
-  pure (t1 >> t2 >> t3 >> pure ())
+  pure (x1 >> x2 >> x3 >> pure ())
 
 redactedRefreshArtist ::
   ( MonadLogger m,
@@ -190,7 +198,15 @@ redactedRefreshArtist ::
   m (Transaction m (Label "newTorrents" [Label "torrentId" Int]))
 redactedRefreshArtist dat = do
   redactedPagedSearchAndInsert
-    (Json.key "torrentgroup" $ parseTourGroups (T2 (label @"torrentFieldName" "torrent") (label @"torrentIdName" "id")))
+    ( Json.key "torrentgroup" $
+        parseTourGroups
+          ( t2
+              #torrentFieldName
+              "torrent"
+              #torrentIdName
+              "id"
+          )
+    )
     ( \page ->
         redactedGetArtist
           ( T2

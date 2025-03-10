@@ -32,6 +32,9 @@ common common-options
     -- known as RecordDotSyntax
     OverloadedRecordDot
 
+    -- Make #labels available
+    OverloadedLabels
+
     -- does not export record fields as functions, use OverloadedRecordDot to access instead
     NoFieldSelectors
 
@@ -68,6 +71,7 @@ library
        Bencode
        JsonLd
        Optional
+       MyLabel
        Http
        Html
        Transmission
