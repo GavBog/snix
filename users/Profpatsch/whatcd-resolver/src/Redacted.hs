@@ -653,31 +653,46 @@ getBestTorrents opts = do
           -- prefer torrents which we already downloaded
           torrent_file,
           seeding_weight DESC
+      ),
+      prepare1 AS (
+        SELECT
+          tg.group_id,
+          t.torrent_id,
+          t.seeding_weight,
+          tg.full_json_result->>'releaseType' AS release_type,
+          -- TODO: different endpoints handle this differently (e.g. action=search and action=artist), we should unify this while parsing
+          COALESCE(
+            t.full_json_result->'artists',
+            tg.full_json_result->'artists',
+            '[]'::jsonb
+          ) as artists,
+          tg.full_json_result->>'groupName' AS group_name,
+          tg.full_json_result->>'groupYear' AS group_year,
+          t.torrent_file IS NOT NULL AS has_torrent_file,
+          t.transmission_torrent_hash,
+          t.full_json_result->>'encoding' AS torrent_format
+        FROM filtered_torrents f
+        JOIN redacted.torrents t ON t.id = f.id
+        JOIN redacted.torrent_groups tg ON tg.id = t.torrent_group
+        WHERE
+          tg.full_json_result->>'releaseType' <> ALL (?::text[])
       )
       SELECT
-        tg.group_id,
-        t.torrent_id,
-        t.seeding_weight,
-        tg.full_json_result->>'releaseType' AS release_type,
-        -- TODO: different endpoints handle this differently (e.g. action=search and action=artist), we should unify this while parsing
-        COALESCE(
-          t.full_json_result->'artists',
-          tg.full_json_result->'artists',
-          '[]'::jsonb
-        ) as artists,
-        tg.full_json_result->>'groupName' AS group_name,
-        tg.full_json_result->>'groupYear' AS group_year,
-        t.torrent_file IS NOT NULL AS has_torrent_file,
-        t.transmission_torrent_hash,
-        t.full_json_result->>'encoding' AS torrent_format
-      FROM filtered_torrents f
-      JOIN redacted.torrents t ON t.id = f.id
-      JOIN redacted.torrent_groups tg ON tg.id = t.torrent_group
-      WHERE tg.full_json_result->>'releaseType' <> ALL (?::text[])
+        group_id,
+        torrent_id,
+        seeding_weight,
+        release_type,
+        artists,
+        group_name,
+        group_year,
+        has_torrent_file,
+        transmission_torrent_hash,
+        torrent_format
+      FROM prepare1
     |]
         <> case opts.ordering of
           BySeedingWeight -> [fmt|ORDER BY seeding_weight DESC|] <> "\n"
-          ByLastReleases -> [fmt|ORDER BY tg.group_id DESC|] <> "\n"
+          ByLastReleases -> [fmt|ORDER BY group_id DESC|] <> "\n"
         <> [sql|
       LIMIT ?::int
     |]
