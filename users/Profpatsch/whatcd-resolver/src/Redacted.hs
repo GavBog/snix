@@ -624,7 +624,8 @@ data GetBestTorrentsFilter = GetBestTorrentsFilter
     onlyTheseTorrents :: Maybe ([Label "torrentId" Int]),
     disallowedReleaseTypes :: [ReleaseType],
     limitResults :: Maybe Natural,
-    ordering :: BestTorrentsOrdering
+    ordering :: BestTorrentsOrdering,
+    onlyFavourites :: Bool
   }
 
 data BestTorrentsOrdering = BySeedingWeight | ByLastReleases
@@ -676,6 +677,16 @@ getBestTorrents opts = do
         JOIN redacted.torrent_groups tg ON tg.id = t.torrent_group
         WHERE
           tg.full_json_result->>'releaseType' <> ALL (?::text[])
+      ),
+      prepare2 AS MATERIALIZED (
+        -- extract the json artist ids field into an array of ints
+        SELECT *, array(select id from jsonb_to_recordset(artists) as (id int)) as artist_ids
+        FROM prepare1
+      ),
+      artist_has_been_snatched AS MATERIALIZED (
+        SELECT DISTINCT artist_id
+        FROM (SELECT UNNEST(artist_ids) as artist_id, has_torrent_file from prepare2) as _
+        WHERE has_torrent_file
       )
       SELECT
         group_id,
@@ -688,7 +699,14 @@ getBestTorrents opts = do
         has_torrent_file,
         transmission_torrent_hash,
         torrent_format
-      FROM prepare1
+      FROM prepare2
+      JOIN LATERAL
+        (SELECT (
+          artist_ids && ARRAY(SELECT artist_id FROM artist_has_been_snatched)
+          OR artist_ids && ARRAY(SELECT artist_id FROM redacted.artist_favourites)
+        ) as is_favourite) as _
+        -- filter everything that’s not a favourite if requested
+        ON (NOT ?::bool OR is_favourite)
     |]
         <> case opts.ordering of
           BySeedingWeight -> [fmt|ORDER BY seeding_weight DESC|] <> "\n"
@@ -709,6 +727,7 @@ getBestTorrents opts = do
           onlyTheseTorrentsB :: Bool,
           onlyTheseTorrents,
           (opts.disallowedReleaseTypes & concatMap (\rt -> [rt.stringKey, rt.intKey & buildText intDecimalT]) & PGArray :: PGArray Text),
+          opts.onlyFavourites :: Bool,
           opts.limitResults <&> naturalToInteger :: Maybe Integer
           )
     )

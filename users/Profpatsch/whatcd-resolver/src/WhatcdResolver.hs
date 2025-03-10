@@ -28,7 +28,7 @@ import Data.Map.Strict qualified as Map
 import Data.Pool qualified as Pool
 import Data.Text qualified as Text
 import Database.PostgreSQL.Simple qualified as Postgres
-import Database.PostgreSQL.Simple.Types (PGArray (PGArray))
+import Database.PostgreSQL.Simple.Types (Only (..), PGArray (PGArray))
 import Database.Postgres.Temp qualified as TmpPg
 import FieldParser (FieldParser)
 import FieldParser qualified as Field
@@ -159,7 +159,7 @@ htmlUi = do
                                      ( do
                                          d <-
                                            getBestTorrentsData
-                                             (t3 #limitResults Nothing #ordering BySeedingWeight #disallowedReleaseTypes [])
+                                             bestTorrentsDataDefault
                                              ( Just
                                                  ( E21
                                                      (label @"onlyTheseTorrents" res.newTorrents)
@@ -305,13 +305,21 @@ htmlUi = do
                            )
                            $ \dat _span ->
                              ( do
-                                 runTransaction $ inSpan' "finding artist name" $ \span -> do
-                                   addAttribute span "artist-redacted-id" (dat.queryArgs.artistRedactedId, intDecimalT)
-                                   mArtistName <- getArtistNameById (lbl #artistId dat.queryArgs.artistRedactedId)
-                                   let pageTitle = case mArtistName of
-                                         Nothing -> "whatcd-resolver"
-                                         Just a -> [fmt|{a} - Artist Page - whatcd-resolver|]
-                                   pure $ htmlPageChrome ourHtmlIntegrities pageTitle,
+                                 runTransaction $ do
+                                   (artistName, _) <-
+                                     concurrentlyTraced
+                                       ( inSpan' "finding artist name" $ \span -> do
+                                           addAttribute span "artist-redacted-id" (dat.queryArgs.artistRedactedId, intDecimalT)
+                                           mArtistName <- getArtistNameById (lbl #artistId dat.queryArgs.artistRedactedId)
+                                           let pageTitle = case mArtistName of
+                                                 Nothing -> "whatcd-resolver"
+                                                 Just a -> [fmt|{a} - Artist Page - whatcd-resolver|]
+                                           pure $ htmlPageChrome ourHtmlIntegrities pageTitle
+                                       )
+                                       ( do
+                                           execute [sql|INSERT INTO redacted.artist_favourites (artist_id) VALUES (?) ON CONFLICT DO NOTHING|] (Only (dat.queryArgs.artistRedactedId :: Int))
+                                       )
+                                   pure artistName,
                                do
                                  artistPage (T2 dat.queryArgs (label @"uniqueRunId" uniqueRunId))
                              )
@@ -382,16 +390,17 @@ htmlUi = do
           ( do
               d <-
                 getBestTorrentsData
-                  ( t3
-                      #limitResults
-                      (Just 100)
-                      #ordering
-                      ByLastReleases
-                      #disallowedReleaseTypes
-                      [ releaseTypeBootleg,
-                        releaseTypeGuestAppearance,
-                        releaseTypeRemix
-                      ]
+                  ( BestTorrentsData
+                      { limitResults = Just 100,
+                        ordering = ByLastReleases,
+                        onlyFavourites = True,
+                        disallowedReleaseTypes =
+                          [ releaseTypeBootleg,
+                            releaseTypeGuestAppearance,
+                            releaseTypeRemix
+                          ],
+                        ..
+                      }
                   )
                   Nothing
               pure $ case d & nonEmpty of
@@ -601,7 +610,7 @@ artistPage dat = runTransaction $ do
   (fresh, settings) <-
     concurrentlyTraced
       ( getBestTorrentsData
-          (t3 #limitResults Nothing #ordering BySeedingWeight #disallowedReleaseTypes [])
+          bestTorrentsDataDefault
           (Just $ E22 (getLabel @"artistRedactedId" dat))
       )
       (getSettings)
@@ -833,17 +842,30 @@ data ArtistFilter = ArtistFilter
 doIfJust :: (Applicative f) => (a -> f ()) -> Maybe a -> f ()
 doIfJust = traverse_
 
+data BestTorrentsData = BestTorrentsData
+  { limitResults :: Maybe Natural,
+    ordering :: BestTorrentsOrdering,
+    disallowedReleaseTypes :: [ReleaseType],
+    onlyFavourites :: Bool
+  }
+
+bestTorrentsDataDefault :: BestTorrentsData
+bestTorrentsDataDefault =
+  BestTorrentsData
+    { limitResults = Nothing,
+      ordering = BySeedingWeight,
+      disallowedReleaseTypes = [],
+      onlyFavourites = False
+    }
+
 getBestTorrentsData ::
   ( MonadTransmission m,
     MonadThrow m,
     MonadLogger m,
     MonadPostgres m,
-    MonadOtel m,
-    HasField "limitResults" opts (Maybe Natural),
-    HasField "ordering" opts BestTorrentsOrdering,
-    HasField "disallowedReleaseTypes" opts [ReleaseType]
+    MonadOtel m
   ) =>
-  opts ->
+  BestTorrentsData ->
   Maybe (E2 "onlyTheseTorrents" [Label "torrentId" Int] "artistRedactedId" Int) ->
   Transaction m [TorrentData (Label "percentDone" Percentage)]
 getBestTorrentsData opts filters = inSpan' "get torrents table data" $ \span -> do
@@ -855,7 +877,9 @@ getBestTorrentsData opts filters = inSpan' "get torrents table data" $ \span -> 
 
   let ordering = opts.ordering
   let disallowedReleaseTypes = opts.disallowedReleaseTypes
+  let onlyFavourites = opts.onlyFavourites
   let getBest = getBestTorrents GetBestTorrentsFilter {..}
+
   bestStale :: [TorrentData ()] <- getBest
   (statusInfo, transmissionStatus) <-
     getAndUpdateTransmissionTorrentsStatus
@@ -1139,6 +1163,12 @@ migrate = inSpan "Database Migration" $ do
 
     CREATE INDEX IF NOT EXISTS torrents_json_seeding ON redacted.torrents_json(((full_json_result->'seeding')::integer));
     CREATE INDEX IF NOT EXISTS torrents_json_snatches ON redacted.torrents_json(((full_json_result->'snatches')::integer));
+
+    CREATE TABLE IF NOT EXISTS redacted.artist_favourites (
+      id SERIAL PRIMARY KEY,
+      artist_id INTEGER NOT NULL,
+      UNIQUE(artist_id)
+    );
   |]
     ()
 
