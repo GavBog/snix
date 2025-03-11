@@ -678,7 +678,7 @@ getBestTorrents opts = do
           ON (NOT ?::bool OR is_favourite)
         WHERE
           -- filter by artist id
-          (?::bool OR (to_jsonb(?::int) <@ (jsonb_path_query_array(full_json_result, '$.artists[*].id'))))
+          (?::bool OR (?::int = any (artist_ids)))
           -- filter by torrent ids
           AND
           (?::bool OR torrent_id = ANY (?::int[]))
