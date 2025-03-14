@@ -30,3 +30,7 @@ cradle:
       component: "httzip:exe:httzip"
     - path: "./my-xmonad/Xmonad.hs"
       component: "my-xmonad:exe:xmonad"
+    - path: "./my-tools/src"
+      component: "lib:my-tools"
+    - path: "./my-tools/exe/Copy.hs"
+      component: "my-tools:exe:copy"

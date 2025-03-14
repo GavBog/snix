@@ -1,5 +1,5 @@
 cabal-version:      3.0
-name:               my-prelude
+name:               my-tools
 version:            0.0.1.0
 author:             Profpatsch
 maintainer:         mail@profpatsch.de
@@ -32,8 +32,15 @@ common common-options
     -- known as RecordDotSyntax
     OverloadedRecordDot
 
+    -- Make #labels available
+    OverloadedLabels
+
     -- does not export record fields as functions, use OverloadedRecordDot to access instead
     NoFieldSelectors
+
+    -- Allow the same record field name to be declared twice per module.
+    -- This works, because we use `OverloadedRecordDot` everywhere (enforced by `NoFieldSelectors`).
+    DuplicateRecordFields
 
     -- Record punning
     RecordWildCards
@@ -57,75 +64,22 @@ library
     import: common-options
     hs-source-dirs: src
     exposed-modules:
-      MyPrelude
-      Aeson
-      Arg
-      AtLeast
-      Builder
-      Comparison
-      Debug
-      Divisive
-      Json
-      Json.Enc
-      MyLabel
-      Test
-      Postgres.Decoder
-      Postgres.MonadPostgres
-      RevList
-      ValidationParseT
-      Parse
-      Pretty
-      Seconds
-      Tool
+      MyTools
 
-    -- Modules included in this executable, other than Main.
-    -- other-modules:
-
-    -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
     build-depends:
        base >=4.15 && <5
-     , pa-prelude
-     , pa-label
-     , pa-error-tree
-     , pa-json
-     , pa-pretty
-     , pa-field-parser
-     , aeson
-     , aeson-better-errors
-     , base64-bytestring
-     , bytestring
-     , containers
-     , contravariant
-     , foldl
-     , unordered-containers
-     , resource-pool
-     , resourcet
-     , scientific
-     , time
-     , error
-     , exceptions
+     , my-prelude
      , filepath
-     , hspec
-     , hspec-expectations-pretty-diff
-     , hs-opentelemetry-api
-     , monad-logger
-     , mtl
-     , postgresql-simple
-     , profunctors
-     , PyF
-     , semigroupoids
-     , selective
-     , template-haskell
-     , text
-     , these
-     , unix
-     , unliftio
-     , validation-selective
-     , vector
-     , ghc-boot
-     -- for Pretty
-     , aeson-pretty
-     , hscolour
-     , ansi-terminal
-     , nicify-lib
+     , directory
+     , process
+     , optparse-simple
+     , optparse-applicative
+
+
+executable copy
+    import: common-options
+    hs-source-dirs: exe
+    build-depends:
+      base,
+      my-tools
+    main-is: Copy.hs

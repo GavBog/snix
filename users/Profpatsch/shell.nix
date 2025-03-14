@@ -24,6 +24,7 @@ pkgs.mkShell {
       h.pa-pretty
       h.pa-run-command
       h.ihp-hsx
+      h.optparse-simple
       h.PyF
       h.foldl
       h.unliftio

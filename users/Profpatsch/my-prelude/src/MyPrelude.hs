@@ -89,6 +89,7 @@ module MyPrelude
     Proxy (Proxy),
     Map,
     annotate,
+    hush,
     Validation (Success, Failure),
     failure,
     successes,
@@ -487,6 +488,12 @@ annotate :: err -> Maybe a -> Either err a
 annotate err = \case
   Nothing -> Left err
   Just a -> Right a
+
+-- | Turn Either into Maybe, ignoring the error.
+hush :: Either e a -> Maybe a
+hush = \case
+  Left _ -> Nothing
+  Right a -> Just a
 
 -- | Map the same function over both sides of a Bifunctor (e.g. a tuple).
 both :: (Bifunctor bi) => (a -> b) -> bi a a -> bi b b

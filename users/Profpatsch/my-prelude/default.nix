@@ -15,6 +15,7 @@ pkgs.haskellPackages.mkDerivation {
     ./src/Json/Enc.hs
     ./src/Arg.hs
     ./src/AtLeast.hs
+    ./src/MyLabel.hs
     ./src/MyPrelude.hs
     ./src/Test.hs
     ./src/Parse.hs

@@ -184,10 +184,6 @@ httpJson opts parser req = inSpan' "HTTP Request (JSON)" $ \span -> do
             )
         Right a -> pure a
 
-hush :: Either e a -> Maybe a
-hush (Right a) = Just a
-hush _ = Nothing
-
 doRequestJson ::
   (MonadOtel m) =>
   RequestOptions ->

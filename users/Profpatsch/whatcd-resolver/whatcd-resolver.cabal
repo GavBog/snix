@@ -71,7 +71,6 @@ library
        Bencode
        JsonLd
        Optional
-       MyLabel
        Http
        Html
        Transmission

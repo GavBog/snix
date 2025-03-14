@@ -11,3 +11,4 @@ packages:
   ./openlab-tools/openlab-tools.cabal
   ./httzip/httzip.cabal
   ./my-xmonad/my-xmonad.cabal
+  ./my-tools/my-tools.cabal
