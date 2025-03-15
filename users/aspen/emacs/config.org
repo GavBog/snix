@@ -7,21 +7,19 @@
 # End:
 
 #+title: Emacs Config
-#+PROPERTY: header-args:emacs-lisp :results silent
-#+PROPERTY: header-args:elisp :results silent
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
 ;; -*- lexical-binding: t; -*-
 #+end_src
 
 * Utils
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (use-package! dash)
 #+end_src
 
 ** Elisp extras
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defmacro comment (&rest _body)
   "Comment out one or more s-expressions"
   nil)
@@ -44,13 +42,19 @@
    `(and symbol-start (group (or ,@words)) symbol-end)))
 #+end_src
 
+#+RESULTS:
+: rx-words
+
 #+begin_src elisp :tangle no :results example
 (average (list 1 2 3 4))
 #+end_src
 
+#+RESULTS:
+: 2
+
 ** Text editing utils
 *** Reading strings
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defun get-char (&optional point)
   "Get the character at the given `point' (defaulting to the current point),
 without properties"
@@ -108,8 +112,10 @@ Returns nil if the regex did not match, non-nil otherwise"
   (match-beginning 1))
 #+end_src
 
+#+RESULTS:
+: 3
 *** Changing file contents
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defmacro saving-excursion (&rest body)
   `(λ! () (save-excursion ,@body)))
 
@@ -138,14 +144,20 @@ Returns nil if the regex did not match, non-nil otherwise"
                        ,@(when ignore-case (list ignore-case)))))
 #+end_src
 
+#+RESULTS:
+: s-contains--pcase-macroexpander
+
 #+begin_src elisp :tangle no
 (pcase "foo"
   ((s-contains "bar") 1)
   ((s-contains "o") 2))
 #+end_src
 
+#+RESULTS:
+: 2
+
 ** Evil utils
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defmacro define-move-and-insert
     (name &rest body)
   `(defun ,name (count &optional vcount skip-empty-lines)
@@ -167,18 +179,24 @@ Returns nil if the regex did not match, non-nil otherwise"
        (evil-insert count vcount skip-empty-lines))))
 #+end_src
 
+#+RESULTS:
+: define-move-and-insert
+
 * Name and email
 #+begin_src emacs-lisp
 (setq user-full-name "Aspen Smith"
       user-mail-address "root@gws.fyi")
 #+end_src
 
+#+RESULTS:
+: root@gws.fyi
+
 * Visual style
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (let ((font-family (pcase system-type
                      ('darwin "MesloLGSDZ NF")
                      ('gnu/linux "Meslo LGSDZ Nerd Font"))))
-  (setq doom-font (font-spec :family font-family :height 113)
+  (setq doom-font (font-spec :family font-family :height 140)
         doom-big-font (font-spec :family font-family :size 24)
         doom-big-font-increment 5
         doom-variable-pitch-font (font-spec :family font-family)
@@ -192,11 +210,17 @@ Returns nil if the regex did not match, non-nil otherwise"
       doom-modeline-height 12)
 #+end_src
 
-#+begin_src elisp :tangle yes
+#+RESULTS:
+: 12
+
+#+begin_src emacs-lisp 
 (setq whitespace-style '(face lines-tail))
 (global-whitespace-mode t)
 (add-hook 'org-mode-hook (lambda () (whitespace-mode -1)) t)
 #+end_src
+
+#+RESULTS:
+| er/add-org-mode-expansions | (closure ((hook . org-mode-hook)) (&rest _) (progn (let ((tail '(after-change-major-mode-hook))) (while tail (let ((hook (car tail))) (let ((tail (list #'(lambda (&rest _) (if (derived-mode-p 'org-mode) (progn (setq tab-width 8))))))) (while tail (let ((func (car tail))) (add-hook hook func nil t) (setq tail (cdr tail))))) (setq tail (cdr tail)))))) (add-hook 'save-place-after-find-file-hook #'+org-make-last-point-visible-h nil t)) | +lookup--init-org-mode-handlers-h | (closure (t) (&rest _) (add-hook 'before-save-hook 'org-encrypt-entries nil t)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-fold-show-all append local] 5] | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | doom-disable-show-paren-mode-h | doom-disable-show-trailing-whitespace-h | org-appear-mode | org-fancy-priorities-mode | org-superstar-mode | evil-org-mode | org-eldoc-load | toc-org-enable | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | flyspell-mode | embrace-org-mode-hook | +corfu-add-cape-elisp-block-h | +literate-enable-recompile-h | (lambda nil (whitespace-mode -1)) |
 
 ** Theme
 [[https://davidjohnstone.net/lch-lab-colour-gradient-picker][LAB colour gradient picker]] is a good tool for trying to find "halfway points" between two colours
@@ -206,8 +230,11 @@ Returns nil if the regex did not match, non-nil otherwise"
 (rainbow-mode)
 #+end_src
 
+#+RESULTS:
+: t
+
 #+name: solarized-vars
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (setq +solarized-s-base03    "#002b36"
       +solarized-s-base02    "#073642"
       ;; emphasized content
@@ -254,10 +281,13 @@ Returns nil if the regex did not match, non-nil otherwise"
       +solarized-green-l   "#B4C342")
 #+end_src
 
+#+RESULTS: solarized-vars
+: #B4C342
+
 *** Overrides
 
 #+name: overrides-for-solarized-light
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (custom-set-faces!
   `(cursor :background ,+solarized-s-base00)
   `(font-lock-doc-face :foreground ,+solarized-s-base1)
@@ -306,13 +336,16 @@ Returns nil if the regex did not match, non-nil otherwise"
   )
   #+end_src
 
+#+RESULTS: overrides-for-solarized-light
+| doom--customize-themes-h-91 | doom--customize-themes-h-92 | doom--customize-themes-h-93 | doom--customize-themes-h-94 | doom--customize-themes-h-95 | doom--customize-themes-h-96 | doom--customize-themes-h-97 | doom--customize-themes-h-98 |
+
 * Keybindings and navigation
 Get the hell out of here, snipe!
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (remove-hook 'doom-first-input-hook #'evil-snipe-mode)
 #+end_src
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
 (map!
  (:leader
   "b" #'consult-buffer
@@ -324,19 +357,21 @@ Get the hell out of here, snipe!
 #+end_src
 
 ** Flycheck
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (evil-set-command-property 'flycheck-next-error :repeat nil)
 (evil-set-command-property 'flycheck-prev-error :repeat nil)
 (evil-set-command-property 'flycheck-previous-error :repeat nil)
 
 (map!
  (:map flycheck-mode-map
-  :m  "]e" #'flycheck-next-error
-  :m  "[e" #'flycheck-previous-error))
+  :m  "]q" #'flycheck-next-error
+  :m  "[q" #'flycheck-previous-error))
 #+end_src
 
+#+RESULTS:
+
 ** Smerge
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (evil-set-command-property 'smerge-next :repeat nil)
 (evil-set-command-property 'smerge-prev :repeat nil)
 
@@ -352,8 +387,11 @@ Get the hell out of here, snipe!
 t
  #+end_src
 
+#+RESULTS:
+: t
+
 ** Vinegar-style dired
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defun dired-mode-p () (eq 'dired-mode major-mode))
 
 (defun aspen/dired-minus ()
@@ -371,18 +409,23 @@ t
        "-" #'aspen/dired-minus))
 #+end_src
 
+#+RESULTS:
+
 ** Lisp mappings
 *** Use paxedit
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (use-package! paxedit
   :hook ((emacs-lisp-mode . paxedit-mode)
          (clojure-mode . paxedit-mode)
          (common-lisp-mode . paxedit-mode)))
 #+end_src
 
+#+RESULTS:
+| paxedit-mode |
+
 *** Paxedit functions
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (define-move-and-insert aspen/insert-at-sexp-end
   (when (not (equal (get-char) "("))
     (backward-up-list))
@@ -412,8 +455,11 @@ t
       (message paxedit-message-kill)))
 #+end_src
 
+#+RESULTS:
+: aspen/paxedit-kill
+
 *** Paxedit mappings
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (map!
  (:after paxedit
          (:map paxedit-mode-map
@@ -451,8 +497,10 @@ t
         ))
 #+end_src
 
+#+RESULTS:
+
 *** Eval functions
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (use-package! predd)
 
 (predd-defmulti eval-sexp (lambda (form) major-mode))
@@ -551,14 +599,17 @@ If invoked with a prefix ARG eval the expression after inserting it"
 ;;;
 #+end_src
 
+#+RESULTS:
+: fireplace-eval-context
 *** Eval bindings
 fireplace-esque eval binding
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (evil-define-operator fireplace-eval (beg end)
   (eval-sexp-region beg end))
 
 (evil-define-operator fireplace-replace (beg end)
+
   (cider-eval-and-replace beg end))
 
 (evil-define-operator fireplace-eval-context (beg end)
@@ -619,9 +670,11 @@ fireplace-esque eval binding
 
 #+end_src
 
+#+RESULTS:
+
 ** Coerce
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (use-package! string-inflection
   :config
   (nmap "c" (general-key-dispatch 'evil-change
@@ -638,17 +691,22 @@ fireplace-esque eval binding
               )))
 #+end_src
 
+#+RESULTS:
+: t
+
 * Mode-specific config
 ** org-mode
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (after! org
   (load! "org-config")
   (load! "org-query"))
 #+end_src
 
+#+RESULTS:
+: t
 *** Theme overrides
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (custom-set-faces!
   `(org-drawer :foreground ,+solarized-s-base1 :bold t)
   `(org-block :foreground ,+solarized-s-base00)
@@ -678,8 +736,11 @@ fireplace-esque eval binding
   `(org-level-8 :foreground ,+solarized-blue))
 #+end_src
 
+#+RESULTS:
+| doom--customize-themes-h-91 | doom--customize-themes-h-92 | doom--customize-themes-h-93 | doom--customize-themes-h-94 | doom--customize-themes-h-95 | doom--customize-themes-h-96 | doom--customize-themes-h-97 | doom--customize-themes-h-98 | doom--customize-themes-h-99 |
+
 *** Commands
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defun grfn/insert-new-src-block ()
   (interactive)
   (let* ((current-src-block (org-element-at-point))
@@ -716,7 +777,7 @@ fireplace-esque eval binding
 (advice-add #'+org--insert-item :around #'grfn/+org-insert-item)
 #+end_src
 *** Bindings
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (map!
  (:after org
   :n "C-c C-x C-o" #'org-clock-out
@@ -731,8 +792,30 @@ fireplace-esque eval binding
    [tab] #'org-cycle)))
 #+end_src
 
+#+RESULTS:
+
+*** Babel
+#+begin_src emacs-lisp
+(use-package! ob-python-extras
+  :config
+  ;; (ob-python-extras/map-suggested-keybindings)
+  )
+#+end_src
+
+#+RESULTS:
+
+** eglot
+#+begin_src emacs-lisp 
+(defun disable-eglot-inlay-mode-hints ()
+  (eglot-inlay-hints-mode -1))
+(add-hook 'eglot-managed-mode-hook #'disable-eglot-inlay-mode-hints)
+#+end_src
+
+#+RESULTS:
+| disable-eglot-inlay-mode-hints | evil-normalize-keymaps | doom-modeline-override-eglot | doom-modeline-update-eglot | flycheck-eglot-mode | +lsp-optimization-mode |
+
 ** magit
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (after! magit
   (map! :map magit-mode-map
         ;; :n "] ]" #'magit-section-forward
@@ -766,11 +849,13 @@ fireplace-esque eval binding
     (list "o" "Reset HEAD@{1}" #'magit-reset-head-previous)))
 #+end_src
 
+#+RESULTS:
+
 ** elisp
 *** Org config mode
 The minor-mode for *this file*!
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (after! smartparens
   (sp-local-pair 'org-config-mode "'" "'" :actions nil)
   (sp-local-pair 'org-config-mode "`" "`" :actions nil))
@@ -783,18 +868,28 @@ The minor-mode for *this file*!
   (sp-update-local-pairs 'org-config-mode))
 #+end_src
 
+#+RESULTS:
+| keymap |
+
 *** Bindings
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (map!
  (:map emacs-lisp-mode-map
   :n "g SPC" #'eval-buffer
   :n "g RET" (λ! () (ert t)) ))
 #+end_src
 
+#+RESULTS:
+
 ** tuareg
 *** Config
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp
+(defun set-ocaml-error-regexp ()
+  (set
+   'compilation-error-regexp-alist
+   (list '("[Ff]ile \\(\"\\(.*?\\)\", line \\(-?[0-9]+\\)\\(, characters \\(-?[0-9]+\\)-\\([0-9]+\\)\\)?\\)\\(:\n\\(\\(Warning .*?\\)\\|\\(Error\\)\\):\\)?"
+    2 3 (5 . 6) (9 . 11) 1 (8 compilation-message-face)))))
 
 (defun aspen/tuareg-setup ()
   (setq-local sp-max-pair-length (->> '("begin" "sig" "struct")
@@ -822,27 +917,56 @@ The minor-mode for *this file*!
                    :unless '(sp-in-string-p)
                    :actions '(insert navigate)
                    :post-handlers '(sp-tuareg-post-handler))))
+
+(require 'opam-user-setup "~/.emacs.d/opam-user-setup.el")
+
 nil
     #+end_src
 
-#+begin_src elisp :tangle yes
+#+RESULTS:
+
+#+begin_src emacs-lisp 
 (after! dune-mode
   (add-hook 'dune-mode-hook 'paxedit-mode))
 #+end_src
 
+#+RESULTS:
+
 *** Bindings
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp
+(defun aspen/run-ocaml-test (&optional arg)
+  (interactive "P")
+  (pcase (project-name (project-current))
+    ("flambda-backend"
+     (let* ((default-directory (project-root (project-current)))
+            (filename (buffer-file-name))
+            (filename-in-project (s-chop-prefix default-directory filename))
+            (test-name (when (s-prefix? "testsuite/tests/" filename-in-project)
+                         (s-chop-prefix "testsuite/tests/" filename-in-project)))
+            (compile-command (if test-name (format "make -o runtime-stdlib -o boot-compiler promote-one TEST=%s" test-name) "make"))
+            (compile-command (if arg
+                                 (compilation-read-command compile-command)
+                               compile-command)))
+       (compile compile-command)))))
+#+end_src
+
+#+RESULTS:
+: aspen/run-ocaml-test
+
+#+begin_src emacs-lisp 
 (map!
  (:map tuareg-mode-map
-  :n "g RET" (λ! () (compile "dune build @@runtest"))
+  :n "g RET" #'aspen/run-ocaml-test
   :n "g SPC" #'dune-promote
   :n "g \\" #'utop
   :n "g y" #'merlin-locate-type
   "C-c C-f" (λ! () (compile "dune fmt"))))
 #+end_src
 
+#+RESULTS:
+
 *** Theme overrides
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (custom-set-faces!
   `(tuareg-font-lock-governing-face :foreground ,+solarized-s-base01 :bold t)
   `(tuareg-font-lock-label-face :foreground ,+solarized-blue)
@@ -858,11 +982,76 @@ nil
   `(vertico-group-header :foreground ,+solarized-s-base1))
 #+end_src
 
+#+RESULTS:
+| doom--customize-themes-h-30 | doom--customize-themes-h-31 | doom--customize-themes-h-32 | doom--customize-themes-h-33 | doom--customize-themes-h-34 | doom--customize-themes-h-35 | doom--customize-themes-h-52 |
+*** ocamldebug
+
+#+begin_src emacs-lisp
+;; directly inspired by the ocamldebug implementation in ocamldebug.el
+(require 'ocamldebug)
+(defun ocamldebug-ocaml (cmd)
+  "Runs ocamldebug on the provided command"
+  (interactive)
+  (let* ((ocaml-dir (expand-file-name
+                     (locate-dominating-file (buffer-file-name) ".git")))
+         (pgm-path (file-name-concat ocaml-dir cmd))
+         (comint-name (concat "ocamldebug-" cmd))
+         (buffer-name (concat "*" comint-name "*"))
+         (ocamldebug-command-name
+          (file-name-concat ocaml-dir "_build/install/main/bin/ocamldebug")))
+    (unless (file-exists-p ocamldebug-command-name)
+      (error "No debugger found; run `make debug` first."))
+    (pop-to-buffer buffer-name)
+    (unless (comint-check-proc buffer-name)
+      (setq default-directory ocaml-dir)
+      (setq ocamldebug-debuggee-args
+            (read-from-minibuffer (format "Args for ocamlc: ")
+                                  ocamldebug-debuggee-args))
+      ;; In addition to the directories in .ocamldebug, use 'find' to
+      ;; see also list directories with -I; this finds any new cmo directories
+      ;; since the last 'make debug'
+      (let* ((cmo-top-dir (file-name-concat ocaml-dir "_build/main"))
+             (find-cmo-cmd (concat "find "
+                                   cmo-top-dir
+                                   " -name '*.cmo' -type f -printf '%h\n' | sort -u"))
+             (cmo-dirs (shell-command-to-string find-cmo-cmd)))
+        (setq cmo-dir-list (split-string cmo-dirs "\n" t)))
+      (let* ((user-args (split-string-shell-command ocamldebug-debuggee-args))
+             (includes (mapcan (lambda (dir) (list "-I" dir)) cmo-dir-list))
+             (args (append (list
+                             comint-name
+                             ocamldebug-command-name
+                             nil
+                             "-emacs"
+                             "-cd" default-directory)
+                           includes
+                           (list pgm-path)
+                           user-args)))
+        (apply #'make-comint args)
+        (set-process-filter (get-buffer-process (current-buffer))
+                            #'ocamldebug-filter)
+        (set-process-sentinel (get-buffer-process (current-buffer))
+                              #'ocamldebug-sentinel)
+        (ocamldebug-mode)))
+    (ocamldebug-set-buffer)))
+(defun ocamldebug-ocamlc ()
+  "Runs ocamldebug on the ocamlc built from the source file in the active buffer"
+  (interactive)
+  (ocamldebug-ocaml "ocamlc"))
+(defun ocamldebug-ocamlopt ()
+  "Runs ocamldebug on the ocamlopt built from the source file in the active buffer"
+  (interactive)
+  (ocamldebug-ocaml "ocamlopt"))
+#+end_src
+
+#+RESULTS:
+: ocamldebug-ocamlopt
+
 ** clojure
 
 *** Setup
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defun clojure-thing-at-point-setup ()
   (interactive)
   ;; Used by cider-find-dwim to parse the symbol at point
@@ -917,9 +1106,11 @@ nil
 nil
 #+end_src
 
+#+RESULTS:
+
 *** Commands
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defun grfn/run-clj-or-cljs-test ()
   (interactive)
   (message "Running tests...")
@@ -956,10 +1147,13 @@ nil
 
 #+end_src
 
+#+RESULTS:
+: cider-copy-last-result
+
 *** Bindings
 
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (map!
  (:after
   clojure-mode
@@ -992,8 +1186,10 @@ nil
    :n "g \\" 'cider-switch-to-last-clojure-buffer)))
  #+end_src
 
+ #+RESULTS:
+
 ** rust
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defun aspen/rust-setup ()
   (interactive)
   (+evil-embrace-angle-bracket-modes-hook-h)
@@ -1003,28 +1199,47 @@ nil
 (add-hook 'rust-mode-hook #'aspen/rust-setup)
 #+end_src
 
+#+RESULTS:
+| doom-modeline-env-setup-rust | aspen/rust-setup |
+
+enable clippy:
+
+#+begin_src emacs-lisp
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '((rust-ts-mode rust-mode rustic-mode) .
+                 ("rust-analyzer" :initializationOptions (:check (:command "clippy"))))))
+nil
+#+end_src
+
+#+RESULTS:
+
 *** Bindings
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (map!
  (:map rust-mode-map
   :n "g RET" #'lsp-rust-analyzer-run
-  :n "g R" #'lsp-find-references
-  :n "g d" #'lsp-find-definition
-  :n "g Y" #'lsp-goto-type-definition
+  :n "g R" #'xref-find-references
+  :n "g Y" #'eglot-find-typeDefinition
   (:localleader
    "m" #'lsp-rust-analyzer-expand-macro)))
 #+end_src
 
+#+RESULTS:
+
 *** Theme overrides
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (custom-set-faces!
   `(rust-unsafe :foreground ,+solarized-red))
 #+end_src
 
+#+RESULTS:
+| doom--customize-themes-h-30 | doom--customize-themes-h-31 | doom--customize-themes-h-32 | doom--customize-themes-h-33 | doom--customize-themes-h-54 |
+
 ** common-lisp
 *** Commands
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
 (defun aspen/sly-panettone ()
   (interactive)
   (sly
@@ -1051,9 +1266,12 @@ nil
     (select-window orig-window)))
 #+end_src
 
+#+RESULTS:
+: sly-run-tests
+
 *** Bindings
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
 (map!
  (:map sly-mode-map
   :n "g \\" #'sly-mrepl-sync
@@ -1067,9 +1285,21 @@ nil
   "C-r" #'isearch-backward))
 #+end_src
 
+#+RESULTS:
+** prolog
+*** Bindings
+#+begin_src emacs-lisp
+(map!
+ (:map prolog-mode-map
+  :n "g SPC" #'prolog-compile-buffer
+  :n "g \\" #'run-prolog))
+#+end_src
+
+#+RESULTS:
+
 * Completion
 ** Corfu
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
 (setopt +corfu-want-ret-to-confirm nil)
 
 (use-package! corfu
@@ -1097,8 +1327,11 @@ nil
         :i [backtab] #'corfu-previous))
 #+end_src
 
+#+RESULTS:
+: t
+
 ** Fuzzy search
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
 (use-package! hotfuzz
   :after (orderless corfu)
   :config
@@ -1106,8 +1339,11 @@ nil
           completion-ignore-case t))
 #+end_src
 
+#+RESULTS:
+: t
+
 * Email
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (after! notmuch
   (setq notmuch-saved-searches
         '((:name "inbox" :query "tag:inbox tag:important not tag:trash" :key "i")
@@ -1115,10 +1351,11 @@ nil
           (:name "sent" :query "tag:sent" :key "s")
           (:name "drafts" :query "tag:draft" :key "d")
 
-          (:name "work" :query "tag:inbox and tag:important and path:work/**"
-                 :key "w")
+          ;; (:name "work" :query "tag:inbox and tag:important and path:work/**"
+          ;;        :key "w")
           (:name "personal" :query "tag:inbox and tag:important and path:personal/**"
-                 :key "p"))
+                 :key "p")
+          (:name "depot" :query "to:depot@tvl.su or path:tvl/**" :key "v"))
         message-send-mail-function 'message-send-mail-with-sendmail
         message-sendmail-f-is-evil 't
         message-sendmail-envelope-from 'header
@@ -1156,41 +1393,46 @@ nil
       :n "g SPC" #'aspen/notmuch-sync)
 #+end_src
 
+#+RESULTS:
+
 ** Bindings
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
 (map!
  (:leader
   :desc "Email" :n "o m" #'notmuch-jump-search
   :desc "Search email" "s M" #'consult-notmuch))
 #+end_src
 
+#+RESULTS:
+: notmuch-jump-search
+
+
 ** Theme
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
 (custom-set-faces!
   `(notmuch-message-summary-face
     :background ,+solarized-halfway-highlight))
 #+end_src
 
-* Misc
-** TVL
-#+begin_src emacs-lisp :tangle yes
-(require 'tvl)
-#+end_src
+#+RESULTS:
+| doom--customize-themes-h-91 | doom--customize-themes-h-92 | doom--customize-themes-h-93 | doom--customize-themes-h-94 | doom--customize-themes-h-95 | doom--customize-themes-h-96 | doom--customize-themes-h-97 | doom--customize-themes-h-98 | doom--customize-themes-h-99 | doom--customize-themes-h-100 |
 
+* Misc
 ** Matchit
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (use-package! evil-matchit)
 #+end_src
+
 ** Direnv
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (use-package! direnv
   :config (direnv-mode))
 #+end_src
 ** IRC
 *** Connecting to IRC
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defvar irc-servers
   '("hackint"
     "libera"))
@@ -1219,13 +1461,19 @@ nil
     (call-interactively #'irc-connect)))
 #+end_src
 
-#+begin_src elisp :tangle yes
+#+RESULTS:
+: aspen/switch-to-erc-buffer-or-connect
+
+#+begin_src emacs-lisp 
 (map! :leader "o I" #'irc-connect
       :leader "o i" #'aspen/switch-to-erc-buffer-or-connect)
 #+end_src
 
+#+RESULTS:
+: aspen/switch-to-erc-buffer-or-connect
+
 *** IRC alerts
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (use-package! alert)
 
 (defgroup erc-alert nil
@@ -1327,26 +1575,34 @@ If the buffer is currently not visible, makes it sticky."
 (add-hook 'erc-connect-pre-hook 'my-erc-define-alerts)
 #+end_src
 
+#+RESULTS:
+| my-erc-define-alerts |
+
 *** Don't send ~:q~, etc, to the server
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defun fix-irc-message (msg)
   (let ((msg (s-trim msg)))
     (if (string-equal msg ":q") "" msg)))
 (advice-add #'erc-user-input :filter-return #'fix-irc-message)
 #+end_src
 
+#+RESULTS:
+
 *** Theme overrides
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (custom-set-faces!
   `(erc-button :foreground ,+solarized-blue))
 #+end_src
+
+#+RESULTS:
+| doom--customize-themes-h-30 | doom--customize-themes-h-31 | doom--customize-themes-h-32 | doom--customize-themes-h-43 | doom--customize-themes-h-47 | doom--customize-themes-h-48 | doom--customize-themes-h-49 | doom--customize-themes-h-50 | doom--customize-themes-h-51 | doom--customize-themes-h-52 | doom--customize-themes-h-53 | doom--customize-themes-h-54 | doom--customize-themes-h-56 | doom--customize-themes-h-57 | doom--customize-themes-h-58 | doom--customize-themes-h-59 | doom--customize-themes-h-60 | doom--customize-themes-h-61 | doom--customize-themes-h-62 | doom--customize-themes-h-63 | doom--customize-themes-h-64 |
 
 *** TODO Nick rainbow colors
 Stole this from https://github.com/jtdaugherty/emacs-config/blob/master/common/erc-nick-colors.el.
 
 IT doesn't work though :(
 
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (setq nick-face-list '())
 
 ;; Define the list of colors to use when coloring IRC nicks.
@@ -1397,8 +1653,15 @@ you'll change the colors used for nicks."
 ;; This adds the ERC message insert hook.
 (add-hook 'erc-insert-modify-hook 'erc-insert-nick-colors)
 #+end_src
+
+#+RESULTS:
+| erc-insert-nick-colors | erc-controls-highlight | erc-fill | my-erc-hook | erc-button-add-buttons | erc-match-message | erc-add-timestamp |
+
 * Hacks
 Not having this breaks elisp documentation :(
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp 
 (defvar elisp-demos-user-files nil)
 #+end_src
+
+#+RESULTS:
+: elisp-demos-user-files
