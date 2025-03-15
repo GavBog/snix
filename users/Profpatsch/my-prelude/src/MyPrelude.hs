@@ -120,6 +120,7 @@ module MyPrelude
     zipWith3NonEmpty,
     zip4NonEmpty,
     toList,
+    atMay,
     lengthNatural,
     maximum1,
     minimum1,
@@ -236,6 +237,7 @@ import Data.Text.Lazy.Encoding qualified
 import Data.These (These (That, These, This))
 import Data.Traversable (for)
 import Data.Vector (Vector)
+import Data.Vector qualified as Vector
 import Data.Void (Void, absurd)
 import Data.Word (Word8)
 import Divisive
@@ -452,13 +454,26 @@ zip4NonEmpty ~(a :| as) ~(b :| bs) ~(c :| cs) ~(d :| ds) = (a, b, c, d) :| zip4 
 
 -- | We don’t want to use Foldable’s `length`, because it is too polymorphic and can lead to bugs.
 -- Only list-y things should have a length.
-class (Foldable f) => Lengthy f
+class (Foldable f) => Lengthy f where
+  atMay :: Natural -> f a -> Maybe a
+  atMay = atMayDefault (\idx' xs -> xs & toList & (!! idx'))
+  {-# INLINE atMay #-}
+
+atMayDefault :: (Lengthy f) => (Int -> f a -> a) -> Natural -> f a -> Maybe a
+atMayDefault lookupF idx f = do
+  let midx = integerToBounded @Int (idx & naturalToInteger)
+  if
+    | idx >= lengthNatural f -> Nothing
+    | Nothing <- midx -> Nothing
+    | Just idx' <- midx -> f & lookupF idx' & Just
+{-# INLINE atMayDefault #-}
 
 instance Lengthy []
 
 instance Lengthy NonEmpty
 
-instance Lengthy Vector
+instance Lengthy Vector where
+  atMay = atMayDefault (\idx' xs -> xs & (Vector.! idx'))
 
 lengthNatural :: (Lengthy f) => f a -> Natural
 lengthNatural xs =

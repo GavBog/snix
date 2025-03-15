@@ -12,6 +12,7 @@ import FieldParser (FieldParser)
 import FieldParser qualified as Field
 import Json qualified
 import Label
+import Parse (Parse, runParse)
 import PossehlAnalyticsPrelude
 
 -- | A Decoder of postgres values. Allows embedding more complex parsers (like a 'Json.ParseT').
@@ -36,21 +37,21 @@ textMay = fromField @(Maybe Text)
 
 -- | Parse a `text` field, and then use a 'FieldParser' to convert the result further.
 textParse :: (Typeable to) => FieldParser Text to -> Decoder to
-textParse = parse @Text
+textParse = parseField @Text
 
 -- | Parse a nullable `text` field, and then use a 'FieldParser' to convert the result further.
 textParseMay :: (Typeable to) => FieldParser Text to -> Decoder (Maybe to)
-textParseMay = parseMay @Text
+textParseMay = parseFieldMay @Text
 
 -- | Parse a type implementing 'FromField', and then use a 'FieldParser' to convert the result further.
-parse ::
+parseField ::
   forall from to.
   ( PG.FromField from,
     Typeable to
   ) =>
   FieldParser from to ->
   Decoder to
-parse parser = Decoder $ PG.fieldWith $ \field bytes -> do
+parseField parser = Decoder $ PG.fieldWith $ \field bytes -> do
   val <- PG.fromField @from field bytes
   case Field.runFieldParser parser val of
     Left err ->
@@ -61,14 +62,14 @@ parse parser = Decoder $ PG.fieldWith $ \field bytes -> do
     Right a -> pure a
 
 -- | Parse a nullable type implementing 'FromField', and then use a 'FieldParser' to convert the result further.
-parseMay ::
+parseFieldMay ::
   forall from to.
   ( PG.FromField from,
     Typeable to
   ) =>
   FieldParser from to ->
   Decoder (Maybe to)
-parseMay parser = Decoder $ PG.fieldWith $ \field bytes -> do
+parseFieldMay parser = Decoder $ PG.fieldWith $ \field bytes -> do
   val <- PG.fromField @(Maybe from) field bytes
   case Field.runFieldParser parser <$> val of
     Nothing -> pure Nothing
@@ -77,6 +78,43 @@ parseMay parser = Decoder $ PG.fieldWith $ \field bytes -> do
         PG.ConversionFailed
         field
         (err & prettyError & textToString)
+    Just (Right a) -> pure (Just a)
+
+-- | Parse a type implementing 'FromField', and then use a 'Parse' to convert the result further.
+parse ::
+  forall from to.
+  ( PG.FromField from,
+    Typeable to
+  ) =>
+  Parse from to ->
+  Decoder to
+parse parser = Decoder $ PG.fieldWith $ \field bytes -> do
+  val <- PG.fromField @from field bytes
+  case Parse.runParse "Cannot parse field" parser val of
+    Left err ->
+      PG.returnError
+        PG.ConversionFailed
+        field
+        (err & prettyErrorTree & textToString)
+    Right a -> pure a
+
+-- | Parse a nullable type implementing 'FromField', and then use a 'Parse' to convert the result further.
+parseMay ::
+  forall from to.
+  ( PG.FromField from,
+    Typeable to
+  ) =>
+  Parse from to ->
+  Decoder (Maybe to)
+parseMay parser = Decoder $ PG.fieldWith $ \field bytes -> do
+  val <- PG.fromField @(Maybe from) field bytes
+  case Parse.runParse "Cannot parse field" parser <$> val of
+    Nothing -> pure Nothing
+    Just (Left err) ->
+      PG.returnError
+        PG.ConversionFailed
+        field
+        (err & prettyErrorTree & textToString)
     Just (Right a) -> pure (Just a)
 
 -- | Turn any type that implements 'PG.fromField' into a 'Decoder'. Use type applications to prevent accidental conversions:

@@ -292,10 +292,7 @@ htmlUi = do
                            ( label @"artistRedactedId"
                                <$> ( singleQueryArgument
                                        "redacted_id"
-                                       ( Field.utf8
-                                           >>> (Field.decimalNatural <&> toInteger)
-                                           >>> (Field.bounded @Int "Int")
-                                       )
+                                       parseRedactedId
                                    )
                            )
                            $ \dat _span ->
@@ -329,13 +326,30 @@ htmlUi = do
                                ( label @"artistId"
                                    <$> Multipart.field
                                      "artist-id"
-                                     ( Field.utf8
-                                         >>> (Field.decimalNatural <&> toInteger)
-                                         >>> (Field.bounded @Int "Int")
-                                     )
+                                     parseRedactedId
                                )
                            runTransaction $ redactedRefreshArtist dat
                            pure $ E22 (label @"redirectTo" $ textToBytesUtf8 $ mkArtistLink dat)
+                     ),
+                     ( "serve/torrent",
+                       HtmlWithQueryArgsRedirect
+                         ( do
+                             torrentId <- singleQueryArgument "torrent-id" parseRedactedId
+                             fileId <- singleQueryArgument "file-id" (Field.utf8 >>> Field.decimalNatural)
+                             pure $ t2 #torrentId torrentId #fileId fileId
+                         )
+                         ( \dat _span -> do
+                             let transmissionTorrentEndpoint :: Text
+                                 transmissionTorrentEndpoint = "/files"
+
+                             mFilePath <- getTorrentFilePath dat.queryArgs
+                             case mFilePath of
+                               Nothing -> do
+                                 pure $ e21 #err "Torrent file not found"
+                               Just filePath -> do
+                                 let redirectPath = transmissionTorrentEndpoint <> "/" <> (filePath & stringToText)
+                                 pure $ e22 #redirectTo (textToBytesUtf8 redirectPath)
+                         )
                      ),
                      ( "autorefresh",
                        Plain $ do
@@ -413,6 +427,13 @@ htmlUi = do
                 searchFieldContent = ""
               }
           )
+
+parseRedactedId :: Field.FieldParser' Error ByteString Int
+parseRedactedId =
+  ( Field.utf8
+      >>> (Field.decimalNatural <&> toInteger)
+      >>> (Field.bounded @Int "Int")
+  )
 
 data MainHtml = MainHtml
   { returnUrl :: ByteString,
@@ -622,6 +643,8 @@ data HandlerResponse m where
   HtmlOrRedirect :: (Otel.Span -> m (E2 "respond" Html "redirectTo" ByteString)) -> HandlerResponse m
   -- | render html after parsing some query arguments
   HtmlWithQueryArgs :: Parse Query a -> (QueryArgsDat a -> Otel.Span -> m Html) -> HandlerResponse m
+  -- | Redirect (HTTP 302) to the given path or show 404 with error message
+  HtmlWithQueryArgsRedirect :: Parse Query a -> (QueryArgsDat a -> Otel.Span -> m (E2 "err" Error "redirectTo" ByteString)) -> HandlerResponse m
   -- | render html or reload the page via the Referer header if no htmx
   HtmlOrReferer :: (Otel.Span -> m Html) -> HandlerResponse m
   -- | render html and stream the head before even doing any work in the handler
@@ -673,6 +696,14 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
             r.redirectTo
             (\status header -> Wai.responseLBS status [header] "")
             req
+  let redirectOr404 :: (Otel.Span -> m (E2 "err" Error "redirectTo" ByteString)) -> m ResponseReceived
+      redirectOr404 = html' $ \res -> case res.html of
+        E21 h ->
+          Wai.responseLBS
+            Http.notFound404
+            [("Content-Type", "text/plain")]
+            (h.err & prettyError & textToBytesUtf8 & toLazyBytes)
+        E22 r -> Wai.responseLBS Http.seeOther303 [("Location", r.redirectTo)] ""
   let postAndRedirect ::
         MultipartParseT m dat ->
         (Otel.Span -> dat -> m (Label "redirectTo" ByteString)) ->
@@ -706,6 +737,10 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
               )
   let htmlWithQueryArgs parser act = case htmlWithQueryArgs' parser of
         Right dat -> html (act dat)
+        Left act' -> html act'
+
+  let htmlWithQueryArgsRedirect parser act = case htmlWithQueryArgs' parser of
+        Right dat -> redirectOr404 (act dat)
         Left act' -> html act'
 
   let htmlStream :: Parse Query a -> (QueryArgsDat a -> Otel.Span -> (m HtmlHead, m Html)) -> m ResponseReceived
@@ -746,6 +781,7 @@ runHandlers defaultHandler handlers req respond = withRunInIO $ \runInIO -> do
             Html act -> html act
             HtmlOrRedirect act -> htmlOrRedirect act
             HtmlWithQueryArgs parser act -> htmlWithQueryArgs parser act
+            HtmlWithQueryArgsRedirect parser act -> htmlWithQueryArgsRedirect parser act
             HtmlOrReferer act -> htmlOrReferer act
             HtmlStream parser act -> htmlStream parser act
             PostAndRedirect mParser act -> mParser >>= \parser -> postAndRedirect parser act
@@ -1185,11 +1221,25 @@ runAppWith appT = withTracer $ \tracer -> withDb $ \db -> do
       Nothing -> runStderrLoggingT $ do
         logInfo "WHATCD_RESOLVER_REDACTED_API_KEY was not set, trying pass"
         runCommandExpect0 "pass" ["internet/redacted/api-keys/whatcd-resolver"]
+  transmissionDownloadDirectory <- do
+    mPath <- Env.lookupEnv "WHATCD_RESOLVER_TRANSMISSION_DOWNLOAD_DIRECTORY"
+    case mPath of
+      Nothing -> pure $ Left [fmt|WHATCD_RESOLVER_TRANSMISSION_DOWNLOAD_DIRECTORY not set, no file streaming available|]
+      Just path -> do
+        Dir.doesDirectoryExist path >>= \case
+          False -> pure $ Left [fmt|WHATCD_RESOLVER_TRANSMISSION_DOWNLOAD_DIRECTORY directory does not exist: {path}, no file streaming available|]
+          True -> pure $ Right path
+
   let newAppT = do
         logInfo [fmt|Running with config: {showPretty pgConfig}|]
         logInfo [fmt|Connected to database at {db & TmpPg.toDataDirectory} on socket {db & TmpPg.toConnectionString}|]
+        case transmissionDownloadDirectory of
+          Left errmsg -> logInfo errmsg
+          Right dir -> logInfo [fmt|Streaming torrent files from {dir}|]
         appT
-  runReaderT newAppT.unAppT Context {..}
+  runReaderT
+    newAppT.unAppT
+    Context {..}
     `catch` ( \case
                 AppExceptionPretty p -> throwM $ EscapedException (p & Pretty.prettyErrs)
                 AppExceptionTree t -> throwM $ EscapedException (t & prettyErrorTree & textToString)

@@ -26,6 +26,7 @@ import Data.Text.IO qualified as Text.IO
 import Data.Time (NominalDiffTime, UTCTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Database.PostgreSQL.Simple (Binary (Binary), Only (..))
+import Database.PostgreSQL.Simple qualified as Postgres
 import Database.PostgreSQL.Simple.Types (PGArray (PGArray))
 import FieldParser (FieldParser)
 import FieldParser qualified as Field
@@ -46,6 +47,7 @@ import Postgres.MonadPostgres
 import Pretty
 import RevList (RevList)
 import RevList qualified
+import System.FilePath ((</>))
 import UnliftIO (MonadUnliftIO, askRunInIO, async, newQSem, withQSem)
 import UnliftIO.Async (Async)
 import UnliftIO.Async qualified as Async
@@ -1141,3 +1143,26 @@ bencodeTorrentParser =
           source <- mapLookupMay "source" bencodeTextLenient
           pure Info {..}
     pure TorrentFile {..}
+
+getTorrentFilePath :: (MonadPostgres m, HasField "torrentId" dat Int, HasField "fileId" dat Natural) => dat -> m (Maybe FilePath)
+getTorrentFilePath dat = do
+  mTorrent <-
+    runTransaction $
+      queryFirstRowWithMaybe
+        [fmt|
+          SELECT torrent_file FROM redacted.torrents
+          WHERE torrent_file IS NOT NULL
+          AND torrent_id = ?::int
+        |]
+        ( Only $ (dat.torrentId :: Int)
+        )
+        ( Dec.parse @(Postgres.Binary ByteString)
+            (lmap (Postgres.fromBinary) parseBencode >>> bencodeTorrentParser)
+        )
+  if
+    | Just torrent <- mTorrent ->
+        pure $
+          torrent.info.files
+            & atMay dat.fileId
+            <&> (\f -> (torrent.info.name & textToString) </> (f.path <&> textToString & foldl' (</>) ""))
+    | otherwise -> pure Nothing

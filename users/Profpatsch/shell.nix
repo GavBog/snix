@@ -85,6 +85,7 @@ pkgs.mkShell {
       path = "${pkgs.pgformatter}/bin/pg_format";
     }
   ];
+  WHATCD_RESOLVER_TRANSMISSION_DOWNLOAD_DIRECTORY = "/home/philip/tmp/a/seeding";
 
   # DECLIB_MASTODON_ACCESS_TOKEN read from `pass` in .envrc.
 

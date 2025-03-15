@@ -1,2 +1,2 @@
 #!/usr/bin/env execlineb
-caddy reverse-proxy --from :9092 --to :9093
+caddy run --config ./caddyfile
