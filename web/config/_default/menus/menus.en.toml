@@ -39,10 +39,10 @@
 # url = "/docs/1.0/prologue/introduction/"
   weight = 20
 
-# [[main]]
-#   name = "Blog"
-#   url = "/blog/"
-#   weight = 30
+[[main]]
+  name = "Blog"
+  url = "/blog/"
+  weight = 30
 
 [[main]]
   name = "Contact"
