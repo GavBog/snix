@@ -111,7 +111,7 @@ in
 
   services.fail2ban.enable = true;
 
-  environment.systemPackages = (with pkgs; [
+  environment.systemPackages = with pkgs; [
     bat
     bb
     curl
@@ -127,9 +127,7 @@ in
     tree
     unzip
     vim
-  ]) ++ (with depot; [
-    ops.deploy-machine
-  ]);
+  ];
 
   # Required for prometheus to be able to scrape stats
   services.nginx.statusPage = true;
