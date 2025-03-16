@@ -25,7 +25,7 @@ in
         --index \
         --nocache \
         "$@" \
-        ${depot.web.snixbolt}
+        ${depot.contrib.snixbolt}
   '';
 
   meta.ci.extraSteps.crate2nix-check = depot.snix.utils.mkCrate2nixCheck ./Cargo.nix;
