@@ -104,6 +104,18 @@
         "url": "https://github.com/NixOS/nixpkgs/archive/205fd4226592cc83fd4c0885a3e4c9c400efabb5.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "npmlock2nix": {
+        "branch": "master",
+        "description": "nixify npm based packages [maintainer=@andir] ",
+        "homepage": "",
+        "owner": "mitya57",
+        "repo": "npmlock2nix",
+        "rev": "0f0547a60437da2cf2f6cda06ad1255639d9450e",
+        "sha256": "112rydifcdk39ygk24ax3dvc4n2xl66pbrdpw56giyhh3l5gl9i5",
+        "type": "tarball",
+        "url": "https://github.com/mitya57/npmlock2nix/archive/0f0547a60437da2cf2f6cda06ad1255639d9450e.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "rust-overlay": {
         "branch": "master",
         "description": "Pure and reproducible nix overlay of binary distributed rust toolchains",
