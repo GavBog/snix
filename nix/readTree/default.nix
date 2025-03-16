@@ -81,7 +81,7 @@ let
   importFile = args: scopedArgs: path: parts: filter:
     let
       importedFile =
-        if scopedArgs != { } && builtins ? scopedImport # For tvix
+        if scopedArgs != { } && builtins ? scopedImport # For snix
         then builtins.scopedImport scopedArgs path
         else import path;
       pathType = builtins.typeOf importedFile;

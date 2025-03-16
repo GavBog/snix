@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tvix.flatstore.v1;
+package snix.flatstore.v1;
 
 message Path {
     bytes nar_hash = 1;

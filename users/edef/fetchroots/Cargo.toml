@@ -16,7 +16,7 @@ bzip2 = "0.4.4"
 chrono = "0.4.34"
 futures = "0.3.30"
 indicatif = "0.17.8"
-nix-compat = { version = "0.1.0", path = "../../../tvix/nix-compat" }
+nix-compat = { version = "0.1.0", path = "../../../snix/nix-compat" }
 polars = { version = "0.36.2", features = ["parquet"] }
 rayon = "1.8.1"
 tokio = { version = "1.36.0", features = ["full"] }

@@ -13,7 +13,7 @@ let
     command = "${pkgs.nixpkgs-fmt}/bin/nixpkgs-fmt"
     includes = [ "*.nix" ]
     excludes = [
-      "tvix/eval/src/tests/nix_tests/*",
+      "snix/eval/src/tests/nix_tests/*",
     ]
 
     [formatter.rust]

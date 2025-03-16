@@ -29,7 +29,7 @@ use weave::{as_fixed_binary, hash64, INDEX_NULL};
 
 #[tracing::instrument]
 fn main() -> Result<()> {
-    let _tracing = tvix_tracing::TracingBuilder::default()
+    let _tracing = snix_tracing::TracingBuilder::default()
         .enable_progressbar()
         .build()?;
 
@@ -121,7 +121,7 @@ fn main() -> Result<()> {
     {
         let span = info_span!("mark", indicatif.pb_show = tracing::field::Empty).entered();
         span.pb_set_message("marking");
-        span.pb_set_style(&tvix_tracing::PB_PROGRESS_STYLE);
+        span.pb_set_style(&snix_tracing::PB_PROGRESS_STYLE);
 
         while !todo.is_empty() {
             span.pb_set_length(seen.len() as u64);

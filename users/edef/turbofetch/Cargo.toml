@@ -3,7 +3,7 @@ name = "turbofetch"
 version = "0.1.0"
 edition = "2021"
 
-# We don't join the //tvix workspace, as this is fairly cache.nixos.org-specific.
+# We don't join the //snix workspace, as this is fairly cache.nixos.org-specific.
 [workspace]
 members = ["."]
 

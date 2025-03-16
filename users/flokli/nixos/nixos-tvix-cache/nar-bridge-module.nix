@@ -8,7 +8,7 @@
 let
   cfg = config.services.nar-bridge;
 
-  package = depot.tvix.nar-bridge.override (old: {
+  package = depot.snix.nar-bridge.override (old: {
     features = old.features or [ "default" ] ++ [ "xp-store-composition-cli" ];
     runTests = true;
   });

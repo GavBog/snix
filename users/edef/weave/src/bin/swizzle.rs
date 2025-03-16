@@ -43,7 +43,7 @@ use weave::{as_fixed_binary, hash64, leak, load_ph_array, INDEX_NULL};
 
 #[tracing::instrument]
 fn main() -> Result<()> {
-    let _tracing = tvix_tracing::TracingBuilder::default()
+    let _tracing = snix_tracing::TracingBuilder::default()
         .enable_progressbar()
         .build()?;
 

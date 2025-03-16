@@ -2882,7 +2882,7 @@ rec {
         version = "0.1.0";
         edition = "2021";
         crateBin = [ ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../../tvix/nix-compat; };
+        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../../snix/nix-compat; };
         libName = "nix_compat";
         dependencies = [
           {
@@ -3005,7 +3005,7 @@ rec {
         crateName = "nix-compat-derive";
         version = "0.1.0";
         edition = "2021";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../../tvix/nix-compat-derive; };
+        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../../snix/nix-compat-derive; };
         procMacro = true;
         libName = "nix_compat_derive";
         dependencies = [
@@ -6214,6 +6214,50 @@ rec {
         ];
 
       };
+      "snix-tracing" = rec {
+        crateName = "snix-tracing";
+        version = "0.1.0";
+        edition = "2021";
+        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../../snix/tracing; };
+        libName = "snix_tracing";
+        dependencies = [
+          {
+            name = "indicatif";
+            packageId = "indicatif";
+          }
+          {
+            name = "thiserror";
+            packageId = "thiserror 2.0.11";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [ "sync" "rt" ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+            features = [ "max_level_trace" "release_max_level_debug" ];
+          }
+          {
+            name = "tracing-indicatif";
+            packageId = "tracing-indicatif";
+          }
+          {
+            name = "tracing-subscriber";
+            packageId = "tracing-subscriber";
+            features = [ "env-filter" ];
+          }
+        ];
+        features = {
+          "axum" = [ "dep:axum" ];
+          "otlp" = [ "dep:tracing-opentelemetry" "dep:opentelemetry" "dep:opentelemetry-otlp" "dep:opentelemetry_sdk" "dep:opentelemetry-http" "dep:opentelemetry-semantic-conventions" "reqwest-tracing?/opentelemetry_0_28" ];
+          "reqwest" = [ "dep:reqwest-tracing" ];
+          "tonic" = [ "dep:tonic" "dep:http" ];
+          "tracy" = [ "dep:tracing-tracy" ];
+        };
+        resolvedDefaultFeatures = [ "default" ];
+      };
       "socket2" = rec {
         crateName = "socket2";
         version = "0.5.7";
@@ -7178,50 +7222,6 @@ rec {
         };
         resolvedDefaultFeatures = [ "alloc" "ansi" "default" "env-filter" "fmt" "matchers" "nu-ansi-term" "once_cell" "regex" "registry" "sharded-slab" "smallvec" "std" "thread_local" "tracing" "tracing-log" ];
       };
-      "tvix-tracing" = rec {
-        crateName = "tvix-tracing";
-        version = "0.1.0";
-        edition = "2021";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../../tvix/tracing; };
-        libName = "tvix_tracing";
-        dependencies = [
-          {
-            name = "indicatif";
-            packageId = "indicatif";
-          }
-          {
-            name = "thiserror";
-            packageId = "thiserror 2.0.11";
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [ "sync" "rt" ];
-          }
-          {
-            name = "tracing";
-            packageId = "tracing";
-            features = [ "max_level_trace" "release_max_level_debug" ];
-          }
-          {
-            name = "tracing-indicatif";
-            packageId = "tracing-indicatif";
-          }
-          {
-            name = "tracing-subscriber";
-            packageId = "tracing-subscriber";
-            features = [ "env-filter" ];
-          }
-        ];
-        features = {
-          "axum" = [ "dep:axum" ];
-          "otlp" = [ "dep:tracing-opentelemetry" "dep:opentelemetry" "dep:opentelemetry-otlp" "dep:opentelemetry_sdk" "dep:opentelemetry-http" "dep:opentelemetry-semantic-conventions" "reqwest-tracing?/opentelemetry_0_28" ];
-          "reqwest" = [ "dep:reqwest-tracing" ];
-          "tonic" = [ "dep:tonic" "dep:http" ];
-          "tracy" = [ "dep:tracing-tracy" ];
-        };
-        resolvedDefaultFeatures = [ "default" ];
-      };
       "typenum" = rec {
         crateName = "typenum";
         version = "1.17.0";
@@ -7615,16 +7615,16 @@ rec {
             packageId = "safer_owning_ref";
           }
           {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+          }
+          {
             name = "tracing";
             packageId = "tracing";
           }
           {
             name = "tracing-indicatif";
             packageId = "tracing-indicatif";
-          }
-          {
-            name = "tvix-tracing";
-            packageId = "tvix-tracing";
           }
         ];
 

@@ -1,0 +1,15 @@
+[package]
+name = "snixbolt"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+yew = { version = "0.21.0", features = ["csr"] }
+yew-router = "0.18"
+snix-eval = { path = "../../snix/eval", default-features = false }
+serde = { version = "1.0.204", features = ["derive"] }
+web-sys = { version = "0.3.69", features = ["HtmlDetailsElement"] }
+wasm-bindgen = "0.2.100"

@@ -1847,6 +1847,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b6b67fb9a61334225b5b790716f609cd58395f895b3fe8b328786812a40bc3b"
 
 [[package]]
+name = "snix-tracing"
+version = "0.1.0"
+dependencies = [
+ "indicatif",
+ "thiserror 2.0.11",
+ "tokio",
+ "tracing",
+ "tracing-indicatif",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "socket2"
 version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2169,18 +2181,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tvix-tracing"
-version = "0.1.0"
-dependencies = [
- "indicatif",
- "thiserror 2.0.11",
- "tokio",
- "tracing",
- "tracing-indicatif",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2321,9 +2321,9 @@ dependencies = [
  "rayon",
  "rustc-hash",
  "safer_owning_ref",
+ "snix-tracing",
  "tracing",
  "tracing-indicatif",
- "tvix-tracing",
 ]
 
 [[package]]

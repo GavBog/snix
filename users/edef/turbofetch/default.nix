@@ -1,11 +1,11 @@
 { pkgs, depot, ... }:
 
 (pkgs.callPackage ./Cargo.nix {
-  defaultCrateOverrides = (depot.tvix.utils.defaultCrateOverridesForPkgs pkgs) // {
+  defaultCrateOverrides = (depot.snix.utils.defaultCrateOverridesForPkgs pkgs) // {
     turbofetch = prev: {
-      src = depot.tvix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
+      src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
     };
   };
 }).rootCrate.build.overrideAttrs {
-  meta.ci.extraSteps.crate2nix-check = depot.tvix.utils.mkCrate2nixCheck ./Cargo.nix;
+  meta.ci.extraSteps.crate2nix-check = depot.snix.utils.mkCrate2nixCheck ./Cargo.nix;
 }

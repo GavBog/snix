@@ -1,0 +1,9 @@
+[package]
+name = "snix-serde"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+snix-eval = { path = "../eval" }
+serde = { workspace = true, features = ["derive"] }
+bstr = { workspace = true, features = ["serde"] }
