@@ -30,7 +30,7 @@ Snix is hosted in its own Forgejo instance, hosted on [git.snix.dev](https://git
 Check out the source code as follows:
 
 ```console
-$ git clone https://git.snix.dev/snix-project/snix.git
+$ git clone https://git.snix.dev/snix/snix.git
 ```
 
 ### Interactive development
