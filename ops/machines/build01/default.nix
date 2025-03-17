@@ -35,7 +35,6 @@ in
 
   boot.loader.initScript.enable = true;
   system.switch.enableNg = false;
-  nix.package = pkgs.nix_2_3;
   nix.nrBuildUsers = 256;
   nix.settings.max-jobs = 64;
 
