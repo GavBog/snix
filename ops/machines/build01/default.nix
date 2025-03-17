@@ -28,6 +28,7 @@ in
   services.depot.buildkite = {
     enable = true;
     agentCount = 32;
+    largeSlots = 32;
   };
 
   boot.loader.initScript.enable = true;
