@@ -2,7 +2,6 @@ pub mod worker_protocol;
 
 use std::io::Result;
 
-use futures::future::try_join_all;
 use tokio::io::AsyncRead;
 use tracing::warn;
 use types::{AddToStoreNarRequest, QueryValidPaths, UnkeyedValidPathInfo};
@@ -39,19 +38,21 @@ pub trait NixDaemonIO: Sync {
     fn query_valid_paths(
         &self,
         request: &QueryValidPaths,
-    ) -> impl std::future::Future<Output = Result<Vec<UnkeyedValidPathInfo>>> + Send {
+    ) -> impl std::future::Future<Output = Result<Vec<StorePath<String>>>> + Send {
         async move {
             if request.substitute {
                 warn!("snix does not yet support substitution, ignoring the 'substitute' flag...");
             }
-            // Using try_join_all here to avoid returning partial results to the client.
-            // The only reason query_path_info can fail is due to transient IO errors,
-            // so we return such errors to the client as opposed to only returning paths
-            // that succeeded.
-            let results =
-                try_join_all(request.paths.iter().map(|path| self.query_path_info(path))).await?;
 
-            Ok(results.into_iter().flatten().collect())
+            let mut results: Vec<StorePath<String>> = Vec::with_capacity(request.paths.len());
+
+            for path in request.paths.iter() {
+                if self.is_valid_path(path).await? {
+                    results.push(path.clone());
+                }
+            }
+
+            Ok(results)
         }
     }
 
@@ -178,16 +179,12 @@ mod tests {
 
         let result = io
             .query_valid_paths(&QueryValidPaths {
-                paths: vec![path],
+                paths: vec![path.clone()],
                 substitute: false,
             })
             .await
             .expect("expected to get a non-empty response");
-        assert_eq!(
-            result,
-            vec![UnkeyedValidPathInfo::default()],
-            "expected to get non empty response"
-        );
+        assert_eq!(result, vec![path], "expected to get non empty response");
     }
 
     #[tokio::test]

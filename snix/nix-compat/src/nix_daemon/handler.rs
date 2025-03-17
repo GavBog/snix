@@ -117,7 +117,9 @@ where
         let io = self.io.clone();
         loop {
             let op_code = self.reader.read_number().await?;
-            match TryInto::<Operation>::try_into(op_code) {
+            let op = TryInto::<Operation>::try_into(op_code);
+            debug!(?op, "Received operation");
+            match op {
                 // Note: please keep operations sorted in ascending order of their numerical op number.
                 Ok(operation) => match operation {
                     Operation::IsValidPath => {
