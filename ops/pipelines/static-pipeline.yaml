@@ -7,16 +7,6 @@
 env:
   BUILDKITE_TOKEN_PATH: /run/agenix/buildkite-graphql-token
 steps:
-  # Run pipeline for snix when new commits arrive on canon. Since
-  # it is not part of the depot build tree, this is a useful
-  # verification to ensure we don't break external things (too much).
-  - trigger: "snix"
-    async: true
-    label: ":fork:"
-    branches: "refs/heads/canon"
-    build:
-      message: "Verification triggered by ${BUILDKITE_COMMIT}"
-
   # Create a revision number for the current commit for builds on
   # canon.
   #
