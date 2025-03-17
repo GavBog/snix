@@ -29,9 +29,9 @@ went through these instructions first.
 
 ### Creating a Gerrit account
  - Navigate to [our Gerrit instance][snix-gerrit]. Hit the "Sign in" button
-   (which allows SSO with a GitHub account) [^1]
+   (which allows SSO with some common IdPs)
  - In the User settings, paste an SSH public key and hit the "Add New SSH key"
-   button. [^2]
+   button. [^1]
  - Alternatively, you can also create "HTTP Credentials" (though saving the HTTP
    password is messy).
 
@@ -58,7 +58,7 @@ replicates fast enough, then update to --push only -->
 ### Install the commit-msg hook
 Gerrit uses a `commit-msg` hook to add a `Change-Id: …` field to each commit
 message if not present already. This allows Gerrit to identify new revisions /
-updates of old commits, and track them as new revisions of the same "CL" [^3].
+updates of old commits, and track them as new revisions of the same "CL" [^2].
 
 To install the commit-msg hook, run the following from the repo root:
 
@@ -122,6 +122,5 @@ $ git push origin HEAD:refs/for/canon%r=alice,cc=bob,l=Autosubmit+1,publish-comm
 [snix-gerrit]: https://cl.snix.dev
 [Gerrit walkthrough]: https://gerrit-review.googlesource.com/Documentation/intro-gerrit-walkthrough.html
 [gerrit-for-github-users]: https://gerrit.wikimedia.org/r/Documentation/intro-gerrit-walkthrough-github.html
-[^1]: more SSO providers to come
-[^2]: currently, `ssh-*-sk` keytypes are not supported, so use an `ssh-ed25519` key.
-[^3]: abbreviation for "change list", and the review unit in Gerrit.
+[^1]: currently, `ssh-*-sk` keytypes are not supported, so use an `ssh-ed25519` key.
+[^2]: abbreviation for "change list", and the review unit in Gerrit.
