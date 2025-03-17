@@ -195,7 +195,7 @@ in
   # Required for prometheus to be able to scrape stats
   services.nginx.statusPage = true;
 
-  users.users.root.openssh.authorizedKeys.keys = with depot.users; flokli.keys.all ++ edef.keys.all ++ raito.keys.all;
+  users.users.root.openssh.authorizedKeys.keys = depot.ops.users.all;
 
   boot.initrd.systemd.enable = true;
   zramSwap.enable = true;
