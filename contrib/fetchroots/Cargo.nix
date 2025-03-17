@@ -5475,7 +5475,7 @@ rec {
         version = "0.1.0";
         edition = "2021";
         crateBin = [ ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../../snix/nix-compat; };
+        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../snix/nix-compat; };
         libName = "nix_compat";
         dependencies = [
           {
@@ -5598,7 +5598,7 @@ rec {
         crateName = "nix-compat-derive";
         version = "0.1.0";
         edition = "2021";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../../snix/nix-compat-derive; };
+        src = lib.cleanSourceWith { filter = sourceFilter; src = ../../snix/nix-compat-derive; };
         procMacro = true;
         libName = "nix_compat_derive";
         dependencies = [

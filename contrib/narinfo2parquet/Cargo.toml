@@ -11,7 +11,7 @@ members = ["."]
 [dependencies]
 anyhow = { version = "1.0.75", features = ["backtrace"] }
 jemallocator = "0.5.4"
-nix-compat = { version = "0.1.0", path = "../../../snix/nix-compat" }
+nix-compat = { version = "0.1.0", path = "../../snix/nix-compat" }
 tempfile-fast = "0.3.4"
 zstd = "0.13.0"
 
