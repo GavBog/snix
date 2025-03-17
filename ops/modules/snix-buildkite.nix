@@ -65,10 +65,12 @@ in
                 export PATH=$PATH:/run/wrappers/bin
               '';
 
-              tags.hostname = hostname;
-
-              # all agents support small jobs
-              tags.small = "true";
+              tags = {
+                # all agents support small jobs
+                small = "true";
+                inherit hostname;
+                large = if n <= cfg.largeSlots then "true" else "false";
+              };
 
               runtimePackages = with pkgs; [
                 bash
@@ -81,10 +83,7 @@ in
                 jq
                 nix
               ];
-            }
-            // (lib.optionalAttrs (n <= cfg.largeSlots) {
-              tags.large = "true";
-            });
+            };
         })
         agents
     );
