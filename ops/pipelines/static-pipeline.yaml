@@ -7,10 +7,10 @@
 env:
   BUILDKITE_TOKEN_PATH: /run/agenix/buildkite-graphql-token
 steps:
-  # Run pipeline for tvix when new commits arrive on canon. Since
+  # Run pipeline for snix when new commits arrive on canon. Since
   # it is not part of the depot build tree, this is a useful
   # verification to ensure we don't break external things (too much).
-  - trigger: "tvix"
+  - trigger: "snix"
     async: true
     label: ":fork:"
     branches: "refs/heads/canon"
