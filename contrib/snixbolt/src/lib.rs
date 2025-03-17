@@ -1,6 +1,7 @@
 // snixbolt - an online tool for exploring Snix language evaluation
 //
 // Copyright (C) The TVL Community
+// Copyright (C) The Snix Project
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::fmt::Write;
@@ -51,8 +52,8 @@ fn snixbolt_overview() -> Html {
           </p>
           <p>
             {"Snixbolt is a project by "}
-            <a href="https://tvl.fyi">
-              {"TVL"}
+            <a href="https://snix.dev">
+              {"The Snix Project"}
             </a>
             {"."}
           </p>
@@ -74,10 +75,6 @@ fn footer() -> Html {
         <hr/>
         <footer>
           <p class="footer">
-            {footer_link("https://tvl.fyi", "home")}
-            {footer_link("https://code.tvl.fyi", "code")}
-            {footer_link("https://tvl.fyi/builds", "ci")}
-            {footer_link("https://b.tvl.fyi", "bugs")}
             {"© TVL"}
           </p>
           <p class="lod">{"ಠ_ಠ"}</p>
@@ -162,10 +159,7 @@ impl Model {
         if self.code.is_empty() {
             return html! {
                 <p>
-                  {"Enter some Nix code above to get started. Don't know Nix yet? "}
-                  {"Check out "}
-                  <a href="https://code.tvl.fyi/about/nix/nix-1p/README.md">{"nix-1p"}</a>
-                  {"!"}
+                  {"Enter some Nix code above to get started."}
                 </p>
             };
         }
@@ -279,7 +273,7 @@ fn eval(model: &Model) -> Output {
         }
 
         let eval = eval_builder.build();
-        eval.evaluate(&model.code, Some("/nixbolt".into()))
+        eval.evaluate(&model.code, Some("/snixbolt".into()))
     };
 
     if model.display_ast {
