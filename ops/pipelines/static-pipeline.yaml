@@ -62,7 +62,7 @@ steps:
 
       nix-build --option restrict-eval true --include "depot=$${PWD}" \
         --include "store=/nix/store" \
-        --allowed-uris 'https://' \
+        --allowed-uris 'https:// git+https://' \
         -A ops.pipelines.depot \
         -o pipeline --show-trace $$PIPELINE_ARGS
 
