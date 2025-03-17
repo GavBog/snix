@@ -175,5 +175,5 @@ compare_lazy_eval_tests! {
     unthunked_formals_fallback_literal("({ foo ? 12 }: [ foo ]) { }");
     unthunked_formals_fallback_string_literal("({ foo ? \"wiggly\" }: [ foo ]) { }");
     thunked_formals_fallback_application("({ foo ? builtins.add 1 2 }: [ foo ]) { }");
-    thunked_formals_fallback_name_resolution_literal("({ foo ? bar, bar ? 12 }: [ foo ]) { }");
+    thunked_formals_fallback_name_resolution_literal("({ foo ? bar, bar ? 12 + 1 }: [ foo ]) { }");
 }
