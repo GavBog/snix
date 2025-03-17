@@ -164,7 +164,11 @@ in
       # Replicate to our forgejo instance.
       remote.forgejo = {
         url = "git@git.snix.dev:snix/snix.git";
-        push = [ "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" ];
+        push = [
+          "+refs/heads/*:refs/heads/*"
+          "+refs/tags/*:refs/tags/*"
+          "+refs/r/*:refs/r/*"
+        ];
         timeout = 30;
         threads = 3;
         remoteNameStyle = "dash";
