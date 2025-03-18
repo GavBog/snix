@@ -1,26 +1,6 @@
 { pkgs, lib, depot, ... }:
 
-{
-  mkFeaturePowerset = { crateName, features, override ? { } }:
-    let
-      powerset = xs:
-        let
-          addElement = set: element:
-            set ++ map (e: [ element ] ++ e) set;
-        in
-        lib.foldl' addElement [ [ ] ] xs;
-    in
-    lib.listToAttrs (map
-      (featuresPowerset: {
-        name = if featuresPowerset != [ ] then "with-features-${lib.concatStringsSep "-" featuresPowerset}" else "no-features";
-        value = depot.snix.crates.workspaceMembers.${crateName}.build.override (old: {
-          runTests = true;
-          features = featuresPowerset;
-        } // (if lib.isFunction override then override old else override)
-        );
-      })
-      (powerset features));
-
+let
   # Filters the given source, only keeping files related to the build, preventing unnecessary rebuilds.
   # Includes src in the root, all other .rs files and optionally Cargo specific files.
   # Additional files to be included can be specified in extraFileset.
@@ -42,31 +22,55 @@
         ] ++ lib.optional (extraFileset != null) extraFileset));
     };
 
+in
+{
+  mkFeaturePowerset = { crateName, features, override ? { } }:
+    let
+      powerset = xs:
+        let
+          addElement = set: element:
+            set ++ map (e: [ element ] ++ e) set;
+        in
+        lib.foldl' addElement [ [ ] ] xs;
+    in
+    lib.listToAttrs (map
+      (featuresPowerset: {
+        name = if featuresPowerset != [ ] then "with-features-${lib.concatStringsSep "-" featuresPowerset}" else "no-features";
+        value = depot.snix.crates.workspaceMembers.${crateName}.build.override (old: {
+          runTests = true;
+          features = featuresPowerset;
+        } // (if lib.isFunction override then override old else override)
+        );
+      })
+      (powerset features));
+
+  inherit filterRustCrateSrc;
+
   # A function which takes a pkgs instance and returns an overriden defaultCrateOverrides with support for snix crates.
   # This can be used throughout the rest of the repo.
   defaultCrateOverridesForPkgs = pkgs:
     pkgs.defaultCrateOverrides // {
       nar-bridge = prev: {
-        src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
 
       nix-compat = prev: {
-        src = depot.snix.utils.filterRustCrateSrc rec {
+        src = filterRustCrateSrc rec {
           root = prev.src.origSrc;
           extraFileset = root + "/testdata";
         };
       };
 
       nix-compat-derive = prev: {
-        src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
 
       nix-compat-derive-tests = prev: {
-        src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
 
       snix-build = prev: {
-        src = depot.snix.utils.filterRustCrateSrc rec {
+        src = filterRustCrateSrc rec {
           root = prev.src.origSrc;
           extraFileset = lib.fileset.fileFilter (f: f.hasExt "proto") root;
         };
@@ -76,7 +80,7 @@
       };
 
       snix-castore = prev: {
-        src = depot.snix.utils.filterRustCrateSrc rec {
+        src = filterRustCrateSrc rec {
           root = prev.src.origSrc;
           extraFileset = lib.fileset.fileFilter (f: f.hasExt "proto") root;
         };
@@ -85,14 +89,14 @@
       };
 
       snix-cli = prev: {
-        src = depot.snix.utils.filterRustCrateSrc rec {
+        src = filterRustCrateSrc rec {
           root = prev.src.origSrc;
           extraFileset = root + "/tests";
         };
       };
 
       snix-store = prev: {
-        src = depot.snix.utils.filterRustCrateSrc rec {
+        src = filterRustCrateSrc rec {
           root = prev.src.origSrc;
           extraFileset = lib.fileset.fileFilter (f: f.hasExt "proto") root;
         };
@@ -101,28 +105,28 @@
       };
 
       snix-eval-builtin-macros = prev: {
-        src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
 
       snix-eval = prev: {
-        src = depot.snix.utils.filterRustCrateSrc rec {
+        src = filterRustCrateSrc rec {
           root = prev.src.origSrc;
           extraFileset = root + "/proptest-regressions";
         };
       };
 
       snix-glue = prev: {
-        src = depot.snix.utils.filterRustCrateSrc {
+        src = filterRustCrateSrc {
           root = prev.src.origSrc;
         };
       };
 
       snix-serde = prev: {
-        src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
 
       snix-tracing = prev: {
-        src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
     };
 
