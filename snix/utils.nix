@@ -45,12 +45,6 @@
   # A function which takes a pkgs instance and returns an overriden defaultCrateOverrides with support for snix crates.
   # This can be used throughout the rest of the repo.
   defaultCrateOverridesForPkgs = pkgs:
-    let
-      commonDarwinDeps = with pkgs.darwin.apple_sdk.frameworks; [
-        Security
-        SystemConfiguration
-      ];
-    in
     pkgs.defaultCrateOverrides // {
       nar-bridge = prev: {
         src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
@@ -78,7 +72,6 @@
         };
         PROTO_ROOT = depot.snix.build.protos.protos;
         nativeBuildInputs = [ pkgs.protobuf ];
-        buildInputs = lib.optional pkgs.stdenv.isDarwin commonDarwinDeps;
         SNIX_BUILD_SANDBOX_SHELL = if pkgs.stdenv.isLinux then pkgs.pkgsStatic.busybox + "/bin/sh" else "/bin/sh";
       };
 
@@ -96,7 +89,6 @@
           root = prev.src.origSrc;
           extraFileset = root + "/tests";
         };
-        buildInputs = lib.optional pkgs.stdenv.isDarwin commonDarwinDeps;
       };
 
       snix-store = prev: {
@@ -106,8 +98,6 @@
         };
         PROTO_ROOT = depot.snix.store.protos.protos;
         nativeBuildInputs = [ pkgs.protobuf ];
-        # fuse-backend-rs uses DiskArbitration framework to handle mount/unmount on Darwin
-        buildInputs = lib.optional pkgs.stdenv.isDarwin (commonDarwinDeps ++ pkgs.darwin.apple_sdk.frameworks.DiskArbitration);
       };
 
       snix-eval-builtin-macros = prev: {
