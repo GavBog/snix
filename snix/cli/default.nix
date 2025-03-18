@@ -91,16 +91,13 @@ let
     eval-nixpkgs-firefox-drvpath = (mkNixpkgsEvalTest { attrPath = "firefox.drvPath"; expectedPath = pkgs.firefox.drvPath; });
     eval-nixpkgs-cross-stdenv-outpath = (mkNixpkgsEvalTest { attrPath = "pkgsCross.aarch64-multiplatform.stdenv.outPath"; expectedPath = pkgs.pkgsCross.aarch64-multiplatform.stdenv.outPath; });
     eval-nixpkgs-cross-hello-outpath = (mkNixpkgsEvalTest { attrPath = "pkgsCross.aarch64-multiplatform.hello.outPath"; expectedPath = pkgs.pkgsCross.aarch64-multiplatform.hello.outPath; });
-    # Our CI runner currently uses Nix version lower than 2.12, which means it uses the old JSON library.
-    # The NixOS docs generate a JSON file with all the NixOS options, and so output is different between Snix (and Nix 2.12+) and our CI runner's Nix version,
-    # so we disable the NixOS docs generation for now. TODO(kranzes): Re-enable NixOS docs once the CI runner is using a newer Nix version.
     eval-nixpkgs-nixos-gnome-installer-drvpath = (mkNixpkgsEvalTest {
-      expr = "(import ${pkgs.path}/nixos/release.nix { configuration = { documentation.nixos.enable = (import ${pkgs.path}/lib).mkForce false; }; }).iso_gnome.${pkgs.system}.drvPath";
-      expectedPath = (import "${pkgs.path}/nixos/release.nix" { configuration.documentation.nixos.enable = lib.mkForce false; }).iso_gnome.${pkgs.system}.drvPath;
+      expr = "(import ${pkgs.path}/nixos/release.nix { }).iso_gnome.${pkgs.system}.drvPath";
+      expectedPath = (import "${pkgs.path}/nixos/release.nix" { }).iso_gnome.${pkgs.system}.drvPath;
     });
     eval-nixpkgs-nixos-gnome-installer-outpath = (mkNixpkgsEvalTest {
-      expr = "(import ${pkgs.path}/nixos/release.nix { configuration = { documentation.nixos.enable = (import ${pkgs.path}/lib).mkForce false; }; }).iso_gnome.${pkgs.system}.outPath";
-      expectedPath = (import "${pkgs.path}/nixos/release.nix" { configuration.documentation.nixos.enable = lib.mkForce false; }).iso_gnome.${pkgs.system}.outPath;
+      expr = "(import ${pkgs.path}/nixos/release.nix { }).iso_gnome.${pkgs.system}.outPath";
+      expectedPath = (import "${pkgs.path}/nixos/release.nix" { }).iso_gnome.${pkgs.system}.outPath;
     });
   };
 in
