@@ -81,19 +81,6 @@ resource "hcloud_server" "public01" {
   }
 }
 
-resource "hcloud_rdns" "mail-v4" {
-  floating_ip_id = hcloud_floating_ip.mail.id
-  ip_address     = hcloud_floating_ip.mail.ip_address
-  dns_ptr        = "mail.snix.dev"
-}
-
-resource "hcloud_rdns" "mail-v6" {
-  server_id  = hcloud_server.public01.id
-  # Hardcoded because I don't want to compute it via Terraform.
-  ip_address = "2a01:4f8:c013:3e62::2"
-  dns_ptr    = "mail.snix.dev"
-}
-
 resource "hcloud_rdns" "public01-v4" {
   server_id = hcloud_server.public01.id
   ip_address = hcloud_server.public01.ipv4_address

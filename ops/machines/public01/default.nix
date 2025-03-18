@@ -11,7 +11,6 @@ in
     (mod "hetzner-cloud.nix")
     (mod "forgejo.nix")
     (mod "restic.nix")
-    # (mod "stalwart.nix")
     # Automatically enable metric and log collection.
     (mod "o11y/agent.nix")
     (mod "o11y/grafana.nix")
@@ -20,7 +19,6 @@ in
     (mod "www/status.snix.dev.nix")
     (mod "www/auth.snix.dev.nix")
     (mod "www/git.snix.dev.nix")
-    # (mod "www/mail.snix.dev.nix")
     (mod "known-hosts.nix")
 
     (depot.third_party.agenix.src + "/modules/age.nix")
@@ -32,10 +30,6 @@ in
   infra.hardware.hetzner-cloud = {
     enable = true;
     ipv6 = "2a01:4f8:c013:3e62::1/64";
-    # Additional IPs.
-    floatingIPs = [
-      "49.12.112.149/32"
-    ];
   };
 
   networking = {
@@ -69,10 +63,6 @@ in
       domain = "git.snix.dev";
     };
     grafana.enable = true;
-    # stalwart = {
-    #   enable = true;
-    #   mailDomain = "mail.snix.dev";
-    # };
     # Configure backups to Hetzner Cloud
     restic = {
       enable = true;

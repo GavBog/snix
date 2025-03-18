@@ -69,21 +69,6 @@ resource "digitalocean_record" "snix_dev_infra_public01_v6" {
   value    = var.public01_ipv6
 }
 
-# Email records
-resource "digitalocean_record" "snix_dev_mail_v4" {
-  domain  = digitalocean_domain.snix_dev.id
-  type    = "A"
-  value   = "49.12.112.149"
-  name    = "mail"
-}
-
-resource "digitalocean_record" "snix_dev_mail_v6" {
-  domain  = digitalocean_domain.snix_dev.id
-  type    = "AAAA"
-  value   = "2a01:4f8:c013:3e62::2"
-  name    = "mail"
-}
-
 # Explicit records for all services running on public01
 resource "digitalocean_record" "snix_dev_public01" {
   domain   = digitalocean_domain.snix_dev.id
