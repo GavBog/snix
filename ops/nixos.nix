@@ -1,12 +1,10 @@
 # Helper functions for instantiating depot-compatible NixOS machines.
 { depot, lib, pkgs, ... }@args:
 
-let inherit (lib) findFirst isAttrs;
+let inherit (lib) findFirst;
 in rec {
   # This provides our standard set of arguments to all NixOS modules.
   baseModule = { ... }: {
-    # Ensure that pkgs == third_party.nix
-    nixpkgs.pkgs = depot.third_party.nixpkgs;
     nix.nixPath =
       let
         # Due to nixpkgsBisectPath, pkgs.path is not always in the nix store

@@ -12,6 +12,8 @@ in
     (depot.third_party.agenix.src + "/modules/age.nix")
   ];
 
+  nixpkgs.hostPlatform = "x86_64-linux";
+
   # Machine model taken from project Floral.
   boot.isContainer = true;
 

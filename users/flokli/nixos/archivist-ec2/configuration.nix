@@ -6,6 +6,8 @@
     ../profiles/archivist.nix
   ];
 
+  nixpkgs.hostPlatform = "x86_64-linux";
+
   systemd.timers.parse-bucket-logs = {
     wantedBy = [ "multi-user.target" ];
     timerConfig.OnCalendar = "*-*-* 03:00:00 UTC";

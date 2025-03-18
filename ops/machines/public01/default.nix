@@ -27,6 +27,8 @@ in
     (depot.third_party.disko.src + "/module.nix")
   ];
 
+  nixpkgs.hostPlatform = "x86_64-linux";
+
   infra.hardware.hetzner-cloud = {
     enable = true;
     ipv6 = "2a01:4f8:c013:3e62::1/64";
