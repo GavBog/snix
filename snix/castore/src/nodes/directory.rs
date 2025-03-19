@@ -115,7 +115,7 @@ fn check_insert_node(
             e.insert(node);
         }
         btree_map::Entry::Occupied(occupied) => {
-            return Err(DirectoryError::DuplicateName(occupied.key().to_owned()))
+            return Err(DirectoryError::DuplicateName(occupied.key().to_owned()));
         }
     }
 

@@ -278,7 +278,7 @@ impl PathBuf {
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::InvalidData,
                         "found disallowed prefix or rootdir",
-                    ))
+                    ));
                 }
                 std::path::Component::CurDir => continue, // ignore
                 std::path::Component::ParentDir => {

@@ -46,7 +46,7 @@ impl InodeData {
                 InodeData::Regular(_, size, _) => *size,
                 InodeData::Symlink(target) => target.len() as u64,
                 InodeData::Directory(DirectoryInodeData::Sparse(_, size)) => *size,
-                InodeData::Directory(DirectoryInodeData::Populated(_, ref children)) => {
+                InodeData::Directory(DirectoryInodeData::Populated(_, children)) => {
                     children.len() as u64
                 }
             },

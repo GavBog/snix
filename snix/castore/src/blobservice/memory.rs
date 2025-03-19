@@ -99,7 +99,7 @@ impl tokio::io::AsyncWrite for MemoryBlobWriter {
                 io::ErrorKind::NotConnected,
                 "already closed",
             )),
-            Some((ref mut buf, ref mut hasher)) => {
+            Some((buf, hasher)) => {
                 let bytes_written = buf.write(b)?;
                 hasher.write(&b[..bytes_written])
             }

@@ -89,7 +89,7 @@ where
                     size: directory_size,
                 }
             }
-            IngestionEntry::Symlink { ref target, .. } => Node::Symlink {
+            &mut IngestionEntry::Symlink { ref target, .. } => Node::Symlink {
                 target: bytes::Bytes::copy_from_slice(target).try_into().map_err(
                     |e: SymlinkTargetError| {
                         IngestionError::UploadDirectoryError(

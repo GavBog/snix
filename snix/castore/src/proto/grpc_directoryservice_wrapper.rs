@@ -36,7 +36,7 @@ where
             .ok_or_else(|| Status::invalid_argument("invalid by_what"))?;
 
         match by_what {
-            proto::get_directory_request::ByWhat::Digest(ref digest) => {
+            proto::get_directory_request::ByWhat::Digest(digest) => {
                 let digest: B3Digest = digest
                     .clone()
                     .try_into()

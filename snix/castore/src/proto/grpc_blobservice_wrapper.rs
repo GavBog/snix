@@ -70,7 +70,9 @@ unsafe impl<const N: usize> bytes::BufMut for BytesMutWithDefaultCapacity<N> {
     }
 
     unsafe fn advance_mut(&mut self, cnt: usize) {
-        self.inner.advance_mut(cnt);
+        unsafe {
+            self.inner.advance_mut(cnt);
+        }
     }
 
     fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {

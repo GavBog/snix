@@ -284,7 +284,7 @@ impl<W: tokio::io::AsyncWrite + Unpin> tokio::io::AsyncWrite for GRPCBlobWriter<
                 io::ErrorKind::NotConnected,
                 "already closed",
             ))),
-            Some((_, ref mut writer)) => {
+            Some((_, writer)) => {
                 let pinned_writer = pin!(writer);
                 pinned_writer.poll_write(cx, buf)
             }
@@ -300,7 +300,7 @@ impl<W: tokio::io::AsyncWrite + Unpin> tokio::io::AsyncWrite for GRPCBlobWriter<
                 io::ErrorKind::NotConnected,
                 "already closed",
             ))),
-            Some((_, ref mut writer)) => {
+            Some((_, writer)) => {
                 let pinned_writer = pin!(writer);
                 pinned_writer.poll_flush(cx)
             }

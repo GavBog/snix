@@ -13574,7 +13574,7 @@ rec {
       "snix-castore" = rec {
         crateName = "snix-castore";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ./castore; };
         libName = "snix_castore";
         dependencies = [

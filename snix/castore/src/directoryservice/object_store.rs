@@ -129,7 +129,7 @@ impl DirectoryService for ObjectStoreDirectoryService {
                 let stream = match object_store.get(&dir_path).await {
                     Ok(v) => v.into_stream(),
                     Err(object_store::Error::NotFound { .. }) => {
-                        return Ok(Either::Left(futures::stream::empty()))
+                        return Ok(Either::Left(futures::stream::empty()));
                     }
                     Err(e) => return Err(std::io::Error::from(e).into()),
                 };

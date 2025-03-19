@@ -567,7 +567,7 @@ where
             None => {
                 // called a second time, return self.fut_output.
                 match self.fut_output.as_ref().unwrap() {
-                    Ok(ref b3_digest) => Ok(b3_digest.clone()),
+                    Ok(b3_digest) => Ok(b3_digest.clone()),
                     Err(e) => Err(std::io::Error::new(e.kind(), e.to_string())),
                 }
             }
