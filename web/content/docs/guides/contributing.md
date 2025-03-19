@@ -63,9 +63,9 @@ updates of old commits, and track them as new revisions of the same "CL" [^2].
 To install the commit-msg hook, run the following from the repo root:
 
 ```console
-mkdir -p .git/hooks
-curl -Lo .git/hooks/commit-msg https://cl.snix.dev/tools/hooks/commit-msg
-chmod +x .git/hooks/commit-msg
+$ mkdir -p .git/hooks
+$ curl -Lo .git/hooks/commit-msg https://cl.snix.dev/tools/hooks/commit-msg
+$ chmod +x .git/hooks/commit-msg
 ```
 
 {{< callout context="tip" title="Did you know?" icon="outline/rocket" >}}
