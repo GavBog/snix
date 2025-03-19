@@ -92,10 +92,24 @@ in
       #   linkname = "cgit";
       # };
 
-      # Auto-link other CLs
-      commentlink.gerrit = {
-        match = "cl/(\\d+)";
-        link = "https://cl.snix.dev/q/$1";
+      # # Auto-link panettone bug links
+      # commentlink.panettone = {
+      #   match = "b/(\\d+)";
+      #   link = "https://b.tvl.fyi/issues/$1";
+      # };
+
+      commentlink = {
+        # Auto-link other CLs
+        gerrit = {
+          match = "cl/(\\d+)";
+          link = "https://cl.snix.dev/q/$1";
+        };
+
+        # Auto-link Forgejo issues
+        forgejo = {
+          match = "#(\\d+)";
+          link = "https://git.snix.dev/snix/snix/issues/$1";
+        };
       };
 
       # Configures integration with Keycloak, which then integrates with a
