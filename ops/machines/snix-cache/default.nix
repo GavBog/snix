@@ -1,8 +1,5 @@
-{ pkgs
-, lib
-, config
-, ...
-}:
+{ pkgs, lib, ... }: # readTree options
+{ config, ... }: # passed by module system
 
 let
   srvos =
@@ -45,7 +42,7 @@ in
     security.acme.acceptTerms = true;
     security.acme.defaults.email = "admin+acme@numtide.com";
 
-    nixpkgs.hostPlatform = "x86_64-linux";
+    nixpkgs.hostPlatform = lib.mkForce "x86_64-linux";
 
     networking.hostName = "tvix-cache";
 

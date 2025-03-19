@@ -19,14 +19,6 @@ depot.nix.readTree.drvTargets rec {
 
   deploy-archivist-ec2 = (deployScript "archivist-ec2" archivistEc2System);
 
-  nixosTvixCacheSystem = (depot.ops.nixos.nixosFor ({ ... }: {
-    imports = [
-      ./nixos-tvix-cache/configuration.nix
-    ];
-  })).config.system.build.toplevel;
-
-  deploy-nixos-tvix-cache = (deployScript "root@nixos.tvix.store" nixosTvixCacheSystem);
-
   deps = (depot.nix.lazy-deps {
     deploy-archivist-ec2.attr = "users.flokli.nixos.deploy-archivist-ec2";
     aws.attr = "third_party.nixpkgs.awscli";
