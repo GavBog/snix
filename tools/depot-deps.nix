@@ -6,7 +6,6 @@ depot.nix.lazy-deps {
   age-keygen.attr = "third_party.nixpkgs.age";
   age.attr = "third_party.nixpkgs.age";
   depotfmt.attr = "tools.depotfmt";
-  git-r.attr = "tools.git-r";
   git-review.attr = "third_party.nixpkgs.git-review";
   gerrit-update.attr = "tools.gerrit-update";
   gerrit.attr = "tools.gerrit-cli";
