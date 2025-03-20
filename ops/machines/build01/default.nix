@@ -27,12 +27,6 @@ in
     };
   };
 
-  # Put builds in /var/tmp as it can be quite big and would cause spurious
-  # failures from time to time: https://git.snix.dev/snix/snix/issues/82
-  systemd.services.nix-daemon.serviceConfig.Environment = [
-    "TMPDIR=/var/tmp"
-  ];
-
   services.depot.buildkite = {
     enable = true;
     agentCount = 32;
@@ -43,6 +37,9 @@ in
   system.switch.enableNg = false;
   nix.nrBuildUsers = 256;
   nix.settings.max-jobs = 64;
+  # Put builds in /var/tmp as it can be quite big and would cause spurious
+  # failures from time to time: https://git.snix.dev/snix/snix/issues/82
+  nix.settings.build-dir = "/var/tmp";
 
   networking = {
     useNetworkd = true;
