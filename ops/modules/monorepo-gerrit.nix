@@ -95,7 +95,7 @@ in
       # Auto-link other CLs
       commentlink.gerrit = {
         match = "cl/(\\d+)";
-        link = "https://cl.snix.dev/$1";
+        link = "https://cl.snix.dev/q/$1";
       };
 
       # Configures integration with Keycloak, which then integrates with a
