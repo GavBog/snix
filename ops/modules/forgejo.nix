@@ -102,7 +102,7 @@ in
       group = "git";
 
       # Secret mail config.
-      # mailerPasswordFile = config.age.secrets.forgejoSmtpSecret.path;
+      secrets.mailer.PASSWD = config.age.secrets.forgejo-smtp-passwd.path;
 
       # Server and database config.
       settings = {
@@ -198,15 +198,16 @@ in
           DISABLE_GIT_HOOKS = false;
         };
 
-        # Note: PASSWD is set by NixOS up.
-        # mailer = {
-        #   ENABLED = true;
-        #   PROTOCOL = "smtps";
-        #   SMTP_ADDR = "";
-        #   SMTP_PORT = 465;
-        #   USER = "";
-        #   FROM = "";
-        # };
+        # Note: PASSWD is set up by the NixOS module, which sets FORGEJO__MAILER__PASSWD__FILE.
+        # https://forum.gitea.com/t/email-could-not-initiate-smtp-session-error/8164/14
+        mailer = {
+          ENABLED = true;
+          PROTOCOL = "smtp+starttls";
+          SMTP_ADDR = "smtp.postmarkapp.com";
+          SMTP_PORT = 2525;
+          USER = "PM-T-forgejo-48CsFdjTEW5_tALcpact0HG";
+          FROM = "\"Snix Forgejo\" <forgejo@snix.dev>";
+        };
 
         ui = {
           # Add the used emojis from https://volpeon.ink/emojis/ as well as https://github.com/chr-1x/dragn-emoji

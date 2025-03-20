@@ -128,6 +128,7 @@ in
         mode = "0440";
         group = "git";
       };
+      forgejo-smtp-passwd.file = secretFile "forgejo-smtp-passwd";
       grafana-oauth-secret = {
         file = secretFile "grafana-oauth-secret";
         mode = "0440";

@@ -41,6 +41,8 @@ in
   "gerrit-autosubmit.age" = gerrit01Default;
 
   "forgejo-oauth-secret.age" = public01Default;
+  "forgejo-smtp-passwd.age" = public01Default;
+
   "grafana-oauth-secret.age" = public01Default;
 
   "buildkite-agent-token.age" = build01Default;
