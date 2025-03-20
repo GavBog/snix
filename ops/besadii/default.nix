@@ -1,8 +1,20 @@
 # This program is used as a Gerrit hook to trigger builds on
 # Buildkite and perform other maintenance tasks.
-{ depot, ... }:
+{ pkgs, ... }@args:
 
-depot.nix.buildGo.program {
+let
+  inherit (pkgs) lib;
+in
+
+pkgs.buildGoModule {
   name = "besadii";
-  srcs = [ ./main.go ];
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./main.go
+      ./go.mod
+    ];
+  };
+  # No third party dependencies
+  vendorHash = null;
 }
