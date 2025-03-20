@@ -110,7 +110,7 @@ in
       createHome = true;
       home = "/var/lib/git";
     };
-    users.root.openssh.authorizedKeys.keys = depot.ops.users.all;
+    users.root.openssh.authorizedKeys.keys = depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
   };
 
   boot.initrd.systemd.enable = true;

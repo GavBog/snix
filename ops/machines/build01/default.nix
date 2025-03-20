@@ -96,7 +96,7 @@ in
 
   services.openssh.enable = true;
   time.timeZone = "UTC";
-  users.users.root.openssh.authorizedKeys.keys = depot.ops.users.all;
+  users.users.root.openssh.authorizedKeys.keys = depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
   users.groups.kvm = { };
   users.users.root.extraGroups = [ "kvm" ];
 
