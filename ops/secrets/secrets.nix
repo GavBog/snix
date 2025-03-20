@@ -37,6 +37,7 @@ in
   "keycloak-db-password.age" = public01Default;
   "gerrit-oauth-secret.age" = gerrit01Default;
   "gerrit-replication-key.age" = gerrit01Default;
+  "gerrit-sendemail-smtp-pass.age" = gerrit01Default;
   "gerrit-autosubmit.age" = gerrit01Default;
 
   "forgejo-oauth-secret.age" = public01Default;

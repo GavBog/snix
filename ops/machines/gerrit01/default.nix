@@ -64,6 +64,7 @@ in
     {
       gerrit-oauth-secret.file = secretFile "gerrit-oauth-secret";
       gerrit-replication-key.file = secretFile "gerrit-replication-key";
+      gerrit-sendemail-smtp-pass.file = secretFile "gerrit-sendemail-smtp-pass";
       gerrit-autosubmit.file = secretFile "gerrit-autosubmit";
       gerrit-besadii-config = {
         file = secretFile "buildkite-besadii-config";

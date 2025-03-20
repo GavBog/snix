@@ -145,16 +145,17 @@ in
       # $site_path/etc/secure.config and is *not* controlled by Nix.
       #
       # Receiving email is not currently supported.
-      # sendemail = {
-      #   enable = true;
-      #   html = false;
-      #   connectTimeout = "10sec";
-      #   from = "TVL Code Review <tvlbot@tazj.in>";
-      #   includeDiff = true;
-      #   smtpEncryption = "none";
-      #   smtpServer = "localhost";
-      #   smtpServerPort = 2525;
-      # };
+      sendemail = {
+        enable = true;
+        html = true; # multi-part, both html and plaintext
+        connectTimeout = "10sec";
+        from = "Snix Code Review <gerrit@snix.dev>";
+        includeDiff = true;
+        smtpEncryption = "tls";
+        smtpServer = "smtp.postmarkapp.com";
+        smtpUser = "PM-T-snix-gerrit-2reTInskye8FLoYt11_";
+        smtpServerPort = 2525;
+      };
     };
 
     # Replication of the snix repository to secondary machines, for
@@ -235,6 +236,8 @@ in
       # ... and finally, plop our secrets inside, and give the file to gerrit.
       git config -f $CONF plugin.gerrit-oauth-provider-keycloak-oauth.client-secret \
         "$(cat ${config.age.secrets.gerrit-oauth-secret.path})"
+      git config -f $CONF sendemail.smtpPass \
+        "$(cat ${config.age.secrets.gerrit-sendemail-smtp-pass.path})"
 
       chown git:git $CONF
     '';
