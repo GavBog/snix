@@ -633,6 +633,11 @@ impl NixString {
         unsafe { NixStringInner::data_slice(self.0) }
     }
 
+    /// Returns a &str if the NixString is a valid UTF-8 string.
+    pub fn as_str(&self) -> Result<&str, std::str::Utf8Error> {
+        std::str::from_utf8(self.as_bytes())
+    }
+
     pub fn into_bstring(self) -> BString {
         self.as_bstr().to_owned()
     }

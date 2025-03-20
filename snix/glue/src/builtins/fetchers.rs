@@ -202,20 +202,18 @@ pub(crate) mod fetcher_builtins {
         co: GenCo,
         value: Value,
     ) -> Result<Value, ErrorKind> {
-        let flake_ref_str = value.to_str()?.into_bstring().as_bstr().to_string();
+        let flake_ref = value.to_str()?;
+        let flake_ref_str = flake_ref.to_str()?;
 
-        let fetch_args = match flake_ref_str.parse() {
-            Ok(args) => args,
-            Err(err) => {
-                return Err(ErrorKind::SnixError(Rc::new(err)));
-            }
-        };
+        let fetch_args = flake_ref_str
+            .parse()
+            .map_err(|err| ErrorKind::SnixError(Rc::new(err)))?;
 
         // Convert the FlakeRef to our Value format
         let mut attrs = BTreeMap::new();
 
         // Extract type and url based on the variant
-        match &fetch_args {
+        match fetch_args {
             flakeref::FlakeRef::Git { url, .. } => {
                 attrs.insert("type".into(), Value::from("git"));
                 attrs.insert("url".into(), Value::from(url.to_string()));
@@ -224,16 +222,16 @@ pub(crate) mod fetcher_builtins {
                 owner, repo, r#ref, ..
             } => {
                 attrs.insert("type".into(), Value::from("github"));
-                attrs.insert("owner".into(), Value::from(owner.clone()));
-                attrs.insert("repo".into(), Value::from(repo.clone()));
+                attrs.insert("owner".into(), Value::from(owner));
+                attrs.insert("repo".into(), Value::from(repo));
                 if let Some(ref_name) = r#ref {
-                    attrs.insert("ref".into(), Value::from(ref_name.clone()));
+                    attrs.insert("ref".into(), Value::from(ref_name));
                 }
             }
             flakeref::FlakeRef::GitLab { owner, repo, .. } => {
                 attrs.insert("type".into(), Value::from("gitlab"));
-                attrs.insert("owner".into(), Value::from(owner.clone()));
-                attrs.insert("repo".into(), Value::from(repo.clone()));
+                attrs.insert("owner".into(), Value::from(owner));
+                attrs.insert("repo".into(), Value::from(repo));
             }
             flakeref::FlakeRef::File { url, .. } => {
                 attrs.insert("type".into(), Value::from("file"));
