@@ -93,23 +93,11 @@ in
       #   linkname = "cgit";
       # };
 
-      # # Auto-link panettone bug links
-      # commentlink.panettone = {
-      #   match = "b/(\\d+)";
-      #   link = "https://b.tvl.fyi/issues/$1";
-      # };
-
       # Auto-link other CLs
       commentlink.gerrit = {
         match = "cl/(\\d+)";
         link = "https://cl.snix.dev/$1";
       };
-
-      # Auto-link links to monotonically increasing revisions/commits
-      # commentlink.revision = {
-      #   match = "r/(\\d+)";
-      #   link = "https://code.tvl.fyi/commit/?h=refs/r/$1";
-      # };
 
       # Configures integration with Keycloak, which then integrates with a
       # variety of backends.
