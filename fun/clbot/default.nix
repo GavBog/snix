@@ -1,19 +1,25 @@
-{ depot, ... }@args:
+{ pkgs, ... }@args:
 
 let
-  clbot = depot.fun.clbot;
-  gopkgs = depot.third_party.gopkgs;
+  inherit (pkgs) lib;
 in
-depot.nix.buildGo.program {
+
+pkgs.buildGoModule {
   name = "clbot";
-  srcs = [
-    ./clbot.go
-  ];
-  deps = [
-    clbot.gerrit
-    gopkgs."github.com".davecgh.go-spew.spew.gopkg
-    gopkgs."github.com".golang.glog.gopkg
-    gopkgs."golang.org".x.crypto.ssh.gopkg
-    gopkgs."gopkg.in"."irc.v3".gopkg
-  ];
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./clbot.go
+      ./clbot_test.go
+      ./go.mod
+      ./go.sum
+      ./backoffutil
+      ./gerrit
+    ];
+  };
+  vendorHash =
+    # Assert the expected go.sum hash matches so we don't forget to update the FOD hash on dependency changes.
+    assert builtins.hashFile "sha256" ./go.sum
+      == "f999a34979af2113b867446a445a4d8c066d68f945cd4470fe33fe4fead6d15b";
+    "sha256-IvFg+/lwBsJiJoLCRP5KU5+tRuHDLpwWHHkmt67yJd8=";
 }
