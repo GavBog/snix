@@ -110,3 +110,18 @@ resource "digitalocean_record" "snix_dev_meta01" {
   name     = each.key
   for_each = toset(local.meta01_services)
 }
+
+# DNS Records for Email (Postmark)
+resource "digitalocean_record" "snix_dev_dkim" {
+  domain   = digitalocean_domain.snix_dev.id
+  type     = "TXT"
+  value    = "k=rsa;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDkF965mvnDqDnHpMX1NdRkYfDTAPMb3ovMQAefFtAWiZPVQDkZ+LPGObVaZb+6eQakFROz7wc2nG5pn/8KLcnKdGCQ0Glllr516EKF6oeGtqP9MwMslkmfOJ1FG5oDyDCIXOf7J+GcgYjs3K6j/4sw0q9lljXgzoHWdNbS0AuQBQIDAQAB"
+  name     = "20250320170729pm._domainkey"
+}
+
+resource "digitalocean_record" "snix_dev_pm_bounces" {
+  domain   = digitalocean_domain.snix_dev.id
+  type     = "CNAME"
+  value    = "pm.mtasv.net."
+  name     = "pm-bounces"
+}
