@@ -638,10 +638,6 @@ impl NixString {
         std::str::from_utf8(self.as_bytes())
     }
 
-    pub fn into_bstring(self) -> BString {
-        self.as_bstr().to_owned()
-    }
-
     /// Return a displayable representation of the string as an
     /// identifier.
     ///
