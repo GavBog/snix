@@ -177,70 +177,19 @@ impl SnixStoreIO {
                         span.pb_set_style(&snix_tracing::PB_SPINNER_STYLE);
                         span.pb_set_message(&format!("⏳Waiting for inputs {}", &store_path));
 
+                        // Maps from the index in refscan_needles to the full store path
+                        // Used to map back to the actual store path from the found needles
+                        // Importantly, this must match the order of the needles generated in derivation_to_build_request
+                        let inputs =
+                            crate::snix_build::get_all_inputs(&drv, &self.known_paths.borrow())
+                                .map(StorePath::to_owned)
+                                .collect::<Vec<_>>();
+
                         // derivation_to_build_request needs castore nodes for all inputs.
                         // Provide them, which means, here is where we recursively build
                         // all dependencies.
-                        let mut inputs: BTreeMap<StorePath<String>, Node> =
-                            futures::stream::iter(drv.input_derivations.iter())
-                                .map(|(input_drv_path, output_names)| {
-                                    // look up the derivation object
-                                    let input_drv = {
-                                        let known_paths = self.known_paths.borrow();
-                                        known_paths
-                                            .get_drv_by_drvpath(input_drv_path)
-                                            .unwrap_or_else(|| {
-                                                panic!("{} not found", input_drv_path)
-                                            })
-                                            .to_owned()
-                                    };
-
-                                    // convert output names to actual paths
-                                    let output_paths: Vec<StorePath<String>> = output_names
-                                        .iter()
-                                        .map(|output_name| {
-                                            input_drv
-                                                .outputs
-                                                .get(output_name)
-                                                .expect("missing output_name")
-                                                .path
-                                                .as_ref()
-                                                .expect("missing output path")
-                                                .clone()
-                                        })
-                                        .collect();
-
-                                    // For each output, ask for the castore node.
-                                    // We're in a per-derivation context, so if they're
-                                    // not built yet they'll all get built together.
-                                    // If they don't need to build, we can however still
-                                    // substitute all in parallel (if they don't need to
-                                    // be built) - so we turn this into a stream of streams.
-                                    // It's up to the builder to deduplicate same build requests.
-                                    futures::stream::iter(output_paths.into_iter()).map(
-                                        |output_path| async move {
-                                            let node = self
-                                                .store_path_to_node(&output_path, Path::new(""))
-                                                .await?;
-
-                                            if let Some(node) = node {
-                                                Ok((output_path, node))
-                                            } else {
-                                                Err(io::Error::other("no node produced"))
-                                            }
-                                        },
-                                    )
-                                })
-                                .flatten()
-                                .buffer_unordered(
-                                    1, /* TODO: increase again once we prevent redundant fetches */
-                                ) // TODO: make configurable
-                                .try_collect()
-                                .await?;
-
-                        // FUTUREWORK: merge these who things together
-                        // add input sources
-                        let input_sources: BTreeMap<_, _> =
-                            futures::stream::iter(drv.input_sources.iter())
+                        let resolved_inputs: BTreeMap<StorePath<String>, Node> =
+                            futures::stream::iter(inputs.iter())
                                 .then(|input_source| {
                                     Box::pin({
                                         let input_source = input_source.clone();
@@ -259,16 +208,10 @@ impl SnixStoreIO {
                                 .try_collect()
                                 .await?;
 
-                        inputs.extend(input_sources);
-
                         span.pb_set_message(&format!("🔨Building {}", &store_path));
 
-                        // TODO: check if input sources are sufficiently dealth with,
-                        // I think yes, they must be imported into the store by other
-                        // operations, so dealt with in the Some(…) match arm
-
                         // synthesize the build request.
-                        let build_request = derivation_to_build_request(&drv, inputs)?;
+                        let build_request = derivation_to_build_request(&drv, &resolved_inputs)?;
 
                         // create a build
                         let build_result = self
@@ -278,16 +221,13 @@ impl SnixStoreIO {
                             .await
                             .map_err(|e| std::io::Error::new(io::ErrorKind::Other, e))?;
 
-                        // Maps from the index in refscan_needles to the full store path
-                        // Used to map back to the actual store path from the found needles
-                        // Importantly, this must match the order of the needles generated in derivation_to_build_request
-                        let refscan_needles =
-                            crate::snix_build::get_refscan_needles(&drv).collect::<Vec<_>>();
-
                         // For each output, insert a PathInfo.
                         for ((output, output_needles), drv_output) in build_result
                             .outputs
                             .iter()
+                            // Important: build outputs must match drv outputs order,
+                            // otherwise the outputs will be mixed up
+                            // see https://git.snix.dev/snix/snix/issues/89
                             .zip(build_result.outputs_needles.iter())
                             .zip(drv.outputs.iter())
                         {
@@ -295,20 +235,6 @@ impl SnixStoreIO {
                                 .clone()
                                 .try_into_name_and_node()
                                 .expect("invalid node");
-
-                            let output_needles: Vec<_> = output_needles
-                                .needles
-                                .iter()
-                                // Map each output needle index back to the refscan_needle
-                                .map(|idx| {
-                                    refscan_needles
-                                        .get(*idx as usize)
-                                        .ok_or(std::io::Error::new(
-                                            std::io::ErrorKind::Other,
-                                            "invalid build response",
-                                        ))
-                                })
-                                .collect::<Result<_, std::io::Error>>()?;
 
                             // calculate the nar representation
                             let (nar_size, nar_sha256) = self
@@ -328,10 +254,31 @@ impl SnixStoreIO {
                                     ))?
                                     .to_owned(),
                                 node: output_node,
-                                references: output_needles
-                                    .iter()
-                                    .map(|s| (**s).to_owned())
-                                    .collect(),
+                                references: {
+                                    let all_possible_refs: Vec<_> = drv
+                                        .outputs
+                                        .values()
+                                        .filter_map(|output| output.path.as_ref())
+                                        .chain(resolved_inputs.keys())
+                                        .collect();
+                                    let mut references: Vec<_> = output_needles
+                                        .needles
+                                        .iter()
+                                        // Map each output needle index back to the refscan_needle
+                                        .map(|idx| {
+                                            all_possible_refs
+                                                .get(*idx as usize)
+                                                .map(|it| (*it).clone())
+                                                .ok_or(std::io::Error::new(
+                                                    std::io::ErrorKind::Other,
+                                                    "invalid build response",
+                                                ))
+                                        })
+                                        .collect::<Result<_, std::io::Error>>()?;
+                                    // Produce references sorted by name for consistency with nix narinfos
+                                    references.sort();
+                                    references
+                                },
                                 nar_size,
                                 nar_sha256,
                                 signatures: vec![],

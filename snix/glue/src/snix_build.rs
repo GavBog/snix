@@ -1,7 +1,7 @@
 //! This module contains glue code translating from
 //! [nix_compat::derivation::Derivation] to [snix_build::buildservice::BuildRequest].
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashSet, VecDeque};
 use std::path::PathBuf;
 
 use bytes::Bytes;
@@ -9,6 +9,8 @@ use nix_compat::{derivation::Derivation, nixbase32, store_path::StorePath};
 use sha2::{Digest, Sha256};
 use snix_build::buildservice::{AdditionalFile, BuildConstraints, BuildRequest, EnvVar};
 use snix_castore::Node;
+
+use crate::known_paths::KnownPaths;
 
 /// These are the environment variables that Nix sets in its sandbox for every
 /// build.
@@ -27,30 +29,115 @@ const NIX_ENVIRONMENT_VARS: [(&str, &str); 12] = [
     ("TMPDIR", "/build"),
 ];
 
-/// Get an iterator of store paths whose nixbase32 hashes will be the needles for refscanning
-/// Importantly, the returned order will match the one used by [derivation_to_build_request]
-/// so users may use this function to map back from the found needles to a store path
-pub(crate) fn get_refscan_needles(
-    derivation: &Derivation,
-) -> impl Iterator<Item = &StorePath<String>> {
-    derivation
-        .outputs
-        .values()
-        .filter_map(|output| output.path.as_ref())
-        .chain(derivation.input_sources.iter())
-        .chain(derivation.input_derivations.keys())
+/// Bfs queue needs to track both leaf store paths as well as
+/// input derivation outputs.
+#[derive(Eq, Hash, PartialEq, Clone)]
+enum DerivationQueueItem<'a> {
+    /// Leaf input of a derivation
+    InputSource(&'a StorePath<String>),
+    /// Derivation input that can transitively produce more paths
+    /// that are needed for a given output.
+    InputDerivation {
+        drv_path: &'a StorePath<String>,
+        output: &'a String,
+    },
+}
+
+/// Iterator that yields store paths in a breadth-first order.
+/// It is used to get all inputs for a derivation and the needles for refscanning.
+struct BfsDerivationInputs<'a> {
+    queue: VecDeque<DerivationQueueItem<'a>>,
+    visited: HashSet<DerivationQueueItem<'a>>,
+    known_paths: &'a KnownPaths,
+}
+
+impl<'a> Iterator for BfsDerivationInputs<'a> {
+    type Item = &'a StorePath<String>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(item) = self.queue.pop_front() {
+            if !self.visited.insert(item.clone()) {
+                continue;
+            }
+            match item {
+                DerivationQueueItem::InputSource(path) => {
+                    return Some(path);
+                }
+                DerivationQueueItem::InputDerivation { drv_path, output } => {
+                    let drv = self
+                        .known_paths
+                        .get_drv_by_drvpath(drv_path)
+                        .expect("drv Bug!!!");
+                    let output_path = drv
+                        .outputs
+                        .get(output)
+                        .expect("No output bug!")
+                        .path
+                        .as_ref()
+                        .expect("output has no store path");
+                    if self
+                        .visited
+                        .insert(DerivationQueueItem::InputSource(output_path))
+                    {
+                        self.queue.extend(
+                            drv.input_sources
+                                .iter()
+                                .map(DerivationQueueItem::InputSource)
+                                .chain(drv.input_derivations.iter().flat_map(
+                                    |(drv_path, outs)| {
+                                        outs.iter().map(move |output| {
+                                            DerivationQueueItem::InputDerivation {
+                                                drv_path,
+                                                output,
+                                            }
+                                        })
+                                    },
+                                )),
+                        );
+                    }
+                    return Some(output_path);
+                }
+            }
+        }
+        None
+    }
+}
+
+/// Get an iterator of a transitive input closure for a derivation.
+/// It's used for input propagation into the build and nixbase32 needle propagation
+/// for build output refscanning.
+pub(crate) fn get_all_inputs<'a>(
+    derivation: &'a Derivation,
+    known_paths: &'a KnownPaths,
+) -> impl Iterator<Item = &'a StorePath<String>> {
+    BfsDerivationInputs {
+        queue: derivation
+            .input_sources
+            .iter()
+            .map(DerivationQueueItem::InputSource)
+            .chain(
+                derivation
+                    .input_derivations
+                    .iter()
+                    .flat_map(|(drv_path, outs)| {
+                        outs.iter()
+                            .map(move |output| DerivationQueueItem::InputDerivation {
+                                drv_path,
+                                output,
+                            })
+                    }),
+            )
+            .collect(),
+        visited: HashSet::new(),
+        known_paths,
+    }
 }
 
 /// Takes a [Derivation] and turns it into a [buildservice::BuildRequest].
-/// It assumes the Derivation has been validated.
-/// It needs two lookup functions:
-/// - one translating input sources to a castore node
-///   (`fn_input_sources_to_node`)
-/// - one translating a tuple of drv path and (a subset of their) output names to
-///   castore nodes of the selected outpus (`fn_input_drvs_to_output_nodes`).
+/// It assumes the Derivation has been validated, and all referenced output paths are present in `inputs`.
 pub(crate) fn derivation_to_build_request(
     derivation: &Derivation,
-    inputs: BTreeMap<StorePath<String>, Node>,
+    inputs: &BTreeMap<StorePath<String>, Node>,
 ) -> std::io::Result<BuildRequest> {
     debug_assert!(derivation.validate(true).is_ok(), "drv must validate");
 
@@ -105,23 +192,20 @@ pub(crate) fn derivation_to_build_request(
     Ok(BuildRequest {
         // Importantly, this must match the order of get_refscan_needles, since users may use that
         // function to map back from the found needles to a store path
-        refscan_needles: get_refscan_needles(derivation)
+        refscan_needles: derivation
+            .outputs
+            .values()
+            .filter_map(|output| output.path.as_ref())
             .map(|path| nixbase32::encode(path.digest()))
+            .chain(inputs.keys().map(|path| nixbase32::encode(path.digest())))
             .collect(),
         command_args,
 
-        outputs: {
-            // produce output_paths, which is the absolute path of each output (sorted)
-            let mut output_paths: Vec<PathBuf> = derivation
-                .outputs
-                .values()
-                .map(|e| PathBuf::from(e.path_str()[1..].to_owned()))
-                .collect();
-
-            // Sort the outputs. We can use sort_unstable, as these are unique strings.
-            output_paths.sort_unstable();
-            output_paths
-        },
+        outputs: derivation
+            .outputs
+            .values()
+            .map(|e| PathBuf::from(e.path_str()[1..].to_owned()))
+            .collect(),
 
         // Turn this into a sorted-by-key Vec<EnvVar>.
         environment_vars: environment_vars
@@ -129,14 +213,14 @@ pub(crate) fn derivation_to_build_request(
             .map(|(key, value)| EnvVar { key, value })
             .collect(),
         inputs: inputs
-            .into_iter()
+            .iter()
             .map(|(path, node)| {
                 (
                     path.to_string()
                         .as_str()
                         .try_into()
                         .expect("Snix bug: unable to convert store path basename to PathComponent"),
-                    node,
+                    node.clone(),
                 )
             })
             .collect(),
@@ -223,6 +307,7 @@ mod test {
 
     use snix_build::buildservice::{AdditionalFile, BuildConstraints, BuildRequest, EnvVar};
 
+    use crate::known_paths::KnownPaths;
     use crate::snix_build::NIX_ENVIRONMENT_VARS;
 
     use super::derivation_to_build_request;
@@ -239,11 +324,25 @@ mod test {
     fn test_derivation_to_build_request() {
         let aterm_bytes = include_bytes!("tests/ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv");
 
-        let derivation = Derivation::from_aterm_bytes(aterm_bytes).expect("must parse");
+        let dep_drv_bytes = include_bytes!("tests/ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv");
+
+        let derivation1 = Derivation::from_aterm_bytes(aterm_bytes).expect("drv1 must parse");
+        let drv_path1 =
+            StorePath::<String>::from_bytes("ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv".as_bytes())
+                .expect("drv path1 must parse");
+        let derivation2 = Derivation::from_aterm_bytes(dep_drv_bytes).expect("drv2 must parse");
+        let drv_path2 =
+            StorePath::<String>::from_bytes("ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv".as_bytes())
+                .expect("drv path2 must parse");
+
+        let mut known_paths = KnownPaths::default();
+
+        known_paths.add_derivation(drv_path2, derivation2);
+        known_paths.add_derivation(drv_path1, derivation1.clone());
 
         let build_request = derivation_to_build_request(
-            &derivation,
-            BTreeMap::from([(
+            &derivation1,
+            &BTreeMap::from([(
                 StorePath::<String>::from_bytes(&INPUT_NODE_FOO_NAME.clone()).unwrap(),
                 INPUT_NODE_FOO.clone(),
             )]),
@@ -291,7 +390,7 @@ mod test {
                 )]),
                 inputs_dir: "nix/store".into(),
                 constraints: HashSet::from([
-                    BuildConstraints::System(derivation.system.clone()),
+                    BuildConstraints::System(derivation1.system.clone()),
                     BuildConstraints::ProvideBinSh
                 ]),
                 additional_files: vec![],
@@ -299,7 +398,7 @@ mod test {
                 scratch_paths: vec!["build".into(), "nix/store".into()],
                 refscan_needles: vec![
                     "fhaj6gmwns62s6ypkcldbaj2ybvkhx3p".into(),
-                    "ss2p4wmxijn652haqyd7dckxwl4c7hxx".into()
+                    "mp57d33657rf34lzvlbpfa1gjfv5gmpg".into()
                 ],
             },
             build_request
@@ -313,7 +412,7 @@ mod test {
         let derivation = Derivation::from_aterm_bytes(aterm_bytes).expect("must parse");
 
         let build_request =
-            derivation_to_build_request(&derivation, BTreeMap::from([])).expect("must succeed");
+            derivation_to_build_request(&derivation, &BTreeMap::from([])).expect("must succeed");
 
         let mut expected_environment_vars = vec![
             EnvVar {
@@ -382,7 +481,7 @@ mod test {
         let derivation = Derivation::from_aterm_bytes(aterm_bytes).expect("must parse");
 
         let build_request =
-            derivation_to_build_request(&derivation, BTreeMap::from([])).expect("must succeed");
+            derivation_to_build_request(&derivation, &BTreeMap::from([])).expect("must succeed");
 
         let mut expected_environment_vars = vec![
             // Note how bar and baz are not present in the env anymore,
