@@ -20,10 +20,6 @@ let
     command = "${pkgs.rustfmt}/bin/rustfmt"
     options = ["--edition", "2021"]
     includes = [ "*.rs" ]
-    excludes = [
-      "users/emery/*",
-      "users/tazjin/*",
-    ]
   '';
 
   # helper tool for formatting the depot interactively
