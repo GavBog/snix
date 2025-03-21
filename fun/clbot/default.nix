@@ -10,7 +10,6 @@ pkgs.buildGoModule {
     root = ./.;
     fileset = lib.fileset.unions [
       ./clbot.go
-      ./clbot_test.go
       ./go.mod
       ./go.sum
       ./backoffutil
