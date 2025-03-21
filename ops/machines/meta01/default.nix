@@ -16,6 +16,7 @@ in
     (mod "o11y/alertmanager-irc-relay.nix")
     (mod "known-hosts.nix")
     (mod "clbot.nix")
+    (mod "irccat.nix")
 
     (mod "www/mimir.snix.dev.nix")
     (mod "www/loki.snix.dev.nix")
@@ -79,6 +80,23 @@ in
     };
   };
 
+  services.irccat = {
+    enable = true;
+    config = {
+      generic.listen = "127.0.0.1:4722";
+      irc = {
+        server = "irc.eu.hackint.org:6697";
+        tls = true;
+        sasl_pass = "filled_in_by_secret";
+        nick = "snixbot";
+        channels = [
+          "#snix"
+        ];
+      };
+    };
+    secretsFile = config.age.secrets.irccat-secrets.path;
+  };
+
   networking.nftables.enable = true;
   networking.firewall.extraInputRules = ''
     # Prometheus, Loki, Tempo
@@ -99,6 +117,7 @@ in
       metrics-push-htpasswd.owner = "nginx";
       mimir-webhook-url.file = secretFile "mimir-webhook-url";
       alertmanager-irc-relay-environment.file = secretFile "alertmanager-irc-relay-environment";
+      irccat-secrets.file = secretFile "irccat-secrets";
       restic-repository-password.file = secretFile "restic-repository-password";
       restic-bucket-credentials.file = secretFile "restic-bucket-credentials";
     };

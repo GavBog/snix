@@ -47,7 +47,6 @@ in
 
   "grafana-oauth-secret.age" = public01Default;
 
-
   "binary-cache-key.age" = build01Default;
   "buildkite-agent-token.age" = build01Default;
   "buildkite-ssh-private-key.age" = build01Default;
@@ -56,6 +55,7 @@ in
 
   "metrics-push-htpasswd.age" = meta01Default;
   "alertmanager-irc-relay-environment.age" = meta01Default;
+  "irccat-secrets.age" = meta01Default;
   "mimir-environment.age" = meta01Default;
   "mimir-webhook-url.age" = meta01Default;
 
