@@ -49,6 +49,17 @@ impl EvalWarning {
             .emit(&[self.diagnostic(source)]);
     }
 
+    /// Render a fancy, human-readable output of this warning and
+    /// print it to a std::io::Write. If rendered in a terminal that supports
+    /// colours and font styles, the output will include those.
+    pub fn fancy_format_write<E: std::io::Write + std::marker::Send>(
+        &self,
+        stderr: &mut E,
+        source: &SourceCode,
+    ) {
+        Emitter::new(Box::new(stderr), Some(&*source.codemap())).emit(&[self.diagnostic(source)]);
+    }
+
     /// Create the optional span label displayed as an annotation on
     /// the underlined span of the warning.
     fn span_label(&self) -> Option<String> {

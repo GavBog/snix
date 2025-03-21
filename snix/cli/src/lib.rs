@@ -82,7 +82,8 @@ pub struct EvalResult {
 
 /// Interprets the given code snippet, printing out warnings and errors and returning the result
 #[allow(clippy::too_many_arguments)]
-pub fn evaluate(
+pub fn evaluate<E: std::io::Write + Clone + Send>(
+    stderr: &mut E,
     snix_store_io: Rc<SnixStoreIO>,
     code: &str,
     path: Option<PathBuf>,
@@ -126,13 +127,12 @@ pub fn evaluate(
 
     let source_map = eval_builder.source_map().clone();
     let (result, globals) = {
-        let mut compiler_observer =
-            DisassemblingObserver::new(source_map.clone(), std::io::stderr());
+        let mut compiler_observer = DisassemblingObserver::new(source_map.clone(), stderr.clone());
         if args.dump_bytecode {
             eval_builder.set_compiler_observer(Some(&mut compiler_observer));
         }
 
-        let mut runtime_observer = TracingObserver::new(std::io::stderr());
+        let mut runtime_observer = TracingObserver::new(stderr.clone());
         if args.trace_runtime {
             if args.trace_runtime_timing {
                 runtime_observer.enable_timing()
@@ -162,17 +162,17 @@ pub fn evaluate(
 
     if args.display_ast {
         if let Some(ref expr) = result.expr {
-            eprintln!("AST: {}", snix_eval::pretty_print_expr(expr));
+            writeln!(stderr, "AST: {}", snix_eval::pretty_print_expr(expr)).unwrap();
         }
     }
 
     for error in &result.errors {
-        error.fancy_format_stderr();
+        error.fancy_format_write(stderr);
     }
 
     if !args.no_warnings {
         for warning in &result.warnings {
-            warning.fancy_format_stderr(&source_map);
+            warning.fancy_format_write(stderr, &source_map);
         }
     }
 
@@ -212,8 +212,8 @@ impl InterpretResult {
         }
     }
 
-    pub fn finalize(self) -> bool {
-        print!("{}", self.output);
+    pub fn finalize<E: std::io::Write>(self, stderr: &mut E) -> bool {
+        write!(stderr, "{}", self.output).unwrap();
         self.success
     }
 
@@ -231,7 +231,8 @@ impl InterpretResult {
 /// evaluation succeeded.
 #[instrument(skip_all, fields(indicatif.pb_show=tracing::field::Empty))]
 #[allow(clippy::too_many_arguments)]
-pub fn interpret(
+pub fn interpret<E: std::io::Write + Clone + Send>(
+    stderr: &mut E,
     snix_store_io: Rc<SnixStoreIO>,
     code: &str,
     path: Option<PathBuf>,
@@ -244,6 +245,7 @@ pub fn interpret(
 ) -> Result<InterpretResult, IncompleteInput> {
     let mut output = String::new();
     let result = evaluate(
+        stderr,
         snix_store_io,
         code,
         path,

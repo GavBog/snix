@@ -1,5 +1,6 @@
 use std::error;
 use std::io;
+use std::io::Write;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::str::Utf8Error;
@@ -150,7 +151,7 @@ to a missing value in the attribute set(s) included via `with`."#
     BytecodeError(Box<Error>),
 
     /// Given type can't be coerced to a string in the respective context
-    #[error("cannot ({}) coerce {from} to a string{}", 
+    #[error("cannot ({}) coerce {from} to a string{}",
         (if .kind.strong { "strongly" } else { "weakly" }),
         (if *.from == "set" {
             ", missing a `__toString` or `outPath` attribute"
@@ -632,6 +633,12 @@ impl Error {
     /// it to stderr.
     pub fn fancy_format_stderr(&self) {
         Emitter::stderr(ColorConfig::Auto, Some(&*self.source.codemap())).emit(&self.diagnostics());
+    }
+
+    /// Render a fancy, human-readable output of this error and print
+    /// it to a std::io::Write.
+    pub fn fancy_format_write<E: Write + Send>(&self, stderr: &mut E) {
+        Emitter::new(Box::new(stderr), Some(&*self.source.codemap())).emit(&self.diagnostics());
     }
 
     /// Create the optional span label displayed as an annotation on

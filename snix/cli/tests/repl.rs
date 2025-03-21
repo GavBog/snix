@@ -15,8 +15,9 @@ macro_rules! test_repl {
               OsString::from("nixpkgs=/tmp"),
             ]);
             let mut repl = snix_cli::Repl::new(init_io_handle(&tokio_runtime, &args), &args);
+            let mut buffer = std::io::Cursor::new(Vec::new());
             $({
-                let result = repl.send($send.into());
+                let result = repl.send(&mut buffer, $send.into());
                 $expect.assert_eq(result.output())
                 ;
             })*

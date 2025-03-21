@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::path::PathBuf;
 use std::rc::Rc;
 
@@ -74,8 +75,8 @@ pub struct CommandResult {
 }
 
 impl CommandResult {
-    pub fn finalize(self) -> bool {
-        print!("{}", self.output);
+    pub fn finalize<E: Write>(self, stdout: &mut E) -> bool {
+        write!(stdout, "{}", self.output).unwrap();
         self.continue_
     }
 
@@ -111,9 +112,17 @@ impl<'a> Repl<'a> {
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run<O: Write + Clone + Send, E: Write + Clone + Send>(
+        &mut self,
+        stdout: &mut O,
+        stderr: &mut E,
+    ) {
         if self.args.compile_only {
-            eprintln!("warning: `--compile-only` has no effect on REPL usage!");
+            writeln!(
+                stderr,
+                "warning: `--compile-only` has no effect on REPL usage!"
+            )
+            .unwrap();
         }
 
         let history_path = match state_dir() {
@@ -139,14 +148,14 @@ impl<'a> Repl<'a> {
             let readline = self.rl.readline(prompt);
             match readline {
                 Ok(line) => {
-                    if !self.send(line).finalize() {
+                    if !self.send(stderr, line).finalize(stdout) {
                         break;
                     }
                 }
                 Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => break,
 
                 Err(err) => {
-                    eprintln!("error: {}", err);
+                    writeln!(stderr, "error: {}", err).unwrap();
                     break;
                 }
             }
@@ -159,7 +168,7 @@ impl<'a> Repl<'a> {
 
     /// Send a line of user input to the REPL. Returns a result indicating the output to show to the
     /// user, and whether or not to continue
-    pub fn send(&mut self, line: String) -> CommandResult {
+    pub fn send<E: Write + Clone + Send>(&mut self, stderr: &mut E, line: String) -> CommandResult {
         if line.is_empty() {
             return CommandResult {
                 output: String::new(),
@@ -187,6 +196,7 @@ impl<'a> Repl<'a> {
                 Ok(InterpretResult::empty_success(None))
             }
             ReplCommand::Expr(input) => interpret(
+                stderr,
                 Rc::clone(&self.io_handle),
                 input,
                 None,
@@ -199,6 +209,7 @@ impl<'a> Repl<'a> {
             ),
             ReplCommand::Assign(Assignment { ident, value }) => {
                 match evaluate(
+                    stderr,
                     Rc::clone(&self.io_handle),
                     &value.to_string(), /* FIXME: don't re-parse */
                     None,
@@ -218,6 +229,7 @@ impl<'a> Repl<'a> {
                 }
             }
             ReplCommand::Explain(input) => interpret(
+                stderr,
                 Rc::clone(&self.io_handle),
                 input,
                 None,
@@ -229,6 +241,7 @@ impl<'a> Repl<'a> {
                 Some(self.source_map.clone()),
             ),
             ReplCommand::Print(input) => interpret(
+                stderr,
                 Rc::clone(&self.io_handle),
                 input,
                 None,
