@@ -172,7 +172,10 @@ fn configure_linux(
             LinuxNamespaceType::Ipc,
             LinuxNamespaceType::Uts,
             LinuxNamespaceType::Mount,
-            LinuxNamespaceType::Cgroup,
+            // We want to create a cgroup namespace in the future to be able to trace resource usage
+            // For now it's disabled as it causes issues in cases where the host machine is running in a
+            // messed up cgroup
+            // LinuxNamespaceType::Cgroup,
         ];
         if !allow_network {
             namespace_types.push(LinuxNamespaceType::Network)
