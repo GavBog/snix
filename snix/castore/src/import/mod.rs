@@ -6,7 +6,7 @@
 
 use crate::directoryservice::{DirectoryPutter, DirectoryService};
 use crate::path::{Path, PathBuf};
-use crate::{B3Digest, Directory, Node, SymlinkTargetError};
+use crate::{B3Digest, Directory, Node};
 use futures::{Stream, StreamExt};
 use tracing::Level;
 
@@ -52,21 +52,21 @@ where
     let mut maybe_directory_putter: Option<Box<dyn DirectoryPutter>> = None;
 
     let root_node = loop {
-        let mut entry = entries
+        let entry = entries
             .next()
             .await
             // The last entry of the stream must have 1 path component, after which
             // we break the loop manually.
             .ok_or(IngestionError::UnexpectedEndOfStream)??;
 
-        let node = match &mut entry {
-            IngestionEntry::Dir { .. } => {
+        let (path, node) = match entry {
+            IngestionEntry::Dir { path } => {
                 // If the entry is a directory, we traversed all its children (and
                 // populated it in `directories`).
                 // If we don't have it in directories, it's a directory without
                 // children.
                 let directory = directories
-                    .remove(entry.path())
+                    .remove(&path)
                     // In that case, it contained no children
                     .unwrap_or_default();
 
@@ -76,51 +76,54 @@ where
                 // Use the directory_putter to upload the directory.
                 // If we don't have one yet (as that's the first one to upload),
                 // initialize the putter.
-                maybe_directory_putter
-                    .get_or_insert_with(|| directory_service.put_multiple_start())
-                    .put(directory)
-                    .await
-                    .map_err(|e| {
-                        IngestionError::UploadDirectoryError(entry.path().to_owned(), e)
-                    })?;
+                let directory_putter = maybe_directory_putter
+                    .get_or_insert_with(|| directory_service.put_multiple_start());
 
-                Node::Directory {
-                    digest: directory_digest,
-                    size: directory_size,
+                match directory_putter.put(directory).await {
+                    Ok(()) => (
+                        path,
+                        Node::Directory {
+                            digest: directory_digest,
+                            size: directory_size,
+                        },
+                    ),
+                    Err(e) => {
+                        return Err(IngestionError::UploadDirectoryError(path, e));
+                    }
                 }
             }
-            &mut IngestionEntry::Symlink { ref target, .. } => Node::Symlink {
-                target: bytes::Bytes::copy_from_slice(target).try_into().map_err(
-                    |e: SymlinkTargetError| {
-                        IngestionError::UploadDirectoryError(
-                            entry.path().to_owned(),
+            IngestionEntry::Symlink { path, target } => {
+                match bytes::Bytes::from(target).try_into() {
+                    Ok(target) => (path, Node::Symlink { target }),
+                    Err(e) => {
+                        return Err(IngestionError::UploadDirectoryError(
+                            path,
                             crate::Error::StorageError(format!("invalid symlink target: {}", e)),
-                        )
-                    },
-                )?,
-            },
+                        ));
+                    }
+                }
+            }
             IngestionEntry::Regular {
+                path,
                 size,
                 executable,
                 digest,
-                ..
-            } => Node::File {
-                digest: digest.clone(),
-                size: *size,
-                executable: *executable,
-            },
+            } => (
+                path,
+                Node::File {
+                    digest: digest.clone(),
+                    size,
+                    executable,
+                },
+            ),
         };
 
-        let parent = entry
-            .path()
-            .parent()
-            .expect("Snix bug: got entry with root node");
+        let parent = path.parent().expect("Snix bug: got entry with root node");
 
         if parent == crate::Path::ROOT {
             break node;
         } else {
-            let name = entry
-                .path()
+            let name = path
                 .file_name()
                 // If this is the root node, it will have an empty name.
                 .unwrap_or_else(|| "".try_into().unwrap())
@@ -133,7 +136,7 @@ where
                 .add(name, node)
                 .map_err(|e| {
                     IngestionError::UploadDirectoryError(
-                        entry.path().to_owned(),
+                        path,
                         crate::Error::StorageError(e.to_string()),
                     )
                 })?;
