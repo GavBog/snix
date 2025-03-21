@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/signal"
@@ -75,7 +74,7 @@ func mustFixedHostKey(f string) ssh.HostKeyCallback {
 }
 
 func mustPrivateKey(p string) ssh.AuthMethod {
-	pkBytes, err := ioutil.ReadFile(p)
+	pkBytes, err := os.ReadFile(p)
 	if err != nil {
 		log.Exitf("reading SSH private key from %q: %v", p, err)
 	}
