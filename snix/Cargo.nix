@@ -14359,7 +14359,7 @@ rec {
       "snix-store" = rec {
         crateName = "snix-store";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "snix-store";
