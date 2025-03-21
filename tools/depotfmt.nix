@@ -20,6 +20,44 @@ let
     command = "${pkgs.rustfmt}/bin/rustfmt"
     options = ["--edition", "2021"]
     includes = [ "*.rs" ]
+
+    [formatter.editorconfig]
+    command = "${pkgs.editorconfig-checker}/bin/editorconfig-checker"
+    includes = [
+      "*.c",
+      "*.conf",
+      "*.css",
+      "*.exp",
+      "*.go",
+      "*.h",
+      "*.hcl",
+      "*.html",
+      "*.java",
+      "*.jq",
+      "*.js",
+      "*.json",
+      "*.md",
+      "*.nix",
+      "*.proto",
+      "*.py",
+      "*.rs",
+      "*.scm",
+      "*.scss",
+      "*.sh",
+      "*.tf",
+      "*.toml",
+      "*.txt",
+      "*.xml",
+      "*.yaml",
+      "*.yml"
+    ]
+    excludes = [
+      "snix/eval/src/tests/nix_tests/*",
+
+      # contains "References: ", which has trailing whitespace
+      # FUTUREWORK: move into separate fixture and read from here
+      "snix/nix-compat/src/narinfo/mod.rs"
+    ]
   '';
 
   # helper tool for formatting the depot interactively
