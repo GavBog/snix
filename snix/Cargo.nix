@@ -105,6 +105,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-castore-http" = rec {
+      packageId = "snix-castore-http";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-castore-http";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-cli" = rec {
       packageId = "snix-cli";
       build = internal.buildRustCrateWithFeatures {
@@ -13925,6 +13935,109 @@ rec {
         };
         resolvedDefaultFeatures = [ "cloud" "default" "fs" "fuse" "integration" "toml" "tonic-reflection" "virtiofs" "xp-composition-cli" "xp-composition-url-refs" ];
       };
+      "snix-castore-http" = rec {
+        crateName = "snix-castore-http";
+        version = "0.1.0";
+        edition = "2021";
+        crateBin = [
+          {
+            name = "snix-castore-http";
+            path = "src/main.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith { filter = sourceFilter; src = ./castore-http; };
+        libName = "snix_castore_http";
+        dependencies = [
+          {
+            name = "anyhow";
+            packageId = "anyhow";
+          }
+          {
+            name = "axum";
+            packageId = "axum";
+            features = [ "tracing" ];
+          }
+          {
+            name = "axum-extra";
+            packageId = "axum-extra";
+          }
+          {
+            name = "axum-range";
+            packageId = "axum-range";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "clap";
+            packageId = "clap";
+            features = [ "derive" ];
+          }
+          {
+            name = "data-encoding";
+            packageId = "data-encoding";
+          }
+          {
+            name = "mime";
+            packageId = "mime";
+          }
+          {
+            name = "mime_guess";
+            packageId = "mime_guess";
+          }
+          {
+            name = "path-clean";
+            packageId = "path-clean";
+          }
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "snix-castore";
+            packageId = "snix-castore";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [ "tracing" ];
+          }
+          {
+            name = "tokio-listener";
+            packageId = "tokio-listener";
+            features = [ "axum07" "clap" "multi-listener" "sd_listen" ];
+          }
+          {
+            name = "tokio-util";
+            packageId = "tokio-util";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "tracing-subscriber";
+            packageId = "tracing-subscriber";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "axum-test";
+            packageId = "axum-test";
+          }
+          {
+            name = "blake3";
+            packageId = "blake3";
+          }
+          {
+            name = "tracing-test";
+            packageId = "tracing-test";
+          }
+        ];
+
+      };
       "snix-cli" = rec {
         crateName = "snix-cli";
         version = "0.1.0";
@@ -15704,6 +15817,14 @@ rec {
             optional = true;
           }
           {
+            name = "tracing";
+            packageId = "tracing";
+            optional = true;
+            usesDefaultFeatures = false;
+            target = { target, features }: (target."tokio_unstable" or false);
+            features = [ "std" ];
+          }
+          {
             name = "windows-sys";
             packageId = "windows-sys 0.52.0";
             optional = true;
@@ -15747,7 +15868,7 @@ rec {
           "tracing" = [ "dep:tracing" ];
           "windows-sys" = [ "dep:windows-sys" ];
         };
-        resolvedDefaultFeatures = [ "bytes" "default" "fs" "io-std" "io-util" "libc" "macros" "mio" "net" "process" "rt" "rt-multi-thread" "signal" "signal-hook-registry" "socket2" "sync" "test-util" "time" "tokio-macros" "windows-sys" ];
+        resolvedDefaultFeatures = [ "bytes" "default" "fs" "io-std" "io-util" "libc" "macros" "mio" "net" "process" "rt" "rt-multi-thread" "signal" "signal-hook-registry" "socket2" "sync" "test-util" "time" "tokio-macros" "tracing" "windows-sys" ];
       };
       "tokio-listener" = rec {
         crateName = "tokio-listener";

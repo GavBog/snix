@@ -1,0 +1,28 @@
+[package]
+name = "snix-castore-http"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+axum = { workspace = true, features = ["tracing"] }
+axum-extra.workspace = true
+axum-range.workspace = true
+bytes.workspace = true
+clap = { workspace = true, features = ["derive"] }
+data-encoding.workspace = true
+mime_guess = "2.0.5"
+mime = "0.3.17"
+path-clean.workspace = true
+prost.workspace = true
+tokio = { workspace = true, features = [ "tracing"] }
+tokio-listener = { workspace = true, features = ["axum07", "clap", "multi-listener", "sd_listen"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tokio-util.workspace = true
+snix-castore = { path = "../castore" }
+
+[dev-dependencies]
+axum-test = "16.4.0"
+blake3.workspace = true
+tracing-test.workspace = true

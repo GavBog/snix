@@ -92,6 +92,10 @@ in
         nativeBuildInputs = [ pkgs.protobuf ];
       };
 
+      snix-castore-htp = prev: {
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
+      };
+
       snix-cli = prev: {
         src = filterRustCrateSrc rec {
           root = prev.src.origSrc;

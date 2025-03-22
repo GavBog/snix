@@ -4249,6 +4249,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "snix-castore-http"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-extra",
+ "axum-range",
+ "axum-test",
+ "blake3",
+ "bytes",
+ "clap",
+ "data-encoding",
+ "mime",
+ "mime_guess",
+ "path-clean",
+ "prost",
+ "snix-castore",
+ "tokio",
+ "tokio-listener",
+ "tokio-util",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+]
+
+[[package]]
 name = "snix-cli"
 version = "0.1.0"
 dependencies = [
@@ -4800,6 +4826,7 @@ dependencies = [
  "signal-hook-registry",
  "socket2",
  "tokio-macros",
+ "tracing",
  "windows-sys 0.52.0",
 ]
 

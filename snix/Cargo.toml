@@ -21,6 +21,7 @@ resolver = "2"
 members = [
   "build",
   "castore",
+  "castore-http",
   "cli",
   "eval",
   "eval/builtin-macros",
