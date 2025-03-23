@@ -93,6 +93,7 @@ in
     };
   systemd.tmpfiles.rules = [
     "d '/nix/var/nix/gcroots/buildkite' 0770 - buildkite-agents - -"
+    "z '/nix/var/nix/gcroots' 0771 - - - -"
   ];
 
   services.openssh.enable = true;
