@@ -14,18 +14,19 @@ homepage: false
 
 ## Background
 
-About a year ago, nix introduced a new experimental store type:
+About a year ago, Nix introduced a new experimental store type:
 [Local Overlay Store]. This store allows having multiple physical stores acting
 as a single logical store.
 
 With this approach, stores are layered on top of each other with all but the
-top-most layer being writable, the others are read-only. The feature is
-described in the [Upstream Nix Documentation][Local Overlay Store]. Work is
-[ongoing][lix-local-overlay] to bring the feature to Lix aswell.
+top-most layer being writable, the others are read-only. Nix will build inside
+the top-most layer.
+The feature is described in the [Upstream Nix Documentation][Local Overlay Store].
+Work is [ongoing][lix-local-overlay] to bring the feature to Lix aswell.
 
-The main use-case is for it is having a large nix store mounted onto a machine
-as read-only and configure nix to use data stored in it to avoid
-rebuilding/substituting from `cache.nixos.org`.
+The main use-case is for it is having a large Nix store mounted onto a machine
+as read-only and having Nix not rebuild/substitute store paths available in
+lower layers.
 
 Due to implementation details of this feature, the lower layer(s) can not only
 be a location on the file system but also have another `nix-daemon` back the
@@ -62,7 +63,7 @@ multiple `snix` components.
 
 Stay tuned.
 
-[castore]: https://snix.dev/docs/components/overview/
+[castore]: {{< ref "/docs/components/overview.md" >}}
 [bugs]: https://git.snix.dev/snix/snix/issues
 [Local Overlay Store]: https://nix.dev/manual/nix/2.26/store/types/experimental-local-overlay-store.html
 [replit]: https://blog.replit.com/tvix-store

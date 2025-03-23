@@ -39,7 +39,7 @@ You can run the daemon with:
 $ $(nix-build -A snix.snix-store)/bin/snix-store daemon
 ```
 
-### Mount the castore onto your file system
+### Mount the store
 
 To expose the store paths and their contents as a file system, if can be
 FUSE-mounted with the following command:
@@ -61,9 +61,24 @@ $ $(nix-build -A snix.nix-daemon)/bin/nix-daemon -l /tmp/snix-daemon.sock \
     --unix-listen-unlink
 ```
 
-This will launch the `snix` nix-daemon listening on a unix domain socket
+This will launch the `snix` nix-daemon listening on a unix domain socket.
+
+Nix will communicate with it to get metadata about store paths.
 
 ### Create an overlayfs mount
+
+{{<callout>}}
+Depending on your usecase, this might not be appropriate for a physical NixOS
+system, replacing `/nix` globally.
+
+In these cases, you want to ensure store paths needed to boot the system are
+available on the plain disk.
+
+You most likely want to mount this combined mountpoint elsewhere, and spin up a
+separate mount namespace (via `systemd-nspawn`, `bwrap` or similar) exposing it
+at `/nix` in there. You have been warned!
+{{</callout>}}
+
 
 Bind mount your real /nix store on the side, so that nix has direct access to
 it, this is optional but allows you to have access to your real nix store
@@ -108,11 +123,16 @@ This can be achieved by either setting the env variable
 
 ### Profit
 
-With the above setup you should now be able to have nix use Snix Castore as its
+With the above setup you should now be able to have nix use Snix castore as its
 lower store.
 
-Note that snix's FUSE mount might be performing slower than the native
-file-system depending on your workload. Please file bugs if you notice obviously
-bad performance.
+{{<callout>}}
+There are some known (and not yet worked-on) performance issues in Snix
+castore, which is why the mount is expected to perform slower than the native
+file-system. Depending on your workload, this might or might not be an issue.
 
+Check [our Bug tracker][castore-perf-issues] for updates on that topic.
+{{</callout>}}
+
+[castore-perf-issues]: https://git.snix.dev/snix/snix/issues?q=&type=all&sort=&labels=14%2c24
 [local overlay]: https://nix.dev/manual/nix/2.26/store/types/experimental-local-overlay-store.html
