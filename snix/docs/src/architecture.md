@@ -46,60 +46,6 @@ coordinator on top of a state-machine model that would make it
 possible to reuse the FSM logic without tying it to any particular
 kind of application.
 
-### Evaluator
-
-*Purpose:* Eval takes care of evaluating Nix code. In a typical build
-flow it would be responsible for producing derivations. It can also be
-used as a standalone tool, for example, in use-cases where Nix is used
-to generate configuration without any build or store involvement.
-
-*Requirements:* For now, it will run on the machine invoking the build
-command itself. We give it filesystem access to handle things like
-imports or `builtins.readFile`.
-
-To support IFD, the Evaluator also needs access to store paths. This
-could be implemented by having the coordinator provide an interface to retrieve
-files from a store path, or by ensuring a "realized version of the store" is
-accessible by the evaluator (this could be a FUSE filesystem, or the "real"
-/nix/store on disk.
-
-We might be okay with running the evaluator with filesystem access for now and
-can extend the interface if the need arises.
-
-### Builder
-
-*Purpose:* A builder receives derivations from the coordinator and
-builds them.
-
-By making builder a standardised interface it's possible to make the
-sandboxing mechanism used by the build process pluggable.
-
-Nix is currently using a hard-coded
-[libseccomp](https://github.com/seccomp/libseccomp) based sandboxing
-mechanism and another one based on
-[sandboxd](https://www.unix.com/man-page/mojave/8/sandboxd/) on macOS.
-These are only separated by [compiler preprocessor
-macros](https://gcc.gnu.org/onlinedocs/cpp/Ifdef.html) within the same
-source files despite having very little in common with each other.
-
-This makes experimentation with alternative backends difficult and
-porting Nix to other platforms harder than it has to be. We want to
-write a new Linux builder which uses
-[OCI](https://github.com/opencontainers/runtime-spec), the current
-dominant Linux containerisation technology, by default.
-
-With a well-defined builder abstraction, it's also easy to imagine
-other backends such as a Kubernetes-based one in the future.
-
-The environment in which builds happen is currently very Nix-specific. We might
-want to avoid having to maintain all the intricacies of a Nix-specific
-sandboxing environment in every builder, and instead only provide a more
-generic interface, receiving build requests (and have the coordinator translate
-derivations to that format). [^1]
-
-To build, the builder needs to be able to mount all build inputs into the build
-environment. For this, it needs the store to expose a filesystem interface.
-
 ### Store
 
 *Purpose:* Store takes care of storing build results. It provides a

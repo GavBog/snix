@@ -53,6 +53,9 @@ in there - new formats etc. are usually "factored out into nix-compat".
 The builder consumes build requests from a client, runs builds and sends
 logs/telemetry to the client.
 
+By making the build protocol a standardized interface, it's possible to make the
+sandboxing mechanism used by the build process pluggable.
+
 There currently exists an OCI builder, as well as gRPC server adapter and client
 implementations, allowing to run the builder both locally or remotely.
 
