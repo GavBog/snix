@@ -1,6 +1,6 @@
 ---
-title: "Using Snix as Lower Nix Overlay Store"
-description: "Using Snix as Lower Nix Store"
+title: "Snix as lower Nix Overlay Store"
+description: "How to use Snix as your lower Nix Overlay Store"
 date: 2025-03-21T22:40:33+00:00
 lastmod: 2025-03-21T22:40:33+00:00
 draft: false
@@ -46,7 +46,7 @@ good opportunity to make using `nix` backed by our `castore` more seamless.
 So we are happy to announce that as of today, `snix` has implemented **all** of
 the operations required to operate as a lower layer in nix's overlay store.
 
-Check out our [Guide]({{\< ref "/docs/guides/local-overlay" >}}) on how to set
+Check out our [Guide]({{< ref "/docs/guides/local-overlay.md" >}}) on how to set
 it up.
 
 Please test it out, let us know what you think and report [bugs].
