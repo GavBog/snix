@@ -38,8 +38,9 @@ resource "keycloak_group_memberships" "snix_core_team_members" {
   group_id    = keycloak_group.snix_core_team.id
 
   members = [
-    "raitobezarius",
-    "edef"
+    "edef",
+    "flokli",
+    "raitobezarius"
   ]
 }
 
