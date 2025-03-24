@@ -1,8 +1,5 @@
 # Summary
 
-# Welcome
-* [Getting Started](./getting-started.md)
-
 # Tvix
 - [Architecture & data flow](./architecture.md)
 - [TODOs](./TODO.md)
