@@ -1,7 +1,6 @@
 # Summary
 
 # Welcome
-* [Introduction](./introduction.md)
 * [Getting Started](./getting-started.md)
 
 # Tvix
