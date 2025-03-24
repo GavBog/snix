@@ -7,6 +7,7 @@ in
   imports = [
     (mod "o11y/agent.nix")
     (mod "snix-buildkite.nix")
+    (mod "harmonia.nix")
     (mod "known-hosts.nix")
 
     (depot.third_party.agenix.src + "/modules/age.nix")
@@ -62,7 +63,15 @@ in
       ];
     };
 
-    firewall.allowPing = true;
+    nftables.enable = true;
+    firewall = {
+      extraInputRules = ''
+        # Allow public01 to access Harmonia
+        ip6 saddr { 2a01:4f8:c013:3e62::1 } tcp dport { 5000 } accept
+        ip saddr { 49.13.70.233 } tcp dport { 5000 } accept
+      '';
+      allowPing = true;
+    };
   };
 
   age.secrets =

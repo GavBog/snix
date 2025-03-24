@@ -19,6 +19,7 @@ in
     (mod "www/status.snix.dev.nix")
     (mod "www/auth.snix.dev.nix")
     (mod "www/git.snix.dev.nix")
+    (mod "www/cache.snix.dev.nix")
     (mod "known-hosts.nix")
 
     (depot.third_party.agenix.src + "/modules/age.nix")

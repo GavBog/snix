@@ -45,6 +45,8 @@ in
 
   "grafana-oauth-secret.age" = public01Default;
 
+
+  "binary-cache-key.age" = build01Default;
   "buildkite-agent-token.age" = build01Default;
   "buildkite-ssh-private-key.age" = build01Default;
   "buildkite-besadii-config.age" = ciDefault;

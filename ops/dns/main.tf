@@ -66,6 +66,7 @@ locals {
   public01_services = [
     "auth",
     "bolt",
+    "cache",
     "git",
     "status"
   ]
