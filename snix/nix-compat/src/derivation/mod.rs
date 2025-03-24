@@ -133,7 +133,7 @@ impl Derivation {
         name: &str,
     ) -> Result<StorePath<String>, DerivationError> {
         // append .drv to the name
-        let name = &format!("{}.drv", name);
+        let name = format!("{}.drv", name);
 
         // collect the list of paths from input_sources and input_derivations
         // into a (sorted, guaranteed by BTreeSet) list of references
@@ -144,8 +144,8 @@ impl Derivation {
             .map(StorePath::to_absolute_path)
             .collect();
 
-        build_text_path(name, self.to_aterm_bytes(), references)
-            .map_err(|_e| DerivationError::InvalidOutputName(name.to_string()))
+        build_text_path(&name, self.to_aterm_bytes(), references)
+            .map_err(|_e| DerivationError::InvalidOutputName(name))
     }
 
     /// Returns the FOD digest, if the derivation is fixed-output, or None if
@@ -159,7 +159,7 @@ impl Derivation {
         }
 
         let out_output = self.outputs.get("out")?;
-        let ca_hash = &out_output.ca_hash.as_ref()?;
+        let ca_hash = out_output.ca_hash.as_ref()?;
 
         Some(
             Sha256::new_with_prefix(format!(
@@ -170,9 +170,7 @@ impl Derivation {
                     .path
                     .as_ref()
                     .map(StorePath::to_absolute_path)
-                    .as_ref()
-                    .map(|s| s as &str)
-                    .unwrap_or(""),
+                    .unwrap_or_default(),
             ))
             .finalize()
             .into(),
