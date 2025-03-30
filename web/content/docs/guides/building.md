@@ -60,6 +60,27 @@ $ mg build //snix:cli
 
 This uses [crate2nix][] to build each crate dependency individually.
 
+#### Binary cache for Development
+
+If you want to fetch store paths built by CI, you can configure our
+[Harmonia](https://github.com/nix-community/harmonia) deployment as a Nix substituter:
+
+```nix
+{
+  nix.settings.trusted-public-keys = [
+    "cache.snix.dev-1:miTqzIzmCbX/DyK2tLNXDROk77CbbvcRdWA4y2F8pno="
+  ];
+  nix.settings.substituters = [
+    "https://cache.snix.dev"
+  ];
+}
+```
+
+Keep in mind there's no guarantees on paths being available, they get GC'ed
+eventually.
+
+
+### Further reading
 Checkout the [Component Overview]({{< ref "/docs/components/overview" >}})
 to learn more about the project structure.
 
