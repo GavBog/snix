@@ -3099,9 +3099,9 @@ rec {
       };
       "data-encoding" = rec {
         crateName = "data-encoding";
-        version = "2.6.0";
+        version = "2.8.0";
         edition = "2018";
-        sha256 = "1qnn68n4vragxaxlkqcb1r28d3hhj43wch67lm4rpxlw89wnjmp8";
+        sha256 = "0470yf5ly1ibzmwygyjqg9ii9njbsha3xr5qj5dxyf2psbgpapsp";
         libName = "data_encoding";
         authors = [
           "Julien Cretin <git@ia0.eu>"
@@ -3720,6 +3720,10 @@ rec {
           {
             name = "chrono";
             packageId = "chrono";
+          }
+          {
+            name = "data-encoding";
+            packageId = "data-encoding";
           }
           {
             name = "futures";

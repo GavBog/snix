@@ -3,12 +3,14 @@
 //! The resulting Parquet has three columns:
 //!
 //!  * `key` (`String`): the release, eg `nixos/22.11-small/nixos-22.11.513.563dc6476b8`
+//!  * `git_rev` (`Binary`): the git revision hash of this release, if available
 //!  * `timestamp` (`DateTime`): the timestamp of the GC roots file for this release
 //!  * `store_path_hash` (`List[Binary]`): hash part of the store paths rooted by this release
 //!
 //! [^1]: some roots are truly ancient, and aren't compatible with Nix 1.x
 
 use anyhow::Result;
+use data_encoding::HEXLOWER;
 use std::{
     collections::BTreeMap,
     fs::File,
@@ -123,6 +125,31 @@ async fn main() {
         js.spawn(async move {
             let _permit = sem.acquire().await.unwrap();
 
+            // TODO(edef): learn whether there is a git-revision from the listings
+            let rev = s3
+                .get_object()
+                .bucket("nix-releases")
+                .key(format!("{root}/git-revision"))
+                .send()
+                .await;
+
+            let rev = match rev {
+                Ok(resp) => {
+                    let hex = resp.body.collect().await.unwrap().to_vec();
+                    let mut buf = [0; 20];
+                    assert_eq!(HEXLOWER.decode_mut(&hex, &mut buf).unwrap(), buf.len());
+                    Ok(Some(buf))
+                }
+                Err(e) => {
+                    if e.as_service_error().is_some_and(|e| e.is_no_such_key()) {
+                        Ok(None)
+                    } else {
+                        Err(e)
+                    }
+                }
+            }
+            .unwrap();
+
             let body = get_object(
                 s3.get_object()
                     .bucket("nix-releases")
@@ -136,6 +163,7 @@ async fn main() {
             let ph_array = block_in_place(|| meta.format.to_ph_array(body).rechunk());
             df! {
                 "key" => [root],
+                "git_rev" => [rev.as_ref().map(|r| &r[..])],
                 "timestamp" => [meta.last_modified.naive_utc()],
                 "store_path_hash" => ph_array.into_series().implode().unwrap()
             }
@@ -146,6 +174,7 @@ async fn main() {
     let mut writer = ParquetWriter::new(File::create("roots.parquet").unwrap())
         .batched(&Schema::from_iter([
             Field::new("key", DataType::String),
+            Field::new("git_rev", DataType::Binary),
             Field::new(
                 "timestamp",
                 DataType::Datetime(TimeUnit::Milliseconds, None),

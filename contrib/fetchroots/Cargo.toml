@@ -14,6 +14,7 @@ bytes = "1.5.0"
 bytes-utils = "0.1.4"
 bzip2 = "0.4.4"
 chrono = "0.4.34"
+data-encoding = "2.8.0"
 futures = "0.3.30"
 indicatif = "0.17.8"
 nix-compat = { version = "0.1.0", path = "../../snix/nix-compat" }
