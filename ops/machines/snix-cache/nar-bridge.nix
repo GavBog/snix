@@ -41,6 +41,11 @@
           proxy_cache_use_stale error timeout updating;
         '';
       };
+      # Rewrite old nar/tvix-castore/…?narsize=… requests to the new URL
+      # Clients keep these paths in their narinfo cache annoyingly long.
+      locations."/nar/tvix-castore".extraConfig = ''
+        rewrite ^/nar/tvix-castore/(.*)$ /nar/snix-castore/$1 redirect;
+      '';
     };
 
     # use more cores for compression
