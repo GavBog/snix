@@ -13623,6 +13623,13 @@ rec {
         crateName = "snix-castore";
         version = "0.1.0";
         edition = "2024";
+        crateBin = [
+          {
+            name = "snix-castore";
+            path = "src/bin/snix-castore.rs";
+            requiredFeatures = [ ];
+          }
+        ];
         src = lib.cleanSourceWith { filter = sourceFilter; src = ./castore; };
         libName = "snix_castore";
         dependencies = [
