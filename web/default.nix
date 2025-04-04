@@ -2,7 +2,7 @@
 
 {
   shell = pkgs.mkShell {
-    name = "tvix-website";
+    name = "snix-website";
     packages = [
       pkgs.nodejs
       pkgs.hugo
