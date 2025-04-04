@@ -1,51 +1,5 @@
 # Tvix - Architecture & data flow
 
-## Background
-
-We intend for Tvix tooling to be more decoupled than the existing,
-monolithic Nix implementation. In practice, we expect to gain several
-benefits from this, such as:
-
-- Ability to use different builders
-- Ability to use different store implementations
-- No monopolisation of the implementation, allowing users to replace
-  components that they are unhappy with (up to and including the
-  language evaluator)
-- Less hidden intra-dependencies between tools due to explicit RPC/IPC
-  boundaries
-
-Communication between different components of the system will use
-gRPC. The rest of this document outlines the components.
-
-## Components
-
-### Coordinator
-
-```admonish warning
-Currently there's no separate coordinator. Most of the interaction between
-store, builder and evaluator is done by library code living in the `tvix-glue`
-crate (and `tvix-cli` is a user of it).
-
-Keep in mind some of the statements below are outdated and neither reflect
-reality nor desired design anymore.
-```
-
-*Purpose:* The coordinator (in the simplest case, the Tvix CLI tool)
-oversees the flow of a build process and delegates tasks to the right
-subcomponents. For example, if a user runs the equivalent of
-`nix-build` in a folder containing a `default.nix` file, the
-coordinator will invoke the evaluator, pass the resulting derivations
-to the builder and coordinate any necessary store interactions (for
-substitution and other purposes).
-
-While many users are likely to use the CLI tool as their primary
-method of interacting with Tvix, it is not unlikely that alternative
-coordinators (e.g. for a distributed, "Nix-native" CI system) would be
-implemented. To facilitate this, we are considering implementing the
-coordinator on top of a state-machine model that would make it
-possible to reuse the FSM logic without tying it to any particular
-kind of application.
-
 ### Store
 
 *Purpose:* Store takes care of storing build results. It provides a
