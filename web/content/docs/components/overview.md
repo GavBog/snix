@@ -16,7 +16,7 @@ different contained components and the dependencies in between them.
 If you scroll further down, you find a textual description of what each component does.
 Check the individual documentation pages for more details.
 
-{{< inline-svg src="crate-diagram.svg" width="800px" height="800px" class="svg-inline-custom" >}}
+{{< inline-svg src="crate-diagram.svg" width="100%" height="800px" class="svg-inline-custom" >}}
 
 
 ## Castore
