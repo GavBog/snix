@@ -79,8 +79,12 @@ It allows keeping `snix-eval` relatively simple.
 
 ## CLI
 `snix-cli` is a REPL interface, constructing an Evaluator and populating it with
-most builtins present in Nix. It is our main vehicle to evaluate Nixpkgs and
-check for differences.
+most builtins present in Nix. Upon receiving an expression, it'll invoke the
+evaluator, and depending on the configuration, this might dispatch builds, cause
+substitutions etc.
+
+It currently is our vehicle to evaluate Nixpkgs and check for differences - it's
+not a replacement for `nix-build` or similar. Its CLI is subject to change.
 
 ## Serde
 `snix-serde` is a crate allowing (de)-serialisation of Rust data structures
