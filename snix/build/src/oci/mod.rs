@@ -1,5 +1,6 @@
 mod bundle;
 mod spec;
+pub(crate) mod subuid;
 
 pub(crate) use bundle::get_host_output_paths;
 pub(crate) use bundle::make_bundle;

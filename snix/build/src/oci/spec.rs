@@ -1,12 +1,23 @@
 //! Module to create a OCI runtime spec for a given [BuildRequest].
 use crate::buildservice::{BuildConstraints, BuildRequest};
-use oci_spec::{
-    runtime::{Capability, LinuxNamespace, LinuxNamespaceBuilder, LinuxNamespaceType},
-    OciSpecError,
+use oci_spec::runtime::{
+    Capability, LinuxIdMappingBuilder, LinuxNamespace, LinuxNamespaceBuilder, LinuxNamespaceType,
 };
 use std::{collections::HashSet, path::Path};
 
-use super::scratch_name;
+use super::{
+    scratch_name,
+    subuid::{SubordinateError, SubordinateInfo},
+};
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum SpecError {
+    #[error("oci error: {0}")]
+    OciError(oci_spec::OciSpecError),
+    #[error("subordinate error: {0}")]
+    SubordinateError(SubordinateError),
+}
 
 /// For a given [BuildRequest], return an OCI runtime spec.
 ///
@@ -33,7 +44,7 @@ pub(crate) fn make_spec(
     request: &BuildRequest,
     rootless: bool,
     sandbox_shell: &str,
-) -> Result<oci_spec::runtime::Spec, oci_spec::OciSpecError> {
+) -> Result<oci_spec::runtime::Spec, SpecError> {
     let allow_network = request
         .constraints
         .contains(&BuildConstraints::NetworkAccess);
@@ -57,39 +68,47 @@ pub(crate) fn make_spec(
     }
 
     oci_spec::runtime::SpecBuilder::default()
-        .process(configure_process(
-            &request.command_args,
-            &request.working_dir,
-            request
-                .environment_vars
-                .iter()
-                .map(|e| {
-                    (
-                        e.key.as_str(),
-                        // TODO: decide what to do with non-bytes env values
-                        String::from_utf8(e.value.to_vec()).expect("invalid string in env"),
-                    )
-                })
-                .collect::<Vec<_>>(),
-            rootless,
-        )?)
+        .process(
+            configure_process(
+                &request.command_args,
+                &request.working_dir,
+                request
+                    .environment_vars
+                    .iter()
+                    .map(|e| {
+                        (
+                            e.key.as_str(),
+                            // TODO: decide what to do with non-bytes env values
+                            String::from_utf8(e.value.to_vec()).expect("invalid string in env"),
+                        )
+                    })
+                    .collect::<Vec<_>>(),
+                rootless,
+            )
+            .map_err(SpecError::OciError)?,
+        )
         .linux(configure_linux(allow_network, rootless)?)
         .root(
             oci_spec::runtime::RootBuilder::default()
                 .path("root")
                 .readonly(true)
-                .build()?,
+                .build()
+                .map_err(SpecError::OciError)?,
         )
         .hostname("localhost")
-        .mounts(configure_mounts(
-            rootless,
-            allow_network,
-            request.scratch_paths.iter().map(|e| e.as_path()),
-            request.inputs.iter(),
-            &request.inputs_dir,
-            ro_host_mounts,
-        )?)
+        .mounts(
+            configure_mounts(
+                rootless,
+                allow_network,
+                request.scratch_paths.iter().map(|e| e.as_path()),
+                request.inputs.iter(),
+                &request.inputs_dir,
+                ro_host_mounts,
+            )
+            .map_err(SpecError::OciError)?,
+        )
         .build()
+        .map_err(SpecError::OciError)
 }
 
 /// Return the Process part of the OCI Runtime spec.
@@ -162,7 +181,7 @@ fn configure_process<'a>(
 fn configure_linux(
     allow_network: bool,
     rootless: bool,
-) -> Result<oci_spec::runtime::Linux, OciSpecError> {
+) -> Result<oci_spec::runtime::Linux, SpecError> {
     let mut linux = oci_spec::runtime::Linux::default();
 
     // explicitly set namespaces, depending on allow_network.
@@ -187,7 +206,8 @@ fn configure_linux(
         namespace_types
             .into_iter()
             .map(|e| LinuxNamespaceBuilder::default().typ(e).build())
-            .collect::<Result<Vec<LinuxNamespace>, _>>()?
+            .collect::<Result<Vec<LinuxNamespace>, _>>()
+            .map_err(SpecError::OciError)?
     }));
 
     linux.set_masked_paths(Some(
@@ -217,6 +237,35 @@ fn configure_linux(
         .map(|e| e.to_string())
         .collect::<Vec<_>>(),
     ));
+    let info = SubordinateInfo::for_effective_user().map_err(SpecError::SubordinateError)?;
+    linux.set_uid_mappings(Some(vec![
+        LinuxIdMappingBuilder::default()
+            .host_id(info.uid)
+            .container_id(0_u32)
+            .size(1_u32)
+            .build()
+            .unwrap(),
+        LinuxIdMappingBuilder::default()
+            .host_id(info.subuid)
+            .container_id(1000_u32)
+            .size(1_u32)
+            .build()
+            .unwrap(),
+    ]));
+    linux.set_gid_mappings(Some(vec![
+        LinuxIdMappingBuilder::default()
+            .host_id(info.gid)
+            .container_id(0_u32)
+            .size(1_u32)
+            .build()
+            .unwrap(),
+        LinuxIdMappingBuilder::default()
+            .host_id(info.subgid)
+            .container_id(100_u32)
+            .size(1_u32)
+            .build()
+            .unwrap(),
+    ]));
 
     Ok(linux)
 }

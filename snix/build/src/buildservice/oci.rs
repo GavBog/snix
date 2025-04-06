@@ -1,6 +1,5 @@
 use anyhow::Context;
 use bstr::BStr;
-use oci_spec::runtime::{LinuxIdMapping, LinuxIdMappingBuilder};
 use snix_castore::{
     blobservice::BlobService,
     directoryservice::DirectoryService,
@@ -29,11 +28,6 @@ pub struct OCIBuildService<BS, DS> {
     /// Root path in which all bundles are created in
     bundle_root: PathBuf,
 
-    /// uid mappings to set up for the workloads
-    uid_mappings: Vec<LinuxIdMapping>,
-    /// uid mappings to set up for the workloads
-    gid_mappings: Vec<LinuxIdMapping>,
-
     /// Handle to a [BlobService], used by filesystems spawned during builds.
     blob_service: BS,
     /// Handle to a [DirectoryService], used by filesystems spawned during builds.
@@ -49,40 +43,11 @@ impl<BS, DS> OCIBuildService<BS, DS> {
         // We map root inside the container to the uid/gid this is running at,
         // and allocate one for uid 1000 into the container from the range we
         // got in /etc/sub{u,g}id.
-        // TODO: actually read uid, and /etc/subuid. Maybe only when we try to build?
         // FUTUREWORK: use different uids?
         Self {
             bundle_root,
             blob_service,
             directory_service,
-            uid_mappings: vec![
-                LinuxIdMappingBuilder::default()
-                    .host_id(1000_u32)
-                    .container_id(0_u32)
-                    .size(1_u32)
-                    .build()
-                    .unwrap(),
-                LinuxIdMappingBuilder::default()
-                    .host_id(100000_u32)
-                    .container_id(1000_u32)
-                    .size(1_u32)
-                    .build()
-                    .unwrap(),
-            ],
-            gid_mappings: vec![
-                LinuxIdMappingBuilder::default()
-                    .host_id(100_u32)
-                    .container_id(0_u32)
-                    .size(1_u32)
-                    .build()
-                    .unwrap(),
-                LinuxIdMappingBuilder::default()
-                    .host_id(100000_u32)
-                    .container_id(100_u32)
-                    .size(1_u32)
-                    .build()
-                    .unwrap(),
-            ],
             concurrent_builds: tokio::sync::Semaphore::new(MAX_CONCURRENT_BUILDS),
         }
     }
@@ -108,11 +73,7 @@ where
             .context("failed to create spec")
             .map_err(std::io::Error::other)?;
 
-        let mut linux = runtime_spec.linux().clone().unwrap();
-
-        // edit the spec, we need to setup uid/gid mappings.
-        linux.set_uid_mappings(Some(self.uid_mappings.clone()));
-        linux.set_gid_mappings(Some(self.gid_mappings.clone()));
+        let linux = runtime_spec.linux().clone().unwrap();
 
         runtime_spec.set_linux(Some(linux));
 
