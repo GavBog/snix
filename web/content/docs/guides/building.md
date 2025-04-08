@@ -36,7 +36,6 @@ $ git clone https://git.snix.dev/snix/snix.git
 ### Interactive development
 ```console
 $ direnv allow
-$ mg shell //snix:shell
 ```
 
 This provides all the necessary tools and dependencies to interactively build
