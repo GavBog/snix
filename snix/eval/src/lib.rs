@@ -208,7 +208,7 @@ impl<'co, 'ro, 'env, IO> EvaluationBuilder<'co, 'ro, 'env, IO> {
     ///
     /// # Panics
     ///
-    /// Panics if this evaluation builder has had globals set via [`with_globals`]
+    /// Panics if this evaluation builder has had globals set via [`Self::with_globals`]
     pub fn add_builtins<I>(mut self, builtins: I) -> Self
     where
         I: IntoIterator<Item = (&'static str, Value)>,
@@ -222,7 +222,7 @@ impl<'co, 'ro, 'env, IO> EvaluationBuilder<'co, 'ro, 'env, IO> {
     ///
     /// # Panics
     ///
-    /// Panics if this evaluation builder has had globals set via [`with_globals`]
+    /// Panics if this evaluation builder has had globals set via [`Self::with_globals`]
     pub fn add_src_builtin(mut self, name: &'static str, src: &'static str) -> Self {
         self.builtins_mut().src_builtins.push((name, src));
         self
@@ -231,7 +231,7 @@ impl<'co, 'ro, 'env, IO> EvaluationBuilder<'co, 'ro, 'env, IO> {
     /// Set the globals for this evaluation builder to a previously-constructed globals map.
     /// Intended to allow sharing globals across multiple evaluations (eg for the REPL).
     ///
-    /// Discards any builtins previously configured via [`add_builtins`] and [`add_src_builtins`].
+    /// Discards any builtins previously configured via [`Self::add_builtins`] and [`Self::add_src_builtin`].
     /// If either of those methods is called on the evaluation builder after this one, they will
     /// panic.
     pub fn with_globals(self, globals: Rc<GlobalsMap>) -> Self {

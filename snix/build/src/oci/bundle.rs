@@ -10,7 +10,7 @@ use anyhow::{bail, Context};
 use tracing::{debug, instrument};
 
 /// Produce an OCI bundle in a given path.
-/// Check [make_spec] for a description about the paths produced.
+/// Check [super::spec::make_spec] for a description about the paths produced.
 #[instrument(err)]
 pub(crate) fn make_bundle<'a>(
     request: &BuildRequest,

@@ -229,7 +229,7 @@ impl IngestionEntryGraph {
         Ok(index)
     }
 
-    /// Traverses the graph in DFS post order and collects the entries into a [Vec<IngestionEntry>].
+    /// Traverses the graph in DFS post order and collects the entries into a [`Vec<IngestionEntry>`].
     ///
     /// Unreachable parts of the graph are not included in the result.
     pub fn finalize(self) -> Result<Vec<IngestionEntry>, Error> {

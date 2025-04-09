@@ -191,7 +191,7 @@ impl From<crate::Directory> for Directory {
 }
 
 impl Entry {
-    /// Converts a proto [Node] to a [crate::Node], and splits off the name as a [PathComponent].
+    /// Converts a proto [Entry] to a [crate::Node], and splits off the name as a [PathComponent].
     pub fn try_into_name_and_node(self) -> Result<(PathComponent, crate::Node), DirectoryError> {
         let (name_bytes, node) = self.try_into_unchecked_name_and_checked_node()?;
         Ok((
@@ -200,7 +200,7 @@ impl Entry {
         ))
     }
 
-    /// Converts a proto [Node] to a [crate::Node], and splits off the name as a
+    /// Converts a proto [Entry] to a [crate::Node], and splits off the name as a
     /// [bytes::Bytes] without doing any checking of it.
     fn try_into_unchecked_name_and_checked_node(
         self,
@@ -245,7 +245,7 @@ impl Entry {
         }
     }
 
-    /// Converts a proto [Node] to a [crate::Node], and splits off the name and returns it as a
+    /// Converts a proto [Entry] to a [crate::Node], and splits off the name and returns it as a
     /// [bytes::Bytes].
     ///
     /// The name must be empty.

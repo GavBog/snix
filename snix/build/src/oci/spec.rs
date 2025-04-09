@@ -13,7 +13,7 @@ use super::scratch_name;
 /// While there's no IO occuring in this function, the generated spec contains
 /// path references relative to the "bundle location".
 /// Due to overlayfs requiring its layers to be absolute paths, we also need a
-/// [bundle_dir] parameter, pointing to the location of the bundle dir itself.
+/// bundle_dir parameter, pointing to the location of the bundle dir itself.
 ///
 /// The paths used in the spec are the following (relative to a "bundle root"):
 ///

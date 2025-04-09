@@ -134,7 +134,7 @@ where
 /// Holds a list of blake3 digest for individual chunks (and their sizes).
 /// Is able to construct a Reader that seeked to a certain offset, which
 /// is useful to construct a BlobReader (that implements AsyncSeek).
-/// - the current chunk index, and a Custor<Vec<u8>> holding the data of that chunk.
+/// - the current chunk index, and a `Custor<Vec<u8>>` holding the data of that chunk.
 struct ChunkedBlob<BS> {
     blob_service: BS,
     chunks: Vec<(u64, u64, B3Digest)>,

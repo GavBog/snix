@@ -12,8 +12,8 @@ pub enum InodeData {
 }
 
 /// This encodes the two different states of [InodeData::Directory].
-/// Either the data still is sparse (we only saw a [castorepb::DirectoryNode],
-/// but didn't fetch the [castorepb::Directory] struct yet, or we processed a
+/// Either the data still is sparse (we only saw a [crate::Node::Directory],
+/// but didn't fetch the [crate::Directory] struct yet, or we processed a
 /// lookup and did fetch the data.
 #[derive(Clone, Debug)]
 pub enum DirectoryInodeData {

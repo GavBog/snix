@@ -49,7 +49,7 @@ impl Debug for SuspendedNative {
 /// Internal representation of the different states of a thunk.
 ///
 /// Upvalues must be finalised before leaving the initial state
-/// (Suspended or RecursiveClosure).  The [`value()`] function may
+/// (Suspended or RecursiveClosure).  The [`Thunk::value()`] function may
 /// not be called until the thunk is in the final state (Evaluated).
 #[derive(Debug)]
 enum ThunkRepr {

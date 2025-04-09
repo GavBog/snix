@@ -133,7 +133,7 @@ pub(crate) fn get_all_inputs<'a>(
     }
 }
 
-/// Takes a [Derivation] and turns it into a [buildservice::BuildRequest].
+/// Takes a [Derivation] and turns it into a [snix_build::buildservice::BuildRequest].
 /// It assumes the Derivation has been validated, and all referenced output paths are present in `inputs`.
 pub(crate) fn derivation_to_build_request(
     derivation: &Derivation,

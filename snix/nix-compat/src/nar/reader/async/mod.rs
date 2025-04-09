@@ -36,9 +36,9 @@ pub enum Node<'a, 'r: 'a> {
 }
 
 impl<'a, 'r: 'a> Node<'a, 'r> {
-    /// Start reading a [Node], matching the next [wire::Node].
+    /// Start reading a [Node], matching the next [nar::wire::Node].
     ///
-    /// Reading the terminating [wire::TOK_PAR] is done immediately for [Node::Symlink],
+    /// Reading the terminating [nar::wire::TOK_PAR] is done immediately for [Node::Symlink],
     /// but is otherwise left to [DirReader] or [BytesReader].
     async fn new(reader: &'a mut Reader<'r>) -> io::Result<Self> {
         Ok(match read::tag(reader).await? {

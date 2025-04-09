@@ -63,7 +63,7 @@ impl NixContext {
     /// For internal consumers, we let people observe
     /// if the [NixContext] is actually empty or not
     /// to decide whether they want to skip the allocation
-    /// of a full blown [HashSet].
+    /// of a full blown [std::collections::HashSet].
     pub(crate) fn is_empty(&self) -> bool {
         self.0.is_empty()
     }

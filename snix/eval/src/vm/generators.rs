@@ -35,7 +35,7 @@ pub(crate) enum GeneratorState {
 /// cases, the VM will suspend the generator when receiving a message
 /// and enter some other frame to process the request.
 ///
-/// Responses are returned to generators via the [`GeneratorResponse`] type.
+/// Responses are returned to generators via the [`VMResponse`] type.
 pub enum VMRequest {
     /// Request that the VM forces this value. This message is first sent to the
     /// VM with the unforced value, then returned to the generator with the
@@ -114,8 +114,7 @@ pub enum VMRequest {
     /// Request a reasonable span from the VM.
     Span,
 
-    /// Request evaluation of `builtins.tryEval` from the VM. See
-    /// [`VM::catch_result`] for an explanation of how this works.
+    /// Request evaluation of `builtins.tryEval` from the VM.
     TryForce(Value),
 
     /// Request the VM for the file type of the given path.
@@ -199,7 +198,7 @@ pub enum VMResponse {
     /// VM response with a span to use at the current point.
     Span(Span),
 
-    /// [std::io::Reader] produced by the VM in response to some IO operation.
+    /// Reader produced by the VM in response to some IO operation.
     Reader(Box<dyn std::io::Read>),
 
     FileType(FileType),

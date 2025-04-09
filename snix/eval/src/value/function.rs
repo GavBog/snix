@@ -61,8 +61,7 @@ pub struct Lambda {
 
     /// Number of upvalues which the code in this Lambda closes
     /// over, and which need to be initialised at
-    /// runtime.  Information about the variables is emitted using
-    /// data-carrying opcodes (see [`crate::opcode::OpCode::DataStackIdx`]).
+    /// runtime.
     pub(crate) upvalue_count: usize,
     pub(crate) formals: Option<Formals>,
 }

@@ -39,7 +39,7 @@ pub struct NixHTTPPathInfoService<BS, DS> {
     blob_service: BS,
     directory_service: DS,
 
-    /// An optional list of [narinfo::PubKey].
+    /// An optional list of [narinfo::VerifyingKey].
     /// If set, the .narinfo files received need to have correct signature by at least one of these.
     public_keys: Option<Vec<narinfo::VerifyingKey>>,
 }
@@ -276,7 +276,7 @@ pub struct NixHTTPPathInfoServiceConfig {
     blob_service: String,
     directory_service: String,
     #[serde(default)]
-    /// An optional list of [narinfo::PubKey].
+    /// An optional list of [narinfo::VerifyingKey].
     /// If set, the .narinfo files received need to have correct signature by at least one of these.
     public_keys: Option<Vec<String>>,
 }

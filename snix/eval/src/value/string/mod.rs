@@ -714,7 +714,7 @@ impl NixString {
     }
 
     /// Iterates over all context elements.
-    /// See [iter_plain], [iter_derivation], [iter_single_outputs].
+    /// See [context::NixContext::iter_plain], [context::NixContext::iter_derivation], [context::NixContext::iter_single_outputs].
     pub fn iter_context(&self) -> impl Iterator<Item = &NixContext> {
         self.context().into_iter()
     }

@@ -16,7 +16,7 @@ use tonic::async_trait;
 use tracing::{instrument, trace, warn, Span};
 
 /// There should not be more than 10 MiB in a single cell.
-/// https://cloud.google.com/bigtable/docs/schema-design#cells
+/// <https://cloud.google.com/bigtable/docs/schema-design#cells>
 const CELL_SIZE_LIMIT: u64 = 10 * 1024 * 1024;
 
 /// Provides a [PathInfoService] implementation using
