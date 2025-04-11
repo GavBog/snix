@@ -36,6 +36,17 @@ fn eval_merge_attrs(c: &mut Criterion) {
             interpret(black_box(&expr));
         })
     });
+
+    c.bench_function("merge small attrs with large attrs", |b| {
+        let large_attrs = format!(
+            "{{{}}}",
+            (0..10000).map(|n| format!("a{n} = {n};")).join(" ")
+        );
+        let expr = format!("{{ c = 3 }} // {large_attrs}");
+        b.iter(move || {
+            interpret(black_box(&expr));
+        })
+    });
 }
 
 fn eval_intersect_attrs(c: &mut Criterion) {
