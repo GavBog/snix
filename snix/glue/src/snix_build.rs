@@ -6,13 +6,17 @@ use std::future::Future;
 use std::path::PathBuf;
 
 use async_stream::try_stream;
+use bstr::BString;
 use bytes::Bytes;
 use futures::Stream;
+use nix_compat::derivation::Output;
+use nix_compat::store_path::hash_placeholder;
 use nix_compat::{derivation::Derivation, nixbase32, store_path::StorePath};
 use sha2::{Digest, Sha256};
 use snix_build::buildservice::{AdditionalFile, BuildConstraints, BuildRequest, EnvVar};
 use snix_castore::Node;
 use snix_store::path_info::PathInfo;
+use tracing::warn;
 
 use crate::known_paths::KnownPaths;
 
@@ -95,7 +99,14 @@ pub(crate) fn derivation_to_build_request(
     // produce command_args, which is builder and arguments in a Vec.
     let mut command_args: Vec<String> = Vec::with_capacity(derivation.arguments.len() + 1);
     command_args.push(derivation.builder.clone());
-    command_args.extend_from_slice(&derivation.arguments);
+    command_args.extend_from_slice(
+        derivation
+            .arguments
+            .iter()
+            .map(|arg| replace_placeholders(arg, &derivation.outputs))
+            .collect::<Vec<String>>()
+            .as_slice(),
+    );
 
     // Produce environment_vars and additional files.
     // We use a BTreeMap while producing, and only realize the resulting Vec
@@ -113,12 +124,12 @@ pub(crate) fn derivation_to_build_request(
     // extend / overwrite with the keys set in the derivation environment itself.
     // TODO: check if this order is correct, and environment vars set in the
     // *Derivation actually* have priority.
-    environment_vars.extend(
-        derivation
-            .environment
-            .iter()
-            .map(|(k, v)| (k.clone(), Bytes::from(v.to_vec()))),
-    );
+    environment_vars.extend(derivation.environment.iter().map(|(k, v)| {
+        (
+            k.clone(),
+            Bytes::from(replace_placeholders_b(v, &derivation.outputs).to_vec()),
+        )
+    }));
 
     handle_pass_as_file(&mut environment_vars, &mut additional_files)?;
 
@@ -247,9 +258,47 @@ fn calculate_pass_as_file_env(k: &str) -> (String, String) {
     )
 }
 
+/// Replace all references to `placeholder outputName` inside the derivation
+fn replace_placeholders(s: &str, outputs: &BTreeMap<String, Output>) -> String {
+    let mut s = s.to_owned();
+    for (out_name, output) in outputs {
+        let placeholder = hash_placeholder(out_name.as_str());
+        if let Some(path) = output.path.as_ref() {
+            s = s.replace(&placeholder, &path.to_absolute_path());
+        } else {
+            warn!(
+                output.name = out_name,
+                "output should have a path during placeholder replacement"
+            );
+        }
+    }
+    s
+}
+
+/// Replace all references to `placeholder outputName` inside the derivation
+fn replace_placeholders_b(s: &BString, outputs: &BTreeMap<String, Output>) -> BString {
+    use bstr::ByteSlice;
+    let mut s = s.clone();
+    for (out_name, output) in outputs {
+        let placeholder = hash_placeholder(out_name.as_str());
+        if let Some(path) = output.path.as_ref() {
+            s = s
+                .replace(placeholder.as_bytes(), path.to_absolute_path().as_bytes())
+                .into();
+        } else {
+            warn!(
+                output.name = out_name,
+                "output should have a path during placeholder replacement"
+            );
+        }
+    }
+    s
+}
+
 #[cfg(test)]
 mod test {
     use bytes::Bytes;
+    use nix_compat::store_path::hash_placeholder;
     use nix_compat::{derivation::Derivation, store_path::StorePath};
     use snix_castore::fixtures::DUMMY_DIGEST;
     use snix_castore::{Node, PathComponent};
@@ -351,6 +400,75 @@ mod test {
                     "fhaj6gmwns62s6ypkcldbaj2ybvkhx3p".into(),
                     "mp57d33657rf34lzvlbpfa1gjfv5gmpg".into()
                 ],
+            },
+            build_request
+        );
+    }
+
+    #[test]
+    fn test_drv_with_placeholders_to_build_request() {
+        let aterm_bytes =
+            include_bytes!("tests/18m7y1d025lqgrzx8ypnhjbvq23z2kda-with-placeholders.drv");
+        let derivation = Derivation::from_aterm_bytes(aterm_bytes).expect("must parse");
+
+        let build_request =
+            derivation_to_build_request(&derivation, &BTreeMap::from([])).expect("must succeed");
+        let mut expected_environment_vars = vec![
+            EnvVar {
+                key: "FOO".into(),
+                value: "/nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".into(),
+            },
+            EnvVar {
+                key: "BAR".into(),
+                // Non existent output placeholders should not get replaced.
+                value: hash_placeholder("non-existent").into(),
+            },
+            EnvVar {
+                key: "builder".into(),
+                value: "/bin/sh".into(),
+            },
+            EnvVar {
+                key: "name".into(),
+                value: "with-placeholders".into(),
+            },
+            EnvVar {
+                key: "out".into(),
+                value: "/nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".into(),
+            },
+            EnvVar {
+                key: "system".into(),
+                value: "x86_64-linux".into(),
+            },
+        ];
+        expected_environment_vars.extend(NIX_ENVIRONMENT_VARS.iter().map(|(k, v)| EnvVar {
+            key: k.to_string(),
+            value: Bytes::from_static(v.as_bytes()),
+        }));
+
+        expected_environment_vars.sort_unstable_by_key(|e| e.key.to_owned());
+        assert_eq!(
+            BuildRequest {
+                command_args: vec![
+                    "/bin/sh".into(),
+                    "-c".into(),
+                    "/nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".into(),
+                    // Non existent output placeholders should not get replaced.
+                    hash_placeholder("non-existent"),
+                ],
+                outputs: vec![
+                    "nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".into()
+                ],
+                environment_vars: expected_environment_vars,
+                inputs: BTreeMap::new(),
+                inputs_dir: "nix/store".into(),
+                constraints: HashSet::from([
+                    BuildConstraints::System(derivation.system.clone()),
+                    BuildConstraints::ProvideBinSh
+                ]),
+                additional_files: vec![],
+                working_dir: "build".into(),
+                scratch_paths: vec!["build".into(), "nix/store".into()],
+                refscan_needles: vec!["dgapb8kh5gis4w7hzfl5725sx5gam0nz".into()],
             },
             build_request
         );
