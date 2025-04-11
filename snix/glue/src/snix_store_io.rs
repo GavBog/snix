@@ -1,10 +1,9 @@
 //! This module provides an implementation of EvalIO talking to snix-store.
-use futures::{StreamExt, TryStreamExt};
+use futures::TryStreamExt;
 use nix_compat::{nixhash::CAHash, store_path::StorePath};
 use snix_build::buildservice::BuildService;
 use snix_eval::{EvalIO, FileType, StdIO};
 use snix_store::nar::NarCalculationService;
-use std::collections::BTreeMap;
 use std::{
     cell::RefCell,
     io,
@@ -100,24 +99,24 @@ impl SnixStoreIO {
     /// In case there is no PathInfo yet, this means we need to build it
     /// (which currently is stubbed out still).
     #[instrument(skip(self, store_path), fields(store_path=%store_path, indicatif.pb_show=tracing::field::Empty), ret(level = Level::TRACE), err(level = Level::TRACE))]
-    async fn store_path_to_node(
+    async fn store_path_to_path_info(
         &self,
         store_path: &StorePath<String>,
         sub_path: &Path,
-    ) -> io::Result<Option<Node>> {
+    ) -> io::Result<Option<PathInfo>> {
         // Find the root node for the store_path.
         // It asks the PathInfoService first, but in case there was a Derivation
         // produced that would build it, fall back to triggering the build.
         // To populate the input nodes, it might recursively trigger builds of
         // its dependencies too.
-        let root_node = match self
+        let mut path_info = match self
             .path_info_service
             .as_ref()
             .get(*store_path.digest())
             .await?
         {
             // TODO: use stricter typed BuildRequest here.
-            Some(path_info) => path_info.node,
+            Some(path_info) => path_info,
             // If there's no PathInfo found, this normally means we have to
             // trigger the build (and insert into PathInfoService, after
             // reference scanning).
@@ -140,7 +139,7 @@ impl SnixStoreIO {
 
                 match maybe_fetch {
                     Some((name, fetch)) => {
-                        let (sp, root_node) = self
+                        let (sp, path_info) = self
                             .fetcher
                             .ingest_and_persist(&name, fetch)
                             .await
@@ -154,7 +153,7 @@ impl SnixStoreIO {
                             "store path returned from fetcher must match store path we have in fetchers"
                         );
 
-                        root_node
+                        path_info
                     }
                     None => {
                         // Look up the derivation for this output path.
@@ -177,36 +176,19 @@ impl SnixStoreIO {
                         span.pb_set_style(&snix_tracing::PB_SPINNER_STYLE);
                         span.pb_set_message(&format!("⏳Waiting for inputs {}", &store_path));
 
-                        // Maps from the index in refscan_needles to the full store path
-                        // Used to map back to the actual store path from the found needles
-                        // Importantly, this must match the order of the needles generated in derivation_to_build_request
-                        let inputs =
-                            crate::snix_build::get_all_inputs(&drv, &self.known_paths.borrow())
-                                .map(StorePath::to_owned)
-                                .collect::<Vec<_>>();
-
                         // derivation_to_build_request needs castore nodes for all inputs.
                         // Provide them, which means, here is where we recursively build
                         // all dependencies.
-                        let resolved_inputs: BTreeMap<StorePath<String>, Node> =
-                            futures::stream::iter(inputs.iter())
-                                .then(|input_source| {
-                                    Box::pin({
-                                        let input_source = input_source.clone();
-                                        async move {
-                                            let node = self
-                                                .store_path_to_node(&input_source, Path::new(""))
-                                                .await?;
-                                            if let Some(node) = node {
-                                                Ok((input_source, node))
-                                            } else {
-                                                Err(io::Error::other("no node produced"))
-                                            }
-                                        }
-                                    })
+                        let resolved_inputs = {
+                            let known_paths = &self.known_paths.borrow();
+                            crate::snix_build::get_all_inputs(&drv, known_paths, |path| {
+                                Box::pin(async move {
+                                    self.store_path_to_path_info(&path, Path::new("")).await
                                 })
-                                .try_collect()
-                                .await?;
+                            })
+                        }
+                        .try_collect()
+                        .await?;
 
                         span.pb_set_message(&format!("🔨Building {}", &store_path));
 
@@ -221,6 +203,7 @@ impl SnixStoreIO {
                             .await
                             .map_err(|e| std::io::Error::new(io::ErrorKind::Other, e))?;
 
+                        let mut out_path_info: Option<PathInfo> = None;
                         // For each output, insert a PathInfo.
                         for ((output, output_needles), drv_output) in build_result
                             .outputs
@@ -231,7 +214,7 @@ impl SnixStoreIO {
                             .zip(build_result.outputs_needles.iter())
                             .zip(drv.outputs.iter())
                         {
-                            let (_, output_node) = output
+                            let (output_name, output_node) = output
                                 .clone()
                                 .try_into_name_and_node()
                                 .expect("invalid node");
@@ -300,23 +283,15 @@ impl SnixStoreIO {
                             };
 
                             self.path_info_service
-                                .put(path_info)
+                                .put(path_info.clone())
                                 .await
                                 .map_err(|e| std::io::Error::new(io::ErrorKind::Other, e))?;
+                            if output_name.as_ref() == store_path.to_string().as_bytes() {
+                                out_path_info = Some(path_info);
+                            }
                         }
 
-                        // find the output for the store path requested
-                        let s = store_path.to_string();
-
-                        build_result
-                            .outputs
-                            .into_iter()
-                            .map(|e| e.try_into_name_and_node().expect("invalid node"))
-                            .find(|(output_name, _output_node)| {
-                                output_name.as_ref() == s.as_bytes()
-                            })
-                            .expect("build didn't produce the store path")
-                            .1
+                        out_path_info.ok_or(io::Error::other("build didn't produce store path"))?
                     }
                 }
             }
@@ -326,9 +301,15 @@ impl SnixStoreIO {
         // We convert sub_path to the castore model here.
         let sub_path = snix_castore::PathBuf::from_host_path(sub_path, true)?;
 
-        directoryservice::descend_to(&self.directory_service, root_node, sub_path)
-            .await
-            .map_err(|e| std::io::Error::new(io::ErrorKind::Other, e))
+        Ok(
+            directoryservice::descend_to(&self.directory_service, path_info.node.clone(), sub_path)
+                .await
+                .map_err(|e| std::io::Error::new(io::ErrorKind::Other, e))?
+                .map(|node| {
+                    path_info.node = node;
+                    path_info
+                }),
+        )
     }
 }
 
@@ -338,7 +319,7 @@ impl EvalIO for SnixStoreIO {
         if let Ok((store_path, sub_path)) = StorePath::from_absolute_path_full(path) {
             if self
                 .tokio_handle
-                .block_on(self.store_path_to_node(&store_path, sub_path))?
+                .block_on(self.store_path_to_path_info(&store_path, sub_path))?
                 .is_some()
             {
                 Ok(true)
@@ -356,12 +337,12 @@ impl EvalIO for SnixStoreIO {
     #[instrument(skip(self), err)]
     fn open(&self, path: &Path) -> io::Result<Box<dyn io::Read>> {
         if let Ok((store_path, sub_path)) = StorePath::from_absolute_path_full(path) {
-            if let Some(node) = self
+            if let Some(path_info) = self
                 .tokio_handle
-                .block_on(async { self.store_path_to_node(&store_path, sub_path).await })?
+                .block_on(async { self.store_path_to_path_info(&store_path, sub_path).await })?
             {
                 // depending on the node type, treat open differently
-                match node {
+                match path_info.node {
                     Node::Directory { .. } => {
                         // This would normally be a io::ErrorKind::IsADirectory (still unstable)
                         Err(io::Error::new(
@@ -410,11 +391,11 @@ impl EvalIO for SnixStoreIO {
     #[instrument(skip(self), ret(level = Level::TRACE), err)]
     fn file_type(&self, path: &Path) -> io::Result<FileType> {
         if let Ok((store_path, sub_path)) = StorePath::from_absolute_path_full(path) {
-            if let Some(node) = self
+            if let Some(path_info) = self
                 .tokio_handle
-                .block_on(async { self.store_path_to_node(&store_path, sub_path).await })?
+                .block_on(async { self.store_path_to_path_info(&store_path, sub_path).await })?
             {
-                match node {
+                match path_info.node {
                     Node::Directory { .. } => Ok(FileType::Directory),
                     Node::File { .. } => Ok(FileType::Regular),
                     Node::Symlink { .. } => Ok(FileType::Symlink),
@@ -430,11 +411,11 @@ impl EvalIO for SnixStoreIO {
     #[instrument(skip(self), ret(level = Level::TRACE), err)]
     fn read_dir(&self, path: &Path) -> io::Result<Vec<(bytes::Bytes, FileType)>> {
         if let Ok((store_path, sub_path)) = StorePath::from_absolute_path_full(path) {
-            if let Some(node) = self
+            if let Some(path_info) = self
                 .tokio_handle
-                .block_on(async { self.store_path_to_node(&store_path, sub_path).await })?
+                .block_on(async { self.store_path_to_path_info(&store_path, sub_path).await })?
             {
-                match node {
+                match path_info.node {
                     Node::Directory { digest, .. } => {
                         // fetch the Directory itself.
                         if let Some(directory) = self.tokio_handle.block_on({

@@ -2,13 +2,17 @@
 //! [nix_compat::derivation::Derivation] to [snix_build::buildservice::BuildRequest].
 
 use std::collections::{BTreeMap, HashSet, VecDeque};
+use std::future::Future;
 use std::path::PathBuf;
 
+use async_stream::try_stream;
 use bytes::Bytes;
+use futures::Stream;
 use nix_compat::{derivation::Derivation, nixbase32, store_path::StorePath};
 use sha2::{Digest, Sha256};
 use snix_build::buildservice::{AdditionalFile, BuildConstraints, BuildRequest, EnvVar};
 use snix_castore::Node;
+use snix_store::path_info::PathInfo;
 
 use crate::known_paths::KnownPaths;
 
@@ -29,107 +33,54 @@ const NIX_ENVIRONMENT_VARS: [(&str, &str); 12] = [
     ("TMPDIR", "/build"),
 ];
 
-/// Bfs queue needs to track both leaf store paths as well as
-/// input derivation outputs.
-#[derive(Eq, Hash, PartialEq, Clone)]
-enum DerivationQueueItem<'a> {
-    /// Leaf input of a derivation
-    InputSource(&'a StorePath<String>),
-    /// Derivation input that can transitively produce more paths
-    /// that are needed for a given output.
-    InputDerivation {
-        drv_path: &'a StorePath<String>,
-        output: &'a String,
-    },
-}
-
-/// Iterator that yields store paths in a breadth-first order.
-/// It is used to get all inputs for a derivation and the needles for refscanning.
-struct BfsDerivationInputs<'a> {
-    queue: VecDeque<DerivationQueueItem<'a>>,
-    visited: HashSet<DerivationQueueItem<'a>>,
-    known_paths: &'a KnownPaths,
-}
-
-impl<'a> Iterator for BfsDerivationInputs<'a> {
-    type Item = &'a StorePath<String>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some(item) = self.queue.pop_front() {
-            if !self.visited.insert(item.clone()) {
-                continue;
-            }
-            match item {
-                DerivationQueueItem::InputSource(path) => {
-                    return Some(path);
-                }
-                DerivationQueueItem::InputDerivation { drv_path, output } => {
-                    let drv = self
-                        .known_paths
-                        .get_drv_by_drvpath(drv_path)
-                        .expect("drv Bug!!!");
-                    let output_path = drv
-                        .outputs
-                        .get(output)
-                        .expect("No output bug!")
-                        .path
-                        .as_ref()
-                        .expect("output has no store path");
-                    if self
-                        .visited
-                        .insert(DerivationQueueItem::InputSource(output_path))
-                    {
-                        self.queue.extend(
-                            drv.input_sources
-                                .iter()
-                                .map(DerivationQueueItem::InputSource)
-                                .chain(drv.input_derivations.iter().flat_map(
-                                    |(drv_path, outs)| {
-                                        outs.iter().map(move |output| {
-                                            DerivationQueueItem::InputDerivation {
-                                                drv_path,
-                                                output,
-                                            }
-                                        })
-                                    },
-                                )),
-                        );
-                    }
-                    return Some(output_path);
-                }
-            }
-        }
-        None
-    }
-}
-
-/// Get an iterator of a transitive input closure for a derivation.
+/// Get a stream of a transitive input closure for a derivation.
 /// It's used for input propagation into the build and nixbase32 needle propagation
 /// for build output refscanning.
-pub(crate) fn get_all_inputs<'a>(
+pub(crate) fn get_all_inputs<'a, F, Fut>(
     derivation: &'a Derivation,
     known_paths: &'a KnownPaths,
-) -> impl Iterator<Item = &'a StorePath<String>> {
-    BfsDerivationInputs {
-        queue: derivation
-            .input_sources
-            .iter()
-            .map(DerivationQueueItem::InputSource)
-            .chain(
-                derivation
-                    .input_derivations
-                    .iter()
-                    .flat_map(|(drv_path, outs)| {
-                        outs.iter()
-                            .map(move |output| DerivationQueueItem::InputDerivation {
-                                drv_path,
-                                output,
-                            })
-                    }),
-            )
-            .collect(),
-        visited: HashSet::new(),
-        known_paths,
+    get_path_info: F,
+) -> impl Stream<Item = Result<(StorePath<String>, Node), std::io::Error>>
+where
+    F: Fn(StorePath<String>) -> Fut,
+    Fut: Future<Output = std::io::Result<Option<PathInfo>>>,
+{
+    let mut visited: HashSet<StorePath<String>> = HashSet::new();
+    let mut queue: VecDeque<StorePath<String>> = derivation
+        .input_sources
+        .iter()
+        .cloned()
+        .chain(
+            derivation
+                .input_derivations
+                .iter()
+                .flat_map(|(drv_path, outs)| {
+                    let drv = known_paths.get_drv_by_drvpath(drv_path).expect("drv Bug!!");
+                    outs.iter().map(move |output| {
+                        drv.outputs
+                            .get(output)
+                            .expect("No output bug!")
+                            .path
+                            .as_ref()
+                            .expect("output has no store path")
+                            .clone()
+                    })
+                }),
+        )
+        .collect();
+    try_stream! {
+        while let Some(store_path) = queue.pop_front() {
+                let info = get_path_info(store_path).await?.ok_or(std::io::Error::other("path_info not present"))?;
+                    for reference in info.references {
+                        if visited.insert(reference.clone()) {
+                            queue.push_back(reference);
+                        }
+                    }
+
+                    yield (info.store_path, info.node);
+
+
+        }
     }
 }
 

@@ -14244,6 +14244,10 @@ rec {
             features = [ "tokio" "gzip" "bzip2" "xz" ];
           }
           {
+            name = "async-stream";
+            packageId = "async-stream";
+          }
+          {
             name = "bstr";
             packageId = "bstr";
           }

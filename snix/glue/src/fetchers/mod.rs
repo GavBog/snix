@@ -525,7 +525,7 @@ where
         &self,
         name: &'a str,
         fetch: Fetch,
-    ) -> Result<(StorePathRef<'a>, Node), FetcherError> {
+    ) -> Result<(StorePathRef<'a>, PathInfo), FetcherError> {
         // Fetch file, return the (unnamed) (File)Node of its contents, ca hash and filesize.
         let (node, ca_hash, size) = self.ingest(fetch).await?;
 
@@ -560,11 +560,11 @@ where
         };
 
         self.path_info_service
-            .put(path_info)
+            .put(path_info.clone())
             .await
             .map_err(|e| FetcherError::Io(e.into()))?;
 
-        Ok((store_path, node))
+        Ok((store_path, path_info))
     }
 }
 

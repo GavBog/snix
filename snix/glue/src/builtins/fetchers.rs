@@ -123,7 +123,7 @@ pub(crate) mod fetcher_builtins {
             }
             None => {
                 // If we don't have enough info, do the fetch now.
-                let (store_path, _root_node) = state
+                let (store_path, _path_info) = state
                     .tokio_handle
                     .block_on(async { state.fetcher.ingest_and_persist(&name, fetch).await })
                     .map_err(|e| ErrorKind::SnixError(Rc::new(e)))?;

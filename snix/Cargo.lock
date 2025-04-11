@@ -4329,6 +4329,7 @@ name = "snix-glue"
 version = "0.1.0"
 dependencies = [
  "async-compression",
+ "async-stream",
  "bstr",
  "bytes",
  "clap",
