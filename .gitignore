@@ -5,6 +5,9 @@ garbage/
 # Nix gcroot symlinks created by .envrc
 /.gcroots/*
 
+# Ignore direnv data
+.direnv
+
 # Ignore Nix result symlinks
 result
 result-*
