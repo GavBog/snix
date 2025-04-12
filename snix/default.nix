@@ -62,7 +62,7 @@ in
   # Shell, but with tools necessary to run the integration tests
   shell-integration = (import ./shell.nix { inherit pkgs; withIntegration = true; });
 
-  # Build the Rust documentation for publishing on docs.snix.dev.
+  # Build the Rust documentation for publishing on snix.dev/rustdoc.
   rust-docs = pkgs.stdenv.mkDerivation {
     inherit cargoDeps src;
     name = "snix-rust-docs";
