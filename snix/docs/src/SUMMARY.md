@@ -21,7 +21,6 @@
 - [Store API](./store/api.md)
 - [BlobStore Chunking](./castore/blobstore-chunking.md)
 - [BlobStore Protocol](./castore/blobstore-protocol.md)
-- [Why not git trees?](./castore/why-not-git-trees.md)
 
 # Nix
 - [Specification of the Nix Language](./language-spec.md)
