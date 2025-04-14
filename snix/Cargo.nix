@@ -13967,17 +13967,9 @@ rec {
             packageId = "axum-range";
           }
           {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
             name = "clap";
             packageId = "clap";
             features = [ "derive" ];
-          }
-          {
-            name = "data-encoding";
-            packageId = "data-encoding";
           }
           {
             name = "mime";
@@ -13990,10 +13982,6 @@ rec {
           {
             name = "path-clean";
             packageId = "path-clean";
-          }
-          {
-            name = "prost";
-            packageId = "prost";
           }
           {
             name = "snix-castore";

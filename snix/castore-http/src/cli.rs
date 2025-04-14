@@ -1,5 +1,5 @@
 use clap::Parser;
-use snix_castore::utils::ServiceUrlsGrpc;
+use snix_castore::{utils::ServiceUrlsGrpc, B3Digest};
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -10,13 +10,9 @@ pub struct CliArgs {
     // The castore services addresses
     #[clap(flatten)]
     pub service_addrs: ServiceUrlsGrpc,
-    /// The castore root node to serve, URL-safe base64-encoded
-    #[arg(
-        short,
-        long,
-        help = "The castore root node to serve, URL-safe base64-encoded"
-    )]
-    pub root_node: String,
+    /// The root directory digest to serve.
+    #[arg(short, long, help = "The root directory digest to serve")]
+    pub root_directory: B3Digest,
     /// The name of the file to serve if a client requests a directory e.g. index.html index.htm
     #[arg(
         short,
