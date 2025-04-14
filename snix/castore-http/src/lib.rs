@@ -81,13 +81,13 @@ pub async fn get_root_node_contents<BS: BlobService, DS: DirectoryService, S: As
                         {
                             match found_index_node {
                                 Node::File { digest, size, .. } => {
-                                    let found_index_file_path = found_index_file_path.to_string();
-                                    let found_index_file_path = path::Path::new(OsStr::from_bytes(
-                                        found_index_file_path.as_bytes(),
-                                    ));
+                                    let extension = found_index_file_path
+                                        .extension()
+                                        .and_then(|b| std::str::from_utf8(b).ok());
+
                                     return respond_file(
                                         blob_service,
-                                        Some(found_index_file_path),
+                                        extension,
                                         range_header,
                                         digest,
                                         *size,
@@ -111,11 +111,11 @@ pub async fn get_root_node_contents<BS: BlobService, DS: DirectoryService, S: As
                     Err(StatusCode::FORBIDDEN)
                 }
                 Node::File { digest, size, .. } => {
-                    let requested_path =
-                        path::Path::new(OsStr::from_bytes(requested_path.as_bytes()));
                     respond_file(
                         blob_service,
-                        Some(requested_path),
+                        requested_path
+                            .extension()
+                            .and_then(|b| std::str::from_utf8(b).ok()),
                         range_header,
                         &digest,
                         size,
@@ -221,7 +221,7 @@ pub async fn respond_directory_list(
 #[instrument(level = "trace", skip_all, fields(digest, size))]
 pub async fn respond_file<BS: BlobService>(
     blob_service: BS,
-    requested_path: Option<&path::Path>,
+    extension: Option<&str>,
     range_header: Option<TypedHeader<Range>>,
     digest: &B3Digest,
     size: u64,
@@ -238,9 +238,7 @@ pub async fn respond_file<BS: BlobService>(
             StatusCode::NOT_FOUND
         })?;
 
-    let mime_type = requested_path
-        .and_then(path::Path::extension)
-        .and_then(std::ffi::OsStr::to_str)
+    let mime_type = extension
         .and_then(|extension| mime_guess::from_ext(extension).first())
         .unwrap_or(mime::APPLICATION_OCTET_STREAM);
     match range_header {
