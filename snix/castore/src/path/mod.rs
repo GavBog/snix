@@ -122,6 +122,20 @@ impl Path {
         self.components_bytes().last()
     }
 
+    /// Returns the extension (without leading dot) of the Path, if possible.
+    pub fn extension(&self) -> Option<&[u8]> {
+        let file_name = match self.inner[..].rsplit_once_str(b"/") {
+            Some((_, r)) => r,
+            None => &self.inner[..],
+        };
+        let mut iter = file_name.rsplitn(2, |b| *b == b'.');
+        let e = iter.next();
+        // Return None if there's no dot.
+        iter.next()?;
+
+        e
+    }
+
     pub fn as_bytes(&self) -> &[u8] {
         &self.inner
     }
@@ -466,5 +480,16 @@ mod test {
         #[case] canonicalize_dotdot: bool,
     ) {
         PathBuf::from_host_path(&host_path, canonicalize_dotdot).expect_err("must fail");
+    }
+
+    #[rstest]
+    #[case::without_dot(PathBuf { inner: "foo".into()}, None)]
+    #[case::simple(PathBuf { inner: "foo.txt".into()}, Some(&b"txt"[..]))]
+    #[case::empty(PathBuf { inner: "foo.".into()}, Some(&b""[..]))]
+    #[case::multiple(PathBuf { inner: "foo.bar.txt".into()}, Some(&b"txt"[..]))]
+    #[case::with_components(PathBuf { inner: "foo/foo.txt".into()}, Some(&b"txt"[..]))]
+    #[case::path(PathBuf { inner: "foo.a/foo".into()}, None)]
+    fn extension(#[case] p: PathBuf, #[case] exp_extension: Option<&[u8]>) {
+        assert_eq!(exp_extension, p.extension())
     }
 }
