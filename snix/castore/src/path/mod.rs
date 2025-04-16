@@ -112,7 +112,8 @@ impl Path {
         iter
     }
 
-    /// Returns the final component of the Path, if there is one, in bytes.
+    /// Returns the final component of the Path, if there is one, as a
+    /// [PathComponent].
     pub fn file_name(&self) -> Option<PathComponent> {
         self.components().last()
     }
