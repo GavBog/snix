@@ -21,7 +21,7 @@ Nodes themselves don't have names, names are given by being in a
 
 ### `Node::File`
 A (regular) file.
-We store the [BLAKE3] digest of the raw file contents, the length of the raw
+We store the [BLAKE3][] digest of the raw file contents, the length of the raw
 data, and an executable bit.
 
 ### `Node::Symlink`
@@ -39,7 +39,7 @@ elements in the referenced `Directory`, which helps for inode calculation.
 
 ## [Directory][rustdoc-node]
 The Directory struct contains all nodes in a single directory (on that level),
-alongside with their (base)names (called [PathComponent]).
+alongside with their (base)names (called [PathComponent](#pathcomponent)).
 
 `.` and `..` are not included.
 
