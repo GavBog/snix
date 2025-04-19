@@ -15,6 +15,11 @@
 #           be a function of the form `args -> location -> args`, where the
 #           location is a list of strings representing the path components of
 #           the current readTree target. Optional.
+#
+#   addMarkers: Whether to add attributes `__readTree` / `__readTreeChildren`.
+#               Optional, defaults to `true`. When set to `true`, allows use of
+#               `gather` to list node leaves. When set to `false`, `readTree`'s
+#               results may be used in `imports`.
 { ... }:
 
 let
@@ -59,10 +64,15 @@ let
 
   # Create a mark containing the location of this attribute and
   # a list of all child attribute names added by readTree.
-  marker = parts: children: {
-    __readTree = parts;
-    __readTreeChildren = builtins.attrNames children;
-  };
+  marker =
+    addMarkers: parts: children:
+    if addMarkers then
+      {
+        __readTree = parts;
+        __readTreeChildren = builtins.attrNames children;
+      }
+    else
+      { };
 
   # Create a label from a target's tree location.
   mkLabel =
@@ -127,6 +137,7 @@ let
       parts,
       argsFilter,
       scopedArgs,
+      addMarkers,
     }:
     let
       dir = readDirVisible initPath;
@@ -160,7 +171,7 @@ let
       filteredChildren = map (c: {
         name = c;
         value = readTreeImpl {
-          inherit argsFilter scopedArgs;
+          inherit argsFilter scopedArgs addMarkers;
           args = args;
           initPath = (joinChild c);
           rootDir = false;
@@ -193,7 +204,7 @@ let
         in
         {
           name = c;
-          value = if isAttrs imported then merge imported (marker childParts { }) else imported;
+          value = if isAttrs imported then merge imported (marker addMarkers childParts { }) else imported;
         }
       ) nixFiles;
 
@@ -203,7 +214,7 @@ let
 
       result =
         if isAttrs nodeValue then
-          merge nodeValue (allChildren // (marker parts allChildren))
+          merge nodeValue (allChildren // (marker addMarkers parts allChildren))
         else
           nodeValue;
 
@@ -298,9 +309,15 @@ in
       filter ? (_parts: x: x),
       scopedArgs ? { },
       rootDir ? true,
+      addMarkers ? true,
     }:
     readTree {
-      inherit args scopedArgs rootDir;
+      inherit
+        args
+        scopedArgs
+        rootDir
+        addMarkers
+        ;
       argsFilter = filter;
       initPath = path;
       parts = [ ];

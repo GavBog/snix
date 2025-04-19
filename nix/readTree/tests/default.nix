@@ -194,10 +194,39 @@ let
     )
   ];
 
+  without-markers = depot.nix.readTree {
+    path = ./test-marker;
+    args = { };
+    addMarkers = false;
+  };
+
+  assertUnmarkedByPath =
+    path:
+    assertEq "correctly left ${lib.concatStringsSep "." path} unmarked" (
+      (lib.getAttrFromPath path without-markers) ? __readTree
+    ) false;
+
+  plain = it "can leave markers out" [
+    (assertUnmarkedByPath [ "directory-marked" ])
+    (assertUnmarkedByPath [
+      "directory-marked"
+      "nested"
+    ])
+    (assertUnmarkedByPath [
+      "file-children"
+      "one"
+    ])
+    (assertUnmarkedByPath [
+      "file-children"
+      "two"
+    ])
+  ];
+
 in
 runTestsuite "readTree" [
   example
   traversal-logic
   wrong
   markers
+  plain
 ]
