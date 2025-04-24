@@ -91,13 +91,13 @@ let
     eval-nixpkgs-firefox-drvpath = (mkNixpkgsEvalTest { attrPath = "firefox.drvPath"; expectedPath = pkgs.firefox.drvPath; });
     eval-nixpkgs-cross-stdenv-outpath = (mkNixpkgsEvalTest { attrPath = "pkgsCross.aarch64-multiplatform.stdenv.outPath"; expectedPath = pkgs.pkgsCross.aarch64-multiplatform.stdenv.outPath; });
     eval-nixpkgs-cross-hello-outpath = (mkNixpkgsEvalTest { attrPath = "pkgsCross.aarch64-multiplatform.hello.outPath"; expectedPath = pkgs.pkgsCross.aarch64-multiplatform.hello.outPath; });
-    eval-nixpkgs-nixos-gnome-installer-drvpath = (mkNixpkgsEvalTest {
-      expr = "(import ${pkgs.path}/nixos/release.nix { }).iso_gnome.${pkgs.system}.drvPath";
-      expectedPath = (import "${pkgs.path}/nixos/release.nix" { }).iso_gnome.${pkgs.system}.drvPath;
+    eval-nixpkgs-nixos-graphical-installer-drvpath = (mkNixpkgsEvalTest {
+      expr = "(import ${pkgs.path}/nixos/release.nix { }).iso_graphical.${pkgs.system}.drvPath";
+      expectedPath = (import "${pkgs.path}/nixos/release.nix" { }).iso_graphical.${pkgs.system}.drvPath;
     });
-    eval-nixpkgs-nixos-gnome-installer-outpath = (mkNixpkgsEvalTest {
-      expr = "(import ${pkgs.path}/nixos/release.nix { }).iso_gnome.${pkgs.system}.outPath";
-      expectedPath = (import "${pkgs.path}/nixos/release.nix" { }).iso_gnome.${pkgs.system}.outPath;
+    eval-nixpkgs-nixos-graphical-installer-outpath = (mkNixpkgsEvalTest {
+      expr = "(import ${pkgs.path}/nixos/release.nix { }).iso_graphical.${pkgs.system}.outPath";
+      expectedPath = (import "${pkgs.path}/nixos/release.nix" { }).iso_graphical.${pkgs.system}.outPath;
     });
   };
 in

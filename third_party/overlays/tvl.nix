@@ -39,25 +39,6 @@ depot.nix.readTree.drvTargets {
     ];
   });
 
-  # https://github.com/NixOS/nixpkgs/pull/329415/files
-  grpc-health-check = super.rustPlatform.buildRustPackage {
-    pname = "grpc-health-check";
-    version = "unstable-2022-08-19";
-
-    src = super.fetchFromGitHub {
-      owner = "paypizza";
-      repo = "grpc-health-check";
-      rev = "f61bb5e10beadc5ed53144cc540d66e19fc510bd";
-      hash = "sha256-nKut9c1HHIacdRcmvlXe0GrtkgCWN6sxJ4ImO0CIDdo=";
-    };
-
-    cargoHash = "sha256-lz+815iE+oXBQ3PfqBO0QBpZY6x1SNR7OU7BjkRszzI=";
-
-    nativeBuildInputs = [ super.protobuf ];
-    # tests fail
-    doCheck = false;
-  };
-
   # macFUSE bump containing fix for https://github.com/osxfuse/osxfuse/issues/974
   # https://github.com/NixOS/nixpkgs/pull/320197
   fuse =

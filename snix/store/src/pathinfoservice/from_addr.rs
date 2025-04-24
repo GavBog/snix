@@ -26,7 +26,7 @@ use url::Url;
 /// - `grpc+unix:///absolute/path/to/somewhere`
 ///   Connects to a local snix-store gRPC service via Unix socket.
 /// - `grpc+http://host:port`, `grpc+https://host:port`
-///    Connects to a (remote) snix-store gRPC service.
+///   Connects to a (remote) snix-store gRPC service.
 ///
 /// As the [PathInfoService] needs to talk to [snix_castore::blobservice::BlobService] and
 /// [snix_castore::directoryservice::DirectoryService], these also need to be passed in.
@@ -98,9 +98,15 @@ mod tests {
     /// Correct Scheme for Nix HTTP Binary cache, with a subpath and port.
     #[case::correct_nix_http_with_subpath_and_port("nix+http://[::1]:8080/foo", true)]
     /// Correct Scheme for the cache.nixos.org binary cache, and correct trusted public key set
-    #[case::correct_nix_https_with_trusted_public_key("nix+https://cache.nixos.org?trusted-public-keys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=", true)]
+    #[case::correct_nix_https_with_trusted_public_key(
+        "nix+https://cache.nixos.org?trusted-public-keys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=",
+        true
+    )]
     /// Correct Scheme for the cache.nixos.org binary cache, and two correct trusted public keys set
-    #[case::correct_nix_https_with_two_trusted_public_keys("nix+https://cache.nixos.org?trusted-public-keys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=%20foo:jp4fCEx9tBEId/L0ZsVJ26k0wC0fu7vJqLjjIGFkup8=", true)]
+    #[case::correct_nix_https_with_two_trusted_public_keys(
+        "nix+https://cache.nixos.org?trusted-public-keys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=%20foo:jp4fCEx9tBEId/L0ZsVJ26k0wC0fu7vJqLjjIGFkup8=",
+        true
+    )]
     /// Correct scheme to connect to a unix socket.
     #[case::grpc_valid_unix_socket("grpc+unix:///path/to/somewhere", true)]
     /// Correct scheme for unix socket, but setting a host too, which is invalid.
