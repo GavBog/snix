@@ -62,7 +62,7 @@ type PathInfoServiceClient interface {
 	//
 	// It can also be used to calculate arbitrary NAR hashes of output paths, in
 	// case a legacy Nix Binary Cache frontend is provided.
-	CalculateNAR(ctx context.Context, in *proto.Node, opts ...grpc.CallOption) (*CalculateNARResponse, error)
+	CalculateNAR(ctx context.Context, in *proto.Entry, opts ...grpc.CallOption) (*CalculateNARResponse, error)
 	// Return a stream of PathInfo messages matching the criteria specified in
 	// ListPathInfoRequest.
 	List(ctx context.Context, in *ListPathInfoRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[PathInfo], error)
@@ -96,7 +96,7 @@ func (c *pathInfoServiceClient) Put(ctx context.Context, in *PathInfo, opts ...g
 	return out, nil
 }
 
-func (c *pathInfoServiceClient) CalculateNAR(ctx context.Context, in *proto.Node, opts ...grpc.CallOption) (*CalculateNARResponse, error) {
+func (c *pathInfoServiceClient) CalculateNAR(ctx context.Context, in *proto.Entry, opts ...grpc.CallOption) (*CalculateNARResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CalculateNARResponse)
 	err := c.cc.Invoke(ctx, PathInfoService_CalculateNAR_FullMethodName, in, out, cOpts...)
@@ -157,7 +157,7 @@ type PathInfoServiceServer interface {
 	//
 	// It can also be used to calculate arbitrary NAR hashes of output paths, in
 	// case a legacy Nix Binary Cache frontend is provided.
-	CalculateNAR(context.Context, *proto.Node) (*CalculateNARResponse, error)
+	CalculateNAR(context.Context, *proto.Entry) (*CalculateNARResponse, error)
 	// Return a stream of PathInfo messages matching the criteria specified in
 	// ListPathInfoRequest.
 	List(*ListPathInfoRequest, grpc.ServerStreamingServer[PathInfo]) error
@@ -177,7 +177,7 @@ func (UnimplementedPathInfoServiceServer) Get(context.Context, *GetPathInfoReque
 func (UnimplementedPathInfoServiceServer) Put(context.Context, *PathInfo) (*PathInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Put not implemented")
 }
-func (UnimplementedPathInfoServiceServer) CalculateNAR(context.Context, *proto.Node) (*CalculateNARResponse, error) {
+func (UnimplementedPathInfoServiceServer) CalculateNAR(context.Context, *proto.Entry) (*CalculateNARResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CalculateNAR not implemented")
 }
 func (UnimplementedPathInfoServiceServer) List(*ListPathInfoRequest, grpc.ServerStreamingServer[PathInfo]) error {
@@ -241,7 +241,7 @@ func _PathInfoService_Put_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _PathInfoService_CalculateNAR_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(proto.Node)
+	in := new(proto.Entry)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func _PathInfoService_CalculateNAR_Handler(srv interface{}, ctx context.Context,
 		FullMethod: PathInfoService_CalculateNAR_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PathInfoServiceServer).CalculateNAR(ctx, req.(*proto.Node))
+		return srv.(PathInfoServiceServer).CalculateNAR(ctx, req.(*proto.Entry))
 	}
 	return interceptor(ctx, in, info, handler)
 }
