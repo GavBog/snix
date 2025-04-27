@@ -18,7 +18,7 @@ impl<S> SigningKey<S>
 where
     S: ed25519::signature::Signer<ed25519::Signature>,
 {
-    /// Constructs a singing key, using a name and a signing key.
+    /// Constructs a signing key, using a name and a signing key.
     pub fn new(name: String, signing_key: S) -> Self {
         Self { name, signing_key }
     }
