@@ -35,7 +35,6 @@
         inherit specialArgs system;
         modules = [
           configuration
-          (import (depot.path.origSrc + "/ops/modules/default-imports.nix"))
         ];
       };
 
