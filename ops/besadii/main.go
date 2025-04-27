@@ -6,7 +6,7 @@
 //
 // It supports the following modes & operations:
 //
-// Gerrit (ref-updated) hook:
+// Gerrit (patchset-created, change-merged) hooks:
 // - Trigger Buildkite CI builds
 //
 // Buildkite (post-command) hook:
