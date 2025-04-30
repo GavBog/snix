@@ -49,16 +49,9 @@ in
       KbdInteractiveAuthentication = false;
     };
   };
+  nix.gc.automatic = true;
 
   services.depot = {
-    # Automatically collect garbage from the Nix store.
-    automatic-gc = {
-      enable = true;
-      interval = "daily";
-      diskThreshold = 5; # GiB
-      maxFreed = 3; # GiB
-      preserveGenerations = "30d";
-    };
     forgejo = {
       enable = true;
       domain = "git.snix.dev";

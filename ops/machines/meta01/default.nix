@@ -48,15 +48,7 @@ in
       KbdInteractiveAuthentication = false;
     };
   };
-
-  # Automatically collect garbage from the Nix store.
-  services.depot.automatic-gc = {
-    enable = true;
-    interval = "daily";
-    diskThreshold = 5; # GiB
-    maxFreed = 3; # GiB
-    preserveGenerations = "30d";
-  };
+  nix.gc.automatic = true;
 
   services.depot = {
     # TODO: make it possible to do `alertmanager.enable = true;`
