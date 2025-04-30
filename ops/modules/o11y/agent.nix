@@ -25,12 +25,6 @@ in
           description = "Exporter port";
           type = types.int;
         };
-        options.bearerTokenFile = mkOption {
-          description = "File containing a bearer token";
-          type = types.nullOr types.path;
-          default = null;
-        };
-
         options.scrapeConfig = mkOption {
           description = "Prometheus scrape config";
           type = types.attrs;
@@ -40,20 +34,7 @@ in
           static_configs = [
             { targets = [ "localhost:${toString config.port}" ]; }
           ];
-        }
-          (lib.mkIf (config.bearerTokenFile != null) {
-            authorization.credentials_file = "\${CREDENTIALS_DIRECTORY}/${name}-bearer-token";
-          })];
-
-        options.secrets = mkOption {
-          description = "Secrets required for scrape config";
-          type = types.attrs;
-          internal = true;
-          default = { };
-        };
-        config.secrets = lib.mkIf (config.bearerTokenFile != null) {
-          "${name}-bearer-token" = config.bearerTokenFile;
-        };
+        }];
       }));
       default = { };
     };
