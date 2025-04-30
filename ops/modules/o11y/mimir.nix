@@ -118,6 +118,6 @@ in
       };
     };
 
-    infra.monitoring.grafana-agent.exporters.mimir.port = 9009;
+    infra.monitoring.alloy.exporters.mimir.port = 9009;
   };
 }

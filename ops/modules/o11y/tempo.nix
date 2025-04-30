@@ -66,6 +66,6 @@ in
       };
     };
 
-    infra.monitoring.grafana-agent.exporters.tempo.port = 9190;
+    infra.monitoring.alloy.exporters.tempo.port = 9190;
   };
 }

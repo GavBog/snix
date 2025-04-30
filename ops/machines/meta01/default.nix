@@ -9,7 +9,7 @@ in
     ./disko.nix
 
     (mod "hetzner-cloud.nix")
-    (mod "o11y/agent.nix")
+    (mod "o11y/alloy.nix")
     (mod "o11y/mimir.nix")
     (mod "o11y/loki.nix")
     (mod "o11y/tempo.nix")

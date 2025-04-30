@@ -10,7 +10,7 @@ in
 
     (mod "hetzner-cloud.nix")
     (mod "restic.nix")
-    (mod "o11y/agent.nix")
+    (mod "o11y/alloy.nix")
     (mod "gerrit-autosubmit.nix")
     (mod "monorepo-gerrit.nix")
     (mod "www/cl.snix.dev.nix")

@@ -143,6 +143,6 @@ in
       };
     };
 
-    infra.monitoring.grafana-agent.exporters.grafana.port = 2342;
+    infra.monitoring.alloy.exporters.grafana.port = 2342;
   };
 }

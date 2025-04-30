@@ -5,7 +5,7 @@ let
 in
 {
   imports = [
-    (mod "o11y/agent.nix")
+    (mod "o11y/alloy.nix")
     (mod "snix-buildkite.nix")
     (mod "harmonia.nix")
     (mod "known-hosts.nix")

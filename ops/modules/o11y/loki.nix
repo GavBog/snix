@@ -85,6 +85,6 @@ in
 
     systemd.services.loki.serviceConfig.EnvironmentFile = [ config.age.secrets.loki-environment.path ];
 
-    infra.monitoring.grafana-agent.exporters.loki.port = 9090;
+    infra.monitoring.alloy.exporters.loki.port = 9090;
   };
 }

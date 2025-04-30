@@ -12,7 +12,7 @@ in
     (mod "forgejo.nix")
     (mod "restic.nix")
     # Automatically enable metric and log collection.
-    (mod "o11y/agent.nix")
+    (mod "o11y/alloy.nix")
     (mod "o11y/grafana.nix")
     (mod "www/snix.dev.nix")
     (mod "www/bolt.snix.dev.nix")
