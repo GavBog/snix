@@ -6,7 +6,7 @@ use std::{
 
 use super::scratch_name;
 use crate::buildservice::BuildRequest;
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use tracing::{debug, instrument};
 
 /// Produce an OCI bundle in a given path.

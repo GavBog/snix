@@ -13492,7 +13492,7 @@ rec {
       "snix-build" = rec {
         crateName = "snix-build";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "snix-build";

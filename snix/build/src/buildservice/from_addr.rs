@@ -1,4 +1,4 @@
-use super::{grpc::GRPCBuildService, BuildService, DummyBuildService};
+use super::{BuildService, DummyBuildService, grpc::GRPCBuildService};
 use snix_castore::{blobservice::BlobService, directoryservice::DirectoryService};
 use url::Url;
 

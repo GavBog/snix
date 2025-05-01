@@ -9,7 +9,7 @@ use snix_castore::{
 };
 use tokio::process::{Child, Command};
 use tonic::async_trait;
-use tracing::{debug, instrument, warn, Span};
+use tracing::{Span, debug, instrument, warn};
 use uuid::Uuid;
 
 use crate::buildservice::BuildRequest;

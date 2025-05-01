@@ -2,7 +2,7 @@ use clap::Parser;
 use clap::Subcommand;
 use snix_build::{
     buildservice,
-    proto::{build_service_server::BuildServiceServer, GRPCBuildServiceWrapper},
+    proto::{GRPCBuildServiceWrapper, build_service_server::BuildServiceServer},
 };
 use snix_castore::blobservice;
 use snix_castore::directoryservice;
