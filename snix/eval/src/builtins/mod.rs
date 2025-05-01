@@ -803,11 +803,8 @@ mod pure_builtins {
         let mut left = left_keys.next().unwrap();
         let mut right = right_keys.next().unwrap();
 
-        // Calculate the intersection of the attribute sets by simultaneously
-        // advancing two key iterators, and inserting into the result set from
-        // the right side when the keys match. Iteration over Nix attribute sets
-        // is in sorted lexicographical order, so we can advance either iterator
-        // until it "catches up" with its counterpart.
+        // Calculate the intersection of two attribute sets by iterating them
+        // simultaneously in lexicographic order, similar to a merge sort.
         //
         // Only when keys match are the key and value clones actually allocated.
         //
