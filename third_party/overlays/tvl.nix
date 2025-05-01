@@ -53,4 +53,18 @@ depot.nix.readTree.drvTargets {
         })
     else
       super.fuse;
+
+  # https://github.com/thuliteio/doks/pull/1356
+  hugo = super.hugo.overrideAttrs (old: {
+    version = "0.145.0";
+
+    src = super.fetchFromGitHub {
+      owner = "gohugoio";
+      repo = "hugo";
+      tag = "v0.145.0";
+      hash = "sha256-5SV6VzNWGnFQBD0fBugS5kKXECvV1ZE7sk7SwJCMbqY=";
+    };
+
+    vendorHash = "sha256-aynhBko6ecYyyMG9XO5315kLerWDFZ6V8LQ/WIkvC70=";
+  });
 }
