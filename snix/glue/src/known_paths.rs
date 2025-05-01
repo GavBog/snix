@@ -279,9 +279,11 @@ mod tests {
         let mut known_paths = KnownPaths::default();
 
         // get_fetch_for_output_path should return None for new fetches.
-        assert!(known_paths
-            .get_fetch_for_output_path(&FETCH_TARBALL_OUT_PATH)
-            .is_none());
+        assert!(
+            known_paths
+                .get_fetch_for_output_path(&FETCH_TARBALL_OUT_PATH)
+                .is_none()
+        );
 
         // add_fetch should return the properly calculated store paths.
         assert_eq!(

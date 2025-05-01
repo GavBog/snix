@@ -2,7 +2,7 @@
 
 use super::utils::select_string;
 use crate::{
-    fetchers::{url_basename, Fetch},
+    fetchers::{Fetch, url_basename},
     snix_store_io::SnixStoreIO,
 };
 use nix_compat::nixhash;

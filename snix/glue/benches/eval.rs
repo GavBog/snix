@@ -1,15 +1,15 @@
 use clap::Parser;
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use mimalloc::MiMalloc;
 use snix_build::buildservice::DummyBuildService;
-use snix_eval::{builtins::impure_builtins, EvalIO};
+use snix_eval::{EvalIO, builtins::impure_builtins};
 use snix_glue::{
     builtins::{add_derivation_builtins, add_fetcher_builtins, add_import_builtins},
     configure_nix_path,
     snix_io::SnixIO,
     snix_store_io::SnixStoreIO,
 };
-use snix_store::utils::{construct_services, ServiceUrlsMemory};
+use snix_store::utils::{ServiceUrlsMemory, construct_services};
 use std::sync::LazyLock;
 use std::{env, rc::Rc, sync::Arc, time::Duration};
 

@@ -14335,7 +14335,7 @@ rec {
       "snix-glue" = rec {
         crateName = "snix-glue";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ./glue; };
         libName = "snix_glue";
         dependencies = [

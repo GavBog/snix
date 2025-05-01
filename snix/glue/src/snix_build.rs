@@ -40,7 +40,7 @@ pub(crate) fn get_all_inputs<'a, F, Fut>(
     derivation: &'a Derivation,
     known_paths: &'a KnownPaths,
     get_path_info: F,
-) -> impl Stream<Item = Result<(StorePath<String>, Node), std::io::Error>>
+) -> impl Stream<Item = Result<(StorePath<String>, Node), std::io::Error>> + use<F, Fut>
 where
     F: Fn(StorePath<String>) -> Fut,
     Fut: Future<Output = std::io::Result<Option<PathInfo>>>,

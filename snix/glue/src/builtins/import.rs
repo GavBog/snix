@@ -1,12 +1,12 @@
 //! Implements builtins used to import paths in the store.
 
 use crate::snix_store_io::SnixStoreIO;
-use snix_castore::import::ingest_entries;
 use snix_castore::Node;
+use snix_castore::import::ingest_entries;
 use snix_eval::{
+    ErrorKind, EvalIO, Value,
     builtin_macros::builtins,
     generators::{self, GenCo},
-    ErrorKind, EvalIO, Value,
 };
 use std::path::Path;
 
@@ -112,13 +112,13 @@ mod import_builtins {
     use crate::snix_store_io::SnixStoreIO;
     use bstr::ByteSlice;
     use nix_compat::nixhash::{CAHash, NixHash};
-    use nix_compat::store_path::{build_ca_path, StorePath, StorePathRef};
+    use nix_compat::store_path::{StorePath, StorePathRef, build_ca_path};
     use sha2::Digest;
     use snix_castore::blobservice::BlobService;
     use snix_eval::builtins::coerce_value_to_path;
     use snix_eval::generators::Gen;
-    use snix_eval::{generators::GenCo, ErrorKind, Value};
     use snix_eval::{AddContext, FileType, NixContext, NixContextElement, NixString};
+    use snix_eval::{ErrorKind, Value, generators::GenCo};
     use snix_store::path_info::PathInfo;
     use std::rc::Rc;
     use tokio::io::AsyncWriteExt;
@@ -239,7 +239,7 @@ mod import_builtins {
             }
 
             FileType::Directory if !recursive_ingestion => {
-                return Err(ImportError::FlatImportOfNonFile(path))?
+                return Err(ImportError::FlatImportOfNonFile(path))?;
             }
 
             // do the filtered ingest
@@ -265,7 +265,7 @@ mod import_builtins {
                         std::io::ErrorKind::Unsupported,
                         "unsupported file type",
                     )),
-                })
+                });
             }
         };
 
@@ -418,7 +418,7 @@ mod import_builtins {
                 return Err(ErrorKind::TypeError {
                     expected: "string or path",
                     actual: path.type_of(),
-                })
+                });
             }
         };
 

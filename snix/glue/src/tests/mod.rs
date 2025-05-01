@@ -4,7 +4,7 @@ use clap::Parser;
 use pretty_assertions::assert_eq;
 use snix_build::buildservice::DummyBuildService;
 use snix_eval::{EvalIO, EvalMode, Value};
-use snix_store::utils::{construct_services, ServiceUrlsMemory};
+use snix_store::utils::{ServiceUrlsMemory, construct_services};
 use std::path::PathBuf;
 
 use rstest::rstest;

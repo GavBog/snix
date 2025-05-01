@@ -11,13 +11,13 @@ use std::{
     sync::Arc,
 };
 use tokio_util::io::SyncIoBridge;
-use tracing::{error, instrument, warn, Level, Span};
+use tracing::{Level, Span, error, instrument, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 
 use snix_castore::{
+    Node,
     blobservice::BlobService,
     directoryservice::{self, DirectoryService},
-    Node,
 };
 use snix_store::pathinfoservice::{PathInfo, PathInfoService};
 
@@ -489,7 +489,7 @@ mod tests {
     use clap::Parser;
     use snix_build::buildservice::DummyBuildService;
     use snix_eval::{EvalIO, EvaluationResult};
-    use snix_store::utils::{construct_services, ServiceUrlsMemory};
+    use snix_store::utils::{ServiceUrlsMemory, construct_services};
     use tempfile::TempDir;
 
     use super::SnixStoreIO;

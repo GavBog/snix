@@ -69,7 +69,7 @@ mod tests {
     use rstest::rstest;
     use snix_build::buildservice::DummyBuildService;
     use snix_eval::{EvalIO, EvaluationResult};
-    use snix_store::utils::{construct_services, ServiceUrlsMemory};
+    use snix_store::utils::{ServiceUrlsMemory, construct_services};
     use tempfile::TempDir;
 
     /// evaluates a given nix expression and returns the result.
