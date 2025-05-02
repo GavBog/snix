@@ -60,12 +60,10 @@ available on [our own Forgejo](https://git.snix.dev/) instance.
 
 ![NLNET](../assets/nlnet-logo.png)
 
-Snix is [generously][nlnet-proj-tvix] [funded][nlnet-proj-tvix-store-build]
-by [NLNET][].
+Snix is [generously funded][nlnet-proj-snix-store-build] by [NLNET][].
 </center>
 
 ---
 [NixOS/nix]: https://github.com/NixOS/nix
 [NLNET]: https://nlnet.nl
-[nlnet-proj-tvix]: https://nlnet.nl/project/Tvix/
-[nlnet-proj-tvix-store-build]: https://nlnet.nl/project/Tvix-Store_Builder/
+[nlnet-proj-snix-store-build]: https://nlnet.nl/project/Snix-Store_Builder/
