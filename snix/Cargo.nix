@@ -14503,7 +14503,7 @@ rec {
       "snix-serde" = rec {
         crateName = "snix-serde";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ./serde; };
         libName = "snix_serde";
         dependencies = [
