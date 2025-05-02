@@ -1,5 +1,5 @@
 use clap::Parser;
-use snix_castore::{utils::ServiceUrlsGrpc, B3Digest};
+use snix_castore::{B3Digest, utils::ServiceUrlsGrpc};
 
 #[derive(Parser)]
 #[command(author, version, about)]

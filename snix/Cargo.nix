@@ -13938,7 +13938,7 @@ rec {
       "snix-castore-http" = rec {
         crateName = "snix-castore-http";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "snix-castore-http";

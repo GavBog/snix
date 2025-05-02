@@ -8,7 +8,7 @@ use axum::{
     http::StatusCode,
     response::Response,
 };
-use axum_extra::{headers::Range, TypedHeader};
+use axum_extra::{TypedHeader, headers::Range};
 use std::path;
 use tracing::{debug, instrument};
 
@@ -48,10 +48,10 @@ mod tests {
     use crate::{app_state::AppConfig, router::app};
 
     use snix_castore::{
+        B3Digest, Directory, Node,
         blobservice::{BlobService, MemoryBlobService},
         directoryservice::{DirectoryService, MemoryDirectoryService},
         fixtures::{DIRECTORY_COMPLICATED, HELLOWORLD_BLOB_CONTENTS, HELLOWORLD_BLOB_DIGEST},
-        B3Digest, Directory, Node,
     };
 
     use axum::http::StatusCode;
@@ -66,8 +66,8 @@ mod tests {
         auto_index: bool,
     ) -> (
         axum_test::TestServer,
-        impl BlobService,
-        impl DirectoryService,
+        impl BlobService + use<S>,
+        impl DirectoryService + use<S>,
     ) {
         let blob_service = Arc::new(MemoryBlobService::default());
         let directory_service = Arc::new(MemoryDirectoryService::default());

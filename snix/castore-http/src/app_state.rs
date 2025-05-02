@@ -1,4 +1,4 @@
-use snix_castore::{blobservice::BlobService, directoryservice::DirectoryService, Node};
+use snix_castore::{Node, blobservice::BlobService, directoryservice::DirectoryService};
 
 use std::sync::Arc;
 

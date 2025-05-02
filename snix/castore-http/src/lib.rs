@@ -6,17 +6,17 @@ pub mod routes;
 use std::path;
 
 use snix_castore::{
-    blobservice::BlobService,
-    directoryservice::{descend_to, DirectoryService},
     B3Digest, Directory, Node, Path, SymlinkTarget,
+    blobservice::BlobService,
+    directoryservice::{DirectoryService, descend_to},
 };
 
 use axum::{
     body::Body,
-    http::{header, StatusCode},
+    http::{StatusCode, header},
     response::{AppendHeaders, IntoResponse, Redirect, Response},
 };
-use axum_extra::{headers::Range, response::Html, TypedHeader};
+use axum_extra::{TypedHeader, headers::Range, response::Html};
 use axum_range::{KnownSize, Ranged};
 use path_clean::PathClean;
 use std::ffi::OsStr;

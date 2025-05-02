@@ -1,10 +1,10 @@
 use crate::app_state::{AppConfig, AppState};
 use crate::routes;
 
-use snix_castore::utils::ServiceUrlsGrpc;
 use snix_castore::Node;
+use snix_castore::utils::ServiceUrlsGrpc;
 
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use std::sync::Arc;
 use tokio_listener::ListenerAddressLFlag;
 use tracing::info;
