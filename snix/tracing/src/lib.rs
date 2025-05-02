@@ -2,17 +2,17 @@ use indicatif::ProgressStyle;
 use std::sync::LazyLock;
 use tracing::level_filters::LevelFilter;
 use tracing_indicatif::{
-    filter::IndicatifFilter, util::FilteredFormatFields, writer, IndicatifLayer, IndicatifWriter,
+    IndicatifLayer, IndicatifWriter, filter::IndicatifFilter, util::FilteredFormatFields, writer,
 };
 use tracing_subscriber::{
+    EnvFilter, Layer, Registry,
     layer::{Identity, SubscriberExt},
     util::SubscriberInitExt as _,
-    EnvFilter, Layer, Registry,
 };
 
 #[cfg(feature = "otlp")]
 use opentelemetry_sdk::{
-    propagation::TraceContextPropagator, resource::SdkProvidedResourceDetector, Resource,
+    Resource, propagation::TraceContextPropagator, resource::SdkProvidedResourceDetector,
 };
 #[cfg(feature = "tracy")]
 use tracing_tracy::TracyLayer;

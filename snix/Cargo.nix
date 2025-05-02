@@ -14803,7 +14803,7 @@ rec {
       "snix-tracing" = rec {
         crateName = "snix-tracing";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ./tracing; };
         libName = "snix_tracing";
         dependencies = [
