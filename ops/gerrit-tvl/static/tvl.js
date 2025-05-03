@@ -1,17 +1,5 @@
 // vim: set noai ts=2 sw=2 et: */
 
-// This is a read-only Buildkite token: it was generated and installed by flokli@ and has
-// read_builds, read_build_logs, and read_pipelines permissions.
-const BUILDKITE_TOKEN = 'bkua_fbb743ba597d89caf522876289705f6571bb599d';
-
-function encodeParams(p) {
-  const pieces = [];
-  for (let k of Object.getOwnPropertyNames(p)) {
-    pieces.push(`${encodeURIComponent(k)}=${encodeURIComponent(p[k])}`);
-  }
-  return pieces.join('&');
-}
-
 function formatDuration(from, to) {
   const millisecondsTook = Math.floor(to.valueOf() - from.valueOf());
   if (millisecondsTook < 2000) return `${millisecondsTook} ms`;
@@ -81,26 +69,13 @@ const snixChecksProvider = {
   async fetch(change) {
     let {patchsetSha, repo} = change;
 
-    const experiments = window.ENABLED_EXPERIMENTS || [];
-    if (experiments.includes("UiFeature__snix_check_debug")) {
-      patchsetSha = '76692104f58b849b1503a8d8a700298003fa7b5f';
-      repo = 'snix';
-    }
-
     if (repo !== 'snix') {
       // We only handle snix's depot at the moment.
       return {responseCode: 'OK'};
     }
 
-    const params = {
-      commit: patchsetSha,
-    };
-    const url = `https://api.buildkite.com/v2/organizations/snix/pipelines/snix/builds?${encodeParams(params)}`;
-    const resp = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${BUILDKITE_TOKEN}`,
-      },
-    });
+    const url = `https://cl.snix.dev/buildkite-status/${encodeURIComponent(patchsetSha)}`;
+    const resp = await fetch(url, { });
     const respJSON = await resp.json();
 
     const runs = [];
