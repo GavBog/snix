@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, depot, ... }:
 
 {
   imports = [
@@ -32,7 +32,43 @@
         location = /robots.txt {
           return 200 'User-agent: *\nAllow: /';
         }
+
+        location /buildkite-status/ {
+          proxy_pass http://buildkite-api-proxy/;
+        }
       '';
+    };
+
+    services.nginx.upstreams.buildkite-api-proxy = {
+      servers."unix:/run/buildkite-api-proxy.sock" = { };
+    };
+
+    systemd.services.buildkite-api-proxy = {
+      serviceConfig = {
+        LoadCredential = "buildkite-api-token:${config.age.secrets.buildkite-api-proxy-token.path}";
+        ExecStart = "${depot.ops.buildkite-api-proxy}/bin/buildkite-api-proxy";
+        Restart = "always";
+        RestartSec = 5;
+        User = "buildkite-api-proxy";
+        DynamicUser = true;
+        ProtectHome = true;
+        ProtectSystem = true;
+        MemoryDenyWriteExecute = true;
+        ProtectControlGroups = true;
+        ProtectKernelModules = true;
+        ProtectKernelTunables = true;
+        RestrictNamespaces = true;
+        RestrictRealtime = true;
+        SystemCallArchitectures = "native";
+        SystemCallFilter = [
+          "@system-service"
+          "~@privileged"
+        ];
+      };
+    };
+    systemd.sockets.buildkite-api-proxy = {
+      wantedBy = [ "sockets.target" ];
+      socketConfig.ListenStream = "/run/buildkite-api-proxy.sock";
     };
   };
 }
