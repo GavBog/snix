@@ -35,39 +35,6 @@ the resulting diff noise on resulting mismtaches).
 in resulting store paths.
 
 
-## Performance
-Even while keeping in mind some of the above caveats, there's some obvious
-low-langing fruits that could have a good impact on performance, with somewhat
-limited risk of becoming obsolete in case of behaviorial changes due to
-correctness:
-
- - String Contexts currently do a lot of indirections (edef)
-   (NixString -> NixStringInner -> HashSet[element] -> NixContextElement -> String -> data)
-   to get to the actual data. We should improve this. There's various ideas, one
-   of it is globally interning all Nix context elements, and only keeping
-   indices into that. We might need to have different representations for small
-   amount of context elements or larger ones, and need tooling to reason about
-   the amount of contexts we have.
- - To calculate NAR size and digest (used for output path calculation of FODs),
-   our current `SimpleRenderer` `NarCalculationService` sequentially asks for
-   one blob after another (and internally these might consists out of multiple
-   chunks too).
-   That's a lot of roundtrips, adding up to a lot of useless waiting.
-   While we cannot avoid having to feed all bytes sequentially through sha256,
-   we already know what blobs to fetch and in which order.
-   There should be a way to buffer some "amount of upcoming bytes" in memory,
-   and not requesting these seqentially.
-   This is somewhat the "spiritual counterpart" to our sequential ingestion
-   code (`ConcurrentBlobUploader`, used by `ingest_nar`), which keeps
-   "some amount of outgoing bytes" in memory.
-   Our seekable NAR AsyncRead implementation already removes most complexity in
-   rendering everything between blobs.
-   It should be possible to extend / write a wrapped version of it that
-   prefetches a configurable sliding window of blobs.
-   Per-blob prefetching itself is somewhat blocked until the {Chunk/Blob}Service
-   split is done, as then prefetching there would only be a matter of adding it
-   into the one `BlobReader`.
-
 ## Error cleanup
  - Currently, all services use snix_castore::Error, which only has two kinds
    (invalid request, storage error), containing an (owned) string.
