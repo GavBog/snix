@@ -1,21 +1,33 @@
-# Store Configuration
+---
+title: "Store Configuration / Composition"
+slug: store-configuration-composition
+description: ""
+summary: ""
+date: 2025-05-03T16:00:33+00:00
+lastmod: 2025-05-03T16:00:33+00:00
+draft: false
+weight: 15
+toc: true
+---
 
-Currently, tvix-store (and tvix-cli) expose three different `--*-service-addr`
-CLI args, describing how to talk to the three different stores.
+Currently, snix-store, snix-cli and other CLI endpoints expose three different
+`--*-service-addr` CLI args, describing how to talk to the three different
+stores.
 
 Depending on the CLI entrypoint, they have different defaults:
 
- - `tvix-cli` defaults to in-memory variants (`ServiceUrlsMemory`).
- - `tvix-store daemon` defaults to using a local filesystem-based backend for
+ - `snix-cli` defaults to in-memory variants (`ServiceUrlsMemory`).
+ - `snix-store daemon` defaults to using a local filesystem-based backend for
    blobs, and redb backends for `DirectoryService` and `PathInfoService`
    (`ServiceUrls`).
- - other `tvix-store` entrypoints, as well as `nar-bridge` default to talking to
-   a `tvix-store` gRPC daemon (`ServiceUrlsGrpc`).
+ - other `snix-store` entrypoints, as well as `nar-bridge` default to talking to
+   a `snix-store` gRPC daemon (`ServiceUrlsGrpc`).
 
 The exact config and paths can be inspected by invoking `--help` on each of
 these entrypoints, and it's of course possible to change this config, for
 example in case everything should be done from a single binary, without a daemon
 in between.
+
 There currently is no caching on the client side wired up yet, and some (known)
 unnecessary roundtrips (which can be removed after some refactoring), so for
 everything except testing purposes you might want to directly connect to the
@@ -23,13 +35,13 @@ data stores, or use Store Composition to have caching, (and describe more
 complicated fetch-through configs).
 
 ## Store Composition
-Internally, `tvix-castore` supports composing multiple instances of `BlobService`,
-`DirectoryService` (and `PathInfoService`) together.
+Internally, `snix-[ca]store` supports composing multiple instances of
+`BlobService`, `DirectoryService` (and `PathInfoService`) together.
 
-It allows describing more complicated "hierarchies"/"tiers" of different
-service types. It supports combining different storage backend/substituters/
-caches, and combining them in a DAG of some sort, ultimately exposing the same
-(trait) interface as a single store.
+This allows describing more complicated "hierarchies"/"tiers" of different
+service types, by combining different storage backend/substituters/
+caches in a DAG of some sort, with the root still exposing the same (trait)
+interface as a single store.
 
 The three individual URLs exposed in the CLI currently are internally converted
 to a composition with just one instance of each store (at the "root" name).
@@ -50,10 +62,10 @@ only.
 ### CLI usage
 However, if you're okay with these caveats, and want to configure some caching
 today, using the existing CLI entrypoints, you can enable the
-`xp-composition-cli` feature flag in the `tvix-store` crate.
+`xp-composition-cli` feature flag in the `snix-store` crate.
 
 With `cargo`, this can be enabled by passing
-`--features tvix-store/xp-composition-cli` to a `cargo build` / `cargo run`
+`--features snix-store/xp-composition-cli` to a `cargo build` / `cargo run`
 invocation. [^1]
 
 If enabled, CLI entrypoints get a `--experimental-store-composition` arg, which
@@ -65,17 +77,16 @@ attribute, (`DirectoryService`s in `directoryservices`, and `PathInfoService`s
 in `pathinfoservices` respectively), and requires one named "root".
 
 ### Library usage
-The store composition code can be accessed via `snix_castore::composition`, and
-`snix_store::composition`.
+The store composition code and documentation and examples can be viewed at
+[`snix_castore::composition`][rustdoc-castore-composition] and
+[`snix_store::composition`][rustdoc-store-composition].
+Make sure to check them out.
 
 A global "registry" can be used to make other (out-of-tree) "types" of stores
 known to the composition machinery.
 
 In terms of config format, you're also not required to use TOML, but anything
 `serde` can deserialize.
-
-Make sure to check the module-level docstrings and code examples for
-`snix_castore::composition`.
 
 ### Composition config format
 Below examples are in the format accepted by the CLI, using the
@@ -100,7 +111,7 @@ far = "far"
 
 [blobservices.near]
 type = "objectstore"
-object_store_url = "file:///tmp/tvix/blobservice"
+object_store_url = "file:///tmp/snix/blobservice"
 object_store_options = {}
 
 [blobservices.far]
@@ -129,7 +140,7 @@ url = "grpc+http://localhost:8000"
 # […] blobservices/directoryservices go here […]
 ```
 
-### Example: Self-contained fetch-through tvix-store for `cache.nixos.org`.
+### Example: Self-contained fetch-through snIx-store for `cache.nixos.org`.
 This provides a `PathInfoService` "containing" `PathInfo` that are in
 `cache.nixos.org`.
 
@@ -146,13 +157,13 @@ services, directory services).
 ```
 [blobservices.root]
 type = "objectstore"
-object_store_url = "file:///var/lib/tvix-store/blobs.object_store"
+object_store_url = "file:///var/lib/snix-store/blobs.object_store"
 object_store_options = {}
 
 [directoryservices.root]
 type = "redb"
 is_temporary = false
-path = "/var/lib/tvix-store/directories.redb"
+path = "/var/lib/snix-store/directories.redb"
 
 [pathinfoservices.root]
 type = "cache"
@@ -162,7 +173,7 @@ far = "cache-nixos-org"
 [pathinfoservices.redb]
 type = "redb"
 is_temporary = false
-path = "/var/lib/tvix-store/pathinfo.redb"
+path = "/var/lib/snix-store/pathinfo.redb"
 
 [pathinfoservices.cache-nixos-org]
 type = "nix"
@@ -172,5 +183,6 @@ blob_service = "root"
 directory_service = "root"
 ```
 
-
 [^1]: In some leaf binary crates, this can also be controlled via the `xp-store-composition-cli` feature in the leaf crate itself.
+[rustdoc-castore-composition]: https://snix.dev/rustdoc/snix_castore/composition/index.html
+[rustdoc-store-composition]: https://snix.dev/rustdoc/snix_store/composition/index.html
