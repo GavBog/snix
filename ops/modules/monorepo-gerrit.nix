@@ -169,13 +169,13 @@ in
         push = [
           "+refs/heads/*:refs/heads/*"
           "+refs/tags/*:refs/tags/*"
+          "+refs/meta/config:refs/meta/config"
         ];
         timeout = 30;
         threads = 3;
         remoteNameStyle = "dash";
         mirror = true;
-        # we are unsure if this should be private info
-        replicatePermissions = false;
+        replicatePermissions = true;
         projects = [ "snix" ];
       };
     };
