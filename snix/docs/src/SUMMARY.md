@@ -21,8 +21,3 @@
 - [Store API](./store/api.md)
 - [BlobStore Chunking](./castore/blobstore-chunking.md)
 - [BlobStore Protocol](./castore/blobstore-protocol.md)
-
-# Nix
-- [Specification of the Nix Language](./language-spec.md)
-- [Nix language version history](./lang-version.md)
-- [Value Pointer Equality](./value-pointer-equality.md)

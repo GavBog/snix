@@ -1,4 +1,14 @@
-# Nix language version history
+---
+title: Version history
+slug: lang-version
+description: ""
+summary: ""
+date: 2025-05-01T13:10:37+02:00
+lastmod: 2025-05-01T13:10:37+02:00
+draft: false
+weight: 50
+toc: false
+---
 
 The Nix language (“Nix”) has its own versioning mechanism independent from its
 most popular implementation (“C++ Nix”): `builtins.langVersion`. It has been

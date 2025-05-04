@@ -1,4 +1,14 @@
-# Value Pointer Equality in Nix
+---
+title: Value Pointer Equality
+slug: value-pointer-equality
+description: ""
+summary: ""
+date: 2025-05-01T13:10:37+02:00
+lastmod: 2025-05-01T13:10:37+02:00
+draft: false
+weight: 55
+toc: false
+---
 
 ## Introduction
 
@@ -47,10 +57,10 @@ works in C++ Nix, the only production ready Nix implementation currently availab
 
 ## Nix (Pointer) Equality in C++ Nix
 
-```admonish info
+{{< callout context="note" title="Note" icon="outline/info-circle" >}}
 The summary presented here is up-to-date as of 2023-06-27 and was tested with
 Nix 2.3, 2.11 and 2.15.
-```
+{{</callout>}}
 
 ### `EvalState::eqValues` and `ExprOpEq::eval`
 

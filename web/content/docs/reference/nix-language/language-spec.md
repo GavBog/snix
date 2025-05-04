@@ -1,10 +1,20 @@
-# Specification of the Nix Language
+---
+title: Specification of the Nix Language
+slug: language-spec
+description: ""
+summary: ""
+date: 2025-05-01T13:10:37+02:00
+lastmod: 2025-05-01T13:10:37+02:00
+draft: false
+weight: 50
+toc: false
+---
 
-```admonish attention
+{{< callout context="caution" title="Caution" icon="outline/alert-triangle" >}}
 This document is a work in progress. Please keep an eye on
-[`topic:nix-spec`](https://cl.tvl.fyi/q/topic:nix-spec) for ongoing
+[`topic:nix-spec`](https://cl.snix.dev/q/topic:nix-spec) for ongoing
 CLs.
-```
+{{</callout>}}
 
 Nix is a general-purpose, functional programming language which this
 document aims to describe.
