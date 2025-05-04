@@ -104,8 +104,3 @@ Extend the other pages in here. Some ideas on what should be tackled:
    parameters for chunking blobservices. Think where this would fit in.
  - Rework the URL syntax for object_store. We should support the default s3/gcs
    URLs at least.
-
-### O11Y
- - Trace propagation for object_store once they support a way to register a
-   middleware, so we can use that to register a tracing middleware.
-   https://github.com/apache/arrow-rs/issues/5990
