@@ -10,7 +10,7 @@ Please add future ideas to the issue tracker only.
 Before picking something from there to work on, ask in `#snix` to make
 sure noone is working on this, or has some specific design in mind already.
 
-### Correctness > Performance
+## Correctness > Performance
 A lot of the Nix behaviour isn't well documented out, and before going too deep
 into performance optimizations, we need to ensure we properly grasped all hidden
 features. This is to avoid doing a lot of "overall architecture perf-related
@@ -35,7 +35,7 @@ the resulting diff noise on resulting mismtaches).
 in resulting store paths.
 
 
-### Performance
+## Performance
 Even while keeping in mind some of the above caveats, there's some obvious
 low-langing fruits that could have a good impact on performance, with somewhat
 limited risk of becoming obsolete in case of behaviorial changes due to
@@ -68,7 +68,7 @@ correctness:
    split is done, as then prefetching there would only be a matter of adding it
    into the one `BlobReader`.
 
-### Error cleanup
+## Error cleanup
  - Currently, all services use snix_castore::Error, which only has two kinds
    (invalid request, storage error), containing an (owned) string.
    This is quite primitive. We should have individual error types for BS, DS, PS.
