@@ -70,26 +70,6 @@ Extend the other pages in here. Some ideas on what should be tackled:
    is probably still not too clear.
  - Absorb the rest of //snix/website into this.
 
-### Builders
-Once builds are proven to work with real-world builds, and the corner cases
-there are ruled out, adding other types of builders might be interesting.
-
- - bwrap
- - gVisor
- - Cloud Hypervisor (using similar technique as `//snix//boot`).
-
-Long-term, we want to extend traits and gRPC protocol.
-This requires some more designing. Some goals:
-
- - (more granular) control while a build is happening
- - expose more telemetry and logs
-
- - Add pre-flight checks in the OCI builder:
-   - ensure `fusermount` suid binary exists
-   - ensure `allow_other` is set
-   - ensure `runc` exists in `$PATH`
-
-
 ### Store composition
  - Combinators: list-by-priority, first-come-first-serve, cache
  - Store composition hierarchies (@yuka).

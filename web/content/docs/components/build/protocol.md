@@ -20,10 +20,10 @@ These are only separated by [compiler preprocessor macros][ifdef] within the sam
 source files despite having very little in common with each other.
 
 In Snix, the Builders need to implement a trait, and there are multiple
-implementations. In addition to an [OCI][] builder[^k8s], we also include a gRPC
-client (and server adapter), allowing to run the builder both locally or
-remotely, or plug in your entirely separate Builder, as long as it speaks the
-same gRPC protocol.
+implementations. In addition to an [OCI][] builder and plans for
+more[^other-builders], we currently include a gRPC client (and server adapter),
+allowing to run the builder both locally or remotely, or plug in your entirely
+separate Builder, as long as it speaks the same gRPC protocol.
 
 Check `build/protos/build.proto` for a detailed description of the protocol,
 individual fields, and the tests in `glue/src/tvix_build.rs` for some examples.
@@ -96,8 +96,9 @@ regarding [Build Provenance][slsa-provenance].
 [frankenbuilds]:   https://blog.layus.be/posts/2021-06-25-frankenbuilds.html
 [slsa-provenance]: https://slsa.dev/spec/v1.0/provenance
 
-[^k8s]: With a well-defined builder abstraction, it's also easy to imagine
-  other backends such as a Kubernetes-based one in the future.
+[^other-builders]: With a well-defined builder abstraction, it's also easy to imagine
+                   other backends such as a Kubernetes-based / bwrap / gVisor /
+                   Cloud Hypervisor in the future.
 [^reapi]: There have already been some discussions in the Nix community, to switch
   to REAPI:
   https://discourse.nixos.org/t/a-proposal-for-replacing-the-nix-worker-protocol/20926/22
