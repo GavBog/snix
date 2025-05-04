@@ -70,15 +70,6 @@ Extend the other pages in here. Some ideas on what should be tackled:
    is probably still not too clear.
  - Absorb the rest of //snix/website into this.
 
-### Derivation -> Build
-While we have some support for `structuredAttrs` and `fetchClosure` (at least
-enough to calculate output hashes, aka produce identical ATerm), the code
-populating the `Build` struct doesn't exist it yet.
-
-Similarly, we also don't properly populate the build environment for
-`fetchClosure` yet. (Note there already is `ExportedPathInfo`, so once
-`structuredAttrs` is there this should be easy.
-
 ### Builders
 Once builds are proven to work with real-world builds, and the corner cases
 there are ruled out, adding other types of builders might be interesting.
