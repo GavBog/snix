@@ -50,10 +50,6 @@ in resulting store paths.
    `anyhow`'s `.context()` gives us most of this out of the box. Maybe we can
    use that, using enums rather than `&'static str` as context in some cases?
 
-## Fixes towards correctness
- - `rnix` only supports string source files, but `NixString` uses bytes (and Nix
-   source code might be no valid UTF-8).
-
 ## Documentation
 Extend the other pages in here. Some ideas on what should be tackled:
  - Document what Tvix is, and what it is not yet. What it is now, what it is not
