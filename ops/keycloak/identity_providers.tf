@@ -70,18 +70,19 @@ resource "keycloak_oidc_identity_provider" "bornhack" {
   }
 }
 
-# Bornhack uses a uuid as `sub`, and has an additional `nickname` claim, which we use.
-# Normally, we'd simply import this as the username, but for now we cannot, due to
+# Bornhack uses a uuid as `sub`, and has an additional `preferred_username` claim,
+# which we use.
+# See https://bornhack.dk/profile/oidc/?scopes=profile for an overview.
 # https://github.com/bornhack/bornhack-website/issues/1837
-# resource "keycloak_custom_identity_provider_mapper" "bornhack_nickname" {
-#   realm = keycloak_realm.snix.id
-#   name = "bornhack_nickname"
-#   identity_provider_alias = keycloak_oidc_identity_provider.bornhack.alias
-#   identity_provider_mapper = "oidc-user-attribute-idp-mapper"
+resource "keycloak_custom_identity_provider_mapper" "bornhack_nickname" {
+  realm = keycloak_realm.snix.id
+  name = "bornhack_preferred_username"
+  identity_provider_alias = keycloak_oidc_identity_provider.bornhack.alias
+  identity_provider_mapper = "oidc-user-attribute-idp-mapper"
 
-#   extra_config = {
-#     syncMode = "INHERIT"
-#     claim = "nickname"
-#     "user.attribute" = "username"
-#   }
-# }
+  extra_config = {
+    syncMode = "INHERIT"
+    claim = "preferred_username"
+    "user.attribute" = "username"
+  }
+}
