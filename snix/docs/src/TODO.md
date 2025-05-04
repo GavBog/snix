@@ -143,9 +143,6 @@ This requires some more designing. Some goals:
  - Rework the URL syntax for object_store. We should support the default s3/gcs
    URLs at least.
 
-### PathInfoService
- - sqlite backend (different schema than the Nix one, we need the root nodes data!)
-
 ### Nix Daemon protocol
 - Some work ongoing on the worker operation parsing (griff, picnoir)
 
