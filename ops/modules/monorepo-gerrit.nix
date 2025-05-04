@@ -129,6 +129,7 @@ in
         overrideApproval = "Owners-Override+1";
         # People implicitly approve their own changes automatically.
         enableImplicitApprovals = "TRUE";
+        disabledBranch = "refs/meta/config";
       };
 
       # Allow users to add additional email addresses to their accounts.
