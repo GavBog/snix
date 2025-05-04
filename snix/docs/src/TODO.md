@@ -137,8 +137,7 @@ This requires some more designing. Some goals:
       "near" store URL.
 
 ### Store Config
-   There's already serde for some store options (bigtable uses `serde_qs`).
-   We might also have common options global over all backends, like chunking
+ - We might also have common options global over all backends, like chunking
    parameters for chunking blobservices. Think where this would fit in.
  - Rework the URL syntax for object_store. We should support the default s3/gcs
    URLs at least.
