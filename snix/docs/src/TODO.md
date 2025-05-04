@@ -3,10 +3,11 @@
 This contains a rough collection of ideas on the TODO list, trying to keep track
 of it somewhere.
 
-Of course, there's no guarantee these things will get addressed, but it helps
-dumping the backlog somewhere.
+It's in process of being migrated to the
+[Issue Tracker](https://git.snix.dev/snix/snix/issues) and documentation.
+Please add future ideas to the issue tracker only.
 
-Feel free to add new ideas. Before picking something, ask in `#tvix-dev` to make
+Before picking something from there to work on, ask in `#snix` to make
 sure noone is working on this, or has some specific design in mind already.
 
 ## Cleanups
