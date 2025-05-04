@@ -133,9 +133,6 @@ pub struct AdditionalFile {
 /// Describes the result of a [BuildRequest].
 #[derive(Debug, Clone, PartialEq)]
 pub struct BuildResult {
-    /// The original BuildRequest.
-    pub build_request: BuildRequest,
-
     /// The outputs that were produced after successfully building.
     // They are sorted by the order specified in the build request.
     pub outputs: Vec<BuildOutput>,

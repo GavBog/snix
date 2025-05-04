@@ -282,7 +282,6 @@ impl TryFrom<BuildRequest> for crate::buildservice::BuildRequest {
 impl From<BuildResult> for BuildResponse {
     fn from(value: BuildResult) -> Self {
         Self {
-            build_request: Some(value.build_request.into()),
             outputs: value
                 .outputs
                 .into_iter()
@@ -303,11 +302,6 @@ impl TryFrom<BuildResponse> for BuildResult {
 
     fn try_from(value: BuildResponse) -> Result<Self, Self::Error> {
         Ok(Self {
-            build_request: value
-                .build_request
-                .ok_or(ValidateBuildResultError::MissingRequestField)?
-                .try_into()
-                .map_err(ValidateBuildResultError::InvalidBuildRequest)?,
             outputs: value
                 .outputs
                 .into_iter()

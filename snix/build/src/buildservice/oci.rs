@@ -86,7 +86,7 @@ where
             .map_err(std::io::Error::other)?;
 
         // assemble a BTreeMap of Nodes to pass into SnixStoreFs.
-        let patterns = ReferencePattern::new(request.refscan_needles.clone());
+        let patterns = ReferencePattern::new(request.refscan_needles);
         // NOTE: impl Drop for FuseDaemon unmounts, so if the call is cancelled, umount.
         let _fuse_daemon = tokio::task::spawn_blocking({
             let blob_service = self.blob_service.clone();
@@ -94,7 +94,7 @@ where
 
             let dest = bundle_path.join("inputs");
 
-            let root_nodes = Box::new(request.inputs.clone());
+            let root_nodes = Box::new(request.inputs);
             move || {
                 let fs = snix_castore::fs::SnixStoreFs::new(
                     blob_service,
@@ -143,7 +143,7 @@ where
         // mostly IO bound.
         let outputs = futures::future::try_join_all(host_output_paths.into_iter().enumerate().map(
             |(i, host_output_path)| {
-                let output_path = request.outputs[i].clone();
+                let output_path = &request.outputs[i];
                 let patterns = patterns.clone();
                 async move {
                     debug!(host.path=?host_output_path, output.path=?output_path, "ingesting path");
@@ -178,10 +178,7 @@ where
         ))
         .await?;
 
-        Ok(BuildResult {
-            build_request: request,
-            outputs,
-        })
+        Ok(BuildResult { outputs })
     }
 }
 
