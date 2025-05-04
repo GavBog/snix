@@ -28,7 +28,7 @@ resource "keycloak_group_roles" "snix_core_team_roles" {
     # keycloak_role.is_local_admin,
     # keycloak_role.can_manage_snix,
     keycloak_role.grafana_admin.id,
-    # keycloak_role.forgejo_admin.id,
+    keycloak_role.forgejo_admin.id,
     # keycloak_role.gerrit_admin.id
   ]
 }

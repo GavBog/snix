@@ -141,7 +141,6 @@ in
           REGISTER_EMAIL_CONFIRM = false;
           ACCOUNT_LINKING = "login";
           USERNAME = "nickname";
-          OPENID_CONNECT_SCOPES = "email profile";
         };
 
         repository = {
@@ -260,7 +259,6 @@ in
         CLIENT_ID="forgejo"
         CLIENT_SECRET=$(cat ${config.age.secrets.forgejo-oauth-secret.path})
         DISCOVERY_URL="https://auth.snix.dev/realms/snix-project/.well-known/openid-configuration"
-        SCOPES=("openid" "profile" "email")
 
         # Check if the OAuth2 source already exists
         if gitea admin auth list | grep -q "$NAME"; then
@@ -275,8 +273,10 @@ in
           --key "$CLIENT_ID" \
           --secret "$CLIENT_SECRET" \
           --auto-discover-url "$DISCOVERY_URL" \
-          $(printf -- '--scopes "%s" ' "''${SCOPES[@]}") \
-          --icon-url "$ICON_URL"
+          --group-claim-name forgejo_roles \
+          --admin-group Admin \
+          --group-team-map '{"Admin":{"snix":["Owners"]},"Contributors":{"snix": ["Contributors"]}}' \
+          --group-team-map-removal true
 
         echo "OAuth2 source '$NAME' added successfully."
       '';
