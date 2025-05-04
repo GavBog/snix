@@ -169,7 +169,6 @@ in
         push = [
           "+refs/heads/*:refs/heads/*"
           "+refs/tags/*:refs/tags/*"
-          "+refs/r/*:refs/r/*"
         ];
         timeout = 30;
         threads = 3;
