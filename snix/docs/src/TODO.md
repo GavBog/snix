@@ -54,9 +54,3 @@ Extend the other pages in here. Some ideas on what should be tackled:
  - Restructure docs on castore vs store, this seems to be duplicated a bit and
    is probably still not too clear.
  - Absorb the rest of //snix/website into this.
-
-### Store Config
- - We might also have common options global over all backends, like chunking
-   parameters for chunking blobservices. Think where this would fit in.
- - Rework the URL syntax for object_store. We should support the default s3/gcs
-   URLs at least.
