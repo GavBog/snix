@@ -55,35 +55,6 @@ Extend the other pages in here. Some ideas on what should be tackled:
    is probably still not too clear.
  - Absorb the rest of //snix/website into this.
 
-### Store composition
- - Combinators: list-by-priority, first-come-first-serve, cache
- - Store composition hierarchies (@yuka).
-   - URL format too one-dimensional.
-   - We want to have nice and simple user-facing substituter config, including
-     sensible default wrappers for caching, retries, fallbacks, as well as
-     granular control for power-users.
-   - Current design idea:
-     - Have a concept similar to rclone config (map with store aliases as
-       keys, allowing to refer to stores by their alias from other parts of
-       the config).
-       It allows both referring to by name, as well as ad-hoc definition:
-       https://rclone.org/docs/#syntax-of-remote-paths
-     - Each store needs to be aware of its "instance name", so it can be
-       included in logs, metrics, …
-     - Have a "instantiation function" traversing such a config data structure,
-       creating store instances and plugging them together, ultimately returning
-       a dyn …Service interface.
-     - No reconfiguration/reconcilation for now
-     - Making URLs the primary data format would get ugly quite easily (hello
-       multiple layers of escaping!), so best to convert the existing URL
-       syntax to our new config format on the fly and then use one codepath
-       to instantiate/assemble. Similarly, something like the "user-facing
-       substituter config" mentioned above could aalso be converted to such a
-       config format under the hood.
-     - Maybe add a ?cache=$other_url parameter support to the URL syntax, to
-       easily wrap a store with a caching frontend, using $other_url as the
-      "near" store URL.
-
 ### Store Config
  - We might also have common options global over all backends, like chunking
    parameters for chunking blobservices. Think where this would fit in.
