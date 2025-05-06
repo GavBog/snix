@@ -11,8 +11,8 @@ itertools.workspace = true
 prost.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["process"] }
-tokio-listener = { workspace = true, features = ["tonic012"] }
-tonic = { workspace = true, features = ["tls", "tls-roots"] }
+tokio-listener = { workspace = true, features = ["tonic013"] }
+tonic = { workspace = true, features = ["tls-native-roots"] }
 # TODO: put the fuse dep behind a feature flag?
 snix-castore = { path = "../castore", features = ["fuse"] }
 tracing.workspace = true

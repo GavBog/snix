@@ -1358,11 +1358,6 @@ rec {
             packageId = "axum-core 0.4.5";
           }
           {
-            name = "axum-macros";
-            packageId = "axum-macros";
-            optional = true;
-          }
-          {
             name = "bytes";
             packageId = "bytes";
           }
@@ -1481,11 +1476,6 @@ rec {
         ];
         devDependencies = [
           {
-            name = "axum-macros";
-            packageId = "axum-macros";
-            features = [ "__private" ];
-          }
-          {
             name = "serde";
             packageId = "serde";
             features = [ "derive" ];
@@ -1587,7 +1577,6 @@ rec {
           "http1"
           "http2"
           "json"
-          "macros"
           "matched-path"
           "original-uri"
           "query"
@@ -1605,6 +1594,11 @@ rec {
           {
             name = "axum-core";
             packageId = "axum-core 0.5.5";
+          }
+          {
+            name = "axum-macros";
+            packageId = "axum-macros";
+            optional = true;
           }
           {
             name = "bytes";
@@ -1760,6 +1754,10 @@ rec {
             "dep:base64"
           ];
         };
+        resolvedDefaultFeatures = [
+          "macros"
+          "matched-path"
+        ];
       };
       "axum-core 0.4.5" = rec {
         crateName = "axum-core";
@@ -2053,9 +2051,9 @@ rec {
       };
       "axum-macros" = rec {
         crateName = "axum-macros";
-        version = "0.4.2";
+        version = "0.5.0";
         edition = "2021";
-        sha256 = "1klv77c889jm05bzayaaiinalarhvh2crc2w4nvp3l581xaj7lap";
+        sha256 = "0p6011ld0izk22fmdxsps58cigilq2yhnmyqw4f8bslg09gdwkv0";
         procMacro = true;
         libName = "axum_macros";
         dependencies = [
@@ -2417,7 +2415,7 @@ rec {
           }
           {
             name = "tonic";
-            packageId = "tonic 0.13.1";
+            packageId = "tonic";
             features = [ "transport" ];
           }
           {
@@ -2437,7 +2435,7 @@ rec {
           }
           {
             name = "tonic-build";
-            packageId = "tonic-build 0.13.1";
+            packageId = "tonic-build";
             features = [ "cleanup-markdown" ];
           }
         ];
@@ -10340,6 +10338,11 @@ rec {
             ];
           }
           {
+            name = "tonic";
+            packageId = "tonic";
+            features = [ "tls-aws-lc" ];
+          }
+          {
             name = "tower-http";
             packageId = "tower-http";
             features = [
@@ -10727,6 +10730,11 @@ rec {
             packageId = "libc";
             features = [ "extra_traits" ];
           }
+          {
+            name = "memoffset";
+            packageId = "memoffset 0.9.1";
+            optional = true;
+          }
         ];
         buildDependencies = [
           {
@@ -10755,11 +10763,14 @@ rec {
           ];
         };
         resolvedDefaultFeatures = [
+          "default"
           "fs"
           "ioctl"
+          "memoffset"
           "poll"
           "process"
           "signal"
+          "socket"
           "term"
         ];
       };
@@ -11784,9 +11795,9 @@ rec {
       };
       "opentelemetry" = rec {
         crateName = "opentelemetry";
-        version = "0.28.0";
+        version = "0.30.0";
         edition = "2021";
-        sha256 = "09k43sgaarw3zx5j434ngq1canpcjibsbxaqqa8dyp0acxxncvi3";
+        sha256 = "1rjjwlvhr7h01kl0768v9i7ng77l1axxfzbg29ancxbjrgj1dx5a";
         dependencies = [
           {
             name = "futures-core";
@@ -11828,6 +11839,12 @@ rec {
             "metrics"
             "logs"
             "internal-logs"
+            "futures"
+          ];
+          "futures" = [
+            "futures-core"
+            "futures-sink"
+            "pin-project-lite"
           ];
           "futures-core" = [ "dep:futures-core" ];
           "futures-sink" = [ "dep:futures-sink" ];
@@ -11837,15 +11854,14 @@ rec {
           "testing" = [ "trace" ];
           "thiserror" = [ "dep:thiserror" ];
           "trace" = [
-            "pin-project-lite"
-            "futures-sink"
-            "futures-core"
+            "futures"
             "thiserror"
           ];
           "tracing" = [ "dep:tracing" ];
         };
         resolvedDefaultFeatures = [
           "default"
+          "futures"
           "futures-core"
           "futures-sink"
           "internal-logs"
@@ -11859,9 +11875,9 @@ rec {
       };
       "opentelemetry-http" = rec {
         crateName = "opentelemetry-http";
-        version = "0.28.0";
+        version = "0.30.0";
         edition = "2021";
-        sha256 = "0lv2sbsdr7b8bxnly92zzhlm1wzjbynib1xlkw9hs0qh56pkz1m8";
+        sha256 = "0vf3d9p733ms312hcbhy14h32imf22bl7qw6i3mdp5rahjg67xjh";
         libName = "opentelemetry_http";
         dependencies = [
           {
@@ -11890,12 +11906,6 @@ rec {
             usesDefaultFeatures = false;
             features = [ "blocking" ];
           }
-          {
-            name = "tracing";
-            packageId = "tracing";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
         ];
         features = {
           "default" = [ "internal-logs" ];
@@ -11905,10 +11915,7 @@ rec {
             "dep:hyper-util"
             "dep:tokio"
           ];
-          "internal-logs" = [
-            "tracing"
-            "opentelemetry/internal-logs"
-          ];
+          "internal-logs" = [ "opentelemetry/internal-logs" ];
           "reqwest" = [ "dep:reqwest" ];
           "reqwest-rustls" = [
             "reqwest"
@@ -11918,30 +11925,20 @@ rec {
             "reqwest"
             "reqwest/rustls-tls-webpki-roots"
           ];
-          "tracing" = [ "dep:tracing" ];
         };
         resolvedDefaultFeatures = [
           "default"
           "internal-logs"
           "reqwest"
-          "tracing"
         ];
       };
       "opentelemetry-otlp" = rec {
         crateName = "opentelemetry-otlp";
-        version = "0.28.0";
+        version = "0.30.0";
         edition = "2021";
-        sha256 = "148xq13ar11bvmk7pxbslrhh5pgf40bv83n6dlysigj1dm613vsv";
+        sha256 = "0aw5amychdmwayfa0p724na1m7vd1jk9qlzw39riaxp08d56dvnv";
         libName = "opentelemetry_otlp";
         dependencies = [
-          {
-            name = "async-trait";
-            packageId = "async-trait";
-          }
-          {
-            name = "futures-core";
-            packageId = "futures-core";
-          }
           {
             name = "http";
             packageId = "http 1.4.0";
@@ -11997,7 +11994,7 @@ rec {
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
+            packageId = "tonic";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -12016,6 +12013,15 @@ rec {
             features = [
               "macros"
               "rt-multi-thread"
+            ];
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [
+              "router"
+              "server"
             ];
           }
         ];
@@ -12102,10 +12108,10 @@ rec {
             "serde"
             "serde_json"
           ];
-          "tls" = [ "tonic/tls" ];
+          "tls" = [ "tonic/tls-ring" ];
           "tls-roots" = [
             "tls"
-            "tonic/tls-roots"
+            "tonic/tls-native-roots"
           ];
           "tls-webpki-roots" = [
             "tls"
@@ -12141,9 +12147,9 @@ rec {
       };
       "opentelemetry-proto" = rec {
         crateName = "opentelemetry-proto";
-        version = "0.28.0";
+        version = "0.30.0";
         edition = "2021";
-        sha256 = "0vbl4si1mny87pmqxxg6wday45pcc8bvpcrf46cpwwi4606qgy2n";
+        sha256 = "1p4d1s7p4z5a9xy4x4dsjifc3385v5q8wx780mdgw407cvbny11f";
         libName = "opentelemetry_proto";
         dependencies = [
           {
@@ -12163,7 +12169,7 @@ rec {
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
+            packageId = "tonic";
             optional = true;
             usesDefaultFeatures = false;
             features = [
@@ -12186,14 +12192,14 @@ rec {
           ];
           "gen-tonic" = [
             "gen-tonic-messages"
-            "tonic/transport"
+            "tonic/channel"
           ];
           "gen-tonic-messages" = [
             "tonic"
             "prost"
           ];
           "hex" = [ "dep:hex" ];
-          "internal-logs" = [ "tracing" ];
+          "internal-logs" = [ "opentelemetry/internal-logs" ];
           "logs" = [
             "opentelemetry/logs"
             "opentelemetry_sdk/logs"
@@ -12211,7 +12217,6 @@ rec {
             "opentelemetry/trace"
             "opentelemetry_sdk/trace"
           ];
-          "tracing" = [ "dep:tracing" ];
           "with-schemars" = [ "schemars" ];
           "with-serde" = [
             "serde"
@@ -12232,9 +12237,9 @@ rec {
       };
       "opentelemetry-semantic-conventions" = rec {
         crateName = "opentelemetry-semantic-conventions";
-        version = "0.28.0";
+        version = "0.30.0";
         edition = "2021";
-        sha256 = "1dzra5yspllg0qi6hry2ncm19h7vxnmvh4y3sqn3cm9dikvs5crg";
+        sha256 = "1hns9n0sh89cqp7rav7gf2a5nw65wv2m78sphms3cx54jsi5kl43";
         libName = "opentelemetry_semantic_conventions";
         features = {
         };
@@ -12242,15 +12247,10 @@ rec {
       };
       "opentelemetry_sdk" = rec {
         crateName = "opentelemetry_sdk";
-        version = "0.28.0";
+        version = "0.30.0";
         edition = "2021";
-        sha256 = "0w4mycm070f4knvi1x5v199apd1fvi0712qiyv0pz70889havpw4";
+        sha256 = "0jvsqhdrka9ppyfr3y6rhj4ai61wgrfk0970jqcd2cayksm49xhi";
         dependencies = [
-          {
-            name = "async-trait";
-            packageId = "async-trait";
-            optional = true;
-          }
           {
             name = "futures-channel";
             packageId = "futures-channel";
@@ -12270,11 +12270,6 @@ rec {
             ];
           }
           {
-            name = "glob";
-            packageId = "glob";
-            optional = true;
-          }
-          {
             name = "opentelemetry";
             packageId = "opentelemetry";
           }
@@ -12285,13 +12280,15 @@ rec {
           }
           {
             name = "rand";
-            packageId = "rand 0.8.5";
+            packageId = "rand 0.9.2";
             optional = true;
             usesDefaultFeatures = false;
             features = [
               "std"
               "std_rng"
               "small_rng"
+              "os_rng"
+              "thread_rng"
             ];
           }
           {
@@ -12319,29 +12316,31 @@ rec {
             packageId = "tokio-stream";
             optional = true;
           }
-          {
-            name = "tracing";
-            packageId = "tracing";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
         ];
         features = {
-          "async-std" = [ "dep:async-std" ];
-          "async-trait" = [ "dep:async-trait" ];
           "default" = [
             "trace"
             "metrics"
             "logs"
             "internal-logs"
           ];
-          "experimental_logs_batch_log_processor_with_async_runtime" = [ "logs" ];
+          "experimental_logs_batch_log_processor_with_async_runtime" = [
+            "logs"
+            "experimental_async_runtime"
+          ];
+          "experimental_logs_concurrent_log_processor" = [ "logs" ];
+          "experimental_metrics_custom_reader" = [ "metrics" ];
           "experimental_metrics_disable_name_validation" = [ "metrics" ];
-          "experimental_metrics_periodicreader_with_async_runtime" = [ "metrics" ];
-          "experimental_trace_batch_span_processor_with_async_runtime" = [ "trace" ];
-          "glob" = [ "dep:glob" ];
+          "experimental_metrics_periodicreader_with_async_runtime" = [
+            "metrics"
+            "experimental_async_runtime"
+          ];
+          "experimental_trace_batch_span_processor_with_async_runtime" = [
+            "trace"
+            "experimental_async_runtime"
+          ];
           "http" = [ "dep:http" ];
-          "internal-logs" = [ "tracing" ];
+          "internal-logs" = [ "opentelemetry/internal-logs" ];
           "jaeger_remote_sampler" = [
             "trace"
             "opentelemetry-http"
@@ -12349,23 +12348,16 @@ rec {
             "serde"
             "serde_json"
             "url"
+            "experimental_async_runtime"
           ];
           "logs" = [
             "opentelemetry/logs"
             "serde_json"
           ];
-          "metrics" = [
-            "opentelemetry/metrics"
-            "glob"
-            "async-trait"
-          ];
+          "metrics" = [ "opentelemetry/metrics" ];
           "opentelemetry-http" = [ "dep:opentelemetry-http" ];
           "percent-encoding" = [ "dep:percent-encoding" ];
           "rand" = [ "dep:rand" ];
-          "rt-async-std" = [
-            "async-std"
-            "experimental_async_runtime"
-          ];
           "rt-tokio" = [
             "tokio"
             "tokio-stream"
@@ -12388,7 +12380,6 @@ rec {
             "trace"
             "metrics"
             "logs"
-            "rt-async-std"
             "rt-tokio"
             "rt-tokio-current-thread"
             "tokio/macros"
@@ -12401,14 +12392,11 @@ rec {
             "rand"
             "percent-encoding"
           ];
-          "tracing" = [ "dep:tracing" ];
           "url" = [ "dep:url" ];
         };
         resolvedDefaultFeatures = [
-          "async-trait"
           "default"
           "experimental_async_runtime"
-          "glob"
           "internal-logs"
           "logs"
           "metrics"
@@ -12419,7 +12407,6 @@ rec {
           "tokio"
           "tokio-stream"
           "trace"
-          "tracing"
         ];
       };
       "os_str_bytes" = rec {
@@ -16070,7 +16057,7 @@ rec {
           {
             name = "opentelemetry";
             packageId = "opentelemetry";
-            rename = "opentelemetry_0_28_pkg";
+            rename = "opentelemetry_0_30_pkg";
             optional = true;
           }
           {
@@ -16089,7 +16076,7 @@ rec {
           {
             name = "tracing-opentelemetry";
             packageId = "tracing-opentelemetry";
-            rename = "tracing-opentelemetry_0_29_pkg";
+            rename = "tracing-opentelemetry_0_31_pkg";
             optional = true;
           }
         ];
@@ -16169,9 +16156,9 @@ rec {
           "tracing-opentelemetry_0_31_pkg" = [ "dep:tracing-opentelemetry_0_31_pkg" ];
         };
         resolvedDefaultFeatures = [
-          "opentelemetry_0_28"
-          "opentelemetry_0_28_pkg"
-          "tracing-opentelemetry_0_29_pkg"
+          "opentelemetry_0_30"
+          "opentelemetry_0_30_pkg"
+          "tracing-opentelemetry_0_31_pkg"
         ];
       };
       "reserve-port" = rec {
@@ -18618,15 +18605,12 @@ rec {
           {
             name = "tokio-listener";
             packageId = "tokio-listener";
-            features = [ "tonic012" ];
+            features = [ "tonic013" ];
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
-            features = [
-              "tls"
-              "tls-roots"
-            ];
+            packageId = "tonic";
+            features = [ "tls-native-roots" ];
           }
           {
             name = "tonic-reflection";
@@ -18658,7 +18642,7 @@ rec {
           }
           {
             name = "tonic-build";
-            packageId = "tonic-build 0.12.3";
+            packageId = "tonic-build";
           }
         ];
         devDependencies = [
@@ -18881,7 +18865,7 @@ rec {
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
+            packageId = "tonic";
           }
           {
             name = "tonic-health";
@@ -18896,6 +18880,7 @@ rec {
           {
             name = "tower";
             packageId = "tower 0.4.13";
+            features = [ "util" ];
           }
           {
             name = "tower-http";
@@ -18964,7 +18949,7 @@ rec {
           }
           {
             name = "tonic-build";
-            packageId = "tonic-build 0.12.3";
+            packageId = "tonic-build";
           }
         ];
         devDependencies = [
@@ -19235,15 +19220,12 @@ rec {
           {
             name = "tokio-listener";
             packageId = "tokio-listener";
-            features = [ "tonic012" ];
+            features = [ "tonic013" ];
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
-            features = [
-              "tls"
-              "tls-roots"
-            ];
+            packageId = "tonic";
+            features = [ "tls-native-roots" ];
           }
           {
             name = "tonic-reflection";
@@ -19328,12 +19310,12 @@ rec {
               "clap"
               "multi-listener"
               "sd_listen"
-              "tonic012"
+              "tonic013"
             ];
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
+            packageId = "tonic";
           }
           {
             name = "tonic-health";
@@ -19881,16 +19863,13 @@ rec {
               "clap"
               "multi-listener"
               "sd_listen"
-              "tonic012"
+              "tonic013"
             ];
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
-            features = [
-              "tls"
-              "tls-roots"
-            ];
+            packageId = "tonic";
+            features = [ "tls-native-roots" ];
           }
           {
             name = "tonic-health";
@@ -20603,7 +20582,7 @@ rec {
               "clap"
               "multi-listener"
               "sd_listen"
-              "tonic012"
+              "tonic013"
             ];
           }
           {
@@ -20627,11 +20606,8 @@ rec {
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
-            features = [
-              "tls"
-              "tls-roots"
-            ];
+            packageId = "tonic";
+            features = [ "tls-aws-lc" ];
           }
           {
             name = "tonic-health";
@@ -20676,7 +20652,7 @@ rec {
           }
           {
             name = "tonic-build";
-            packageId = "tonic-build 0.12.3";
+            packageId = "tonic-build";
           }
         ];
         devDependencies = [
@@ -20833,7 +20809,7 @@ rec {
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
+            packageId = "tonic";
             optional = true;
           }
           {
@@ -20888,7 +20864,7 @@ rec {
             "dep:opentelemetry_sdk"
             "dep:opentelemetry-http"
             "dep:opentelemetry-semantic-conventions"
-            "reqwest-tracing?/opentelemetry_0_28"
+            "reqwest-tracing?/opentelemetry_0_30"
           ];
           "reqwest" = [ "dep:reqwest-tracing" ];
           "tonic" = [
@@ -22163,9 +22139,9 @@ rec {
       };
       "tokio-listener" = rec {
         crateName = "tokio-listener";
-        version = "0.4.4";
+        version = "0.5.2";
         edition = "2021";
-        sha256 = "18d5g09g5b54sbinq30d1vk1svi0dnbkgk196ria9ginjl7vnp2f";
+        sha256 = "17f76804jmcf3hxnh17j0l35w3clpvj050133ilhbxyvjmr9r968";
         libName = "tokio_listener";
         dependencies = [
           {
@@ -22239,7 +22215,6 @@ rec {
             packageId = "tokio";
             features = [
               "net"
-              "io-std"
               "time"
               "sync"
             ];
@@ -22254,9 +22229,21 @@ rec {
             ];
           }
           {
+            name = "tokio-vsock";
+            packageId = "tokio-vsock";
+            optional = true;
+            target =
+              { target, features }:
+              (
+                ("linux" == target."os" or null)
+                || ("android" == target."os" or null)
+                || ("macos" == target."os" or null)
+              );
+          }
+          {
             name = "tonic";
-            packageId = "tonic 0.12.3";
-            rename = "tonic_012";
+            packageId = "tonic";
+            rename = "tonic_013";
             optional = true;
           }
           {
@@ -22282,6 +22269,10 @@ rec {
             features = [ "help" ];
           }
           {
+            name = "futures-util";
+            packageId = "futures-util";
+          }
+          {
             name = "tokio";
             packageId = "tokio";
             features = [
@@ -22300,13 +22291,21 @@ rec {
             "dep:tower"
             "dep:axum07"
           ];
+          "axum08" = [ "dep:axum08" ];
+          "boxed_variant" = [ "tokio/io-util" ];
           "clap" = [ "dep:clap" ];
           "default" = [
             "user_facing_default"
             "tokio-util"
           ];
+          "dummy_variant" = [ "tokio/io-util" ];
+          "duplex_variant" = [ "tokio/io-util" ];
           "hyper014" = [ "dep:hyper014" ];
-          "inetd" = [ "dep:futures-util" ];
+          "inetd" = [
+            "dep:futures-util"
+            "tokio/io-std"
+          ];
+          "mpsc_listener" = [ "tokio/sync" ];
           "multi-listener" = [ "dep:futures-util" ];
           "nix" = [ "dep:nix" ];
           "sd_listen" = [ "socket2" ];
@@ -22318,9 +22317,26 @@ rec {
           "socket2" = [ "dep:socket2" ];
           "socket_options" = [ "socket2" ];
           "tokio-util" = [ "dep:tokio-util" ];
-          "tonic010" = [ "dep:tonic_010" ];
-          "tonic011" = [ "dep:tonic_011" ];
-          "tonic012" = [ "dep:tonic_012" ];
+          "tonic010" = [
+            "dep:tonic_010"
+            "tokio-vsock?/tonic010"
+          ];
+          "tonic011" = [
+            "dep:tonic_011"
+            "tokio-vsock?/tonic011"
+          ];
+          "tonic012" = [
+            "dep:tonic_012"
+            "tokio-vsock?/tonic012"
+          ];
+          "tonic013" = [
+            "dep:tonic_013"
+            "tokio-vsock?/tonic013"
+          ];
+          "tonic014" = [
+            "dep:tonic_014"
+            "tokio-vsock?/tonic014"
+          ];
           "unix_path_tools" = [ "nix" ];
           "user_facing_default" = [
             "inetd"
@@ -22329,6 +22345,7 @@ rec {
             "sd_listen"
             "socket_options"
           ];
+          "vsock" = [ "dep:tokio-vsock" ];
         };
         resolvedDefaultFeatures = [
           "axum07"
@@ -22341,7 +22358,7 @@ rec {
           "socket2"
           "socket_options"
           "tokio-util"
-          "tonic012"
+          "tonic013"
           "unix"
           "unix_path_tools"
           "user_facing_default"
@@ -22478,6 +22495,11 @@ rec {
             packageId = "tokio";
             features = [ "sync" ];
           }
+          {
+            name = "tokio-util";
+            packageId = "tokio-util";
+            optional = true;
+          }
         ];
         devDependencies = [
           {
@@ -22514,7 +22536,9 @@ rec {
           "default"
           "fs"
           "net"
+          "sync"
           "time"
+          "tokio-util"
         ];
       };
       "tokio-test" = rec {
@@ -22653,6 +22677,74 @@ rec {
           "io-util"
           "net"
         ];
+      };
+      "tokio-vsock" = rec {
+        crateName = "tokio-vsock";
+        version = "0.7.2";
+        edition = "2018";
+        sha256 = "1izis04x0my0mz8sklf9kp3x04ds8mdhiw5lw6rdm2a877wrwccb";
+        libName = "tokio_vsock";
+        authors = [
+          "fsyncd"
+          "rust-vsock"
+        ];
+        dependencies = [
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "futures";
+            packageId = "futures";
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "net"
+              "sync"
+            ];
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            rename = "tonic013";
+            optional = true;
+          }
+          {
+            name = "vsock";
+            packageId = "vsock";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "macros"
+              "rt"
+              "io-util"
+            ];
+          }
+        ];
+        features = {
+          "axum08" = [ "dep:axum08" ];
+          "tonic010" = [ "dep:tonic010" ];
+          "tonic011" = [ "dep:tonic011" ];
+          "tonic012" = [ "dep:tonic012" ];
+          "tonic013" = [ "dep:tonic013" ];
+          "tonic014" = [ "dep:tonic014" ];
+          "tonic05" = [ "dep:tonic05" ];
+          "tonic06" = [ "dep:tonic06" ];
+          "tonic07" = [ "dep:tonic07" ];
+          "tonic08" = [ "dep:tonic08" ];
+          "tonic09" = [ "dep:tonic09" ];
+        };
+        resolvedDefaultFeatures = [ "tonic013" ];
       };
       "toml 0.6.0" = rec {
         crateName = "toml";
@@ -23151,249 +23243,7 @@ rec {
           "std"
         ];
       };
-      "tonic 0.12.3" = rec {
-        crateName = "tonic";
-        version = "0.12.3";
-        edition = "2021";
-        sha256 = "0ljd1lfjpw0vrm5wbv15x6nq2i38llsanls5rkzmdn2n0wrmnz47";
-        authors = [
-          "Lucio Franco <luciofranco14@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "async-stream";
-            packageId = "async-stream";
-            optional = true;
-          }
-          {
-            name = "async-trait";
-            packageId = "async-trait";
-            optional = true;
-          }
-          {
-            name = "axum";
-            packageId = "axum 0.7.9";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "base64";
-            packageId = "base64";
-          }
-          {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
-            name = "h2";
-            packageId = "h2";
-            optional = true;
-          }
-          {
-            name = "http";
-            packageId = "http 1.4.0";
-          }
-          {
-            name = "http-body";
-            packageId = "http-body";
-          }
-          {
-            name = "http-body-util";
-            packageId = "http-body-util";
-          }
-          {
-            name = "hyper";
-            packageId = "hyper";
-            optional = true;
-            features = [
-              "http1"
-              "http2"
-            ];
-          }
-          {
-            name = "hyper-timeout";
-            packageId = "hyper-timeout";
-            optional = true;
-          }
-          {
-            name = "hyper-util";
-            packageId = "hyper-util";
-            optional = true;
-            features = [ "tokio" ];
-          }
-          {
-            name = "percent-encoding";
-            packageId = "percent-encoding";
-          }
-          {
-            name = "pin-project";
-            packageId = "pin-project";
-          }
-          {
-            name = "prost";
-            packageId = "prost";
-            optional = true;
-            usesDefaultFeatures = false;
-            features = [ "std" ];
-          }
-          {
-            name = "rustls-native-certs";
-            packageId = "rustls-native-certs";
-            optional = true;
-          }
-          {
-            name = "rustls-pemfile";
-            packageId = "rustls-pemfile";
-            optional = true;
-          }
-          {
-            name = "socket2";
-            packageId = "socket2 0.5.10";
-            optional = true;
-            features = [ "all" ];
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "tokio-rustls";
-            packageId = "tokio-rustls";
-            optional = true;
-            usesDefaultFeatures = false;
-            features = [
-              "logging"
-              "tls12"
-              "ring"
-            ];
-          }
-          {
-            name = "tokio-stream";
-            packageId = "tokio-stream";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.4.13";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "tower-layer";
-            packageId = "tower-layer";
-          }
-          {
-            name = "tower-service";
-            packageId = "tower-service";
-          }
-          {
-            name = "tracing";
-            packageId = "tracing";
-          }
-        ];
-        devDependencies = [
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [
-              "rt"
-              "macros"
-            ];
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.4.13";
-            features = [ "full" ];
-          }
-        ];
-        features = {
-          "channel" = [
-            "dep:hyper"
-            "hyper?/client"
-            "dep:hyper-util"
-            "hyper-util?/client-legacy"
-            "dep:tower"
-            "tower?/balance"
-            "tower?/buffer"
-            "tower?/discover"
-            "tower?/limit"
-            "tower?/util"
-            "dep:tokio"
-            "tokio?/time"
-            "dep:hyper-timeout"
-          ];
-          "codegen" = [ "dep:async-trait" ];
-          "default" = [
-            "transport"
-            "codegen"
-            "prost"
-          ];
-          "gzip" = [ "dep:flate2" ];
-          "prost" = [ "dep:prost" ];
-          "router" = [
-            "dep:axum"
-            "dep:tower"
-            "tower?/util"
-          ];
-          "server" = [
-            "router"
-            "dep:async-stream"
-            "dep:h2"
-            "dep:hyper"
-            "hyper?/server"
-            "dep:hyper-util"
-            "hyper-util?/service"
-            "hyper-util?/server-auto"
-            "dep:socket2"
-            "dep:tokio"
-            "tokio?/macros"
-            "tokio?/net"
-            "tokio?/time"
-            "tokio-stream/net"
-            "dep:tower"
-            "tower?/util"
-            "tower?/limit"
-          ];
-          "tls" = [
-            "dep:rustls-pemfile"
-            "dep:tokio-rustls"
-            "dep:tokio"
-            "tokio?/rt"
-            "tokio?/macros"
-          ];
-          "tls-native-roots" = [
-            "tls"
-            "channel"
-            "dep:rustls-native-certs"
-          ];
-          "tls-roots" = [ "tls-native-roots" ];
-          "tls-webpki-roots" = [
-            "tls"
-            "channel"
-            "dep:webpki-roots"
-          ];
-          "transport" = [
-            "server"
-            "channel"
-          ];
-          "zstd" = [ "dep:zstd" ];
-        };
-        resolvedDefaultFeatures = [
-          "channel"
-          "codegen"
-          "default"
-          "prost"
-          "router"
-          "server"
-          "tls"
-          "tls-native-roots"
-          "tls-roots"
-          "transport"
-        ];
-      };
-      "tonic 0.13.1" = rec {
+      "tonic" = rec {
         crateName = "tonic";
         version = "0.13.1";
         edition = "2021";
@@ -23472,6 +23322,11 @@ rec {
             optional = true;
             usesDefaultFeatures = false;
             features = [ "std" ];
+          }
+          {
+            name = "rustls-native-certs";
+            packageId = "rustls-native-certs";
+            optional = true;
           }
           {
             name = "socket2";
@@ -23621,69 +23476,11 @@ rec {
           "router"
           "server"
           "tls-aws-lc"
+          "tls-native-roots"
           "transport"
         ];
       };
-      "tonic-build 0.12.3" = rec {
-        crateName = "tonic-build";
-        version = "0.12.3";
-        edition = "2021";
-        sha256 = "04baqblgrlc0g8scnhpky5s0n4cljaixrrdrr6cv6wx7kq8cwmwm";
-        libName = "tonic_build";
-        authors = [
-          "Lucio Franco <luciofranco14@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "prettyplease";
-            packageId = "prettyplease";
-          }
-          {
-            name = "proc-macro2";
-            packageId = "proc-macro2";
-          }
-          {
-            name = "prost-build";
-            packageId = "prost-build";
-            optional = true;
-          }
-          {
-            name = "prost-types";
-            packageId = "prost-types";
-            optional = true;
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-          }
-          {
-            name = "syn";
-            packageId = "syn 2.0.111";
-          }
-        ];
-        features = {
-          "cleanup-markdown" = [
-            "prost"
-            "prost-build/cleanup-markdown"
-          ];
-          "default" = [
-            "transport"
-            "prost"
-          ];
-          "prost" = [
-            "prost-build"
-            "dep:prost-types"
-          ];
-          "prost-build" = [ "dep:prost-build" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "prost"
-          "prost-build"
-          "transport"
-        ];
-      };
-      "tonic-build 0.13.1" = rec {
+      "tonic-build" = rec {
         crateName = "tonic-build";
         version = "0.13.1";
         edition = "2021";
@@ -23742,18 +23539,14 @@ rec {
       };
       "tonic-health" = rec {
         crateName = "tonic-health";
-        version = "0.12.3";
+        version = "0.13.1";
         edition = "2021";
-        sha256 = "1ch97bilfc8djdzhxaq1v4kvbj9kk51daqhic1f0y4hjp3fk9bqy";
+        sha256 = "0jya3573wclwr4lk4llv0dgnva249mwn0viva7xgw4q36i6k71yb";
         libName = "tonic_health";
         authors = [
           "James Nugent <james@jen20.com>"
         ];
         dependencies = [
-          {
-            name = "async-stream";
-            packageId = "async-stream";
-          }
           {
             name = "prost";
             packageId = "prost";
@@ -23766,10 +23559,12 @@ rec {
           {
             name = "tokio-stream";
             packageId = "tokio-stream";
+            usesDefaultFeatures = false;
+            features = [ "sync" ];
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
+            packageId = "tonic";
             usesDefaultFeatures = false;
             features = [
               "codegen"
@@ -23786,20 +23581,14 @@ rec {
               "macros"
             ];
           }
-          {
-            name = "tokio-stream";
-            packageId = "tokio-stream";
-          }
         ];
-        features = {
-          "default" = [ "transport" ];
-        };
+
       };
       "tonic-reflection" = rec {
         crateName = "tonic-reflection";
-        version = "0.12.3";
+        version = "0.13.1";
         edition = "2021";
-        sha256 = "09xs7h268jyf1mzzi1x97djw7cvqnnlvdzdp4q0dikvz5vsq33c7";
+        sha256 = "1qdgkbh0cd15qhvra41j1dpj5a5vg3r50s9msbgbvzpapzapns7r";
         libName = "tonic_reflection";
         authors = [
           "James Nugent <james@jen20.com>"
@@ -23828,11 +23617,11 @@ rec {
             name = "tokio-stream";
             packageId = "tokio-stream";
             optional = true;
-            features = [ "net" ];
+            usesDefaultFeatures = false;
           }
           {
             name = "tonic";
-            packageId = "tonic 0.12.3";
+            packageId = "tonic";
             usesDefaultFeatures = false;
             features = [
               "codegen"
@@ -23842,24 +23631,28 @@ rec {
         ];
         devDependencies = [
           {
+            name = "tokio-stream";
+            packageId = "tokio-stream";
+            usesDefaultFeatures = false;
+            features = [ "net" ];
+          }
+          {
             name = "tonic";
-            packageId = "tonic 0.12.3";
+            packageId = "tonic";
             usesDefaultFeatures = false;
             features = [ "transport" ];
           }
         ];
         features = {
           "default" = [ "server" ];
-          "prost-types" = [ "dep:prost-types" ];
           "server" = [
-            "prost-types"
+            "dep:prost-types"
             "dep:tokio"
             "dep:tokio-stream"
           ];
         };
         resolvedDefaultFeatures = [
           "default"
-          "prost-types"
           "server"
         ];
       };
@@ -23885,11 +23678,6 @@ rec {
             features = [ "alloc" ];
           }
           {
-            name = "indexmap";
-            packageId = "indexmap 1.9.3";
-            optional = true;
-          }
-          {
             name = "pin-project";
             packageId = "pin-project";
             optional = true;
@@ -23898,29 +23686,6 @@ rec {
             name = "pin-project-lite";
             packageId = "pin-project-lite";
             optional = true;
-          }
-          {
-            name = "rand";
-            packageId = "rand 0.8.5";
-            optional = true;
-            features = [ "small_rng" ];
-          }
-          {
-            name = "slab";
-            packageId = "slab";
-            optional = true;
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            optional = true;
-            features = [ "sync" ];
-          }
-          {
-            name = "tokio-util";
-            packageId = "tokio-util";
-            optional = true;
-            usesDefaultFeatures = false;
           }
           {
             name = "tower-layer";
@@ -23942,16 +23707,6 @@ rec {
           {
             name = "pin-project-lite";
             packageId = "pin-project-lite";
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [
-              "macros"
-              "sync"
-              "test-util"
-              "rt-multi-thread"
-            ];
           }
         ];
         features = {
@@ -24074,24 +23829,12 @@ rec {
         };
         resolvedDefaultFeatures = [
           "__common"
-          "balance"
-          "buffer"
           "default"
-          "discover"
           "futures-core"
           "futures-util"
-          "indexmap"
-          "limit"
-          "load"
           "log"
-          "make"
           "pin-project"
           "pin-project-lite"
-          "rand"
-          "ready-cache"
-          "slab"
-          "tokio"
-          "tokio-util"
           "tracing"
           "util"
         ];
@@ -24639,14 +24382,14 @@ rec {
       };
       "tower-otel-http-metrics" = rec {
         crateName = "tower-otel-http-metrics";
-        version = "0.11.0";
+        version = "0.16.0";
         edition = "2021";
-        sha256 = "0n8c8k11kcxk0gmb01d0lhv80qwy774323n9ngd5rgxbvnl97f6z";
+        sha256 = "13i47nrgy7qr6ivsgqfmr46c7p6ikpb15crk368k27nm2hidw7cc";
         libName = "tower_otel_http_metrics";
         dependencies = [
           {
             name = "axum";
-            packageId = "axum 0.7.9";
+            packageId = "axum 0.8.7";
             optional = true;
             usesDefaultFeatures = false;
             features = [
@@ -24666,19 +24409,24 @@ rec {
             features = [ "std" ];
           }
           {
+            name = "http-body";
+            packageId = "http-body";
+            usesDefaultFeatures = false;
+          }
+          {
             name = "opentelemetry";
             packageId = "opentelemetry";
             usesDefaultFeatures = false;
-            features = [ "metrics" ];
+            features = [
+              "futures-core"
+              "futures-sink"
+              "pin-project-lite"
+              "metrics"
+            ];
           }
           {
             name = "pin-project-lite";
             packageId = "pin-project-lite";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.5.2";
             usesDefaultFeatures = false;
           }
           {
@@ -24994,9 +24742,9 @@ rec {
       };
       "tracing-opentelemetry" = rec {
         crateName = "tracing-opentelemetry";
-        version = "0.29.0";
+        version = "0.31.0";
         edition = "2021";
-        sha256 = "0dnca0b7bxbp6gd64skkvzy3p58yjh35kvnxpggz7sfwd4jjs7vj";
+        sha256 = "171scb8d5ynxvnyvq7lm9wzn4fzk0jf124v49p8d01wmydcmkkyx";
         libName = "tracing_opentelemetry";
         dependencies = [
           {
@@ -25074,6 +24822,7 @@ rec {
             features = [
               "trace"
               "rt-tokio"
+              "experimental_metrics_custom_reader"
             ];
           }
           {
@@ -26278,6 +26027,31 @@ rec {
             "serde_derive"
           ];
         };
+      };
+      "vsock" = rec {
+        crateName = "vsock";
+        version = "0.5.2";
+        edition = "2021";
+        sha256 = "0qzd42wk8wrapl5ghbzf8j02zdlb6y2qkyg0vhsrdlbcqx56xnp2";
+        authors = [
+          "fsyncd"
+          "rust-vsock"
+        ];
+        dependencies = [
+          {
+            name = "libc";
+            packageId = "libc";
+          }
+          {
+            name = "nix";
+            packageId = "nix 0.30.1";
+            features = [
+              "ioctl"
+              "socket"
+            ];
+          }
+        ];
+
       };
       "vt100" = rec {
         crateName = "vt100";

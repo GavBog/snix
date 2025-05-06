@@ -375,7 +375,7 @@ fn gen_resources() -> Resource {
 /// to request flushes (and signal back the completion of the flush).
 #[cfg(feature = "otlp")]
 fn gen_tracer_provider()
--> Result<opentelemetry_sdk::trace::SdkTracerProvider, opentelemetry::trace::TraceError> {
+-> Result<opentelemetry_sdk::trace::SdkTracerProvider, opentelemetry_otlp::ExporterBuildError> {
     use opentelemetry_otlp::{ExportConfig, SpanExporter, WithExportConfig};
 
     let exporter = SpanExporter::builder()
@@ -419,7 +419,7 @@ const _OTEL_METRIC_EXPORT_INTERVAL: std::time::Duration = std::time::Duration::f
 
 #[cfg(feature = "otlp")]
 fn gen_meter_provider()
--> Result<opentelemetry_sdk::metrics::SdkMeterProvider, opentelemetry_sdk::metrics::MetricError> {
+-> Result<opentelemetry_sdk::metrics::SdkMeterProvider, opentelemetry_otlp::ExporterBuildError> {
     use std::time::Duration;
 
     use opentelemetry_otlp::WithExportConfig;

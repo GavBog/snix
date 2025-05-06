@@ -46,7 +46,7 @@ impl<T> GRPCBlobService<T> {
 #[async_trait]
 impl<T> BlobService for GRPCBlobService<T>
 where
-    T: tonic::client::GrpcService<tonic::body::BoxBody> + Send + Sync + Clone + 'static,
+    T: tonic::client::GrpcService<tonic::body::Body> + Send + Sync + Clone + 'static,
     T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
     <T::ResponseBody as tonic::codegen::Body>::Error: Into<tonic::codegen::StdError> + Send,
     T::Future: Send,

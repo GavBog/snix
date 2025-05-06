@@ -53,7 +53,7 @@ otlp = [
   "dep:opentelemetry_sdk",
   "dep:opentelemetry-http",
   "dep:opentelemetry-semantic-conventions",
-  "reqwest-tracing?/opentelemetry_0_28",
+  "reqwest-tracing?/opentelemetry_0_30",
 ]
 tracy = ["dep:enumset", "dep:tracing-tracy"]
 tonic = ["dep:tonic", "dep:http"]

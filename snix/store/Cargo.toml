@@ -45,11 +45,11 @@ tokio-listener = { workspace = true, features = [
   "clap",
   "multi-listener",
   "sd_listen",
-  "tonic012",
+  "tonic013",
 ] }
 tokio-stream = { workspace = true, features = ["fs"] }
 tokio-util = { workspace = true, features = ["io", "io-util", "compat"] }
-tonic = { workspace = true, features = ["tls", "tls-roots"] }
+tonic = { workspace = true, features = ["tls-aws-lc"] }
 tower.workspace = true
 tower-http = { workspace = true, features = ["trace"] }
 snix-castore = { path = "../castore" }

@@ -8908,7 +8908,7 @@ rec {
             "dep:opentelemetry_sdk"
             "dep:opentelemetry-http"
             "dep:opentelemetry-semantic-conventions"
-            "reqwest-tracing?/opentelemetry_0_28"
+            "reqwest-tracing?/opentelemetry_0_30"
           ];
           "reqwest" = [ "dep:reqwest-tracing" ];
           "tonic" = [

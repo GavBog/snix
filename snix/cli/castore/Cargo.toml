@@ -19,7 +19,7 @@ tokio-listener = { workspace = true, features = [
   "clap",
   "multi-listener",
   "sd_listen",
-  "tonic012",
+  "tonic013",
 ] }
 tonic.workspace = true
 tonic-health.workspace = true

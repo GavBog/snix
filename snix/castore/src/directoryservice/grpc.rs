@@ -39,7 +39,7 @@ impl<T> GRPCDirectoryService<T> {
 #[async_trait]
 impl<T> DirectoryService for GRPCDirectoryService<T>
 where
-    T: tonic::client::GrpcService<tonic::body::BoxBody> + Send + Sync + Clone + 'static,
+    T: tonic::client::GrpcService<tonic::body::Body> + Send + Sync + Clone + 'static,
     T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
     <T::ResponseBody as tonic::codegen::Body>::Error: Into<tonic::codegen::StdError> + Send,
     T::Future: Send,
