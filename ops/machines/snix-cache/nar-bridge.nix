@@ -3,7 +3,7 @@
   imports = [ ./nar-bridge-module.nix ];
 
   # Microbenchmark
-  # hyperfine --warmup 1 'rm -rf /tmp/cache; nix copy --from https://nixos.tvix.store/ --to "file:///tmp/cache?compression=none" /nix/store/jlkypcf54nrh4n6r0l62ryx93z752hb2-firefox-132.0'
+  # hyperfine --warmup 1 'rm -rf /tmp/cache; nix copy --from https://nixos.snix.store/ --to "file:///tmp/cache?compression=none" /nix/store/jlkypcf54nrh4n6r0l62ryx93z752hb2-firefox-132.0'
   services.nginx = {
     package = pkgs.nginxStable;
     virtualHosts.${config.machine.domain} = {
@@ -46,6 +46,11 @@
       locations."/nar/tvix-castore".extraConfig = ''
         rewrite ^/nar/tvix-castore/(.*)$ /nar/snix-castore/$1 redirect;
       '';
+    };
+    virtualHosts."nixos.tvix.store" = {
+      forceSSL = true;
+      enableACME = true;
+      locations."/".return = "301 https://nixos.snix.store$request_uri";
     };
 
     # use more cores for compression

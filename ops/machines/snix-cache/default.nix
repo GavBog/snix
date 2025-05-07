@@ -28,7 +28,7 @@ in
   options = {
     machine.domain = lib.mkOption {
       type = lib.types.str;
-      default = "nixos.tvix.store";
+      default = "nixos.snix.store";
     };
   };
 

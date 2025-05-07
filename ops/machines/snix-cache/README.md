@@ -1,4 +1,4 @@
-# nixos-tvix-cache
+# nixos-snix-cache
 
 This is a fetch-through mirror of cache.nixos.org, hosted by NumTide.
 
@@ -8,7 +8,7 @@ and 2x1TB NVMe disks.
 The goals of this machine:
 
  - Exercise snix-store and nar-bridge code
- - Collect usage metrics (see [Grafana](https://nixos.tvix.store/grafana))
+ - Collect usage metrics (see [Grafana](https://nixos.snix.store/grafana))
  - Identify bottlenecks in the current implementations and fix them
  - Replace cache.nixos.org?
 
@@ -16,7 +16,7 @@ You can configure this as a Nix substitutor on your systems like this:
 
 ```nix
   nix.settings.substituters = [
-    "https://nixos.tvix.store"
+    "https://nixos.snix.store"
   ];
 ```
 
