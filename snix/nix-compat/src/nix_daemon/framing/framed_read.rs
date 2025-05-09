@@ -70,6 +70,12 @@ impl<R: AsyncRead> AsyncRead for NixFramedReader<R> {
                 State::Eof => {
                     return Ok(()).into();
                 }
+                State::Length { buf, filled: 8 } => {
+                    *this.state = match NonZeroU64::new(u64::from_le_bytes(*buf)) {
+                        None => State::Eof,
+                        Some(remaining) => State::Chunk { remaining },
+                    };
+                }
                 State::Length { buf, filled } => {
                     let bytes_read = {
                         let mut b = ReadBuf::new(&mut buf[*filled as usize..]);
@@ -82,13 +88,6 @@ impl<R: AsyncRead> AsyncRead for NixFramedReader<R> {
                     }
 
                     *filled += bytes_read;
-
-                    if *filled == 8 {
-                        *this.state = match NonZeroU64::new(u64::from_le_bytes(*buf)) {
-                            None => State::Eof,
-                            Some(remaining) => State::Chunk { remaining },
-                        };
-                    }
                 }
                 State::Chunk { remaining } => {
                     let bytes_read = ready!(with_limited(buf, remaining.get(), |buf| {
