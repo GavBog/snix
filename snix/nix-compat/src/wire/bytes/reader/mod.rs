@@ -129,6 +129,11 @@ impl<R: AsyncRead + Unpin, T: Tag> AsyncRead for BytesReader<R, T> {
     ) -> Poll<io::Result<()>> {
         let this = &mut self.state;
 
+        // reading nothing always succeeds
+        if buf.remaining() == 0 {
+            return Ok(()).into();
+        }
+
         loop {
             match this {
                 State::Body {
@@ -147,11 +152,8 @@ impl<R: AsyncRead + Unpin, T: Tag> AsyncRead for BytesReader<R, T> {
                         Pin::new(reader.as_mut().unwrap())
                     };
 
-                    let mut bytes_read = 0;
-                    ready!(with_limited(buf, remaining, |buf| {
-                        let ret = reader.poll_read(cx, buf);
-                        bytes_read = buf.filled().len();
-                        ret
+                    let bytes_read = ready!(with_limited(buf, remaining, |buf| {
+                        reader.poll_read(cx, buf).map_ok(|()| buf.filled().len())
                     }))?;
 
                     *consumed += bytes_read as u64;
@@ -262,7 +264,11 @@ impl<R: AsyncBufRead + Unpin, T: Tag> AsyncBufRead for BytesReader<R, T> {
 
                 reader.consume(amt);
             }
-            State::ReadTrailer(_) => unreachable!(),
+            State::ReadTrailer(_) => {
+                if amt != 0 {
+                    unreachable!();
+                }
+            }
             State::ReleaseTrailer { consumed, data } => {
                 *consumed = amt
                     .checked_add(*consumed as usize)
