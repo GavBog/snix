@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, ... }:
 let
   domain = config.machine.domain;
 in
@@ -115,16 +115,15 @@ in
 
     settings = {
       server = {
+        protocol = "socket";
+        socket = "/run/grafana/web.sock";
+        socket_gid = config.ids.gids.nginx;
         domain = domain;
-        http_addr = "127.0.0.1";
-        http_port = 3000;
         root_url = "https://%(domain)s/grafana";
         serve_from_sub_path = true;
       };
       analytics.reporting_enabled = false;
-      "auth.anonymous" = {
-        enabled = true;
-      };
+      "auth.anonymous".enabled = true;
       auth.disable_login_form = true;
       "auth.basic".enabled = false;
       "auth.github" = {
@@ -176,9 +175,12 @@ in
   };
 
   systemd.services.grafana.serviceConfig.LoadCredential = "github_auth_client_secret:/etc/secrets/grafana_github_auth_client_secret";
+  systemd.services.grafana.serviceConfig.RuntimeDirectory = "grafana";
+  systemd.services.grafana.serviceConfig.SupplementaryGroups = "nginx";
 
+  services.nginx.upstreams.grafana.servers."unix:/run/grafana/web.sock" = { };
   services.nginx.virtualHosts."${domain}".locations."/grafana" = {
-    proxyPass = "http://localhost:3000";
+    proxyPass = "http://grafana";
     proxyWebsockets = true;
   };
 }
