@@ -30,6 +30,7 @@ in
             host = "/run/postgresql";
           };
 
+          analytics.reporting_enabled = false;
           "auth.anonymous" = {
             enabled = true;
             org_role = "Viewer";
