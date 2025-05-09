@@ -17,9 +17,10 @@ in
 
         settings = {
           server = {
+            protocol = "socket";
+            socket = "/run/grafana/web.sock";
+            socket_gid = config.ids.gids.nginx;
             domain = "status.snix.dev";
-            http_addr = "127.0.0.1";
-            http_port = 2342;
             root_url = "https://status.snix.dev/";
           };
 
@@ -139,6 +140,9 @@ in
         ];
       };
     };
+
+    systemd.services.grafana.serviceConfig.RuntimeDirectory = "grafana";
+    systemd.services.grafana.serviceConfig.SupplementaryGroups = "nginx";
 
     infra.monitoring.alloy.exporters.grafana.port = 2342;
   };

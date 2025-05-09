@@ -1,4 +1,4 @@
-{ config, ... }:
+{ ... }:
 
 {
   imports = [
@@ -6,20 +6,17 @@
   ];
 
   config = {
-    services.nginx =
-      let
-        scfg = config.services.grafana.settings.server;
-      in
-      {
-        enable = true;
-        virtualHosts."${scfg.domain}" = {
-          enableACME = true;
-          forceSSL = true;
-          locations."/" = {
-            proxyPass = "http://${scfg.http_addr}:${toString scfg.http_port}";
-            proxyWebsockets = true;
-          };
+    services.nginx = {
+      enable = true;
+      upstreams.grafana.servers."unix:/run/grafana/web.sock" = { };
+      virtualHosts."status.snix.dev" = {
+        enableACME = true;
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://grafana/";
+          proxyWebsockets = true;
         };
       };
+    };
   };
 }
