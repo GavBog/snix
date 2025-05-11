@@ -21,7 +21,7 @@ use crate::known_paths::KnownPaths;
 const NIX_ENVIRONMENT_VARS: [(&str, &str); 12] = [
     ("HOME", "/homeless-shelter"),
     ("NIX_BUILD_CORES", "0"), // TODO: make this configurable?
-    ("NIX_BUILD_TOP", "/"),
+    ("NIX_BUILD_TOP", "/build"),
     ("NIX_LOG_FD", "2"),
     ("NIX_STORE", "/nix/store"),
     ("PATH", "/path-not-set"),
