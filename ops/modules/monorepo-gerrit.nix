@@ -139,8 +139,7 @@ in
       # password against the backing OAuth provider.
       auth.gitBasicAuthPolicy = "HTTP";
 
-      # Email sending (emails are relayed via the tazj.in domain's
-      # GSuite currently).
+      # Email sending
       #
       # Note that sendemail.smtpPass is stored in
       # $site_path/etc/secure.config and is *not* controlled by Nix.
