@@ -29,6 +29,7 @@ in
       "download-commands"
       "hooks"
       "replication"
+      "webhooks"
     ];
 
     plugins = with gerritPlugins; [
@@ -130,6 +131,14 @@ in
         # People implicitly approve their own changes automatically.
         enableImplicitApprovals = "TRUE";
         disabledBranch = "refs/meta/config";
+      };
+
+      plugin.webhooks = {
+        connectionTimeout = 3000;
+        socketTimeout = 2500;
+        maxTries = 5;
+        retryInterval = 5000;
+        threadPoolSize = 3;
       };
 
       # Allow users to add additional email addresses to their accounts.
