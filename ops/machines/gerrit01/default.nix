@@ -13,6 +13,7 @@ in
     (mod "o11y/alloy.nix")
     (mod "gerrit-autosubmit.nix")
     (mod "monorepo-gerrit.nix")
+    (mod "gerrit-webhook-to-irccat.nix")
     (mod "www/cl.snix.dev.nix")
     (mod "known-hosts.nix")
 
@@ -70,6 +71,11 @@ in
   services.depot = {
     gerrit-autosubmit.enable = true;
     restic.enable = true;
+    gerrit-webhook-to-irccat = {
+      enable = true;
+      irccatUrl = "http://meta01.infra.snix.dev:4722/send";
+      listenAddress = "127.0.0.1:4779";
+    };
   };
 
   services.fail2ban.enable = true;

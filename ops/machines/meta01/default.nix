@@ -63,7 +63,7 @@ in
       # FUTUREWORK: disable tcp listener entirely
       # Maybe this is https://github.com/spf13/viper/issues/323#issuecomment-309570752 ?
       tcp.listen = "127.0.0.1:4723";
-      http.listen = "127.0.0.1:4722";
+      http.listen = ":4722";
       http.listeners.generic = { };
       irc = {
         server = "irc.eu.hackint.org:6697";
@@ -83,6 +83,9 @@ in
     # Prometheus, Loki, Tempo
     ip6 saddr { 2a01:4f8:c013:3e62::1 } tcp dport { 9009, 9090, 9190 } accept
     ip saddr { 49.13.70.233 } tcp dport { 9009, 9090, 9190 } accept
+
+    # Gerrit Webhooks
+    ip6 saddr { 2a01:4f8:c17:6188::1 } tcp dport 4722 accept
   '';
 
   age.secrets =
