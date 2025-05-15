@@ -83,7 +83,11 @@ in
   services.irccat = {
     enable = true;
     config = {
-      generic.listen = "127.0.0.1:4722";
+      # FUTUREWORK: disable tcp listener entirely
+      # Maybe this is https://github.com/spf13/viper/issues/323#issuecomment-309570752 ?
+      tcp.listen = "127.0.0.1:4723";
+      http.listen = "127.0.0.1:4722";
+      http.listeners.generic = { };
       irc = {
         server = "irc.eu.hackint.org:6697";
         tls = true;
