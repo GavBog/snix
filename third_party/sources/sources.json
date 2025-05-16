@@ -84,18 +84,6 @@
         "url": "https://github.com/nmattia/naersk/archive/e5130d37369bfa600144c2424270c96f0ef0e11d.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
-    "napalm": {
-        "branch": "master",
-        "description": "Support for building npm packages in Nix and lightweight npm registry [maintainer @nmattia]",
-        "homepage": "",
-        "owner": "nix-community",
-        "repo": "napalm",
-        "rev": "e1babff744cd278b56abe8478008b4a9e23036cf",
-        "sha256": "04h62p4hxw7fhclki7hcn739hhig3rh9q4njp24j7bm0dk2kj8h6",
-        "type": "tarball",
-        "url": "https://github.com/nix-community/napalm/archive/e1babff744cd278b56abe8478008b4a9e23036cf.tar.gz",
-        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
-    },
     "nix-gerrit": {
         "branch": "main",
         "repo": "https://git.lix.systems/the-distro/nix-gerrit.git",
