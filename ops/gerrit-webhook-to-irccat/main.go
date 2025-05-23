@@ -18,7 +18,7 @@ import (
 	sloghttp "github.com/samber/slog-http"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/andygrunwald/go-gerrit"
+	gerritStreams "github.com/andygrunwald/go-gerrit/streams"
 )
 
 // TODO:
@@ -27,7 +27,7 @@ import (
 
 var logger *slog.Logger
 var tmplStr = `{{- if eq .Type "patchset-created" -}}
-{{- if (and (eq .PatchSet.Number "1") (eq .Change.WorkInProgress false) ) -}}
+{{- if (and (eq .PatchSet.Number "1") (eq .Change.Wip false) ) -}}
 #snix CL/{{.Change.Number}} proposed by {{.Change.Owner.Username}} - {{.Change.Subject}} - {{.Change.URL}}
 {{- end -}}
 {{- else if eq .Type "change-merged" -}}
@@ -51,17 +51,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.InfoContext(r.Context(), "received event", slog.Any("body", body.Bytes()))
 
-	var eventInfo gerrit.EventInfo
-	if err := json.Unmarshal(body.Bytes(), &eventInfo); err != nil {
+	var event gerritStreams.Event
+	if err := json.Unmarshal(body.Bytes(), &event); err != nil {
 		logger.WarnContext(r.Context(), "failed to parse body", slog.Any("error", err))
 		return
 	}
 
-	logger.InfoContext(r.Context(), "received event", slog.Any("event", eventInfo))
+	logger.InfoContext(r.Context(), "received event", slog.Any("event", event))
 
 	// render the template into a buffer.
 	var msg bytes.Buffer
-	if err := tmpl.Execute(&msg, eventInfo); err != nil {
+	if err := tmpl.Execute(&msg, event); err != nil {
 		logger.WarnContext(r.Context(), "failed to execute template with data", slog.Any("error", err))
 		return
 	}
