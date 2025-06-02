@@ -255,7 +255,7 @@ where
         // We don't have it yet, look it up in [self.root_nodes].
         match self
             .tokio_handle
-            .block_on(async move { self.root_nodes_provider.get_by_basename(name).await })
+            .block_on(async { self.root_nodes_provider.get_by_basename(name).await })
         {
             // if there was an error looking up the root node, propagate up an IO error.
             Err(_e) => Err(io::Error::from_raw_os_error(libc::EIO)),
