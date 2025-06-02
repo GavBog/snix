@@ -26,7 +26,7 @@ use fuse_backend_rs::abi::fuse_abi::{OpenOptions, stat64};
 use fuse_backend_rs::api::filesystem::{
     Context, FileSystem, FsOptions, GetxattrReply, ListxattrReply, ROOT_ID,
 };
-use futures::StreamExt;
+use futures::{StreamExt, stream::BoxStream};
 use parking_lot::RwLock;
 use std::sync::Mutex;
 use std::{
@@ -37,11 +37,8 @@ use std::{
     time::Duration,
 };
 use std::{ffi::CStr, io::Cursor};
-use tokio::{
-    io::{AsyncReadExt, AsyncSeekExt},
-    sync::mpsc,
-};
-use tracing::{Instrument as _, Span, debug, error, instrument, warn};
+use tokio::io::{AsyncReadExt, AsyncSeekExt};
+use tracing::{Span, debug, error, instrument, warn};
 
 /// This implements a read-only FUSE filesystem for a snix-store
 /// with the passed [BlobService], [DirectoryService] and [RootNodes].
@@ -94,16 +91,19 @@ pub struct SnixStoreFs<BS, DS, RN> {
 
     // FUTUREWORK: have a generic container type for dir/file handles and handle
     // allocation.
-    /// Maps from the handle returned from an opendir to
-    /// This holds all opendir handles (for the root inode)
-    /// They point to the rx part of the channel producing the listing.
+    /// This holds all opendir handles (for the root inode), keyed by the handle
+    /// returned from the opendir call.
+    /// For each handle, we store an enumerated Result<(PathComponent, Node), crate::Error>.
+    /// The index is needed as we need to send offset information.
     #[allow(clippy::type_complexity)]
     dir_handles: RwLock<
         HashMap<
             u64,
             (
                 Span,
-                Arc<Mutex<mpsc::Receiver<(usize, Result<(PathComponent, Node), crate::Error>)>>>,
+                Arc<
+                    Mutex<BoxStream<'static, (usize, Result<(PathComponent, Node), crate::Error>)>>,
+                >,
             ),
         >,
     >,
@@ -123,7 +123,7 @@ impl<BS, DS, RN> SnixStoreFs<BS, DS, RN>
 where
     BS: BlobService,
     DS: DirectoryService,
-    RN: RootNodes + Clone + 'static,
+    RN: RootNodes,
 {
     pub fn new(
         blob_service: BS,
@@ -289,9 +289,6 @@ where
     }
 }
 
-/// Buffer size of the channel providing nodes in the mount root
-const ROOT_NODES_BUFFER_SIZE: usize = 16;
-
 const XATTR_NAME_DIRECTORY_DIGEST: &[u8] = b"user.snix.castore.directory.digest";
 const XATTR_NAME_BLOB_DIGEST: &[u8] = b"user.snix.castore.blob.digest";
 
@@ -300,7 +297,7 @@ impl<BS, DS, RN> fuse_backend_rs::api::filesystem::Layer for SnixStoreFs<BS, DS,
 where
     BS: BlobService,
     DS: DirectoryService,
-    RN: RootNodes + Clone + 'static,
+    RN: RootNodes,
 {
     fn root_inode(&self) -> Self::Inode {
         ROOT_ID
@@ -311,7 +308,7 @@ impl<BS, DS, RN> FileSystem for SnixStoreFs<BS, DS, RN>
 where
     BS: BlobService,
     DS: DirectoryService,
-    RN: RootNodes + Clone + 'static,
+    RN: RootNodes,
 {
     type Handle = u64;
     type Inode = u64;
@@ -418,27 +415,9 @@ where
                 return Err(io::Error::from_raw_os_error(libc::EPERM)); // same error code as ipfs/kubo
             }
 
-            let root_nodes_provider = self.root_nodes_provider.clone();
-            let (tx, rx) = mpsc::channel(ROOT_NODES_BUFFER_SIZE);
+            let stream = self.root_nodes_provider.list().enumerate().boxed();
 
-            // This task will run in the background immediately and will exit
-            // after the stream ends or if we no longer want any more entries.
-            self.tokio_handle.spawn(
-                async move {
-                    let mut stream = root_nodes_provider.list().enumerate();
-                    while let Some(e) = stream.next().await {
-                        if tx.send(e).await.is_err() {
-                            // If we get a send error, it means the sync code
-                            // doesn't want any more entries.
-                            break;
-                        }
-                    }
-                }
-                // instrument the task with the current span, this is not done by default
-                .in_current_span(),
-            );
-
-            // Put the rx part into [self.dir_handles].
+            // Put the stream into [self.dir_handles].
             // TODO: this will overflow after 2**64 operations,
             // which is fine for now.
             // See https://cl.tvl.fyi/c/depot/+/8834/comment/a6684ce0_d72469d1
@@ -447,7 +426,7 @@ where
 
             self.dir_handles
                 .write()
-                .insert(dh, (Span::current(), Arc::new(Mutex::new(rx))));
+                .insert(dh, (Span::current(), Arc::new(Mutex::new(stream))));
 
             return Ok((Some(dh), OpenOptions::NONSEEKABLE));
         }
@@ -480,20 +459,18 @@ where
                 return Err(io::Error::from_raw_os_error(libc::EPERM)); // same error code as ipfs/kubo
             }
 
-            // get the handle from [self.dir_handles]
-            let (_span, rx) = match self.dir_handles.read().get(&handle) {
-                Some(rx) => rx.clone(),
-                None => {
-                    warn!("dir handle {} unknown", handle);
-                    return Err(io::Error::from_raw_os_error(libc::EIO));
-                }
-            };
+            // get the stream from [self.dir_handles]
+            let dir_handles = self.dir_handles.read();
+            let (_span, stream) = dir_handles.get(&handle).ok_or_else(|| {
+                warn!("dir handle {} unknown", handle);
+                io::Error::from_raw_os_error(libc::EIO)
+            })?;
 
-            let mut rx = rx
+            let mut stream = stream
                 .lock()
                 .map_err(|_| crate::Error::StorageError("mutex poisoned".into()))?;
 
-            while let Some((i, n)) = rx.blocking_recv() {
+            while let Some((i, n)) = self.tokio_handle.block_on(async { stream.next().await }) {
                 let (name, node) = n.map_err(|e| {
                     warn!("failed to retrieve root node: {}", e);
                     io::Error::from_raw_os_error(libc::EIO)
@@ -569,20 +546,18 @@ where
                 return Err(io::Error::from_raw_os_error(libc::EPERM)); // same error code as ipfs/kubo
             }
 
-            // get the handle from [self.dir_handles]
-            let (_span, rx) = match self.dir_handles.read().get(&handle) {
-                Some(rx) => rx.clone(),
-                None => {
-                    warn!("dir handle {} unknown", handle);
-                    return Err(io::Error::from_raw_os_error(libc::EIO));
-                }
-            };
+            // get the stream from [self.dir_handles]
+            let dir_handles = self.dir_handles.read();
+            let (_span, stream) = dir_handles.get(&handle).ok_or_else(|| {
+                warn!("dir handle {} unknown", handle);
+                io::Error::from_raw_os_error(libc::EIO)
+            })?;
 
-            let mut rx = rx
+            let mut stream = stream
                 .lock()
                 .map_err(|_| crate::Error::StorageError("mutex poisoned".into()))?;
 
-            while let Some((i, n)) = rx.blocking_recv() {
+            while let Some((i, n)) = self.tokio_handle.block_on(async { stream.next().await }) {
                 let (name, node) = n.map_err(|e| {
                     warn!("failed to retrieve root node: {}", e);
                     io::Error::from_raw_os_error(libc::EPERM)
@@ -651,13 +626,12 @@ where
         handle: Self::Handle,
     ) -> io::Result<()> {
         if inode == ROOT_ID {
-            // drop the rx part of the channel.
-            match self.dir_handles.write().remove(&handle) {
+            // drop the stream.
+            if let Some(stream) = self.dir_handles.write().remove(&handle) {
                 // drop it, which will close it.
-                Some(rx) => drop(rx),
-                None => {
-                    warn!("dir handle not found");
-                }
+                drop(stream)
+            } else {
+                warn!("dir handle not found");
             }
         }
 

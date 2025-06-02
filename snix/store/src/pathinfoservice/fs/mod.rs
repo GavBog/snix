@@ -1,5 +1,5 @@
-use futures::StreamExt;
 use futures::stream::BoxStream;
+use futures::{StreamExt, TryStreamExt};
 use nix_compat::store_path::StorePathRef;
 use snix_castore::fs::{RootNodes, SnixStoreFs};
 use snix_castore::{Error, Node, PathComponent};
@@ -46,7 +46,7 @@ pub struct RootNodesWrapper<T>(pub(crate) T);
 #[async_trait]
 impl<T> RootNodes for RootNodesWrapper<T>
 where
-    T: PathInfoService + Send + Sync,
+    T: PathInfoService,
 {
     async fn get_by_basename(&self, name: &PathComponent) -> Result<Option<Node>, Error> {
         let Ok(store_path) = StorePathRef::from_bytes(name.as_ref()) else {
@@ -60,18 +60,18 @@ where
             .map(|path_info| path_info.node))
     }
 
-    fn list(&self) -> BoxStream<Result<(PathComponent, Node), Error>> {
-        Box::pin(self.0.list().map(|result| {
-            result.map(|path_info| {
-                let basename = path_info.store_path.to_string();
-                (
-                    basename
-                        .as_str()
-                        .try_into()
-                        .expect("Snix bug: StorePath must be PathComponent"),
-                    path_info.node,
-                )
+    fn list(&self) -> BoxStream<'static, Result<(PathComponent, Node), Error>> {
+        self.0
+            .list()
+            .map_ok(|path_info| {
+                let name = path_info
+                    .store_path
+                    .to_string()
+                    .as_str()
+                    .try_into()
+                    .expect("Snix bug: StorePath must be PathComponent");
+                (name, path_info.node)
             })
-        }))
+            .boxed()
     }
 }
