@@ -121,8 +121,8 @@ pub struct SnixStoreFs<BS, DS, RN> {
 
 impl<BS, DS, RN> SnixStoreFs<BS, DS, RN>
 where
-    BS: BlobService + Clone + Send,
-    DS: DirectoryService + Clone + Send + 'static,
+    BS: BlobService,
+    DS: DirectoryService,
     RN: RootNodes + Clone + 'static,
 {
     pub fn new(
@@ -183,11 +183,7 @@ where
             InodeData::Directory(DirectoryInodeData::Sparse(ref parent_digest, _)) => {
                 let directory = self
                     .tokio_handle
-                    .block_on({
-                        let directory_service = self.directory_service.clone();
-                        let parent_digest = parent_digest.to_owned();
-                        async move { directory_service.get(&parent_digest).await }
-                    })?
+                    .block_on(async { self.directory_service.get(parent_digest).await })?
                     .ok_or_else(|| {
                         warn!(directory.digest=%parent_digest, "directory not found");
                         // If the Directory can't be found, this is a hole, bail out.
@@ -257,11 +253,10 @@ where
         }
 
         // We don't have it yet, look it up in [self.root_nodes].
-        match self.tokio_handle.block_on({
-            let root_nodes_provider = self.root_nodes_provider.clone();
-            let name = name.clone();
-            async move { root_nodes_provider.get_by_basename(&name).await }
-        }) {
+        match self
+            .tokio_handle
+            .block_on(async move { self.root_nodes_provider.get_by_basename(name).await })
+        {
             // if there was an error looking up the root node, propagate up an IO error.
             Err(_e) => Err(io::Error::from_raw_os_error(libc::EIO)),
             // the root node doesn't exist, so the file doesn't exist.
@@ -303,8 +298,8 @@ const XATTR_NAME_BLOB_DIGEST: &[u8] = b"user.snix.castore.blob.digest";
 #[cfg(all(feature = "virtiofs", target_os = "linux"))]
 impl<BS, DS, RN> fuse_backend_rs::api::filesystem::Layer for SnixStoreFs<BS, DS, RN>
 where
-    BS: BlobService + Clone + Send + 'static,
-    DS: DirectoryService + Send + Clone + 'static,
+    BS: BlobService,
+    DS: DirectoryService,
     RN: RootNodes + Clone + 'static,
 {
     fn root_inode(&self) -> Self::Inode {
@@ -314,8 +309,8 @@ where
 
 impl<BS, DS, RN> FileSystem for SnixStoreFs<BS, DS, RN>
 where
-    BS: BlobService + Clone + Send + 'static,
-    DS: DirectoryService + Send + Clone + 'static,
+    BS: BlobService,
+    DS: DirectoryService,
     RN: RootNodes + Clone + 'static,
 {
     type Handle = u64;
@@ -691,11 +686,10 @@ where
             InodeData::Regular(ref blob_digest, _blob_size, _) => {
                 Span::current().record("blob.digest", blob_digest.to_string());
 
-                match self.tokio_handle.block_on({
-                    let blob_service = self.blob_service.clone();
-                    let blob_digest = blob_digest.clone();
-                    async move { blob_service.open_read(&blob_digest).await }
-                }) {
+                match self
+                    .tokio_handle
+                    .block_on(async { self.blob_service.open_read(blob_digest).await })
+                {
                     Ok(None) => {
                         warn!("blob not found");
                         Err(io::Error::from_raw_os_error(libc::EIO))
