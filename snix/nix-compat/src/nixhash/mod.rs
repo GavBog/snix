@@ -73,9 +73,9 @@ impl NixHash {
         }
     }
 
-    /// Constructs a [NixHash] from the Nix default hash format,
-    /// the inverse of [Self::to_nix_hex_string].
-    pub fn from_nix_hex_str(s: &str) -> Option<Self> {
+    /// Constructs a new [NixHash] from the Nix default hash format,
+    /// the inverse of [Self::to_nix_nixbase32_string].
+    pub fn from_nix_nixbase32_str(s: &str) -> Option<Self> {
         let (tag, digest) = s.split_once(':')?;
 
         (match tag {
@@ -98,7 +98,7 @@ impl NixHash {
 
     /// Formats a [NixHash] in the format that's used inside CAHash,
     /// which is the algo, followed by a colon, then the nixbase32-encoded digest.
-    pub(crate) fn to_nix_nixbase32_string(&self) -> String {
+    pub fn to_nix_nixbase32_string(&self) -> String {
         format!(
             "{}:{}",
             self.algo(),

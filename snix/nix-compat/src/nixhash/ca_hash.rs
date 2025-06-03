@@ -85,9 +85,9 @@ impl CAHash {
             }
             "fixed" => {
                 if let Some(s) = s.strip_prefix("r:") {
-                    NixHash::from_nix_hex_str(s).map(CAHash::Nar)
+                    NixHash::from_nix_nixbase32_str(s).map(CAHash::Nar)
                 } else {
-                    NixHash::from_nix_hex_str(s).map(CAHash::Flat)
+                    NixHash::from_nix_nixbase32_str(s).map(CAHash::Flat)
                 }
             }
             _ => None,
