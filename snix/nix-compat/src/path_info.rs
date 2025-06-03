@@ -1,4 +1,4 @@
-use crate::{narinfo::SignatureRef, nixbase32, nixhash::NixHash, store_path::StorePathRef};
+use crate::{narinfo::SignatureRef, nixhash, store_path::StorePathRef};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -14,8 +14,8 @@ pub struct ExportedPathInfo<'a> {
 
     #[serde(
         rename = "narHash",
-        serialize_with = "to_nix_nixbase32_string",
-        deserialize_with = "from_nix_hash_string"
+        serialize_with = "nixhash::serde::to_nix_nixbase32_string",
+        deserialize_with = "nixhash::serde::from_nix_hash_string"
     )]
     pub nar_sha256: [u8; 32],
 
@@ -49,70 +49,6 @@ impl PartialOrd for ExportedPathInfo<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
-}
-
-fn to_nix_nixbase32_string<S>(v: &[u8; 32], serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    let string = NixHash::Sha256(*v).to_nix_nixbase32_string();
-    string.serialize(serializer)
-}
-
-/// The length of a sha256 digest, nixbase32-encoded.
-const NIXBASE32_SHA256_ENCODE_LEN: usize = nixbase32::encode_len(32);
-
-fn from_nix_hash_string<'de, D>(deserializer: D) -> Result<[u8; 32], D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let str: &'de str = Deserialize::deserialize(deserializer)?;
-    if let Some(digest_str) = str.strip_prefix("sha256:") {
-        return from_nix_nixbase32_string::<D>(digest_str);
-    }
-    if let Some(digest_str) = str.strip_prefix("sha256-") {
-        return from_sri_string::<D>(digest_str);
-    }
-    Err(serde::de::Error::invalid_value(
-        serde::de::Unexpected::Str(str),
-        &"extected a valid nixbase32 or sri narHash",
-    ))
-}
-
-fn from_sri_string<'de, D>(str: &str) -> Result<[u8; 32], D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let digest: [u8; 32] = data_encoding::BASE64
-        .decode(str.as_bytes())
-        .map_err(|_| {
-            serde::de::Error::invalid_value(
-                serde::de::Unexpected::Str(str),
-                &"valid base64 encoded string",
-            )
-        })?
-        .try_into()
-        .map_err(|_| {
-            serde::de::Error::invalid_value(serde::de::Unexpected::Str(str), &"valid digest len")
-        })?;
-
-    Ok(digest)
-}
-
-fn from_nix_nixbase32_string<'de, D>(str: &str) -> Result<[u8; 32], D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let digest_str: [u8; NIXBASE32_SHA256_ENCODE_LEN] =
-        str.as_bytes().try_into().map_err(|_| {
-            serde::de::Error::invalid_value(serde::de::Unexpected::Str(str), &"valid digest len")
-        })?;
-
-    let digest: [u8; 32] = nixbase32::decode_fixed(digest_str).map_err(|_| {
-        serde::de::Error::invalid_value(serde::de::Unexpected::Str(str), &"valid nixbase32")
-    })?;
-
-    Ok(digest)
 }
 
 #[cfg(test)]

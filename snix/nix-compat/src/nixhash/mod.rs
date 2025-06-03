@@ -1,14 +1,13 @@
 use crate::nixbase32;
 use bstr::ByteSlice;
 use data_encoding::{BASE64, BASE64_NOPAD, HEXLOWER};
-use serde::Deserialize;
-use serde::Serialize;
 use std::cmp::Ordering;
 use std::fmt::Display;
 use thiserror;
 
 mod algos;
 mod ca_hash;
+pub mod serde;
 
 pub use algos::HashAlgo;
 pub use ca_hash::CAHash;
@@ -126,28 +125,6 @@ impl NixHash {
         self.write_sri_str(&mut s).unwrap();
 
         s
-    }
-}
-
-impl<'de> Deserialize<'de> for NixHash {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let str: &'de str = Deserialize::deserialize(deserializer)?;
-        from_str(str, None).map_err(|_| {
-            serde::de::Error::invalid_value(serde::de::Unexpected::Str(str), &"NixHash")
-        })
-    }
-}
-
-impl Serialize for NixHash {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let sri = self.to_sri_string();
-        sri.serialize(serializer)
     }
 }
 
