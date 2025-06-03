@@ -47,6 +47,15 @@ async fn extract_fetch_args(
         actual: args.type_of(),
     })?;
 
+    // Reject disallowed attrset keys, to match Nix' behaviour.
+    // We complain about the first unexpected key we find in the list.
+    const VALID_KEYS: [&[u8]; 3] = [b"url", b"name", b"sha256"];
+    if let Some(first_invalid_key) = attrs.keys().find(|k| !&VALID_KEYS.contains(&k.as_bytes())) {
+        return Err(ErrorKind::UnexpectedArgumentBuiltin(
+            first_invalid_key.clone(),
+        ));
+    }
+
     let url_str = match select_string(co, &attrs, "url").await? {
         Ok(s) => s.ok_or_else(|| ErrorKind::AttributeNotFound { name: "url".into() })?,
         Err(cek) => return Ok(Err(cek)),
@@ -60,28 +69,19 @@ async fn extract_fetch_args(
         Err(cek) => return Ok(Err(cek)),
     };
 
-    // Disallow other attrset keys, to match Nix' behaviour.
-    // We complain about the first unexpected key we find in the list.
-    const VALID_KEYS: [&[u8]; 3] = [b"url", b"name", b"sha256"];
-    if let Some(first_invalid_key) = attrs.keys().find(|k| !&VALID_KEYS.contains(&k.as_bytes())) {
-        return Err(ErrorKind::UnexpectedArgumentBuiltin(
-            first_invalid_key.clone(),
-        ));
-    }
-
-    // parse the sha256 string into a digest.
-    let sha256 = sha256_str
-        .map(|x| {
-            NixHash::from_str(&x, Some(HashAlgo::Sha256))
-                .map(|x| x.digest_as_bytes().try_into().expect("is sha256"))
-                .map_err(|e| ErrorKind::InvalidHash(e.to_string()))
-        })
-        .transpose()?;
-
-    // Parse the URL.
-    let url = Url::parse(&url_str).map_err(|e| ErrorKind::SnixError(Rc::new(e)))?;
-
-    Ok(Ok(NixFetchArgs { url, name, sha256 }))
+    Ok(Ok(NixFetchArgs {
+        url: Url::parse(&url_str).map_err(|e| ErrorKind::SnixError(Rc::new(e)))?,
+        name,
+        // parse the sha256 string into a digest, and bail out if it's not sha256.
+        sha256: sha256_str
+            .map(
+                |sha256_str| match NixHash::from_str(&sha256_str, Some(HashAlgo::Sha256)) {
+                    Ok(NixHash::Sha256(digest)) => Ok(digest),
+                    _ => Err(ErrorKind::InvalidHash(sha256_str)),
+                },
+            )
+            .transpose()?,
+    }))
 }
 
 #[allow(unused_variables)] // for the `state` arg, for now
