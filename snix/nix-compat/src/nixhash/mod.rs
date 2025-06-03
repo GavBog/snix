@@ -210,11 +210,7 @@ pub enum Error {
 /// one communicated out-of-band.
 pub fn from_str(s: &str, algo_str: Option<&str>) -> NixHashResult<NixHash> {
     // if algo_str is some, parse or bail out
-    let algo: Option<HashAlgo> = if let Some(algo_str) = algo_str {
-        Some(algo_str.try_into()?)
-    } else {
-        None
-    };
+    let algo: Option<HashAlgo> = algo_str.map(HashAlgo::try_from).transpose()?;
 
     // Peek at the beginning of the string to detect SRI hashes.
     if s.starts_with("sha1-")
@@ -240,6 +236,7 @@ pub fn from_str(s: &str, algo_str: Option<&str>) -> NixHashResult<NixHash> {
         || s.starts_with("md5:")
     {
         let parsed_nixhash = from_nix_str(s)?;
+
         // ensure the algo matches with what has been passed externally, if so.
         if let Some(algo) = algo {
             if algo != parsed_nixhash.algo() {
@@ -250,11 +247,8 @@ pub fn from_str(s: &str, algo_str: Option<&str>) -> NixHashResult<NixHash> {
     }
 
     // Neither of these, assume a bare digest, so there MUST be an externally-passed algo.
-    match algo {
-        // Fail if there isn't.
-        None => Err(Error::MissingInlineHashAlgo(s.to_string())),
-        Some(algo) => decode_digest(s.as_bytes(), algo),
-    }
+    let algo = algo.ok_or_else(|| Error::MissingInlineHashAlgo(s.to_string()))?;
+    decode_digest(s.as_bytes(), algo)
 }
 
 /// Parses a Nix hash string ($algo:$digest) to a NixHash.
