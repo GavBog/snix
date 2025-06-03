@@ -130,18 +130,6 @@ impl NixHash {
     }
 }
 
-impl TryFrom<(HashAlgo, &[u8])> for NixHash {
-    type Error = Error;
-
-    /// Constructs a new [NixHash] by specifying [HashAlgo] and digest.
-    /// It can fail if the passed digest length doesn't match what's expected for
-    /// the passed algo.
-    fn try_from(value: (HashAlgo, &[u8])) -> NixHashResult<Self> {
-        let (algo, digest) = value;
-        from_algo_and_digest(algo, digest)
-    }
-}
-
 impl<'de> Deserialize<'de> for NixHash {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
