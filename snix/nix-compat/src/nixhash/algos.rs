@@ -69,7 +69,7 @@ impl TryFrom<&str> for HashAlgo {
             "sha1" => Ok(Self::Sha1),
             "sha256" => Ok(Self::Sha256),
             "sha512" => Ok(Self::Sha512),
-            _ => Err(Error::InvalidAlgo(algo_str.to_string())),
+            _ => Err(Error::InvalidAlgo),
         }
     }
 }

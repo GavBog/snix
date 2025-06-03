@@ -111,7 +111,7 @@ mod import_builtins {
     use crate::builtins::ImportError;
     use crate::snix_store_io::SnixStoreIO;
     use bstr::ByteSlice;
-    use nix_compat::nixhash::{CAHash, NixHash};
+    use nix_compat::nixhash::{CAHash, HashAlgo, NixHash};
     use nix_compat::store_path::{StorePath, StorePathRef, build_ca_path};
     use sha2::Digest;
     use snix_castore::blobservice::BlobService;
@@ -368,7 +368,7 @@ mod import_builtins {
             .select("sha256")
             .map(|h| {
                 h.to_str().and_then(|expected| {
-                    match nix_compat::nixhash::from_str(expected.to_str()?, Some("sha256")) {
+                    match NixHash::from_str(expected.to_str()?, Some(HashAlgo::Sha256)) {
                         Ok(NixHash::Sha256(digest)) => Ok(digest),
                         Ok(_) => unreachable!(),
                         Err(e) => Err(ErrorKind::InvalidHash(e.to_string())),

@@ -603,7 +603,7 @@ mod tests {
     mod fetch {
         use super::super::*;
         use crate::fetchers::Fetch;
-        use nix_compat::{nixbase32, nixhash};
+        use nix_compat::{nixbase32, nixhash::NixHash};
         use rstest::rstest;
 
         #[rstest]
@@ -618,7 +618,7 @@ mod tests {
         #[case::url_sha256(
             Fetch::URL{
                 url: Url::parse("https://raw.githubusercontent.com/aaptel/notmuch-extract-patch/f732a53e12a7c91a06755ebfab2007adc9b3063b/notmuch-extract-patch").unwrap(),
-                exp_hash: Some(nixhash::from_sri_str("sha256-Xa1Jbl2Eq5+L0ww+Ph1osA3Z/Dxe/RkN1/dITQCdXFk=").unwrap()),
+                exp_hash: Some(NixHash::from_sri("sha256-Xa1Jbl2Eq5+L0ww+Ph1osA3Z/Dxe/RkN1/dITQCdXFk=").unwrap()),
             },
             Some(StorePathRef::from_bytes(b"06qi00hylriyfm0nl827crgjvbax84mz-notmuch-extract-patch").unwrap()),
             "notmuch-extract-patch"
@@ -626,7 +626,7 @@ mod tests {
         #[case::url_custom_name(
             Fetch::URL{
                 url: Url::parse("https://test.example/owo").unwrap(),
-                exp_hash: Some(nixhash::from_sri_str("sha256-Xa1Jbl2Eq5+L0ww+Ph1osA3Z/Dxe/RkN1/dITQCdXFk=").unwrap()),
+                exp_hash: Some(NixHash::from_sri("sha256-Xa1Jbl2Eq5+L0ww+Ph1osA3Z/Dxe/RkN1/dITQCdXFk=").unwrap()),
             },
             Some(StorePathRef::from_bytes(b"06qi00hylriyfm0nl827crgjvbax84mz-notmuch-extract-patch").unwrap()),
             "notmuch-extract-patch"
@@ -634,7 +634,7 @@ mod tests {
         #[case::nar_sha256(
             Fetch::NAR{
                 url: Url::parse("https://cache.nixos.org/nar/0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz").unwrap(),
-                hash: nixhash::from_sri_str("sha256-oj6yfWKbcEerK8D9GdPJtIAOveNcsH1ztGeSARGypRA=").unwrap(),
+                hash: NixHash::from_sri("sha256-oj6yfWKbcEerK8D9GdPJtIAOveNcsH1ztGeSARGypRA=").unwrap(),
             },
             Some(StorePathRef::from_bytes(b"b40vjphshq4fdgv8s3yrp0bdlafi4920-0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz").unwrap()),
             "0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz"
@@ -642,7 +642,7 @@ mod tests {
         #[case::nar_sha1(
             Fetch::NAR{
                 url: Url::parse("https://cache.nixos.org/nar/0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz").unwrap(),
-                hash: nixhash::from_sri_str("sha1-F/fMsgwkXF8fPCg1v9zPZ4yOFIA=").unwrap(),
+                hash: NixHash::from_sri("sha1-F/fMsgwkXF8fPCg1v9zPZ4yOFIA=").unwrap(),
             },
             Some(StorePathRef::from_bytes(b"8kx7fdkdbzs4fkfb57xq0cbhs20ymq2n-0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz").unwrap()),
             "0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz"
@@ -650,7 +650,7 @@ mod tests {
         #[case::nar_sha1(
             Fetch::Executable{
                 url: Url::parse("https://cache.nixos.org/nar/0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz").unwrap(),
-                hash: nixhash::from_sri_str("sha1-NKNeU1csW5YJ4lCeWH3Z/apppNU=").unwrap(),
+                hash: NixHash::from_sri("sha1-NKNeU1csW5YJ4lCeWH3Z/apppNU=").unwrap(),
             },
             Some(StorePathRef::from_bytes(b"y92hm2xfk1009hrq0ix80j4m5k4j4w21-0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz").unwrap()),
             "0r8nqa1klm5v17ifc6z96m9wywxkjvgbnqq9pmy0sgqj53wj3n12.nar.xz"

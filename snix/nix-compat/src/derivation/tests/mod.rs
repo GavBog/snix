@@ -326,7 +326,7 @@ fn output_path_construction() {
         Output {
             path: None, // will be calculated
             ca_hash: Some(crate::nixhash::CAHash::Nar(
-                crate::nixhash::from_algo_and_digest(
+                crate::nixhash::NixHash::from_algo_and_digest(
                     crate::nixhash::HashAlgo::Sha256,
                     &data_encoding::HEXLOWER
                         .decode(

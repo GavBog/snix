@@ -8,7 +8,7 @@ impl<'de> Deserialize<'de> for NixHash {
         D: serde::Deserializer<'de>,
     {
         let str: &'de str = Deserialize::deserialize(deserializer)?;
-        super::from_str(str, None).map_err(|_| {
+        NixHash::from_str(str, None).map_err(|_| {
             serde::de::Error::invalid_value(serde::de::Unexpected::Str(str), &"NixHash")
         })
     }
@@ -27,16 +27,16 @@ impl Serialize for NixHash {
 /// The length of a sha256 digest, nixbase32-encoded.
 const NIXBASE32_SHA256_ENCODE_LEN: usize = nixbase32::encode_len(32);
 
-pub fn from_nix_hash_string<'de, D>(deserializer: D) -> Result<[u8; 32], D::Error>
+pub fn from_nix_nixbase32_or_sri<'de, D>(deserializer: D) -> Result<[u8; 32], D::Error>
 where
     D: serde::Deserializer<'de>,
 {
     let str: &'de str = Deserialize::deserialize(deserializer)?;
     if let Some(digest_str) = str.strip_prefix("sha256:") {
-        return from_nix_nixbase32_string::<D>(digest_str);
+        return from_nix_nixbase32::<D>(digest_str);
     }
     if let Some(digest_str) = str.strip_prefix("sha256-") {
-        return from_sri_string::<D>(digest_str);
+        return from_sri::<D>(digest_str);
     }
     Err(serde::de::Error::invalid_value(
         serde::de::Unexpected::Str(str),
@@ -44,7 +44,7 @@ where
     ))
 }
 
-pub fn from_sri_string<'de, D>(str: &str) -> Result<[u8; 32], D::Error>
+pub fn from_sri<'de, D>(str: &str) -> Result<[u8; 32], D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -64,7 +64,7 @@ where
     Ok(digest)
 }
 
-pub fn from_nix_nixbase32_string<'de, D>(str: &str) -> Result<[u8; 32], D::Error>
+pub fn from_nix_nixbase32<'de, D>(str: &str) -> Result<[u8; 32], D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -80,10 +80,10 @@ where
     Ok(digest)
 }
 
-pub fn to_nix_nixbase32_string<S>(v: &[u8; 32], serializer: S) -> Result<S::Ok, S::Error>
+pub fn to_nix_nixbase32<S>(v: &[u8; 32], serializer: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
-    let string = NixHash::Sha256(*v).to_nix_nixbase32_string();
+    let string = NixHash::Sha256(*v).to_nix_nixbase32();
     string.serialize(serializer)
 }

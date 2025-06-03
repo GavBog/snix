@@ -85,9 +85,9 @@ impl CAHash {
             }
             "fixed" => {
                 if let Some(s) = s.strip_prefix("r:") {
-                    NixHash::from_nix_nixbase32_str(s).map(CAHash::Nar)
+                    NixHash::from_nix_nixbase32(s).map(CAHash::Nar)
                 } else {
-                    NixHash::from_nix_nixbase32_str(s).map(CAHash::Flat)
+                    NixHash::from_nix_nixbase32(s).map(CAHash::Flat)
                 }
             }
             _ => None,
@@ -218,7 +218,12 @@ impl<'de> Deserialize<'de> for CAHash {
 
 #[cfg(test)]
 mod tests {
-    use crate::{derivation::CAHash, nixhash};
+    use hex_literal::hex;
+
+    use crate::{
+        derivation::CAHash,
+        nixhash::{HashAlgo, NixHash},
+    };
 
     #[test]
     fn serialize_flat() {
@@ -227,8 +232,9 @@ mod tests {
   "hashAlgo": "sha256"
 }"#;
         let hash = CAHash::Flat(
-            nixhash::from_nix_str(
-                "sha256:08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba",
+            NixHash::from_algo_and_digest(
+                HashAlgo::Sha256,
+                &hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"),
             )
             .unwrap(),
         );
@@ -243,8 +249,9 @@ mod tests {
   "hashAlgo": "r:sha256"
 }"#;
         let hash = CAHash::Nar(
-            nixhash::from_nix_str(
-                "sha256:08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba",
+            NixHash::from_algo_and_digest(
+                HashAlgo::Sha256,
+                &hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"),
             )
             .unwrap(),
         );
@@ -264,8 +271,9 @@ mod tests {
         assert_eq!(
             hash,
             CAHash::Flat(
-                nixhash::from_nix_str(
-                    "sha256:08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"
+                NixHash::from_algo_and_digest(
+                    HashAlgo::Sha256,
+                    &hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba")
                 )
                 .unwrap()
             )
@@ -284,8 +292,9 @@ mod tests {
         assert_eq!(
             hash,
             CAHash::Nar(
-                nixhash::from_nix_str(
-                    "sha256:08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"
+                NixHash::from_algo_and_digest(
+                    HashAlgo::Sha256,
+                    &hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba")
                 )
                 .unwrap()
             )
@@ -304,8 +313,9 @@ mod tests {
         assert_eq!(
             hash,
             CAHash::Nar(
-                nixhash::from_nix_str(
-                    "sha256:08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"
+                NixHash::from_algo_and_digest(
+                    HashAlgo::Sha256,
+                    &hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"),
                 )
                 .unwrap()
             )
@@ -324,8 +334,9 @@ mod tests {
         assert_eq!(
             hash,
             CAHash::Nar(
-                nixhash::from_nix_str(
-                    "sha256:08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"
+                NixHash::from_algo_and_digest(
+                    HashAlgo::Sha256,
+                    &hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"),
                 )
                 .unwrap()
             )

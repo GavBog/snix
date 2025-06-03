@@ -147,7 +147,7 @@ mod tests {
     use std::sync::LazyLock;
 
     use hex_literal::hex;
-    use nix_compat::{derivation::Derivation, nixbase32, nixhash, store_path::StorePath};
+    use nix_compat::{derivation::Derivation, nixbase32, nixhash::NixHash, store_path::StorePath};
     use url::Url;
 
     use super::KnownPaths;
@@ -186,7 +186,7 @@ mod tests {
     static FETCH_URL: LazyLock<Fetch> = LazyLock::new(|| {
         Fetch::URL {
         url: Url::parse("https://raw.githubusercontent.com/aaptel/notmuch-extract-patch/f732a53e12a7c91a06755ebfab2007adc9b3063b/notmuch-extract-patch").unwrap(),
-        exp_hash: Some(nixhash::from_sri_str("sha256-Xa1Jbl2Eq5+L0ww+Ph1osA3Z/Dxe/RkN1/dITQCdXFk=").unwrap())
+        exp_hash: Some(NixHash::from_sri("sha256-Xa1Jbl2Eq5+L0ww+Ph1osA3Z/Dxe/RkN1/dITQCdXFk=").unwrap())
     }
     });
 

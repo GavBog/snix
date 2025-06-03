@@ -5,7 +5,7 @@ use crate::{
     fetchers::{Fetch, url_basename},
     snix_store_io::SnixStoreIO,
 };
-use nix_compat::nixhash;
+use nix_compat::nixhash::{HashAlgo, NixHash};
 use snix_eval::builtin_macros::builtins;
 use snix_eval::generators::Gen;
 use snix_eval::generators::GenCo;
@@ -70,15 +70,13 @@ async fn extract_fetch_args(
     }
 
     // parse the sha256 string into a digest.
-    let sha256 = match sha256_str {
-        Some(sha256_str) => {
-            let nixhash = nixhash::from_str(&sha256_str, Some("sha256"))
-                .map_err(|e| ErrorKind::InvalidHash(e.to_string()))?;
-
-            Some(nixhash.digest_as_bytes().try_into().expect("is sha256"))
-        }
-        None => None,
-    };
+    let sha256 = sha256_str
+        .map(|x| {
+            NixHash::from_str(&x, Some(HashAlgo::Sha256))
+                .map(|x| x.digest_as_bytes().try_into().expect("is sha256"))
+                .map_err(|e| ErrorKind::InvalidHash(e.to_string()))
+        })
+        .transpose()?;
 
     // Parse the URL.
     let url = Url::parse(&url_str).map_err(|e| ErrorKind::SnixError(Rc::new(e)))?;
@@ -90,7 +88,7 @@ async fn extract_fetch_args(
 #[builtins(state = "Rc<SnixStoreIO>")]
 pub(crate) mod fetcher_builtins {
     use bstr::ByteSlice;
-    use nix_compat::flakeref;
+    use nix_compat::{flakeref, nixhash::NixHash};
     use std::collections::BTreeMap;
 
     use super::*;
@@ -154,7 +152,7 @@ pub(crate) mod fetcher_builtins {
             name,
             Fetch::URL {
                 url: args.url,
-                exp_hash: args.sha256.map(nixhash::NixHash::Sha256),
+                exp_hash: args.sha256.map(NixHash::Sha256),
             },
         )
     }

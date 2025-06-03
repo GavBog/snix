@@ -79,7 +79,7 @@ where
 
     /// Helper function, used for the non-sha256 [CAHash::Nar] and all [CAHash::Flat].
     fn fixed_out_digest(prefix: &str, hash: &NixHash) -> [u8; 32] {
-        Sha256::new_with_prefix(format!("{}:{}:", prefix, hash.to_nix_hex_string()))
+        Sha256::new_with_prefix(format!("{}:{}:", prefix, hash.to_nix_lowerhex_string()))
             .finalize()
             .into()
     }

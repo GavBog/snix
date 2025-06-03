@@ -14,8 +14,8 @@ pub struct ExportedPathInfo<'a> {
 
     #[serde(
         rename = "narHash",
-        serialize_with = "nixhash::serde::to_nix_nixbase32_string",
-        deserialize_with = "nixhash::serde::from_nix_hash_string"
+        serialize_with = "nixhash::serde::to_nix_nixbase32",
+        deserialize_with = "nixhash::serde::from_nix_nixbase32_or_sri"
     )]
     pub nar_sha256: [u8; 32],
 

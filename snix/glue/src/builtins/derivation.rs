@@ -4,7 +4,7 @@ use crate::known_paths::KnownPaths;
 use crate::snix_store_io::SnixStoreIO;
 use bstr::BString;
 use nix_compat::derivation::{Derivation, Output};
-use nix_compat::nixhash;
+use nix_compat::nixhash::{CAHash, HashAlgo, NixHash};
 use nix_compat::store_path::{StorePath, StorePathRef};
 use snix_eval::builtin_macros::builtins;
 use snix_eval::generators::{self, GenCo, emit_warning_kind};
@@ -132,9 +132,14 @@ fn handle_fixed_output(
             None => None,
         };
 
-        // construct a NixHash.
-        let nixhash = nixhash::from_str(&hash_str, hash_algo_str.as_deref())
+        let hash_algo = hash_algo_str
+            .map(|s| HashAlgo::try_from(s.as_str()))
+            .transpose()
             .map_err(DerivationError::InvalidOutputHash)?;
+
+        // construct a NixHash.
+        let nixhash =
+            NixHash::from_str(&hash_str, hash_algo).map_err(DerivationError::InvalidOutputHash)?;
         let algo = nixhash.algo();
 
         // construct the fixed output.
@@ -143,8 +148,8 @@ fn handle_fixed_output(
             Output {
                 path: None,
                 ca_hash: match hash_mode_str.as_deref() {
-                    None | Some("flat") => Some(nixhash::CAHash::Flat(nixhash)),
-                    Some("recursive") => Some(nixhash::CAHash::Nar(nixhash)),
+                    None | Some("flat") => Some(CAHash::Flat(nixhash)),
+                    Some("recursive") => Some(CAHash::Nar(nixhash)),
                     Some(other) => {
                         return Err(DerivationError::InvalidOutputHashMode(other.to_string()))?;
                     }

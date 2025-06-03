@@ -15,7 +15,7 @@ use thiserror;
 use crate::derivation::parse_error::{into_nomerror, ErrorKind, NomError, NomResult};
 use crate::derivation::{write, CAHash, Derivation, Output};
 use crate::store_path::{self, StorePath};
-use crate::{aterm, nixhash};
+use crate::{aterm, nixhash, nixhash::NixHash};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error<I> {
@@ -84,11 +84,11 @@ fn from_algo_and_mode_and_digest<B: AsRef<[u8]>>(
     digest: B,
 ) -> crate::nixhash::NixHashResult<CAHash> {
     Ok(match algo_and_mode.strip_prefix("r:") {
-        Some(algo) => nixhash::CAHash::Nar(nixhash::from_algo_and_digest(
+        Some(algo) => nixhash::CAHash::Nar(NixHash::from_algo_and_digest(
             algo.try_into()?,
             digest.as_ref(),
         )?),
-        None => nixhash::CAHash::Flat(nixhash::from_algo_and_digest(
+        None => nixhash::CAHash::Flat(NixHash::from_algo_and_digest(
             algo_and_mode.try_into()?,
             digest.as_ref(),
         )?),
