@@ -85,9 +85,6 @@ impl Display for NixHash {
     }
 }
 
-/// convenience Result type for all nixhash parsing Results.
-pub type NixHashResult<V> = std::result::Result<V, Error>;
-
 impl NixHash {
     /// returns the algo as [HashAlgo].
     pub fn algo(&self) -> HashAlgo {
@@ -112,7 +109,7 @@ impl NixHash {
     /// Constructs a new [NixHash] by specifying [HashAlgo] and digest.
     /// It can fail if the passed digest length doesn't match what's expected for
     /// the passed algo.
-    pub fn from_algo_and_digest(algo: HashAlgo, digest: &[u8]) -> NixHashResult<NixHash> {
+    pub fn from_algo_and_digest(algo: HashAlgo, digest: &[u8]) -> Result<NixHash, Error> {
         if digest.len() != algo.digest_length() {
             return Err(Error::InvalidDigestLength(digest.len(), algo));
         }
@@ -153,7 +150,7 @@ impl NixHash {
 
     /// Parses a Nix SRI string to a NixHash.
     /// (See caveats in [Self] on the deviations from the SRI spec)
-    pub fn from_sri(s: &str) -> NixHashResult<NixHash> {
+    pub fn from_sri(s: &str) -> Result<NixHash, Error> {
         // split at the first occurence of "-"
         let (algo_str, digest_str) = s.split_once('-').ok_or(Error::InvalidSRI)?;
 
@@ -225,7 +222,7 @@ impl NixHash {
     /// the "digest only" format is used.
     /// In other cases, consistency of an optionally externally configured algo
     /// with the one parsed is ensured.
-    pub fn from_str(s: &str, want_algo: Option<HashAlgo>) -> NixHashResult<NixHash> {
+    pub fn from_str(s: &str, want_algo: Option<HashAlgo>) -> Result<NixHash, Error> {
         // Check for SRI hashes.
         if let Ok(parsed_nixhash) = Self::from_sri(s) {
             // ensure the algo matches with what has been passed externally, if so.
@@ -291,7 +288,7 @@ pub enum Error {
 /// Decode a plain digest depending on the hash algo specified externally.
 /// hexlower, nixbase32 and base64 encodings are supported - the encoding is
 /// inferred from the input length.
-fn decode_digest(s: &[u8], algo: HashAlgo) -> NixHashResult<NixHash> {
+fn decode_digest(s: &[u8], algo: HashAlgo) -> Result<NixHash, Error> {
     // for the chosen hash algo, calculate the expected (decoded) digest length
     // (as bytes)
     let digest = if s.len() == HEXLOWER.encode_len(algo.digest_length()) {

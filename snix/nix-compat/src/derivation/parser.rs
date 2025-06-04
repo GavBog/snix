@@ -79,10 +79,11 @@ pub fn parse_streaming(i: &[u8]) -> (Result<Derivation, Error<&[u8]>>, &[u8]) {
 
 /// Consume a string containing the algo, and optionally a `r:`
 /// prefix, and a digest (bytes), return a [CAHash::Nar] or [CAHash::Flat].
+// TODO: This maybe should belong in ca_hash.rs
 fn from_algo_and_mode_and_digest<B: AsRef<[u8]>>(
     algo_and_mode: &str,
     digest: B,
-) -> crate::nixhash::NixHashResult<CAHash> {
+) -> Result<CAHash, nixhash::Error> {
     Ok(match algo_and_mode.strip_prefix("r:") {
         Some(algo) => nixhash::CAHash::Nar(NixHash::from_algo_and_digest(
             algo.try_into()?,
