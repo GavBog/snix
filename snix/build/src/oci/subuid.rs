@@ -55,11 +55,8 @@ impl SubordinateInfo {
 
         let subuid =
             first_subordinate_id(&PathBuf::from("/etc/subuid"), user.uid.as_raw(), &user.name)?;
-        let subgid = first_subordinate_id(
-            &PathBuf::from("/etc/subgid"),
-            group.gid.as_raw(),
-            &group.name,
-        )?;
+        let subgid =
+            first_subordinate_id(&PathBuf::from("/etc/subgid"), user.uid.as_raw(), &user.name)?;
         Ok(SubordinateInfo {
             uid: user.uid.as_raw(),
             gid: group.gid.as_raw(),
