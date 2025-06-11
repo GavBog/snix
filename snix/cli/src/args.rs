@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use snix_store::utils::ServiceUrlsMemory;
+use url::Url;
 
 /// Provides a CLI interface to trigger evaluation using snix-eval.
 ///
@@ -79,6 +80,13 @@ pub struct Args {
     /// Snix does not read from these.
     #[clap(long)]
     pub drv_dumpdir: Option<PathBuf>,
+
+    /// A list of web servers used by builtins.fetchurl to obtain files by hash.
+    /// Given a hash algorithm ha and a base-16 hash h, Nix will try to download the file
+    /// from hashed-mirror/ha/h. This allows files to be downloaded even if they have
+    /// disappeared from their original URI.
+    #[clap(long, default_values_t = [Url::parse("https://tarballs.nixos.org/").unwrap()])]
+    pub hashed_mirrors: Vec<Url>,
 }
 
 impl Args {

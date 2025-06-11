@@ -38,6 +38,7 @@ fn interpret(code: &str) {
         nar_calculation_service.into(),
         Arc::<DummyBuildService>::default(),
         TOKIO_RUNTIME.handle().clone(),
+        Vec::new(),
     ));
 
     let mut eval_builder = snix_eval::Evaluation::builder(Box::new(SnixIO::new(

@@ -14115,6 +14115,10 @@ rec {
             packageId = "tracing-indicatif";
           }
           {
+            name = "url";
+            packageId = "url";
+          }
+          {
             name = "wu-manber";
             packageId = "wu-manber";
           }

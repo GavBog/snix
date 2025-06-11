@@ -48,6 +48,7 @@ fn eval_test(code_path: PathBuf, expect_success: bool) {
         nar_calculation_service.into(),
         Arc::new(DummyBuildService::default()),
         tokio_runtime.handle().clone(),
+        Vec::new(),
     ));
     // Wrap with SnixIO, so <nix/fetchurl.nix can be imported.
     let mut eval_builder = snix_eval::Evaluation::builder(Box::new(SnixIO::new(

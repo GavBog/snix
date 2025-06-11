@@ -176,6 +176,7 @@ pub struct Fetcher<BS, DS, PS, NS> {
     directory_service: DS,
     path_info_service: PS,
     nar_calculation_service: NS,
+    _hashed_mirrors: Vec<Url>,
 }
 
 impl<BS, DS, PS, NS> Fetcher<BS, DS, PS, NS> {
@@ -184,6 +185,7 @@ impl<BS, DS, PS, NS> Fetcher<BS, DS, PS, NS> {
         directory_service: DS,
         path_info_service: PS,
         nar_calculation_service: NS,
+        hashed_mirrors: Vec<Url>,
     ) -> Self {
         Self {
             http_client: reqwest::Client::builder()
@@ -194,6 +196,7 @@ impl<BS, DS, PS, NS> Fetcher<BS, DS, PS, NS> {
             directory_service,
             path_info_service,
             nar_calculation_service,
+            _hashed_mirrors: hashed_mirrors,
         }
     }
 

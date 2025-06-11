@@ -13,6 +13,7 @@ use std::{
 use tokio_util::io::SyncIoBridge;
 use tracing::{Level, Span, error, instrument, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
+use url::Url;
 
 use snix_castore::{
     Node,
@@ -72,6 +73,7 @@ impl SnixStoreIO {
         nar_calculation_service: Arc<dyn NarCalculationService>,
         build_service: Arc<dyn BuildService>,
         tokio_handle: tokio::runtime::Handle,
+        hashed_mirrors: Vec<Url>,
     ) -> Self {
         Self {
             blob_service: blob_service.clone(),
@@ -86,6 +88,7 @@ impl SnixStoreIO {
                 directory_service,
                 path_info_service,
                 nar_calculation_service,
+                hashed_mirrors,
             ),
             known_paths: Default::default(),
         }
@@ -516,6 +519,7 @@ mod tests {
             nar_calculation_service.into(),
             Arc::<DummyBuildService>::default(),
             tokio_runtime.handle().clone(),
+            Vec::new(),
         ));
 
         let mut eval_builder =

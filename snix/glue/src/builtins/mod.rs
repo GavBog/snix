@@ -91,6 +91,7 @@ mod tests {
             nar_calculation_service.into(),
             Arc::<DummyBuildService>::default(),
             runtime.handle().clone(),
+            Vec::new(),
         ));
 
         let mut eval_builder = snix_eval::Evaluation::builder(io.clone() as Rc<dyn EvalIO>);

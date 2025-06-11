@@ -27,6 +27,7 @@ tracing-indicatif.workspace = true
 rustc-hash.workspace = true
 mimalloc.workspace = true
 wu-manber.workspace = true
+url.workspace = true
 
 [dev-dependencies]
 expect-test.workspace = true
