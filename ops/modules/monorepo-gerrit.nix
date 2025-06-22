@@ -4,8 +4,8 @@
 let
   cfg = config.services.gerrit;
 
-  gerritPackage = depot.third_party.nix-gerrit.gerrit_3_11;
-  gerritPlugins = depot.third_party.nix-gerrit.plugins_3_11;
+  gerritPackage = depot.third_party.nix-gerrit.gerrit_3_12;
+  gerritPlugins = depot.third_party.nix-gerrit.plugins_3_12;
 
   besadiiWithConfig = name: pkgs.writeShellScript "besadii-gerrit01" ''
     export BESADII_CONFIG=/run/agenix/gerrit-besadii-config
