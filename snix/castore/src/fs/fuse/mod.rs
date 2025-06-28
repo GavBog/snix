@@ -25,7 +25,9 @@ impl<FS> FuseServer<FS>
 where
     FS: FileSystem + Sync + Send,
 {
-    fn start(&mut self) -> io::Result<()> {
+    fn start(&mut self, tokio_handle: tokio::runtime::Handle) -> io::Result<()> {
+        let _guard = tokio_handle.enter();
+
         while let Some((reader, writer)) = self
             .channel
             .get_request()
@@ -88,6 +90,9 @@ impl FuseDaemon {
             .thread_name("fuse_server".to_string())
             .build();
 
+        // get a handle to the current tokio runtime
+        let runtime_handle = tokio::runtime::Handle::current();
+
         for _ in 0..num_threads {
             // for each thread requested, create and start a FuseServer accepting requests.
             let mut server = FuseServer {
@@ -97,8 +102,13 @@ impl FuseDaemon {
                     .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?,
             };
 
-            threads.execute(move || {
-                let _ = server.start();
+            // Start the FuseServer in each thread, and enter the tokio runtime context,
+            // so we can block on tasks.
+            threads.execute({
+                let runtime_handle = runtime_handle.clone();
+                move || {
+                    let _ = server.start(runtime_handle);
+                }
             });
         }
 
