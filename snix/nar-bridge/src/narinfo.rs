@@ -6,7 +6,7 @@ use nix_compat::{
     store_path::StorePath,
 };
 use snix_store::pathinfoservice::PathInfo;
-use tracing::{instrument, warn, Span};
+use tracing::{Span, instrument, warn};
 
 use crate::AppState;
 

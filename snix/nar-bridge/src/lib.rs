@@ -1,13 +1,13 @@
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{head, put};
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use lru::LruCache;
 use nix_compat::nix_http;
 use parking_lot::RwLock;
+use snix_castore::Node;
 use snix_castore::blobservice::BlobService;
 use snix_castore::directoryservice::DirectoryService;
-use snix_castore::Node;
 use snix_store::pathinfoservice::PathInfoService;
 use std::num::NonZeroUsize;
 use std::sync::Arc;

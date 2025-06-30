@@ -7791,7 +7791,7 @@ rec {
       "nar-bridge" = rec {
         crateName = "nar-bridge";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "nar-bridge";

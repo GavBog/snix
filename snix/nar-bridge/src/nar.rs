@@ -1,7 +1,7 @@
 use axum::extract::Query;
 use axum::http::{Response, StatusCode};
 use axum::{body::Body, response::IntoResponse};
-use axum_extra::{headers::Range, TypedHeader};
+use axum_extra::{TypedHeader, headers::Range};
 use axum_range::{KnownSize, Ranged};
 use bytes::Bytes;
 use data_encoding::BASE64URL_NOPAD;
@@ -11,7 +11,7 @@ use serde::Deserialize;
 use snix_store::nar::ingest_nar_and_hash;
 use std::io;
 use tokio_util::io::ReaderStream;
-use tracing::{instrument, warn, Span};
+use tracing::{Span, instrument, warn};
 
 use crate::AppState;
 
@@ -220,7 +220,7 @@ mod tests {
         sync::{Arc, LazyLock},
     };
 
-    use axum::{http::Method, Router};
+    use axum::{Router, http::Method};
     use bytes::Bytes;
     use data_encoding::BASE64URL_NOPAD;
     use nix_compat::nixbase32;
@@ -407,10 +407,12 @@ mod tests {
             .expect_success()
             .await;
 
-        assert!(blob_service
-            .has(&HELLOWORLD_BLOB_DIGEST)
-            .await
-            .expect("blobservice"))
+        assert!(
+            blob_service
+                .has(&HELLOWORLD_BLOB_DIGEST)
+                .await
+                .expect("blobservice")
+        )
     }
 
     // Upload a NAR with blobs and directories, ensure blobs and directories
