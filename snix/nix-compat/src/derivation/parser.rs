@@ -3,17 +3,17 @@
 //!
 //! [ATerm]: http://program-transformation.org/Tools/ATermFormat.html
 
+use nom::Parser;
 use nom::bytes::streaming::tag;
 use nom::character::streaming::char as nomchar;
 use nom::combinator::{all_consuming, consumed, map_res};
 use nom::multi::{separated_list0, separated_list1};
 use nom::sequence::{delimited, preceded, separated_pair, terminated};
-use nom::Parser;
-use std::collections::{btree_map, BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, btree_map};
 use thiserror;
 
-use crate::derivation::parse_error::{into_nomerror, ErrorKind, NomError, NomResult};
-use crate::derivation::{write, CAHash, Derivation, Output};
+use crate::derivation::parse_error::{ErrorKind, NomError, NomResult, into_nomerror};
+use crate::derivation::{CAHash, Derivation, Output, write};
 use crate::store_path::{self, StorePath};
 use crate::{aterm, nixhash, nixhash::NixHash};
 
@@ -386,7 +386,7 @@ mod tests {
 
     use crate::{
         derivation::{
-            parse_error::ErrorKind, parser::from_algo_and_mode_and_digest, CAHash, NixHash, Output,
+            CAHash, NixHash, Output, parse_error::ErrorKind, parser::from_algo_and_mode_and_digest,
         },
         store_path::StorePath,
     };

@@ -1,7 +1,7 @@
 use std::{
     num::NonZeroU64,
     pin::Pin,
-    task::{self, ready, Poll},
+    task::{self, Poll, ready},
 };
 
 use pin_project_lite::pin_project;

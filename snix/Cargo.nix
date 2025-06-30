@@ -8213,7 +8213,7 @@ rec {
       "nix-compat" = rec {
         crateName = "nix-compat";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "drvfmt";
@@ -8390,7 +8390,7 @@ rec {
       "nix-compat-derive" = rec {
         crateName = "nix-compat-derive";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ./nix-compat-derive; };
         procMacro = true;
         libName = "nix_compat_derive";
@@ -8451,7 +8451,7 @@ rec {
       "nix-compat-derive-tests" = rec {
         crateName = "nix-compat-derive-tests";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ./nix-compat-derive-tests; };
         devDependencies = [
           {

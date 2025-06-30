@@ -320,8 +320,9 @@ mod tests {
         "a5ce9c155ed09397614646c9717fc7cd94b1023d7b76b618d409e4fefd6e9d39"
     ));
     static NIXHASH_SHA512: LazyLock<NixHash> = LazyLock::new(|| {
-        NixHash::Sha512(Box::new(hex!("ab40d0be3541f0774bba7815d13d10b03252e96e95f7dbb4ee99a3b431c21662fd6971a020160e39848aa5f305b9be0f78727b2b0789e39f124d21e92b8f39ef"))
-        )
+        NixHash::Sha512(Box::new(hex!(
+            "ab40d0be3541f0774bba7815d13d10b03252e96e95f7dbb4ee99a3b431c21662fd6971a020160e39848aa5f305b9be0f78727b2b0789e39f124d21e92b8f39ef"
+        )))
     });
     const NIXHASH_MD5: NixHash = NixHash::Md5(hex!("c4874a8897440b393d862d8fd459073f"));
 
@@ -429,17 +430,29 @@ mod tests {
 
     /// Test parsing sha512 SRI hash with various paddings, Nix accepts all of them.
     #[rstest]
-    #[case::no_padding("sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ")]
-    #[case::too_little_padding("sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ=")]
-    #[case::correct_padding("sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ==")]
-    #[case::too_much_padding("sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ===")]
-    #[case::additional_suffix_ignored("sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ== cheesecake")]
+    #[case::no_padding(
+        "sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ"
+    )]
+    #[case::too_little_padding(
+        "sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ="
+    )]
+    #[case::correct_padding(
+        "sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ=="
+    )]
+    #[case::too_much_padding(
+        "sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ==="
+    )]
+    #[case::additional_suffix_ignored(
+        "sha512-7g91TBvYoYQorRTqo+rYD/i5YnWvUBLnqDhPHxBJDaBW7smuPMeRp6E6JOFuVN9bzN0QnH1ToUU0u9c2CjALEQ== cheesecake"
+    )]
     fn from_sri_str_sha512_paddings(#[case] sri_str: &str) {
         let nix_hash = NixHash::from_sri(sri_str).expect("must succeed");
 
         assert_eq!(HashAlgo::Sha512, nix_hash.algo());
         assert_eq!(
-            &hex!("ee0f754c1bd8a18428ad14eaa3ead80ff8b96275af5012e7a8384f1f10490da056eec9ae3cc791a7a13a24e16e54df5bccdd109c7d53a14534bbd7360a300b11"),
+            &hex!(
+                "ee0f754c1bd8a18428ad14eaa3ead80ff8b96275af5012e7a8384f1f10490da056eec9ae3cc791a7a13a24e16e54df5bccdd109c7d53a14534bbd7360a300b11"
+            ),
             nix_hash.digest_as_bytes()
         )
     }

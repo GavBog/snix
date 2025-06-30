@@ -138,7 +138,7 @@ where
 /// SAFETY: The bytes have to actually be initialized.
 #[cfg(feature = "async")]
 unsafe fn assume_init_bytes(slice: &[MaybeUninit<u8>]) -> &[u8] {
-    &*(slice as *const [MaybeUninit<u8>] as *const [u8])
+    unsafe { &*(slice as *const [MaybeUninit<u8>] as *const [u8]) }
 }
 
 /// Read a "bytes wire packet" of from the AsyncRead and tries to parse as string.

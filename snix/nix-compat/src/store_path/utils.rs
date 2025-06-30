@@ -1,6 +1,6 @@
 use crate::nixbase32;
 use crate::nixhash::{CAHash, NixHash};
-use crate::store_path::{Error, StorePath, STORE_DIR};
+use crate::store_path::{Error, STORE_DIR, StorePath};
 use data_encoding::HEXLOWER;
 use sha2::{Digest, Sha256};
 use thiserror;
@@ -85,14 +85,14 @@ where
     }
 
     let (ty, inner_digest) = match &ca_hash {
-        CAHash::Text(ref digest) => (make_references_string("text", references, false), *digest),
-        CAHash::Nar(NixHash::Sha256(ref digest)) => (
+        CAHash::Text(digest) => (make_references_string("text", references, false), *digest),
+        CAHash::Nar(NixHash::Sha256(digest)) => (
             make_references_string("source", references, self_reference),
             *digest,
         ),
 
         // for all other CAHash::Nar, another custom scheme is used.
-        CAHash::Nar(ref hash) => {
+        CAHash::Nar(hash) => {
             if references.into_iter().next().is_some() {
                 return Err(BuildStorePathError::InvalidReference());
             }
@@ -103,7 +103,7 @@ where
             )
         }
         // CaHash::Flat is using something very similar, except the `r:` prefix.
-        CAHash::Flat(ref hash) => {
+        CAHash::Flat(hash) => {
             if references.into_iter().next().is_some() {
                 return Err(BuildStorePathError::InvalidReference());
             }

@@ -2797,7 +2797,7 @@ rec {
       "nix-compat" = rec {
         crateName = "nix-compat";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [ ];
         src = lib.cleanSourceWith { filter = sourceFilter; src = ../../snix/nix-compat; };
         libName = "nix_compat";
@@ -2923,7 +2923,7 @@ rec {
       "nix-compat-derive" = rec {
         crateName = "nix-compat-derive";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ../../snix/nix-compat-derive; };
         procMacro = true;
         libName = "nix_compat_derive";
