@@ -5,11 +5,11 @@ use std::{
 
 use nix_compat::{
     nix_daemon::{
-        types::{AddToStoreNarRequest, UnkeyedValidPathInfo},
         NixDaemonIO,
+        types::{AddToStoreNarRequest, UnkeyedValidPathInfo},
     },
     nixbase32,
-    store_path::{build_ca_path, StorePath},
+    store_path::{StorePath, build_ca_path},
 };
 use snix_castore::{blobservice::BlobService, directoryservice::DirectoryService};
 use snix_store::{nar::ingest_nar_and_hash, path_info::PathInfo, pathinfoservice::PathInfoService};

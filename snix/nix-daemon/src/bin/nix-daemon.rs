@@ -2,7 +2,7 @@ use clap::Parser;
 use mimalloc::MiMalloc;
 use nix_compat::nix_daemon::handler::NixDaemon;
 use nix_daemon::SnixDaemon;
-use snix_store::utils::{construct_services, ServiceUrlsGrpc};
+use snix_store::utils::{ServiceUrlsGrpc, construct_services};
 use std::{error::Error, sync::Arc};
 use tokio_listener::SystemOptions;
 use tracing::error;
