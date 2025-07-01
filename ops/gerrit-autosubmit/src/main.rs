@@ -23,7 +23,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::{thread, time};
 
 mod gerrit {
-    use anyhow::{anyhow, Context, Result};
+    use anyhow::{Context, Result, anyhow};
     use serde::Deserialize;
     use serde_json::Value;
     use std::collections::HashMap;
