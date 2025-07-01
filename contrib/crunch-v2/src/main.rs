@@ -15,7 +15,7 @@ mod remote;
 
 use anyhow::Result;
 use clap::Parser;
-use futures::{stream, StreamExt, TryStreamExt};
+use futures::{StreamExt, TryStreamExt, stream};
 use indicatif::{ProgressBar, ProgressStyle};
 use std::{
     io::{self, BufRead, Read, Write},
@@ -24,7 +24,7 @@ use std::{
 };
 
 use polars::{
-    prelude::{col, LazyFrame, ScanArgsParquet},
+    prelude::{LazyFrame, ScanArgsParquet, col},
     sql::sql_expr,
 };
 

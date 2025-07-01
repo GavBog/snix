@@ -7,7 +7,7 @@
 //! mkdir narinfo.pq && ls narinfo.zst | parallel --bar 'narinfo2parquet {}'
 //! ```
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use jemallocator::Jemalloc;
 use nix_compat::{
     narinfo::{self, NarInfo},

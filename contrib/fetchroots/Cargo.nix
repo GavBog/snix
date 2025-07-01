@@ -3682,7 +3682,7 @@ rec {
       "fetchroots" = rec {
         crateName = "fetchroots";
         version = "0.0.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "fetchroots";

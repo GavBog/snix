@@ -11,8 +11,8 @@ use snix_eval::observer::{DisassemblingObserver, TracingObserver};
 use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::HtmlDetailsElement;
 use web_sys::HtmlTextAreaElement;
-use yew::prelude::*;
 use yew::TargetCast;
+use yew::prelude::*;
 use yew_router::history::BrowserHistory;
 use yew_router::history::History;
 

@@ -4193,7 +4193,7 @@ rec {
       "snixbolt" = rec {
         crateName = "snixbolt";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ./.; };
         type = [ "cdylib" ];
         dependencies = [

@@ -16,8 +16,8 @@ use prost::Message;
 use polars::{
     chunked_array::builder::AnonymousOwnedListBuilder,
     prelude::{
-        df, BinaryChunkedBuilder, ChunkedBuilder, DataFrame, DataType, Field, ListBuilderTrait,
-        NamedFrom, ParquetWriter, PrimitiveChunkedBuilder, Series, UInt32Type,
+        BinaryChunkedBuilder, ChunkedBuilder, DataFrame, DataType, Field, ListBuilderTrait,
+        NamedFrom, ParquetWriter, PrimitiveChunkedBuilder, Series, UInt32Type, df,
     },
     series::IntoSeries,
 };

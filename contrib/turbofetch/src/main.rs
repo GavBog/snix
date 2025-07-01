@@ -21,9 +21,9 @@
 //! write any output.
 
 use bytes::Bytes;
-use futures::{stream::FuturesUnordered, Stream, TryStreamExt};
+use futures::{Stream, TryStreamExt, stream::FuturesUnordered};
 use rusoto_core::ByteStream;
-use rusoto_s3::{GetObjectRequest, PutObjectRequest, S3Client, S3};
+use rusoto_s3::{GetObjectRequest, PutObjectRequest, S3, S3Client};
 use serde::Deserialize;
 use std::{io::Write, mem, ops::Range, ptr};
 use tokio::{
@@ -34,7 +34,7 @@ use tokio::{
 /// Fetch a group of keys, streaming concatenated chunks as they arrive from S3.
 /// `keys` must be a slice from the job file. Any network error at all fails the
 /// entire batch, and there is no rate limiting.
-fn fetch(keys: &[[u8; 32]]) -> impl Stream<Item = io::Result<Bytes>> {
+fn fetch(keys: &[[u8; 32]]) -> impl Stream<Item = io::Result<Bytes>> + use<> {
     // S3 supports only HTTP/1.1, but we can ease the pain somewhat by using
     // HTTP pipelining. It terminates the TCP connection after receiving 100
     // requests, so we chunk the keys up accordingly, and make one connection

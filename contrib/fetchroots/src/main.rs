@@ -28,7 +28,7 @@ use nix_compat::nixbase32;
 use polars::prelude::*;
 use tokio::{
     sync::Semaphore,
-    task::{block_in_place, JoinSet},
+    task::{JoinSet, block_in_place},
 };
 
 #[derive(Debug)]

@@ -6,7 +6,7 @@
 //! the row numbers in `narinfo.parquet` corresponding to live paths.
 
 use anyhow::Result;
-use hashbrown::{hash_table, HashTable};
+use hashbrown::{HashTable, hash_table};
 use rayon::prelude::*;
 use rustc_hash::FxHashSet;
 use std::{
@@ -25,7 +25,7 @@ use polars::{
     prelude::*,
 };
 
-use weave::{as_fixed_binary, hash64, INDEX_NULL};
+use weave::{INDEX_NULL, as_fixed_binary, hash64};
 
 #[tracing::instrument]
 fn main() -> Result<()> {

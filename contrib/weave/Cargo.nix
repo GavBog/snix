@@ -7570,7 +7570,7 @@ rec {
       "weave" = rec {
         crateName = "weave";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "swizzle";

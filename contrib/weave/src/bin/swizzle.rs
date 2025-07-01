@@ -33,13 +33,13 @@
 use anyhow::Result;
 use hashbrown::HashTable;
 use polars::{
-    lazy::dsl::{col, SpecialEq},
+    lazy::dsl::{SpecialEq, col},
     prelude::*,
 };
 use tracing::info_span;
 use tracing_indicatif::span_ext::IndicatifSpanExt as _;
 
-use weave::{as_fixed_binary, hash64, leak, load_ph_array, INDEX_NULL};
+use weave::{INDEX_NULL, as_fixed_binary, hash64, leak, load_ph_array};
 
 #[tracing::instrument]
 fn main() -> Result<()> {

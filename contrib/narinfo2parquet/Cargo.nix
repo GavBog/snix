@@ -2749,7 +2749,7 @@ rec {
       "narinfo2parquet" = rec {
         crateName = "narinfo2parquet";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "narinfo2parquet";

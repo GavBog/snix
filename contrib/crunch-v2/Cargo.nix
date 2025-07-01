@@ -1581,7 +1581,7 @@ rec {
       "crunch-v2" = rec {
         crateName = "crunch-v2";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         crateBin = [
           {
             name = "crunch-v2";

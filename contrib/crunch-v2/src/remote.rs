@@ -5,16 +5,16 @@ use std::{
     task::{self, Poll},
 };
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use bytes::{Buf, Bytes};
-use futures::{future::BoxFuture, Future, FutureExt, Stream, StreamExt};
+use futures::{Future, FutureExt, Stream, StreamExt, future::BoxFuture};
 use lazy_static::lazy_static;
 use tokio::runtime::Handle;
 
 use nix_compat::nixbase32;
 
 use rusoto_core::{ByteStream, Region};
-use rusoto_s3::{GetObjectOutput, GetObjectRequest, S3Client, S3};
+use rusoto_s3::{GetObjectOutput, GetObjectRequest, S3, S3Client};
 
 use bzip2::read::BzDecoder;
 use xz2::read::XzDecoder;
@@ -106,7 +106,7 @@ impl FileKey {
         &self,
         offset: u64,
         e_tag: Option<&str>,
-    ) -> impl Future<Output = io::Result<GetObjectOutput>> + Send + 'static {
+    ) -> impl Future<Output = io::Result<GetObjectOutput>> + Send + 'static + use<> {
         let input = GetObjectRequest {
             bucket: BUCKET.to_string(),
             key: format!(
