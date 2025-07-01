@@ -9,7 +9,7 @@ use rnix::ast;
 use rustc_hash::FxHashSet;
 use rustc_hash::FxHasher;
 use std::alloc::dealloc;
-use std::alloc::{alloc, handle_alloc_error, Layout};
+use std::alloc::{Layout, alloc, handle_alloc_error};
 use std::borrow::{Borrow, Cow};
 use std::cell::RefCell;
 use std::ffi::c_void;
@@ -19,8 +19,8 @@ use std::ops::Deref;
 use std::ptr::{self, NonNull};
 use std::slice;
 
-use serde::de::{Deserializer, Visitor};
 use serde::Deserialize;
+use serde::de::{Deserializer, Visitor};
 
 mod context;
 
@@ -75,12 +75,14 @@ impl NixStringInner {
     /// This function must only be called on a pointer that has been properly initialized with
     /// [`Self::alloc`]. The data buffer may not necessarily be initialized
     unsafe fn layout_of(this: NonNull<c_void>) -> (Layout, usize, usize) {
-        let layout = Layout::new::<Option<Box<NixContext>>>();
-        let (_, len_offset) = layout.extend(Layout::new::<usize>()).unwrap();
-        // SAFETY: Layouts are linear, so even though we haven't involved data at all yet, we know
-        // the len_offset is a valid offset into the second field of the allocation
-        let len = *(this.as_ptr().add(len_offset) as *const usize);
-        Self::layout(len)
+        unsafe {
+            let layout = Layout::new::<Option<Box<NixContext>>>();
+            let (_, len_offset) = layout.extend(Layout::new::<usize>()).unwrap();
+            // SAFETY: Layouts are linear, so even though we haven't involved data at all yet, we know
+            // the len_offset is a valid offset into the second field of the allocation
+            let len = *(this.as_ptr().add(len_offset) as *const usize);
+            Self::layout(len)
+        }
     }
 
     /// Allocate an *uninitialized* nix string with the given length. Writes the length to the
@@ -121,9 +123,11 @@ impl NixStringInner {
     /// This function must only be called with a pointer that has been properly initialized with
     /// [`Self::alloc`]
     unsafe fn dealloc(this: NonNull<c_void>) {
-        let (layout, _, _) = Self::layout_of(this);
-        // SAFETY: okay because of the safety guarantees of this method
-        dealloc(this.as_ptr() as *mut u8, layout)
+        unsafe {
+            let (layout, _, _) = Self::layout_of(this);
+            // SAFETY: okay because of the safety guarantees of this method
+            dealloc(this.as_ptr() as *mut u8, layout)
+        }
     }
 
     /// Return the length of the Nix string at the given pointer
@@ -133,11 +137,13 @@ impl NixStringInner {
     /// This function must only be called with a pointer that has been properly initialized with
     /// [`Self::alloc`]
     unsafe fn len(this: NonNull<c_void>) -> usize {
-        let (_, len_offset, _) = Self::layout_of(this);
-        // SAFETY: As long as the safety guarantees of this method are upheld, we've allocated with
-        // a layout that causes the len_offset to be in-bounds and writeable, and if the allocation
-        // succeeded it won't wrap
-        *(this.as_ptr().add(len_offset) as *const usize)
+        unsafe {
+            let (_, len_offset, _) = Self::layout_of(this);
+            // SAFETY: As long as the safety guarantees of this method are upheld, we've allocated with
+            // a layout that causes the len_offset to be in-bounds and writeable, and if the allocation
+            // succeeded it won't wrap
+            *(this.as_ptr().add(len_offset) as *const usize)
+        }
     }
 
     /// Return a pointer to the context value within the given Nix string pointer
@@ -162,7 +168,7 @@ impl NixStringInner {
     /// Also, all the normal Rust rules about pointer-to-reference conversion apply. See
     /// [`NonNull::as_ref`] for more.
     unsafe fn context_ref<'a>(this: NonNull<c_void>) -> &'a Option<Box<NixContext>> {
-        Self::context_ptr(this).as_ref().unwrap()
+        unsafe { Self::context_ptr(this).as_ref().unwrap() }
     }
 
     /// Construct a mutable reference to the context value within the given Nix string pointer
@@ -176,7 +182,7 @@ impl NixStringInner {
     /// Also, all the normal Rust rules about pointer-to-reference conversion apply. See
     /// [`NonNull::as_mut`] for more.
     unsafe fn context_mut<'a>(this: NonNull<c_void>) -> &'a mut Option<Box<NixContext>> {
-        Self::context_ptr(this).as_mut().unwrap()
+        unsafe { Self::context_ptr(this).as_mut().unwrap() }
     }
 
     /// Return a pointer to the data array within the given Nix string pointer
@@ -186,9 +192,11 @@ impl NixStringInner {
     /// This function must only be called with a pointer that has been properly initialized with
     /// [`Self::alloc`]
     unsafe fn data_ptr(this: NonNull<c_void>) -> *mut u8 {
-        let (_, _, data_offset) = Self::layout_of(this);
-        // SAFETY: data is the third field in the layout of the allocation
-        this.as_ptr().add(data_offset) as *mut u8
+        unsafe {
+            let (_, _, data_offset) = Self::layout_of(this);
+            // SAFETY: data is the third field in the layout of the allocation
+            this.as_ptr().add(data_offset) as *mut u8
+        }
     }
 
     /// Construct a shared reference to the data slice within the given Nix string pointer
@@ -202,9 +210,11 @@ impl NixStringInner {
     /// Also, all the normal Rust rules about pointer-to-reference conversion apply. See
     /// [`slice::from_raw_parts`] for more.
     unsafe fn data_slice<'a>(this: NonNull<c_void>) -> &'a [u8] {
-        let len = Self::len(this);
-        let data = Self::data_ptr(this);
-        slice::from_raw_parts(data, len)
+        unsafe {
+            let len = Self::len(this);
+            let data = Self::data_ptr(this);
+            slice::from_raw_parts(data, len)
+        }
     }
 
     /// Construct a mutable reference to the data slice within the given Nix string pointer
@@ -219,9 +229,11 @@ impl NixStringInner {
     /// [`slice::from_raw_parts_mut`] for more.
     #[allow(dead_code)]
     unsafe fn data_slice_mut<'a>(this: NonNull<c_void>) -> &'a mut [u8] {
-        let len = Self::len(this);
-        let data = Self::data_ptr(this);
-        slice::from_raw_parts_mut(data, len)
+        unsafe {
+            let len = Self::len(this);
+            let data = Self::data_ptr(this);
+            slice::from_raw_parts_mut(data, len)
+        }
     }
 
     /// Clone the Nix string pointed to by this pointer, and return a pointer to a new Nix string
@@ -234,14 +246,16 @@ impl NixStringInner {
     /// pointer returned from [`Self::context_ptr`]), and the data array has been properly
     /// initialized (by writing to the pointer returned from [`Self::data_ptr`]).
     unsafe fn clone(this: NonNull<c_void>) -> NonNull<c_void> {
-        let (layout, _, _) = Self::layout_of(this);
-        let ptr = alloc(layout);
-        if let Some(new) = NonNull::new(ptr as *mut _) {
-            ptr::copy_nonoverlapping(this.as_ptr(), new.as_ptr(), layout.size());
-            Self::context_ptr(new).write(Self::context_ref(this).clone());
-            new
-        } else {
-            handle_alloc_error(layout);
+        unsafe {
+            let (layout, _, _) = Self::layout_of(this);
+            let ptr = alloc(layout);
+            if let Some(new) = NonNull::new(ptr as *mut _) {
+                ptr::copy_nonoverlapping(this.as_ptr(), new.as_ptr(), layout.size());
+                Self::context_ptr(new).write(Self::context_ref(this).clone());
+                new
+            } else {
+                handle_alloc_error(layout);
+            }
         }
     }
 }
@@ -543,7 +557,7 @@ impl Deref for NixString {
 #[cfg(feature = "arbitrary")]
 mod arbitrary {
     use super::*;
-    use proptest::prelude::{any_with, Arbitrary};
+    use proptest::prelude::{Arbitrary, any_with};
     use proptest::strategy::{BoxedStrategy, Strategy};
 
     impl Arbitrary for NixString {

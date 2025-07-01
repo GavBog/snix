@@ -6,7 +6,7 @@
 //! Due to this, construction and management of attribute sets has
 //! some peculiarities that are encapsulated within this module.
 use std::borrow::Borrow;
-use std::collections::{hash_map, BTreeMap};
+use std::collections::{BTreeMap, hash_map};
 use std::iter::FromIterator;
 use std::rc::Rc;
 use std::sync::LazyLock;
@@ -14,15 +14,15 @@ use std::sync::LazyLock;
 use bstr::BStr;
 use itertools::Itertools as _;
 use rustc_hash::FxHashMap;
-use serde::de::{Deserializer, Error, Visitor};
 use serde::Deserialize;
+use serde::de::{Deserializer, Error, Visitor};
 
-use super::string::NixString;
-use super::thunk::ThunkSet;
 use super::TotalDisplay;
 use super::Value;
-use crate::errors::ErrorKind;
+use super::string::NixString;
+use super::thunk::ThunkSet;
 use crate::CatchableErrorKind;
+use crate::errors::ErrorKind;
 
 static NAME: LazyLock<NixString> = LazyLock::new(|| "name".into());
 static VALUE: LazyLock<NixString> = LazyLock::new(|| "value".into());
@@ -300,10 +300,7 @@ impl NixAttrs {
             AttrsRep::Map(map) => KeyValue::Map(map.iter()),
             AttrsRep::Empty => KeyValue::Empty,
 
-            AttrsRep::KV {
-                ref name,
-                ref value,
-            } => KeyValue::KV {
+            AttrsRep::KV { name, value } => KeyValue::KV {
                 name,
                 value,
                 at: IterKV::default(),
@@ -320,10 +317,7 @@ impl NixAttrs {
                 let sorted = map.iter().sorted_by_key(|x| x.0);
                 KeyValue::Sorted(sorted)
             }
-            AttrsRep::KV {
-                ref name,
-                ref value,
-            } => KeyValue::KV {
+            AttrsRep::KV { name, value } => KeyValue::KV {
                 name,
                 value,
                 at: IterKV::default(),

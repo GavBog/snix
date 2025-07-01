@@ -114,7 +114,7 @@ impl Binding {
         value: ast::Expr,
     ) {
         match self {
-            Binding::InheritFrom { name, ref span, .. } => {
+            Binding::InheritFrom { name, span, .. } => {
                 c.emit_error(span, ErrorKind::UnmergeableInherit { name: name.clone() })
             }
 

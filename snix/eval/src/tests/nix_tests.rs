@@ -1,4 +1,4 @@
-use crate::{value::Value, EvalIO, FileType};
+use crate::{EvalIO, FileType, value::Value};
 use builtin_macros::builtins;
 use pretty_assertions::assert_eq;
 use rstest::rstest;
@@ -91,7 +91,7 @@ where
 
 #[cfg(feature = "impure")]
 fn eval_test(code_path: PathBuf, expect_success: bool) {
-    use crate::{vm::EvalMode, StdIO};
+    use crate::{StdIO, vm::EvalMode};
 
     eprintln!("path: {}", code_path.display());
     assert_eq!(
@@ -180,7 +180,7 @@ fn eval_test(code_path: PathBuf, expect_success: bool) {
 #[cfg(feature = "impure")]
 #[rstest]
 fn identity(#[files("src/tests/snix_tests/identity-*.nix")] code_path: PathBuf) {
-    use crate::{vm::EvalMode, EvalIO};
+    use crate::{EvalIO, vm::EvalMode};
 
     let code = std::fs::read_to_string(code_path).expect("should be able to read test code");
 

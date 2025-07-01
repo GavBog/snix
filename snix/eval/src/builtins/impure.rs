@@ -4,11 +4,10 @@ use genawaiter::rc::Gen;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
-    self as snix_eval,
+    self as snix_eval, NixString, Value,
     errors::ErrorKind,
     value::NixAttrs,
     vm::generators::{self, GenCo},
-    NixString, Value,
 };
 
 #[builtins]

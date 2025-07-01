@@ -4,7 +4,7 @@ use proptest::collection::{btree_map, vec};
 use proptest::{prelude::*, strategy::BoxedStrategy};
 use std::ffi::OsString;
 
-use super::{attrs::AttrsRep, NixAttrs, NixList, NixString, Value};
+use super::{NixAttrs, NixList, NixString, Value, attrs::AttrsRep};
 
 #[derive(Clone)]
 pub enum Parameters {

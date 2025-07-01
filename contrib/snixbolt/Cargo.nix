@@ -4031,7 +4031,7 @@ rec {
       "snix-eval" = rec {
         crateName = "snix-eval";
         version = "0.1.0";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ../../snix/eval; };
         libName = "snix_eval";
         dependencies = [
@@ -4166,7 +4166,7 @@ rec {
       "snix-eval-builtin-macros" = rec {
         crateName = "snix-eval-builtin-macros";
         version = "0.0.1";
-        edition = "2021";
+        edition = "2024";
         src = lib.cleanSourceWith { filter = sourceFilter; src = ../../snix/eval/builtin-macros; };
         procMacro = true;
         libName = "snix_eval_builtin_macros";

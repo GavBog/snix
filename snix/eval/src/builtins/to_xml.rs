@@ -85,7 +85,7 @@ fn value_variant_to_xml<W: Write>(w: &mut XmlEmitter<W>, value: &Value) -> Resul
                     if formals.ellipsis {
                         attrs.push(("ellipsis", "1"));
                     }
-                    if let Some(ref name) = &formals.name {
+                    if let Some(name) = &formals.name {
                         attrs.push(("name", name.as_str()));
                     }
 
@@ -126,7 +126,7 @@ fn value_variant_to_xml<W: Write>(w: &mut XmlEmitter<W>, value: &Value) -> Resul
             return Err(ErrorKind::SnixBug {
                 msg: "internal value variant encountered in builtins.toXML",
                 metadata: Some(Rc::new(value.clone())),
-            })
+            });
         }
 
         Value::Catchable(_) => {

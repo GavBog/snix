@@ -2,7 +2,7 @@
 name = "snix-eval-builtin-macros"
 version = "0.0.1"
 authors = ["Griffin Smith <root@gws.fyi>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 syn = { version = "1.0.109", features = [

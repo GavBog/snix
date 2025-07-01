@@ -14,10 +14,10 @@ use std::ffi::OsString;
 use std::fmt::Display;
 use std::future::Future;
 
-use crate::value::PointerEquality;
-use crate::warnings::{EvalWarning, WarningKind};
 use crate::FileType;
 use crate::NixString;
+use crate::value::PointerEquality;
+use crate::warnings::{EvalWarning, WarningKind};
 
 use super::*;
 
@@ -254,7 +254,7 @@ where
     }
 
     /// Helper function to enqueue a new generator.
-    pub(super) fn enqueue_generator<F, G>(&mut self, name: &'static str, span: Span, gen: G)
+    pub(super) fn enqueue_generator<F, G>(&mut self, name: &'static str, span: Span, r#gen: G)
     where
         F: Future<Output = Result<Value, ErrorKind>> + 'static,
         G: FnOnce(GenCo) -> F,
@@ -263,7 +263,7 @@ where
             name,
             span,
             state: GeneratorState::Running,
-            generator: Gen::new(|co| pin_generator(gen(co))),
+            generator: Gen::new(|co| pin_generator(r#gen(co))),
         });
     }
 
