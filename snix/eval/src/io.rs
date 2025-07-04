@@ -152,7 +152,10 @@ impl EvalIO for StdIO {
 
         for entry in path.read_dir()? {
             let entry = entry?;
-            let file_type = entry.metadata()?.file_type();
+            // Use entry.file_type() instead of entry.metadata() to avoid stat syscalls.
+            // file_type() uses the d_type field from the readdir() syscall (when available),
+            // which is cached in the DirEntry and doesn't require additional filesystem access.
+            let file_type = entry.file_type()?;
 
             let val = if file_type.is_dir() {
                 FileType::Directory
