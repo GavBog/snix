@@ -35,9 +35,9 @@ thiserror.workspace = true
 tracing.workspace = true
 bytes = { workspace = true, optional = true }
 tokio = { workspace = true, features = [
-    "io-util",
-    "macros",
-    "sync",
+  "io-util",
+  "macros",
+  "sync",
 ], optional = true }
 pin-project-lite = { workspace = true, optional = true }
 num_enum = "0.7.3"

@@ -5,10 +5,10 @@ edition = "2024"
 
 [dependencies]
 async-compression = { workspace = true, features = [
-    "tokio",
-    "gzip",
-    "bzip2",
-    "xz",
+  "tokio",
+  "gzip",
+  "bzip2",
+  "xz",
 ] }
 async-stream.workspace = true
 bstr.workspace = true

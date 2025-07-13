@@ -20,6 +20,11 @@ let
     command = "${pkgs.rustfmt}/bin/rustfmt"
     includes = [ "*.rs" ]
 
+    [formatter.toml]
+    command = "${pkgs.taplo}/bin/taplo"
+    options = [ "format" ]
+    includes = [ "*.toml" ]
+
     [formatter.editorconfig]
     command = "${pkgs.editorconfig-checker}/bin/editorconfig-checker"
     includes = [

@@ -16,8 +16,12 @@ bytes = "1.6.1"
 futures = "0.3.29"
 tokio = { version = "1.37.0", features = ["full"] }
 
-rusoto_core = { version = "0.48.0", default-features = false, features = ["hyper-rustls"] }
-rusoto_s3 = { version = "0.48.0", default-features = false, features = ["rustls"] }
+rusoto_core = { version = "0.48.0", default-features = false, features = [
+  "hyper-rustls",
+] }
+rusoto_s3 = { version = "0.48.0", default-features = false, features = [
+  "rustls",
+] }
 
 nix-compat = { version = "0.1.0", path = "../../snix/nix-compat" }
 sled = "0.34.7"
@@ -31,7 +35,12 @@ bzip2 = "0.4.4"
 xz2 = "0.1.7"
 zstd = "0.13.0"
 prost = "0.12.2"
-polars = { version = "0.35.4", default-features = false, features = ["parquet", "lazy", "sql", "dtype-struct"] }
+polars = { version = "0.35.4", default-features = false, features = [
+  "parquet",
+  "lazy",
+  "sql",
+  "dtype-struct",
+] }
 indicatif = "0.17.7"
 clap = { version = "4.4.18", features = ["derive"] }
 

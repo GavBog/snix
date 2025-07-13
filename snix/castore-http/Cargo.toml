@@ -12,8 +12,13 @@ clap = { workspace = true, features = ["derive"] }
 mime_guess = "2.0.5"
 mime = "0.3.17"
 path-clean.workspace = true
-tokio = { workspace = true, features = [ "tracing"] }
-tokio-listener = { workspace = true, features = ["axum07", "clap", "multi-listener", "sd_listen"] }
+tokio = { workspace = true, features = ["tracing"] }
+tokio-listener = { workspace = true, features = [
+  "axum07",
+  "clap",
+  "multi-listener",
+  "sd_listen",
+] }
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tokio-util.workspace = true

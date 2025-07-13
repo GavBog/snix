@@ -23,7 +23,14 @@ thiserror.workspace = true
 tokio-stream = { workspace = true, features = ["fs", "net"] }
 tokio-util = { workspace = true, features = ["io", "io-util", "codec"] }
 tokio-tar.workspace = true
-tokio = { workspace = true, features = ["fs", "macros", "net", "rt", "rt-multi-thread", "signal"] }
+tokio = { workspace = true, features = [
+  "fs",
+  "macros",
+  "net",
+  "rt",
+  "rt-multi-thread",
+  "signal",
+] }
 toml = { version = "0.8.19", optional = true }
 tonic.workspace = true
 tower.workspace = true

@@ -4,5 +4,5 @@ ignore-interior-mutability = [
   # make sure to specify the originating type name, not re-exports!
   "bytes::Bytes",
   "snix_castore::digests::B3Digest",
-  "snix_castore::path::component::PathComponent"
+  "snix_castore::path::component::PathComponent",
 ]

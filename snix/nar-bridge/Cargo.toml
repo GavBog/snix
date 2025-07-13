@@ -19,10 +19,17 @@ nix-compat = { path = "../nix-compat", features = ["async"] }
 opentelemetry.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
-tokio-listener = { workspace = true, features = ["axum07", "clap", "multi-listener", "sd_listen"] }
+tokio-listener = { workspace = true, features = [
+  "axum07",
+  "clap",
+  "multi-listener",
+  "sd_listen",
+] }
 tokio-util = { workspace = true, features = ["io", "io-util", "compat"] }
 tonic = { workspace = true, features = ["tls", "tls-roots"] }
-tower-otel-http-metrics = { workspace = true, features = ["axum"], optional = true }
+tower-otel-http-metrics = { workspace = true, features = [
+  "axum",
+], optional = true }
 snix-castore = { path = "../castore" }
 snix-store = { path = "../store" }
 snix-tracing = { path = "../tracing", features = ["tonic", "axum"] }

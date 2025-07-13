@@ -21,8 +21,4 @@ hashbrown = { version = "0.14.5", features = ["raw"] }
 [dependencies.polars]
 version = "0.36.2"
 default-features = false
-features = [
-    "parquet",
-    "polars-io",
-    "dtype-categorical"
-]
+features = ["parquet", "polars-io", "dtype-categorical"]

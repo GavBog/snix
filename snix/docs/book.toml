@@ -12,8 +12,8 @@ use-data-uris = true
 
 [preprocessor.admonish]
 command = "mdbook-admonish"
-after = ["links"] # ensure `{{#include}}` also gets processed
-assets_version = "3.0.2" # do not edit: managed by `mdbook-admonish install`
+after = ["links"]           # ensure `{{#include}}` also gets processed
+assets_version = "3.0.2"    # do not edit: managed by `mdbook-admonish install`
 
 [preprocessor.d2]
 command = "d2"

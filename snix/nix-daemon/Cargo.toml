@@ -12,7 +12,14 @@ nix-compat = { path = "../nix-compat" }
 snix-castore = { path = "../castore" }
 snix-store = { path = "../store" }
 snix-tracing = { path = "../tracing" }
-tokio = { workspace = true, features = ["fs", "macros", "net", "rt", "rt-multi-thread", "signal"] }
+tokio = { workspace = true, features = [
+  "fs",
+  "macros",
+  "net",
+  "rt",
+  "rt-multi-thread",
+  "signal",
+] }
 tokio-listener.workspace = true
 tracing.workspace = true
 
