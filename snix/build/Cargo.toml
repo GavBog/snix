@@ -41,6 +41,3 @@ tonic-reflection = ["dep:tonic-reflection", "snix-castore/tonic-reflection"]
 [dev-dependencies]
 rstest.workspace = true
 tempfile = "3.3.0"
-
-[lints]
-workspace = true

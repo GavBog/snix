@@ -56,6 +56,3 @@ axum-test = "16.4.0"
 hex-literal.workspace = true
 rstest.workspace = true
 sha2.workspace = true
-
-[lints]
-workspace = true

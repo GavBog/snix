@@ -23,9 +23,6 @@ tokio = { workspace = true, features = [
 tokio-listener.workspace = true
 tracing.workspace = true
 
-[lints]
-workspace = true
-
 [features]
 default = ["otlp"]
 otlp = ["snix-tracing/otlp"]

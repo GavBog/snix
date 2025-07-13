@@ -36,11 +36,6 @@ members = [
   "tracing",
 ]
 
-[workspace.lints.clippy]
-# Allow blocks_in_conditions due to false positives with #[tracing::instrument(…)]:
-# https://github.com/rust-lang/rust-clippy/issues/12281
-blocks_in_conditions = "allow"
-
 [workspace.dependencies]
 anyhow = "1.0.86"
 async-compression = "0.4.12"
