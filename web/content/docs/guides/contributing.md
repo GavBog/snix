@@ -56,9 +56,17 @@ git remote set-url origin "https://$USER@cl.snix.dev/a/snix"
 replicates fast enough, then update to --push only -->
 
 ### Install the commit-msg hook
+
+Setting up the `commit-msg` Git hook is done for you automagically the first time you enter the shell.
+If it didn't work for you for some reason, see the manual steps below.
+
 Gerrit uses a `commit-msg` hook to add a `Change-Id: …` field to each commit
 message if not present already. This allows Gerrit to identify new revisions /
 updates of old commits, and track them as new revisions of the same "CL" [^2].
+
+<details>
+
+<summary>Manually installing the hook</summary>
 
 To install the commit-msg hook, run the following from the repo root:
 
@@ -67,6 +75,8 @@ mkdir -p .git/hooks
 curl -Lo .git/hooks/commit-msg https://cl.snix.dev/tools/hooks/commit-msg
 chmod +x .git/hooks/commit-msg
 ```
+
+</details>
 
 {{< callout context="tip" title="Did you know?" icon="outline/rocket" >}}
 Gerrit refuses receiving commits without these `Change-Id: …` fields.

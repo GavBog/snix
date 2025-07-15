@@ -53,5 +53,24 @@ pkgs.mkShell {
   shellHook = ''
     export SNIX_BUILD_SANDBOX_SHELL=${if pkgs.stdenv.isLinux then pkgs.busybox-sandbox-shell + "/bin/busybox" else "/bin/sh"}
     export SNIX_BENCH_NIX_PATH=nixpkgs=${pkgs.path}
+
+    snixShellHook() {
+      # Somewhat brute force check. Lix uses .this-is-lix in repo root.
+      if [[ ! -d ./snix || ! -e ./.git ]]; then
+        echo "Dev shell not started from within the Snix repo, skipping repo setup" >&2
+        return
+      fi
+
+      local gitcommondir
+      # Install the Gerrit commit-msg hook.
+      # (git common dir is the main .git, including for worktrees)
+      if gitcommondir=$(git rev-parse --git-common-dir 2>/dev/null) && [[ ! -f "$gitcommondir/hooks/commit-msg" ]]; then
+        echo 'Installing Gerrit commit-msg hook (adds Change-Id to commit messages)' >&2
+        mkdir -p "$gitcommondir/hooks"
+        curl -s -Lo "$gitcommondir/hooks/commit-msg" https://cl.snix.dev/tools/hooks/commit-msg
+        chmod u+x "$gitcommondir/hooks/commit-msg"
+      fi
+    }
+    snixShellHook
   '';
 }
