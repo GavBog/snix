@@ -105,6 +105,13 @@ in
     buildPhase = "cargo clippy --tests --all-features --benches --examples -- -Dwarnings | tee $out";
   };
 
+  doc-tests = mkCargoBuild {
+    name = "nixrs-doc-tests";
+    buildPhase = ''
+      cargo test --doc | tee $out
+    '';
+  };
+
   crate2nix-check =
     let
       crate2nix-check = here.utils.mkCrate2nixCheck ./Cargo.nix;
