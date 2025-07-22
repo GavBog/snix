@@ -4,6 +4,8 @@ use url::Url;
 
 #[cfg(target_os = "linux")]
 use super::oci::OCIBuildService;
+#[cfg(all(not(target_os = "linux"), doc))]
+struct OCIBuildService;
 
 /// Constructs a new instance of a [BuildService] from an URI.
 ///
