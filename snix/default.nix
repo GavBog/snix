@@ -36,9 +36,22 @@ let
     ];
   };
 
+  mkCargoBuild = args: pkgs.stdenv.mkDerivation ({
+    inherit cargoDeps src;
+    PROTO_ROOT = protos;
+    SNIX_BUILD_SANDBOX_SHELL = "/homeless-shelter";
+
+    nativeBuildInputs = with pkgs; [
+      cargo
+      pkg-config
+      protobuf
+      rustc
+      rustPlatform.cargoSetupHook
+    ] ++ (args.nativeBuildInputs or [ ]);
+  } // (pkgs.lib.removeAttrs args [ "nativeBuildInputs" ]));
 in
 {
-  inherit crates protos;
+  inherit crates protos mkCargoBuild;
 
   # Provide the snix logo in both .webp and .png format.
   logo = pkgs.runCommand "logo"
@@ -63,19 +76,8 @@ in
   shell-integration = (import ./shell.nix { inherit pkgs; withIntegration = true; });
 
   # Build the Rust documentation for publishing on snix.dev/rustdoc.
-  rust-docs = pkgs.stdenv.mkDerivation {
-    inherit cargoDeps src;
+  rust-docs = mkCargoBuild {
     name = "snix-rust-docs";
-    PROTO_ROOT = protos;
-    SNIX_BUILD_SANDBOX_SHELL = "/homeless-shelter";
-
-    nativeBuildInputs = with pkgs; [
-      cargo
-      pkg-config
-      protobuf
-      rustc
-      rustPlatform.cargoSetupHook
-    ];
 
     buildInputs = [
       pkgs.fuse
@@ -89,22 +91,15 @@ in
 
   # Run cargo clippy. We run it with -Dwarnings, so warnings cause a nonzero
   # exit code.
-  clippy = pkgs.stdenv.mkDerivation {
-    inherit cargoDeps src;
+  clippy = mkCargoBuild {
     name = "snix-clippy";
-    PROTO_ROOT = protos;
-    SNIX_BUILD_SANDBOX_SHELL = "/homeless-shelter";
 
     buildInputs = [
       pkgs.fuse
     ];
+
     nativeBuildInputs = with pkgs; [
-      cargo
       clippy
-      pkg-config
-      protobuf
-      rustc
-      rustPlatform.cargoSetupHook
     ];
 
     buildPhase = "cargo clippy --tests --all-features --benches --examples -- -Dwarnings | tee $out";
