@@ -1,10 +1,7 @@
 use builtin_macros::builtins;
 use genawaiter::rc::Gen;
 
-use std::{
-    env,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
     self as snix_eval,
@@ -24,9 +21,10 @@ mod impure_builtins {
 
     #[builtin("getEnv")]
     async fn builtin_get_env(co: GenCo, var: Value) -> Result<Value, ErrorKind> {
-        Ok(env::var(OsStr::from_bytes(&var.to_str()?))
-            .unwrap_or_else(|_| "".into())
-            .into())
+        let key = OsStr::from_bytes(&var.to_str()?).to_os_string();
+
+        let env = generators::request_get_env(&co, key).await;
+        Ok(Value::String(NixString::from(env.as_bytes())))
     }
 
     #[builtin("hashFile")]

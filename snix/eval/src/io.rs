@@ -16,6 +16,8 @@
 //! how store paths are opened and so on.
 
 use std::{
+    env,
+    ffi::{OsStr, OsString},
     io,
     path::{Path, PathBuf},
 };
@@ -114,6 +116,9 @@ pub trait EvalIO {
     fn store_dir(&self) -> Option<String> {
         None
     }
+
+    /// Fetches the environment variable key from the current process.
+    fn get_env(&self, key: &OsStr) -> Option<OsString>;
 }
 
 /// Implementation of [`EvalIO`] that simply uses the equivalent
@@ -178,6 +183,10 @@ impl EvalIO for StdIO {
     fn import_path(&self, path: &Path) -> io::Result<PathBuf> {
         Ok(path.to_path_buf())
     }
+
+    fn get_env(&self, key: &OsStr) -> Option<OsString> {
+        env::var_os(key)
+    }
 }
 
 /// Dummy implementation of [`EvalIO`], can be used in contexts where
@@ -218,5 +227,9 @@ impl EvalIO for DummyIO {
             io::ErrorKind::Unsupported,
             "I/O methods are not implemented in DummyIO",
         ))
+    }
+
+    fn get_env(&self, _: &OsStr) -> Option<OsString> {
+        None
     }
 }

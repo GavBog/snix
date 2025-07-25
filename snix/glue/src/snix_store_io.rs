@@ -6,6 +6,8 @@ use snix_eval::{EvalIO, FileType, StdIO};
 use snix_store::nar::NarCalculationService;
 use std::{
     cell::RefCell,
+    env,
+    ffi::{OsStr, OsString},
     io,
     path::{Path, PathBuf},
     sync::Arc,
@@ -489,6 +491,10 @@ impl EvalIO for SnixStoreIO {
     #[instrument(skip(self), ret(level = Level::TRACE))]
     fn store_dir(&self) -> Option<String> {
         Some("/nix/store".to_string())
+    }
+
+    fn get_env(&self, key: &OsStr) -> Option<OsString> {
+        env::var_os(key)
     }
 }
 

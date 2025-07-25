@@ -1,8 +1,13 @@
-use crate::value::Value;
+use crate::{value::Value, EvalIO, FileType};
 use builtin_macros::builtins;
 use pretty_assertions::assert_eq;
 use rstest::rstest;
-use std::path::PathBuf;
+use std::{
+    ffi::{OsStr, OsString},
+    io::{self},
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 #[builtins]
 mod mock_builtins {
@@ -35,11 +40,58 @@ mod mock_builtins {
     }
 }
 
+struct MockIo<T> {
+    // Actual underlying [EvalIO] implementation.
+    actual: T,
+}
+
+impl<T> MockIo<T> {
+    pub fn new(actual: T) -> Self {
+        Self { actual }
+    }
+}
+
+impl<T> EvalIO for MockIo<T>
+where
+    T: AsRef<dyn EvalIO>,
+{
+    fn store_dir(&self) -> Option<String> {
+        self.actual.as_ref().store_dir()
+    }
+
+    fn import_path(&self, path: &Path) -> io::Result<PathBuf> {
+        self.actual.as_ref().import_path(path)
+    }
+
+    fn path_exists(&self, path: &Path) -> io::Result<bool> {
+        self.actual.as_ref().path_exists(path)
+    }
+
+    fn open(&self, path: &Path) -> io::Result<Box<dyn io::Read>> {
+        self.actual.as_ref().open(path)
+    }
+
+    fn file_type(&self, path: &Path) -> io::Result<FileType> {
+        self.actual.as_ref().file_type(path)
+    }
+
+    fn read_dir(&self, path: &Path) -> io::Result<Vec<(bytes::Bytes, FileType)>> {
+        self.actual.as_ref().read_dir(path)
+    }
+
+    fn get_env(&self, key: &OsStr) -> Option<OsString> {
+        // for eval-okay-getenv.nix
+        if key == "TEST_VAR" {
+            return Some(OsString::from_str("foo").expect("This conversion is infallible."));
+        }
+
+        self.actual.as_ref().get_env(key)
+    }
+}
+
 #[cfg(feature = "impure")]
 fn eval_test(code_path: PathBuf, expect_success: bool) {
-    use crate::vm::EvalMode;
-
-    std::env::set_var("TEST_VAR", "foo"); // for eval-okay-getenv.nix
+    use crate::{vm::EvalMode, StdIO};
 
     eprintln!("path: {}", code_path.display());
     assert_eq!(
@@ -52,6 +104,7 @@ fn eval_test(code_path: PathBuf, expect_success: bool) {
 
     let eval = crate::Evaluation::builder_impure()
         .mode(EvalMode::Strict)
+        .io_handle(Box::new(MockIo::new(Box::new(StdIO) as Box<dyn EvalIO>)) as Box<dyn EvalIO>)
         .add_builtins(mock_builtins::builtins())
         .build();
 

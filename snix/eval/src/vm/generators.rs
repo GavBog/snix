@@ -10,6 +10,7 @@
 use core::pin::Pin;
 use genawaiter::rc::Co;
 pub use genawaiter::rc::Gen;
+use std::ffi::OsString;
 use std::fmt::Display;
 use std::future::Future;
 
@@ -119,6 +120,9 @@ pub enum VMRequest {
 
     /// Request the VM for the file type of the given path.
     ReadFileType(PathBuf),
+
+    // Request that the VM reads the given environment variable.
+    GetEnv(OsString),
 }
 
 /// Human-readable representation of a generator message, used by observers.
@@ -176,6 +180,7 @@ impl Display for VMRequest {
             VMRequest::Span => write!(f, "span"),
             VMRequest::TryForce(v) => write!(f, "try_force({})", v.type_of()),
             VMRequest::ReadFileType(p) => write!(f, "read_file_type({})", p.to_string_lossy()),
+            VMRequest::GetEnv(p) => write!(f, "get_env({})", p.to_string_lossy()),
         }
     }
 }
@@ -202,6 +207,9 @@ pub enum VMResponse {
     Reader(Box<dyn std::io::Read>),
 
     FileType(FileType),
+
+    /// environment variable
+    Env(OsString),
 }
 
 impl Display for VMResponse {
@@ -214,6 +222,7 @@ impl Display for VMResponse {
             VMResponse::Span(_) => write!(f, "span"),
             VMResponse::Reader(_) => write!(f, "reader"),
             VMResponse::FileType(t) => write!(f, "file_type({t})"),
+            VMResponse::Env(t) => write!(f, "env({})", t.to_string_lossy()),
         }
     }
 }
@@ -504,6 +513,11 @@ where
 
                             message = VMResponse::FileType(file_type);
                         }
+                        VMRequest::GetEnv(key) => {
+                            let env = self.io_handle.as_ref().get_env(&key).unwrap_or_default();
+
+                            message = VMResponse::Env(env);
+                        }
                     }
                 }
 
@@ -734,6 +748,14 @@ pub(crate) async fn request_span(co: &GenCo) -> Span {
 pub(crate) async fn request_read_file_type(co: &GenCo, path: PathBuf) -> FileType {
     match co.yield_(VMRequest::ReadFileType(path)).await {
         VMResponse::FileType(file_type) => file_type,
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
+    }
+}
+
+#[cfg_attr(not(feature = "impure"), allow(unused))]
+pub(crate) async fn request_get_env(co: &GenCo, key: OsString) -> OsString {
+    match co.yield_(VMRequest::GetEnv(key)).await {
+        VMResponse::Env(env) => env,
         msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }

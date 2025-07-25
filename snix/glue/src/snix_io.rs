@@ -7,6 +7,7 @@
 //! otherwise nixpkgs bootstrapping will not work.
 
 use snix_eval::{EvalIO, FileType};
+use std::ffi::{OsStr, OsString};
 use std::io::{self, Cursor};
 use std::path::{Path, PathBuf};
 
@@ -64,5 +65,9 @@ where
 
     fn read_dir(&self, path: &Path) -> io::Result<Vec<(bytes::Bytes, FileType)>> {
         self.actual.as_ref().read_dir(path)
+    }
+
+    fn get_env(&self, key: &OsStr) -> Option<OsString> {
+        self.actual.as_ref().get_env(key)
     }
 }
