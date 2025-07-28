@@ -148,6 +148,12 @@ in
       # password against the backing OAuth provider.
       auth.gitBasicAuthPolicy = "HTTP";
 
+      # Used for system-authored commits
+      user = {
+        name = "Snix Gerrit";
+        email = "gerrit@snix.dev";
+      };
+
       # Email sending
       #
       # Note that sendemail.smtpPass is stored in
@@ -158,7 +164,10 @@ in
         enable = true;
         html = true; # multi-part, both html and plaintext
         connectTimeout = "10sec";
-        from = "Snix Code Review <gerrit@snix.dev>";
+        # Include the name of the user triggering the mailing.
+        # See:
+        # https://gerrit-review.googlesource.com/Documentation/config-gerrit.html#user.email
+        from = "\${user} (Snix Gerrit) <gerrit@snix.dev>";
         includeDiff = true;
         smtpEncryption = "tls";
         smtpServer = "smtp.postmarkapp.com";
