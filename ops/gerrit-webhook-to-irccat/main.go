@@ -27,7 +27,7 @@ import (
 
 var logger *slog.Logger
 var tmplStr = `{{- if eq .Type "patchset-created" -}}
-{{- if (and (eq .PatchSet.Number "1") (eq .Change.Wip false) ) -}}
+{{- if (and (eq .PatchSet.Number 1) (eq .Change.Wip false) ) -}}
 #snix CL/{{.Change.Number}} proposed by {{.Change.Owner.Username}} - {{.Change.Subject}} - {{.Change.URL}}
 {{- end -}}
 {{- else if eq .Type "change-merged" -}}
