@@ -106,6 +106,11 @@ in
   ];
 
   services.openssh.enable = true;
+
+  environment.systemPackages = with pkgs; [
+    kitty.terminfo
+  ];
+
   time.timeZone = "UTC";
   users.users.root.openssh.authorizedKeys.keys = depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
   users.groups.kvm = { };

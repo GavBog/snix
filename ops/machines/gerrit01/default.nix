@@ -90,6 +90,7 @@ in
     htop
     hyperfine
     jq
+    kitty.terminfo
     nano
     nvd
     ripgrep
