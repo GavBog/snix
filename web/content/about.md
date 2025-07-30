@@ -67,3 +67,4 @@ Snix is [generously funded][nlnet-proj-snix-store-build] by [NLNET][].
 [NixOS/nix]: https://github.com/NixOS/nix
 [NLNET]: https://nlnet.nl
 [nlnet-proj-snix-store-build]: https://nlnet.nl/project/Snix-Store_Builder/
+[reach out]: {{< relref "contact" >}}
