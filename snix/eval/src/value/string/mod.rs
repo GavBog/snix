@@ -3,7 +3,6 @@
 //! See [`NixString`] for more information about the internals of string values
 
 use bstr::{BStr, BString, ByteSlice, Chars};
-use nohash_hasher::BuildNoHashHasher;
 use rnix::ast;
 #[cfg(feature = "no_leak")]
 use rustc_hash::FxHashSet;
@@ -262,8 +261,7 @@ impl NixStringInner {
 
 #[derive(Default)]
 struct InternerInner {
-    #[allow(clippy::disallowed_types)] // Not using the default hasher
-    map: std::collections::HashMap<u64, NonNull<c_void>, BuildNoHashHasher<u64>>,
+    map: hashbrown::HashTable<NonNull<c_void>>,
     #[cfg(feature = "no_leak")]
     #[allow(clippy::disallowed_types)] // Not using the default hasher
     interned_strings: FxHashSet<NonNull<c_void>>,
@@ -281,14 +279,14 @@ where
 }
 
 impl InternerInner {
-    pub fn intern(&mut self, s: &[u8]) -> NixString {
-        let hash = hash(s);
-        if let Some(s) = self.map.get(&hash) {
+    pub fn intern(&mut self, contents: &[u8]) -> NixString {
+        let hashed = hash(contents);
+        if let Some(s) = self.map.find(hashed, |m| NixString(*m) == contents) {
             return NixString(*s);
         }
 
-        let string = NixString::new_inner(s, None);
-        self.map.insert(hash, string.0);
+        let string = NixString::new_inner(contents, None);
+        self.map.insert_unique(hashed, string.0, |val| hash(val));
         #[cfg(feature = "no_leak")]
         self.interned_strings.insert(string.0);
         string

@@ -6415,11 +6415,11 @@ rec {
         };
         resolvedDefaultFeatures = [ "inline-more" ];
       };
-      "hashbrown 0.15.2" = rec {
+      "hashbrown 0.15.4" = rec {
         crateName = "hashbrown";
-        version = "0.15.2";
+        version = "0.15.4";
         edition = "2021";
-        sha256 = "12dj0yfn59p3kh3679ac0w1fagvzf4z2zp87a13gbbqbzw0185dz";
+        sha256 = "1mg045sm1nm00cwjm7ndi80hcmmv1v3z7gnapxyhd9qxc62sqwar";
         authors = [
           "Amanieu d'Antras <amanieu@gmail.com>"
         ];
@@ -6447,7 +6447,6 @@ rec {
         features = {
           "alloc" = [ "dep:alloc" ];
           "allocator-api2" = [ "dep:allocator-api2" ];
-          "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
           "default" = [
             "default-hasher"
@@ -6458,18 +6457,13 @@ rec {
           ];
           "default-hasher" = [ "dep:foldhash" ];
           "equivalent" = [ "dep:equivalent" ];
-          "nightly" = [
-            "allocator-api2?/nightly"
-            "bumpalo/allocator_api"
-          ];
+          "nightly" = [ "bumpalo/allocator_api" ];
           "rayon" = [ "dep:rayon" ];
           "rustc-dep-of-std" = [
             "nightly"
             "core"
-            "compiler_builtins"
             "alloc"
             "rustc-internal-api"
-            "raw-entry"
           ];
           "serde" = [ "dep:serde" ];
         };
@@ -7981,7 +7975,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.2";
+            packageId = "hashbrown 0.15.4";
             usesDefaultFeatures = false;
           }
           {
@@ -9019,7 +9013,7 @@ rec {
         dependencies = [
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.2";
+            packageId = "hashbrown 0.15.4";
             optional = true;
           }
         ];
@@ -10727,23 +10721,6 @@ rec {
         resolvedDefaultFeatures = [
           "default"
           "otlp"
-        ];
-      };
-      "nohash-hasher" = rec {
-        crateName = "nohash-hasher";
-        version = "0.2.0";
-        edition = "2018";
-        sha256 = "0lf4p6k01w4wm7zn4grnihzj8s7zd5qczjmzng7wviwxawih5x9b";
-        libName = "nohash_hasher";
-        authors = [
-          "Parity Technologies <admin@parity.io>"
-        ];
-        features = {
-          "default" = [ "std" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "std"
         ];
       };
       "nom" = rec {
@@ -17728,7 +17705,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.2";
+            packageId = "hashbrown 0.15.4";
           }
           {
             name = "hyper-util";
@@ -18280,6 +18257,10 @@ rec {
             usesDefaultFeatures = false;
           }
           {
+            name = "hashbrown";
+            packageId = "hashbrown 0.15.4";
+          }
+          {
             name = "itertools";
             packageId = "itertools 0.12.1";
           }
@@ -18294,10 +18275,6 @@ rec {
           {
             name = "md-5";
             packageId = "md-5";
-          }
-          {
-            name = "nohash-hasher";
-            packageId = "nohash-hasher";
           }
           {
             name = "os_str_bytes";

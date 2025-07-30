@@ -181,6 +181,22 @@ rec {
           "std"
         ];
       };
+      "allocator-api2" = rec {
+        crateName = "allocator-api2";
+        version = "0.2.21";
+        edition = "2018";
+        sha256 = "08zrzs022xwndihvzdn78yqarv2b9696y67i6h78nla3ww87jgb8";
+        libName = "allocator_api2";
+        authors = [
+          "Zakarum <zaq.dev@icloud.com>"
+        ];
+        features = {
+          "default" = [ "std" ];
+          "serde" = [ "dep:serde" ];
+          "std" = [ "alloc" ];
+        };
+        resolvedDefaultFeatures = [ "alloc" ];
+      };
       "anymap2" = rec {
         crateName = "anymap2";
         version = "0.13.0";
@@ -806,6 +822,18 @@ rec {
           "default"
           "std"
         ];
+      };
+      "foldhash" = rec {
+        crateName = "foldhash";
+        version = "0.1.5";
+        edition = "2021";
+        sha256 = "1wisr1xlc2bj7hk4rgkcjkz3j2x4dhd1h9lwk7mj8p71qpdgbi6r";
+        authors = [
+          "Orson Peters <orsonpeters@gmail.com>"
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
       };
       "form_urlencoded" = rec {
         crateName = "form_urlencoded";
@@ -2982,6 +3010,67 @@ rec {
           "raw"
         ];
       };
+      "hashbrown 0.15.4" = rec {
+        crateName = "hashbrown";
+        version = "0.15.4";
+        edition = "2021";
+        sha256 = "1mg045sm1nm00cwjm7ndi80hcmmv1v3z7gnapxyhd9qxc62sqwar";
+        authors = [
+          "Amanieu d'Antras <amanieu@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "allocator-api2";
+            packageId = "allocator-api2";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "alloc" ];
+          }
+          {
+            name = "equivalent";
+            packageId = "equivalent";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "foldhash";
+            packageId = "foldhash";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "alloc" = [ "dep:alloc" ];
+          "allocator-api2" = [ "dep:allocator-api2" ];
+          "core" = [ "dep:core" ];
+          "default" = [
+            "default-hasher"
+            "inline-more"
+            "allocator-api2"
+            "equivalent"
+            "raw-entry"
+          ];
+          "default-hasher" = [ "dep:foldhash" ];
+          "equivalent" = [ "dep:equivalent" ];
+          "nightly" = [ "bumpalo/allocator_api" ];
+          "rayon" = [ "dep:rayon" ];
+          "rustc-dep-of-std" = [
+            "nightly"
+            "core"
+            "alloc"
+            "rustc-internal-api"
+          ];
+          "serde" = [ "dep:serde" ];
+        };
+        resolvedDefaultFeatures = [
+          "allocator-api2"
+          "default"
+          "default-hasher"
+          "equivalent"
+          "inline-more"
+          "raw-entry"
+        ];
+      };
       "hermit-abi" = rec {
         crateName = "hermit-abi";
         version = "0.3.9";
@@ -3825,23 +3914,6 @@ rec {
           "simd" = [ "simd-adler32" ];
           "simd-adler32" = [ "dep:simd-adler32" ];
         };
-      };
-      "nohash-hasher" = rec {
-        crateName = "nohash-hasher";
-        version = "0.2.0";
-        edition = "2018";
-        sha256 = "0lf4p6k01w4wm7zn4grnihzj8s7zd5qczjmzng7wviwxawih5x9b";
-        libName = "nohash_hasher";
-        authors = [
-          "Parity Technologies <admin@parity.io>"
-        ];
-        features = {
-          "default" = [ "std" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "std"
-        ];
       };
       "nom8" = rec {
         crateName = "nom8";
@@ -5403,6 +5475,10 @@ rec {
             usesDefaultFeatures = false;
           }
           {
+            name = "hashbrown";
+            packageId = "hashbrown 0.15.4";
+          }
+          {
             name = "itertools";
             packageId = "itertools";
           }
@@ -5417,10 +5493,6 @@ rec {
           {
             name = "md-5";
             packageId = "md-5";
-          }
-          {
-            name = "nohash-hasher";
-            packageId = "nohash-hasher";
           }
           {
             name = "os_str_bytes";

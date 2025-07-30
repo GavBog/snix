@@ -70,7 +70,7 @@ vmm-sys-util = { workspace = true, optional = true }
 virtio-bindings = { workspace = true, optional = true }
 wu-manber.workspace = true
 auto_impl = "1.2.0"
-hashbrown = "0.15.2"
+hashbrown.workspace = true
 
 [build-dependencies]
 prost-build.workspace = true
