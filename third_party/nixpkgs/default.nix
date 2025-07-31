@@ -33,6 +33,10 @@ let
         # Forbids our meta.ci attribute
         # https://github.com/NixOS/nixpkgs/pull/191171#issuecomment-1260650771
         checkMeta = false;
+        permittedInsecurePackages = [
+          # only used inside tests
+          "nix-2.3.18"
+        ];
       };
 
     inherit localSystem crossSystem;
