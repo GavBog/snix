@@ -66,6 +66,7 @@ impl RedbDirectoryService {
 /// Ensures all tables are present.
 /// Opens a write transaction and calls open_table on DIRECTORY_TABLE, which will
 /// create it if not present.
+#[allow(clippy::result_large_err)]
 fn create_schema(db: &redb::Database) -> Result<(), redb::Error> {
     let txn = db.begin_write()?;
     txn.open_table(DIRECTORY_TABLE)?;
