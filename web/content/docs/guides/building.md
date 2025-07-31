@@ -50,7 +50,7 @@ From the root of the repository, you can build as follows:
 $ nix-build -A snix.cli
 ```
 
-Alternatively, you can use the `mg` wrapper from anywhere in the repository (requires the direnv setup from above):
+Alternatively, you can use the [`mg`][mg] wrapper from anywhere in the repository (requires the direnv setup from above):
 
 ```bash
 mg build //snix:cli
@@ -86,5 +86,5 @@ to learn more about the project structure.
 [Direnv]: https://direnv.net
 [direnv-inst]: https://direnv.net/docs/installation.html
 [Nix]: https://nixos.org/nix/
-[mg]: https://code.tvl.fyi/tree/tools/magrathea
+[mg]: https://git.snix.dev/snix/snix/src/branch/canon/tools/magrathea
 [crate2nix]: https://github.com/nix-community/crate2nix/
