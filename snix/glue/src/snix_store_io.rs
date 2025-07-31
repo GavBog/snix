@@ -223,7 +223,7 @@ impl SnixStoreIO {
                             .as_ref()
                             .do_build(build_request)
                             .await
-                            .map_err(|e| std::io::Error::new(io::ErrorKind::Other, e))?;
+                            .map_err(std::io::Error::other)?;
 
                         let mut out_path_info: Option<PathInfo> = None;
 
@@ -256,8 +256,7 @@ impl SnixStoreIO {
                                             all_possible_refs
                                                 .get(*idx as usize)
                                                 .map(|it| (*it).clone())
-                                                .ok_or(std::io::Error::new(
-                                                    std::io::ErrorKind::Other,
+                                                .ok_or(std::io::Error::other(
                                                     "invalid build response",
                                                 ))
                                         })
@@ -289,7 +288,7 @@ impl SnixStoreIO {
                             self.path_info_service
                                 .put(path_info.clone())
                                 .await
-                                .map_err(|e| std::io::Error::new(io::ErrorKind::Other, e))?;
+                                .map_err(std::io::Error::other)?;
 
                             if store_path == &output_path {
                                 out_path_info = Some(path_info);
@@ -309,7 +308,7 @@ impl SnixStoreIO {
         Ok(
             directoryservice::descend_to(&self.directory_service, path_info.node.clone(), sub_path)
                 .await
-                .map_err(|e| std::io::Error::new(io::ErrorKind::Other, e))?
+                .map_err(std::io::Error::other)?
                 .map(|node| {
                     path_info.node = node;
                     path_info
@@ -361,7 +360,7 @@ impl EvalIO for SnixStoreIO {
                         // This would normally be a io::ErrorKind::IsADirectory (still unstable)
                         Err(io::Error::new(
                             io::ErrorKind::Unsupported,
-                            format!("tried to open directory at {:?}", path),
+                            format!("tried to open directory at {path:?}"),
                         ))
                     }
                     Node::File { digest, .. } => {
@@ -558,7 +557,7 @@ mod tests {
         let value = result.value.expect("must be some");
         match value {
             snix_eval::Value::String(s) => Some(s.to_str_lossy().into_owned()),
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
     }
 
@@ -625,7 +624,7 @@ mod tests {
             snix_eval::Value::String(s) => {
                 assert_eq!(*s, "/deep/thought");
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
     }
 }

@@ -155,7 +155,7 @@ impl Display for VMRequest {
                 if *import_paths { "" } else { "non_" },
                 v.type_of()
             ),
-            VMRequest::Call(v) => write!(f, "call({})", v),
+            VMRequest::Call(v) => write!(f, "call({v})"),
             VMRequest::EnterLambda { lambda, .. } => {
                 write!(f, "enter_lambda({:p})", *lambda)
             }
@@ -208,12 +208,12 @@ impl Display for VMResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             VMResponse::Empty => write!(f, "empty"),
-            VMResponse::Value(v) => write!(f, "value({})", v),
+            VMResponse::Value(v) => write!(f, "value({v})"),
             VMResponse::Path(p) => write!(f, "path({})", p.to_string_lossy()),
             VMResponse::Directory(d) => write!(f, "dir(len = {})", d.len()),
             VMResponse::Span(_) => write!(f, "span"),
             VMResponse::Reader(_) => write!(f, "reader"),
-            VMResponse::FileType(t) => write!(f, "file_type({})", t),
+            VMResponse::FileType(t) => write!(f, "file_type({t})"),
         }
     }
 }
@@ -527,10 +527,7 @@ pub type GenCo = Co<VMRequest, VMResponse>;
 pub async fn request_stack_push(co: &GenCo, val: Value) {
     match co.yield_(VMRequest::StackPush(val)).await {
         VMResponse::Empty => {}
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -539,10 +536,7 @@ pub async fn request_stack_push(co: &GenCo, val: Value) {
 pub async fn request_stack_pop(co: &GenCo) -> Value {
     match co.yield_(VMRequest::StackPop).await {
         VMResponse::Value(value) => value,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -551,10 +545,7 @@ pub async fn request_force(co: &GenCo, val: Value) -> Value {
     if let Value::Thunk(_) = val {
         match co.yield_(VMRequest::ForceValue(val)).await {
             VMResponse::Value(value) => value,
-            msg => panic!(
-                "Snix bug: VM responded with incorrect generator message: {}",
-                msg
-            ),
+            msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
         }
     } else {
         val
@@ -566,10 +557,7 @@ pub(crate) async fn request_try_force(co: &GenCo, val: Value) -> Value {
     if let Value::Thunk(_) = val {
         match co.yield_(VMRequest::TryForce(val)).await {
             VMResponse::Value(value) => value,
-            msg => panic!(
-                "Snix bug: VM responded with incorrect generator message: {}",
-                msg
-            ),
+            msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
         }
     } else {
         val
@@ -582,10 +570,7 @@ pub async fn request_call(co: &GenCo, val: Value) -> Value {
     let val = request_force(co, val).await;
     match co.yield_(VMRequest::Call(val)).await {
         VMResponse::Value(value) => value,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -624,10 +609,7 @@ pub async fn request_string_coerce(
             VMResponse::Value(value) => Ok(value
                 .to_contextful_str()
                 .expect("coerce_to_string always returns a string")),
-            msg => panic!(
-                "Snix bug: VM responded with incorrect generator message: {}",
-                msg
-            ),
+            msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
         },
     }
 }
@@ -636,10 +618,7 @@ pub async fn request_string_coerce(
 pub async fn request_deep_force(co: &GenCo, val: Value) -> Value {
     match co.yield_(VMRequest::DeepForceValue(val)).await {
         VMResponse::Value(value) => value,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -656,10 +635,7 @@ pub(crate) async fn check_equality(
     {
         VMResponse::Value(Value::Bool(b)) => Ok(Ok(b)),
         VMResponse::Value(Value::Catchable(cek)) => Ok(Err(*cek)),
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -667,10 +643,7 @@ pub(crate) async fn check_equality(
 pub(crate) async fn emit_warning(co: &GenCo, warning: EvalWarning) {
     match co.yield_(VMRequest::EmitWarning(warning)).await {
         VMResponse::Empty => {}
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -678,10 +651,7 @@ pub(crate) async fn emit_warning(co: &GenCo, warning: EvalWarning) {
 pub async fn emit_warning_kind(co: &GenCo, kind: WarningKind) {
     match co.yield_(VMRequest::EmitWarningKind(kind)).await {
         VMResponse::Empty => {}
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -700,10 +670,7 @@ pub(crate) async fn request_enter_lambda(
 
     match co.yield_(msg).await {
         VMResponse::Value(value) => value,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -712,10 +679,7 @@ pub(crate) async fn request_import_cache_lookup(co: &GenCo, path: PathBuf) -> Op
     match co.yield_(VMRequest::ImportCacheLookup(path)).await {
         VMResponse::Value(value) => Some(value),
         VMResponse::Empty => None,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -723,10 +687,7 @@ pub(crate) async fn request_import_cache_lookup(co: &GenCo, path: PathBuf) -> Op
 pub(crate) async fn request_import_cache_put(co: &GenCo, path: PathBuf, value: Value) {
     match co.yield_(VMRequest::ImportCachePut(path, value)).await {
         VMResponse::Empty => {}
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -734,10 +695,7 @@ pub(crate) async fn request_import_cache_put(co: &GenCo, path: PathBuf, value: V
 pub(crate) async fn request_path_import(co: &GenCo, path: PathBuf) -> PathBuf {
     match co.yield_(VMRequest::PathImport(path)).await {
         VMResponse::Path(path) => path,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -745,10 +703,7 @@ pub(crate) async fn request_path_import(co: &GenCo, path: PathBuf) -> PathBuf {
 pub async fn request_open_file(co: &GenCo, path: PathBuf) -> Box<dyn std::io::Read> {
     match co.yield_(VMRequest::OpenFile(path)).await {
         VMResponse::Reader(value) => value,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -756,10 +711,7 @@ pub async fn request_open_file(co: &GenCo, path: PathBuf) -> Box<dyn std::io::Re
 pub(crate) async fn request_path_exists(co: &GenCo, path: PathBuf) -> Value {
     match co.yield_(VMRequest::PathExists(path)).await {
         VMResponse::Value(value) => value,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -767,20 +719,14 @@ pub(crate) async fn request_path_exists(co: &GenCo, path: PathBuf) -> Value {
 pub(crate) async fn request_read_dir(co: &GenCo, path: PathBuf) -> Vec<(bytes::Bytes, FileType)> {
     match co.yield_(VMRequest::ReadDir(path)).await {
         VMResponse::Directory(dir) => dir,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
 pub(crate) async fn request_span(co: &GenCo) -> Span {
     match co.yield_(VMRequest::Span).await {
         VMResponse::Span(span) => span,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 
@@ -788,10 +734,7 @@ pub(crate) async fn request_span(co: &GenCo) -> Span {
 pub(crate) async fn request_read_file_type(co: &GenCo, path: PathBuf) -> FileType {
     match co.yield_(VMRequest::ReadFileType(path)).await {
         VMResponse::FileType(file_type) => file_type,
-        msg => panic!(
-            "Snix bug: VM responded with incorrect generator message: {}",
-            msg
-        ),
+        msg => panic!("Snix bug: VM responded with incorrect generator message: {msg}"),
     }
 }
 

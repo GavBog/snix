@@ -212,7 +212,7 @@ where
             &narinfo.ca,
         )
         .await
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        .map_err(io::Error::other)?;
 
         // ensure the ingested narhash and narsize do actually match.
         if narinfo.nar_size != nar_size {

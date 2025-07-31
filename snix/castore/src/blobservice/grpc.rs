@@ -64,7 +64,7 @@ where
         {
             Ok(_blob_meta) => Ok(true),
             Err(e) if e.code() == Code::NotFound => Ok(false),
-            Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+            Err(e) => Err(io::Error::other(e)),
         }
     }
 
@@ -106,7 +106,7 @@ where
                             Ok(Some(Box::new(Cursor::new(buf))))
                         }
                         Err(e) if e.code() == Code::NotFound => Ok(None),
-                        Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+                        Err(e) => Err(io::Error::other(e)),
                     };
                 }
 
@@ -175,7 +175,7 @@ where
 
         match resp {
             Err(e) if e.code() == Code::NotFound => Ok(None),
-            Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+            Err(e) => Err(io::Error::other(e)),
             Ok(resp) => {
                 let resp = resp.into_inner();
 
@@ -259,15 +259,14 @@ impl<W: tokio::io::AsyncWrite + Send + Sync + Unpin + 'static> BlobWriter for GR
                     // return the digest from the response, and store it in self.digest for subsequent closes.
                     let digest_len = resp.digest.len();
                     let digest: B3Digest = resp.digest.try_into().map_err(|_| {
-                        io::Error::new(
-                            io::ErrorKind::Other,
-                            format!("invalid root digest length {} in response", digest_len),
-                        )
+                        io::Error::other(format!(
+                            "invalid root digest length {digest_len} in response"
+                        ))
                     })?;
                     self.digest = Some(digest.clone());
                     Ok(digest)
                 }
-                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e.to_string())),
+                Err(e) => Err(io::Error::other(e.to_string())),
             }
         }
     }

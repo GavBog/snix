@@ -167,7 +167,7 @@ async fn put_get_foo(directory_service: impl DirectoryService) {
         ],
     ];
     if !valid_closures.contains(&retrieved_closure) {
-        panic!("invalid closure returned: {:?}", retrieved_closure);
+        panic!("invalid closure returned: {retrieved_closure:?}");
     }
 }
 

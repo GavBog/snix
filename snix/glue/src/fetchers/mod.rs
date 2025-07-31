@@ -116,7 +116,7 @@ impl std::fmt::Debug for Fetch {
                         NixHash::Sha256(*exp_nar_sha256)
                     )
                 } else {
-                    write!(f, "Tarball [url: {}, exp_hash: None]", url)
+                    write!(f, "Tarball [url: {url}, exp_hash: None]")
                 }
             }
             Fetch::NAR { url, hash } => {

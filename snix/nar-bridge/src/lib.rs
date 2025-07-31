@@ -83,9 +83,6 @@ async fn four_o_four() -> Result<(), StatusCode> {
 async fn nix_cache_info(priority: u64) -> impl IntoResponse {
     (
         [("Content-Type", nix_http::MIME_TYPE_CACHE_INFO)],
-        format!(
-            "StoreDir: /nix/store\nWantMassQuery: 1\nPriority: {}\n",
-            priority
-        ),
+        format!("StoreDir: /nix/store\nWantMassQuery: 1\nPriority: {priority}\n"),
     )
 }

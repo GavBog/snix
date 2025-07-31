@@ -31,5 +31,5 @@ fn main() {
     // Now you can use snix_serde to deserialise the struct:
     let foods: Data = snix_serde::from_str(code).expect("deserialisation should succeed");
 
-    println!("These are the foods:\n{:#?}", foods);
+    println!("These are the foods:\n{foods:#?}");
 }

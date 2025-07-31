@@ -143,7 +143,7 @@ where
 
     // convert to castore PathBuf
     let path = crate::path::PathBuf::from_host_path(fs_path, false)
-        .unwrap_or_else(|e| panic!("Snix bug: walkdir direntry cannot be parsed: {}", e));
+        .unwrap_or_else(|e| panic!("Snix bug: walkdir direntry cannot be parsed: {e}"));
 
     if file_type.is_dir() {
         Ok(IngestionEntry::Dir { path })
@@ -166,7 +166,7 @@ where
         let digest = upload_blob(blob_service, entry.path().to_path_buf(), reference_scanner)
             .instrument({
                 let span = info_span!("upload_blob", "indicatif.pb_show" = tracing::field::Empty);
-                span.pb_set_message(&format!("Uploading blob for {:?}", fs_path));
+                span.pb_set_message(&format!("Uploading blob for {fs_path:?}"));
                 span.pb_set_style(&snix_tracing::PB_TRANSFER_STYLE);
 
                 span

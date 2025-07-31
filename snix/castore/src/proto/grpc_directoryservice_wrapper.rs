@@ -53,7 +53,7 @@ where
                                 tonic::Status::new(tonic::Code::Internal, e.to_string())
                             })?
                             .ok_or_else(|| {
-                                Status::not_found(format!("directory {} not found", digest))
+                                Status::not_found(format!("directory {digest} not found"))
                             })?;
 
                         Box::pin(once(Ok(directory.into())))

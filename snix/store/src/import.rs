@@ -94,7 +94,7 @@ where
     let root_node =
         ingest_path::<_, _, _, &[u8]>(blob_service, directory_service, path.as_ref(), None)
             .await
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+            .map_err(std::io::Error::other)?;
 
     // Ask for the NAR size and sha256
     let (nar_size, nar_sha256) = nar_calculation_service.calculate_nar(&root_node).await?;
@@ -108,7 +108,7 @@ where
         store_path::build_ca_path(name, &ca, std::iter::empty::<&str>(), false).map_err(|_| {
             std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
-                format!("invalid name: {}", name),
+                format!("invalid name: {name}"),
             )
         })?;
 

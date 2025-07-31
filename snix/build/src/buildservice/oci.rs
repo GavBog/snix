@@ -132,10 +132,7 @@ where
 
             warn!(stdout=%stdout, stderr=%stderr, exit_code=%child_output.status, "build failed");
 
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "nonzero exit code".to_string(),
-            ));
+            return Err(std::io::Error::other("nonzero exit code".to_string()));
         }
 
         // Ingest build outputs into the castore.
@@ -161,7 +158,7 @@ where
                         .map_err(|e| {
                             std::io::Error::new(
                                 std::io::ErrorKind::InvalidData,
-                                format!("Unable to ingest output: {}", e),
+                                format!("Unable to ingest output: {e}"),
                             )
                         })?,
 

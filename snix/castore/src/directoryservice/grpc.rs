@@ -71,8 +71,7 @@ where
                 let actual_digest = directory.digest();
                 if actual_digest != digest {
                     Err(crate::Error::StorageError(format!(
-                        "requested directory with digest {}, but got {}",
-                        digest, actual_digest
+                        "requested directory with digest {digest}, but got {actual_digest}"
                     )))
                 } else {
                     Ok(Some(directory.try_into().map_err(|_| {
@@ -141,8 +140,7 @@ where
                             // it if it's in received_directory_digests (as that
                             // means it once was in expected_directory_digests)
                             Err(crate::Error::StorageError(format!(
-                                "received unexpected directory {}",
-                                directory_digest
+                                "received unexpected directory {directory_digest}"
                             )))?;
                         }
                         received_directory_digests.insert(directory_digest);
@@ -177,8 +175,7 @@ where
                         // If this is not empty, then the closure is incomplete
                         if diff_len != 0 {
                             Err(crate::Error::StorageError(format!(
-                                "still expected {} directories, but got premature end of stream",
-                                diff_len
+                                "still expected {diff_len} directories, but got premature end of stream"
                             )))?
                         } else {
                             return

@@ -99,7 +99,7 @@ async fn filtered_ingest(
             .await
             .map_err(|e| ErrorKind::IO {
                 path: Some(path.to_path_buf()),
-                error: Rc::new(std::io::Error::new(std::io::ErrorKind::Other, e)),
+                error: Rc::new(std::io::Error::other(e)),
             })
     })
 }

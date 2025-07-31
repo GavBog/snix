@@ -39,7 +39,7 @@ where
             self.directory_service.clone(),
         )
         .await
-        .map_err(|e| snix_castore::Error::StorageError(format!("failed rendering nar: {}", e)))
+        .map_err(|e| snix_castore::Error::StorageError(format!("failed rendering nar: {e}")))
     }
 }
 

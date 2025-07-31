@@ -200,7 +200,7 @@ impl PathInfoService for BigtablePathInfoService {
         let mut response = client
             .read_rows(request)
             .await
-            .map_err(|e| Error::StorageError(format!("unable to read rows: {}", e)))?;
+            .map_err(|e| Error::StorageError(format!("unable to read rows: {e}")))?;
 
         if response.len() != 1 {
             if response.len() > 1 {
@@ -241,7 +241,7 @@ impl PathInfoService for BigtablePathInfoService {
 
         // Try to parse the value into a PathInfo message
         let path_info_proto = proto::PathInfo::decode(Bytes::from(cell.value))
-            .map_err(|e| Error::StorageError(format!("unable to decode pathinfo proto: {}", e)))?;
+            .map_err(|e| Error::StorageError(format!("unable to decode pathinfo proto: {e}")))?;
 
         let path_info = PathInfo::try_from(path_info_proto)
             .map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?;
@@ -294,7 +294,7 @@ impl PathInfoService for BigtablePathInfoService {
                 ],
             })
             .await
-            .map_err(|e| Error::StorageError(format!("unable to mutate rows: {}", e)))?;
+            .map_err(|e| Error::StorageError(format!("unable to mutate rows: {e}")))?;
 
         if resp.predicate_matched {
             trace!("already existed")
@@ -321,12 +321,12 @@ impl PathInfoService for BigtablePathInfoService {
             let mut rows = client
                 .stream_rows(request)
                 .await
-                .map_err(|e| Error::StorageError(format!("unable to read rows: {}", e)))?.enumerate();
+                .map_err(|e| Error::StorageError(format!("unable to read rows: {e}")))?.enumerate();
 
             use futures::stream::StreamExt;
 
             while let Some((i, elem)) = rows.next().await {
-                let (row_key, mut cells) = elem.map_err(|e| Error::StorageError(format!("unable to stream row {}: {}", i, e)))?;
+                let (row_key, mut cells) = elem.map_err(|e| Error::StorageError(format!("unable to stream row {i}: {e}")))?;
                 let span = Span::current();
                 span.record("row.key", bstr::BStr::new(&row_key).to_string());
 
@@ -351,7 +351,7 @@ impl PathInfoService for BigtablePathInfoService {
 
                 // Try to parse the value into a PathInfo message.
                 let path_info_proto = proto::PathInfo::decode(Bytes::from(cell.value))
-                    .map_err(|e| Error::StorageError(format!("unable to decode pathinfo proto: {}", e)))?;
+                    .map_err(|e| Error::StorageError(format!("unable to decode pathinfo proto: {e}")))?;
 
                 let path_info = PathInfo::try_from(path_info_proto).map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?;
 
@@ -449,7 +449,7 @@ impl TryFrom<url::Url> for BigtableParameters {
             .append_pair("instance_name", &instance_name);
 
         let params: BigtableParameters = serde_qs::from_str(url.query().unwrap_or_default())
-            .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {}", e)))?;
+            .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?;
 
         Ok(params)
     }

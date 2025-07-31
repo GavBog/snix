@@ -31,7 +31,7 @@ async fn single_file_missing_blob(
         crate::nar::RenderError::NARWriterError(e) => {
             assert_eq!(io::ErrorKind::NotFound, e.kind());
         }
-        _ => panic!("unexpected error: {:?}", e),
+        _ => panic!("unexpected error: {e:?}"),
     }
 }
 
@@ -60,10 +60,10 @@ async fn seekable(
         (Ok(_), Err(_)) => panic!("creating reader should have failed but succeeded"),
         (Ok(_), Ok(Err(_))) => panic!("creating reader should have failed but succeeded"),
         (Err(err), Ok(Ok(_))) => {
-            panic!("creating reader should have succeeded but failed: {}", err)
+            panic!("creating reader should have succeeded but failed: {err}")
         }
         (Err(reader_err), Err(expected_err)) => {
-            assert_eq!(format!("{}", reader_err), format!("{}", expected_err));
+            assert_eq!(format!("{reader_err}"), format!("{}", expected_err));
         }
         (Err(reader_err), Ok(Err(expected_err))) => {
             let crate::nar::RenderError::NARWriterError(e) = reader_err else {

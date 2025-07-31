@@ -152,8 +152,7 @@ impl DirectoryService for ObjectStoreDirectoryService {
                         // Ensure to only decode the directory objects whose digests we trust
                         if !order_validator.digest_allowed(&digest) {
                             return Err(crate::Error::StorageError(format!(
-                                "received unexpected directory {}",
-                                digest
+                                "received unexpected directory {digest}"
                             )));
                         }
 

@@ -245,7 +245,7 @@ impl<B: BlobService + 'static> tokio::io::AsyncSeek for Reader<B> {
 
         let this = &mut *self;
         if this.seeking {
-            return Err(io::Error::new(io::ErrorKind::Other, "Already seeking"));
+            return Err(io::Error::other("Already seeking"));
         }
         this.seeking = true;
 

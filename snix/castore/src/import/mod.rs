@@ -98,7 +98,7 @@ where
                     Err(e) => {
                         return Err(IngestionError::UploadDirectoryError(
                             path,
-                            crate::Error::StorageError(format!("invalid symlink target: {}", e)),
+                            crate::Error::StorageError(format!("invalid symlink target: {e}")),
                         ));
                     }
                 }

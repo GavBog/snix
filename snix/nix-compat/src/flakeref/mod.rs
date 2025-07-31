@@ -590,7 +590,7 @@ impl FlakeRef {
                     _ => unreachable!(),
                 };
 
-                let mut url = Url::parse(&format!("{}://{}/{}", scheme, owner, repo)).unwrap();
+                let mut url = Url::parse(&format!("{scheme}://{owner}/{repo}")).unwrap();
                 if let Some(h) = host {
                     url.set_host(Some(h)).unwrap();
                 }
@@ -609,7 +609,7 @@ impl FlakeRef {
                 url
             }
             FlakeRef::Indirect { id, r#ref, rev } => {
-                let mut url = Url::parse(&format!("indirect://{}", id)).unwrap();
+                let mut url = Url::parse(&format!("indirect://{id}")).unwrap();
                 append_params(&mut url, &[("ref", r#ref.clone()), ("rev", rev.clone())]);
                 url
             }

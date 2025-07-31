@@ -50,10 +50,7 @@ fn test_kv_attrs() {
             if name.to_str().unwrap() == meaning_val.to_str().unwrap()
                 || value.to_str().unwrap() == forty_two_val.to_str().unwrap() => {}
 
-        _ => panic!(
-            "K/V attribute set should use optimised representation, but got {:?}",
-            kv_attrs
-        ),
+        _ => panic!("K/V attribute set should use optimised representation, but got {kv_attrs:?}"),
     }
 }
 

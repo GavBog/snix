@@ -98,7 +98,7 @@ async fn put_has_get(blob_service: impl BlobService) {
             "blob service should now have the blob"
         );
 
-        let mut r = blob_service
+        let r = blob_service
             .open_read(blob_digest)
             .await
             .expect("open_read must succeed")

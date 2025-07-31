@@ -287,7 +287,7 @@ async fn run_cli(
                     async move {
                         let span = Span::current();
                         span.pb_set_style(&snix_tracing::PB_SPINNER_STYLE);
-                        span.pb_set_message(&format!("Ingesting {:?}", path));
+                        span.pb_set_message(&format!("Ingesting {path:?}"));
                         span.pb_start();
 
                         // Ingest the contents at the given path into castore.
@@ -300,7 +300,7 @@ async fn run_cli(
                         .await
                         .map_err(std::io::Error::custom)?;
 
-                        span.pb_set_message(&format!("NAR Calculation for {:?}", path));
+                        span.pb_set_message(&format!("NAR Calculation for {path:?}"));
 
                         // Ask for the NAR size and sha256
                         let (nar_size, nar_sha256) =

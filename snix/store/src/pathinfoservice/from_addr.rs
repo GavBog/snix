@@ -36,7 +36,7 @@ pub async fn from_addr(
 ) -> Result<Arc<dyn PathInfoService>, Box<dyn std::error::Error + Send + Sync>> {
     #[allow(unused_mut)]
     let mut url =
-        Url::parse(uri).map_err(|e| Error::StorageError(format!("unable to parse url: {}", e)))?;
+        Url::parse(uri).map_err(|e| Error::StorageError(format!("unable to parse url: {e}")))?;
 
     let path_info_service_config = with_registry(&REG, || {
         <DeserializeWithRegistry<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>>>::try_from(

@@ -19,7 +19,7 @@ pub trait Error: Sized + StdError {
     fn custom<T: fmt::Display>(msg: T) -> Self;
 
     fn io_error(err: std::io::Error) -> Self {
-        Self::custom(format_args!("There was an I/O error {}", err))
+        Self::custom(format_args!("There was an I/O error {err}"))
     }
 
     fn unsupported_data<T: fmt::Display>(msg: T) -> Self {
@@ -33,7 +33,7 @@ pub trait Error: Sized + StdError {
 
 impl Error for io::Error {
     fn custom<T: fmt::Display>(msg: T) -> Self {
-        io::Error::new(io::ErrorKind::Other, msg.to_string())
+        io::Error::other(msg.to_string())
     }
 
     fn io_error(err: std::io::Error) -> Self {

@@ -258,7 +258,7 @@ fn handle_pass_as_file(
 /// The filepath is `/build/.attrs-${nixbase32(sha256(key))`.
 fn calculate_pass_as_file_env(k: &str) -> (String, String) {
     (
-        format!("{}Path", k),
+        format!("{k}Path"),
         format!(
             "/build/.attr-{}",
             nixbase32::encode(&Sha256::new_with_prefix(k).finalize())

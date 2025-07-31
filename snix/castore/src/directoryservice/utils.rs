@@ -33,8 +33,7 @@ pub fn traverse_directory<'a, DS: DirectoryService + 'static>(
             let current_directory = match directory_service.get(&current_directory_digest).await.map_err(|e| {
                 warn!("failed to look up directory");
                 Error::StorageError(format!(
-                    "unable to look up directory {}: {}",
-                    current_directory_digest, e
+                    "unable to look up directory {current_directory_digest}: {e}"
                 ))
             })? {
                 // the root node of the requested closure was not found, return an empty list
@@ -43,8 +42,7 @@ pub fn traverse_directory<'a, DS: DirectoryService + 'static>(
                 None => {
                     warn!("directory {} does not exist", current_directory_digest);
                     Err(Error::StorageError(format!(
-                        "directory {} does not exist",
-                        current_directory_digest
+                        "directory {current_directory_digest} does not exist"
                     )))?;
                     break;
                 }

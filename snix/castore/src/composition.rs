@@ -155,7 +155,7 @@ impl<'r, 'de: 'r, T: 'static> SeedFactory<'de, TagString<'de>> for RegistryWithF
             .0
             .iter()
             .find(|(k, _)| *k == &(TypeId::of::<T>(), tag.as_ref()))
-            .ok_or_else(|| serde::de::Error::custom(format!("Unknown type: {}", tag)))?
+            .ok_or_else(|| serde::de::Error::custom(format!("Unknown type: {tag}")))?
             .1;
 
         let entry: &RegistryEntry<T> = <dyn Any>::downcast_ref(&**seed).unwrap();

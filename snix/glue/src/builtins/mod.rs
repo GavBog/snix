@@ -117,7 +117,7 @@ mod tests {
             snix_eval::Value::String(s) => {
                 assert_eq!(*s, "/nix/store/xpcvxsx5sw4rbq666blz6sxqlmsqphmr-foo",);
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
     }
 
@@ -204,7 +204,7 @@ mod tests {
             snix_eval::Value::String(s) => {
                 assert_eq!(*s, expected_path);
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
     }
 
@@ -236,7 +236,7 @@ mod tests {
             snix_eval::Value::Bool(v) => {
                 assert!(v);
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
     }
 
@@ -254,7 +254,7 @@ mod tests {
             snix_eval::Value::Bool(v) => {
                 assert!(v);
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
     }
 
@@ -276,7 +276,7 @@ mod tests {
             snix_eval::Value::Bool(v) => {
                 assert!(v);
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
     }
 
@@ -297,7 +297,7 @@ mod tests {
             snix_eval::Value::Bool(v) => {
                 assert!(v);
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
     }
 
@@ -330,7 +330,7 @@ mod tests {
                 assert_eq!(*s, expected_drvpath);
             }
 
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         };
     }
 
@@ -362,7 +362,7 @@ mod tests {
             snix_eval::Value::String(s) => {
                 assert_eq!(*s, expected_path);
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
 
         assert!(
@@ -536,7 +536,7 @@ mod tests {
             snix_eval::Value::String(s) => {
                 assert_eq!(expected_outpath, s.as_bstr());
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
 
         assert!(eval_result.errors.is_empty(), "errors should be empty");
@@ -580,7 +580,7 @@ mod tests {
                         s.as_bstr()
                     );
                 }
-                v => panic!("unexpected value type: {:?}", v),
+                v => panic!("unexpected value type: {v:?}"),
             }
         } else {
             assert!(value.is_none(), "unexpected success on illegal store paths");
@@ -626,7 +626,7 @@ mod tests {
                         s.as_bstr()
                     );
                 }
-                v => panic!("unexpected value type: {:?}", v),
+                v => panic!("unexpected value type: {v:?}"),
             }
         } else {
             assert!(value.is_none(), "unexpected success on illegal store paths");
@@ -714,7 +714,7 @@ mod tests {
             snix_eval::Value::String(s) => {
                 assert_eq!(expected_outpath, s.as_bstr());
             }
-            _ => panic!("unexpected value type: {:?}", value),
+            _ => panic!("unexpected value type: {value:?}"),
         }
 
         assert!(eval_result.errors.is_empty(), "errors should be empty");

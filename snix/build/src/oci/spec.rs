@@ -125,7 +125,7 @@ fn configure_process<'a>(
         .args(command_args)
         .env(
             env.into_iter()
-                .map(|(k, v)| format!("{}={}", k, v))
+                .map(|(k, v)| format!("{k}={v}"))
                 .collect::<Vec<_>>(),
         )
         .terminal(true)

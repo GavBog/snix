@@ -92,7 +92,7 @@ impl EvalWarning {
             }
 
             WarningKind::ShadowedGlobal(name) => {
-                format!("declared variable '{}' shadows a built-in global!", name)
+                format!("declared variable '{name}' shadows a built-in global!")
             }
 
             WarningKind::DeprecatedLegacyLet => {
@@ -100,11 +100,11 @@ impl EvalWarning {
             }
 
             WarningKind::InvalidNixPath(ref err) => {
-                format!("invalid NIX_PATH resulted in a parse error: {}", err)
+                format!("invalid NIX_PATH resulted in a parse error: {err}")
             }
 
             WarningKind::UselessBoolOperation(msg) => {
-                format!("useless operation on boolean: {}", msg)
+                format!("useless operation on boolean: {msg}")
             }
 
             WarningKind::DeadCode => "this code will never be executed".to_string(),
@@ -113,14 +113,13 @@ impl EvalWarning {
 
             WarningKind::EmptyLet => "this `let`-expression contains no bindings".to_string(),
 
-            WarningKind::ShadowedOutput(ref out) => format!(
-                "this derivation's environment shadows the output name {}",
-                out
-            ),
+            WarningKind::ShadowedOutput(ref out) => {
+                format!("this derivation's environment shadows the output name {out}")
+            }
             WarningKind::SRIHashWrongPadding => "SRI hash has wrong padding".to_string(),
 
             WarningKind::NotImplemented(what) => {
-                format!("feature not yet implemented in snix: {}", what)
+                format!("feature not yet implemented in snix: {what}")
             }
         }
     }

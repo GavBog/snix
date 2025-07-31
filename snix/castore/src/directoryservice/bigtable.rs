@@ -202,7 +202,7 @@ impl DirectoryService for BigtableDirectoryService {
         let mut response = client
             .read_rows(request)
             .await
-            .map_err(|e| Error::StorageError(format!("unable to read rows: {}", e)))?;
+            .map_err(|e| Error::StorageError(format!("unable to read rows: {e}")))?;
 
         if response.len() != 1 {
             if response.len() > 1 {
@@ -244,17 +244,14 @@ impl DirectoryService for BigtableDirectoryService {
         // For the data in that cell, ensure the digest matches what's requested, before parsing.
         let got_digest = B3Digest::from(blake3::hash(&row_cell.value).as_bytes());
         if got_digest != *digest {
-            return Err(Error::StorageError(format!(
-                "invalid digest: {}",
-                got_digest
-            )));
+            return Err(Error::StorageError(format!("invalid digest: {got_digest}")));
         }
 
         // Try to parse the value into a Directory message.
         let directory = proto::Directory::decode(Bytes::from(row_cell.value))
-            .map_err(|e| Error::StorageError(format!("unable to decode directory proto: {}", e)))?
+            .map_err(|e| Error::StorageError(format!("unable to decode directory proto: {e}")))?
             .try_into()
-            .map_err(|e| Error::StorageError(format!("invalid Directory message: {}", e)))?;
+            .map_err(|e| Error::StorageError(format!("invalid Directory message: {e}")))?;
 
         Ok(Some(directory))
     }
@@ -301,7 +298,7 @@ impl DirectoryService for BigtableDirectoryService {
                 ],
             })
             .await
-            .map_err(|e| Error::StorageError(format!("unable to mutate rows: {}", e)))?;
+            .map_err(|e| Error::StorageError(format!("unable to mutate rows: {e}")))?;
 
         if resp.predicate_matched {
             trace!("already existed")
@@ -376,7 +373,7 @@ impl TryFrom<url::Url> for BigtableParameters {
             .append_pair("instance_name", &instance_name);
 
         let params: BigtableParameters = serde_qs::from_str(url.query().unwrap_or_default())
-            .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {}", e)))?;
+            .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?;
 
         Ok(params)
     }

@@ -24,8 +24,8 @@ where
     BS: BlobService + Send + Sync + Clone + 'static,
     DS: DirectoryService + Send + Sync + Clone + 'static,
 {
-    let url = Url::parse(uri)
-        .map_err(|e| std::io::Error::other(format!("unable to parse url: {}", e)))?;
+    let url =
+        Url::parse(uri).map_err(|e| std::io::Error::other(format!("unable to parse url: {e}")))?;
 
     Ok(match url.scheme() {
         // dummy doesn't care about parameters.

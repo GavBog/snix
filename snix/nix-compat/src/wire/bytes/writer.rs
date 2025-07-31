@@ -477,7 +477,7 @@ mod tests {
 
         let mut mock = Builder::new()
             .write(&1u32.to_le_bytes())
-            .write_error(std::io::Error::new(std::io::ErrorKind::Other, "🍿"))
+            .write_error(std::io::Error::other("🍿"))
             .build();
         let mut w = BytesWriter::new(&mut mock, payload.len() as u64);
 
@@ -492,7 +492,7 @@ mod tests {
 
         let mut mock = Builder::new()
             .write(&1u32.to_le_bytes())
-            .write_error(std::io::Error::new(std::io::ErrorKind::Other, "🍿"))
+            .write_error(std::io::Error::other("🍿"))
             .build();
         let mut w = BytesWriter::new(&mut mock, payload.len() as u64);
 
@@ -508,7 +508,7 @@ mod tests {
         let mut mock = Builder::new()
             .write(&2u64.to_le_bytes())
             .write(&hex!("f0"))
-            .write_error(std::io::Error::new(std::io::ErrorKind::Other, "🍿"))
+            .write_error(std::io::Error::other("🍿"))
             .build();
         let mut w = BytesWriter::new(&mut mock, payload.len() as u64);
 
@@ -526,7 +526,7 @@ mod tests {
             .write(&1u64.to_le_bytes())
             .write(&hex!("f0"))
             .write(&hex!("00"))
-            .write_error(std::io::Error::new(std::io::ErrorKind::Other, "🍿"))
+            .write_error(std::io::Error::other("🍿"))
             .build();
         let mut w = BytesWriter::new(&mut mock, payload.len() as u64);
 

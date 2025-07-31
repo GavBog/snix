@@ -54,7 +54,7 @@ impl error::Error for Error {}
 
 impl convert::From<Error> for io::Error {
     fn from(e: Error) -> Self {
-        io::Error::new(io::ErrorKind::Other, e)
+        io::Error::other(e)
     }
 }
 
@@ -195,7 +195,7 @@ where
                 queue
                     .get_queue_mut()
                     .enable_notification(self.guest_mem.memory().deref())
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+                    .map_err(|e| io::Error::other(e.to_string()))?;
                 if !self.process_queue(&mut queue)? {
                     break;
                 }

@@ -30,9 +30,9 @@ async fn read_to_end(
 
     match (reader_result, test_output) {
         (Ok(_), Err(_)) => panic!("creating reader should have failed but succeeded"),
-        (Err(err), Ok(_)) => panic!("creating reader should have succeeded but failed: {}", err),
+        (Err(err), Ok(_)) => panic!("creating reader should have succeeded but failed: {err}"),
         (Err(reader_err), Err(expected_err)) => {
-            assert_eq!(format!("{}", reader_err), format!("{}", expected_err));
+            assert_eq!(format!("{reader_err}"), format!("{}", expected_err));
         }
         (Ok(mut reader), Ok(expected_read_result)) => {
             let mut buf: Vec<u8> = vec![];
@@ -41,7 +41,7 @@ async fn read_to_end(
             match (read_result, expected_read_result) {
                 (Ok(_), Err(_)) => panic!("read_to_end should have failed but succeeded"),
                 (Err(err), Ok(_)) => {
-                    panic!("read_to_end should have succeeded but failed: {}", err)
+                    panic!("read_to_end should have succeeded but failed: {err}")
                 }
                 (Err(read_err), Err(expected_read_err)) => {
                     assert_eq!(read_err.kind(), expected_read_err);

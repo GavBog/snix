@@ -155,7 +155,7 @@ impl<'a> Repl<'a> {
                 Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => break,
 
                 Err(err) => {
-                    writeln!(stderr, "error: {}", err).unwrap();
+                    writeln!(stderr, "error: {err}").unwrap();
                     break;
                 }
             }

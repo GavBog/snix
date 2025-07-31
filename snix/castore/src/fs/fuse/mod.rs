@@ -76,13 +76,13 @@ impl FuseDaemon {
         let server = Arc::new(fuse_backend_rs::api::server::Server::new(Arc::new(fs)));
 
         let mut session = FuseSession::new(mountpoint.as_ref(), "snix-castore", "", true)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+            .map_err(|e| io::Error::other(e.to_string()))?;
 
         #[cfg(target_os = "linux")]
         session.set_allow_other(allow_other);
         session
             .mount()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+            .map_err(|e| io::Error::other(e.to_string()))?;
 
         // construct a thread pool
         let threads = threadpool::Builder::new()
@@ -99,7 +99,7 @@ impl FuseDaemon {
                 server: server.clone(),
                 channel: session
                     .new_channel()
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?,
+                    .map_err(|e| io::Error::other(e.to_string()))?,
             };
 
             // Start the FuseServer in each thread, and enter the tokio runtime context,
@@ -131,7 +131,7 @@ impl FuseDaemon {
         self.session
             .lock()
             .umount()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+            .map_err(|e| io::Error::other(e.to_string()))?;
 
         self.wait();
         Ok(())

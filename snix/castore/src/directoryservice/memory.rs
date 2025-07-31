@@ -34,13 +34,12 @@ impl DirectoryService for MemoryDirectoryService {
                 let actual_digest = directory.digest();
                 if actual_digest != *digest {
                     return Err(Error::StorageError(format!(
-                        "requested directory with digest {}, but got {}",
-                        digest, actual_digest
+                        "requested directory with digest {digest}, but got {actual_digest}"
                     )));
                 }
 
                 Ok(Some(directory.clone().try_into().map_err(|e| {
-                    crate::Error::StorageError(format!("corrupted directory: {}", e))
+                    crate::Error::StorageError(format!("corrupted directory: {e}"))
                 })?))
             }
         }

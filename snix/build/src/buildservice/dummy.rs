@@ -11,8 +11,7 @@ pub struct DummyBuildService {}
 impl BuildService for DummyBuildService {
     #[instrument(skip(self), ret, err)]
     async fn do_build(&self, _request: BuildRequest) -> std::io::Result<BuildResult> {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
+        Err(std::io::Error::other(
             "builds are not supported with DummyBuildService",
         ))
     }

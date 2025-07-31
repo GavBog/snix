@@ -115,7 +115,7 @@ mod tests {
         use std::io::Write;
         let mut file = tempfile::NamedTempFile::new().expect("Could not create tempfile");
         for line in content.into_iter() {
-            writeln!(file, "{}", line).expect("");
+            writeln!(file, "{line}").expect("");
         }
         file
     }
