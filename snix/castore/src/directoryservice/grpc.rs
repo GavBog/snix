@@ -245,7 +245,9 @@ impl ServiceBuilder for GRPCDirectoryServiceConfig {
     ) -> Result<Arc<dyn DirectoryService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let client = proto::directory_service_client::DirectoryServiceClient::with_interceptor(
             crate::tonic::channel_from_url(&self.url.parse()?).await?,
-            snix_tracing::propagate::tonic::send_trace,
+            // tonic::service::Interceptor wants an unboxed Status as return type.
+            // https://github.com/hyperium/tonic/issues/2253
+            |rq| snix_tracing::propagate::tonic::send_trace(rq).map_err(|e| *e),
         );
         Ok(Arc::new(GRPCDirectoryService::from_client(
             instance_name.to_string(),
