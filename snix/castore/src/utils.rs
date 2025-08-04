@@ -28,14 +28,14 @@ pub struct ServiceUrls {
     #[arg(
         long,
         env,
-        default_value = "objectstore+file:///var/lib/snix-store/blobs.object_store"
+        default_value = "objectstore+file:///var/lib/snix-castore/blobs"
     )]
     pub blob_service_addr: String,
 
     #[arg(
         long,
         env,
-        default_value = "redb:///var/lib/snix-store/directories.redb"
+        default_value = "redb:///var/lib/snix-castore/directories.redb"
     )]
     pub directory_service_addr: String,
 

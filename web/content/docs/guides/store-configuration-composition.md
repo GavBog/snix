@@ -157,13 +157,13 @@ services, directory services).
 ```toml
 [blobservices.root]
 type = "objectstore"
-object_store_url = "file:///var/lib/snix-store/blobs.object_store"
+object_store_url = "file:///var/lib/snix-castore/blobs"
 object_store_options = {}
 
 [directoryservices.root]
 type = "redb"
 is_temporary = false
-path = "/var/lib/snix-store/directories.redb"
+path = "/var/lib/snix-castore/directories.redb"
 
 [pathinfoservices.root]
 type = "cache"
