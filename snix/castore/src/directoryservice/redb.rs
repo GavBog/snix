@@ -36,6 +36,10 @@ impl RedbDirectoryService {
             ));
         }
 
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
         let db = tokio::task::spawn_blocking(|| -> Result<_, redb::Error> {
             let db = redb::Database::create(path)?;
             create_schema(&db)?;
