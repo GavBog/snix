@@ -1,4 +1,4 @@
-From 0edb45d9dc9a2688c8b66a21df2a555f864fb81c Mon Sep 17 00:00:00 2001
+From 849657beb310dc099945f695b9d236ce0e649b27 Mon Sep 17 00:00:00 2001
 From: Jade Lovelace <software@lfcode.ca>
 Date: Thu, 16 May 2024 18:15:54 -0700
 Subject: [PATCH 1/2] lix: Make a Code Review (Gerrit) tab
@@ -8,21 +8,21 @@ Subject: [PATCH 1/2] lix: Make a Code Review (Gerrit) tab
  1 file changed, 11 insertions(+)
 
 diff --git a/templates/repo/header.tmpl b/templates/repo/header.tmpl
-index 21017415c1..c5a36b2203 100644
+index b6cbfc7283510a26f1fa039aca4a5f4ed4b92a47..bbce2bfbcb5aa83b7ae90b87e6dc22d10469adb7 100644
 --- a/templates/repo/header.tmpl
 +++ b/templates/repo/header.tmpl
-@@ -99,6 +99,11 @@
+@@ -107,6 +107,12 @@
  					</a>
  				{{end}}
- 
+
 +				{{if and (eq .Repository.Name "snix") (eq .Repository.OwnerName "snix")}}
 +					<a class="item" href="https://cl.snix.dev/q/project:snix">
 +						{{svg "octicon-code-review"}} Code Review (Gerrit)
 +					</a>
 +				{{end}}
++
  				{{if .Permission.CanRead $.UnitTypeExternalTracker}}
  					<a class="{{if .PageIsIssueList}}active {{end}}item" href="{{.RepoExternalIssuesLink}}" target="_blank" rel="noopener noreferrer">
  						{{svg "octicon-link-external"}} {{ctx.Locale.Tr "repo.issues"}}
--- 
-2.45.1
-
+--
+2.49.0

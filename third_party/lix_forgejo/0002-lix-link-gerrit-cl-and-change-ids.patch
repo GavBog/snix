@@ -1,22 +1,20 @@
-From c560d6e110377fb6f42e841a0bd35f80c0f2eb29 Mon Sep 17 00:00:00 2001
+From 33e71419f21f76e8a242b88dcb6eff7af2bc1b4d Mon Sep 17 00:00:00 2001
 From: Jade Lovelace <software@lfcode.ca>
 Date: Thu, 16 May 2024 19:56:25 -0700
 Subject: [PATCH 2/2] lix: link gerrit cl/ and change-ids
 
 This code is a bit dubious but you know, golang
-
-Co-authored-by: Ryan Lahfa <raito@lix.systems>
 ---
  modules/markup/html.go | 59 ++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 59 insertions(+)
 
 diff --git a/modules/markup/html.go b/modules/markup/html.go
-index 2e65827bf7..2d474077a5 100644
+index 7961c5c9301f03b89e88d289d032abca921adfff..518ad01b16466fe43f1fc44e9bcac63794d76bbe 100644
 --- a/modules/markup/html.go
 +++ b/modules/markup/html.go
-@@ -50,6 +50,20 @@ var (
+@@ -51,6 +51,20 @@ var (
  	// so that abbreviated hash links can be used as well. This matches git and GitHub usability.
- 	hashCurrentPattern = regexp.MustCompile(`(?:\s|^|\(|\[)([0-9a-f]{7,64})(?:\s|$|\)|\]|[.,:](\s|$))`)
+ 	hashCurrentPattern = regexp.MustCompile(`(?:^|\s)[^\w\d]{0,2}([0-9a-f]{7,64})[^\w\d]{0,2}(?:\s|$)`)
 
 +	// Gerrit change ID pattern
 +	changeIdPattern = GerritPattern{
@@ -35,7 +33,7 @@ index 2e65827bf7..2d474077a5 100644
  	// shortLinkPattern matches short but difficult to parse [[name|link|arg=test]] syntax
  	shortLinkPattern = regexp.MustCompile(`\[\[(.*?)\]\](\w*)`)
 
-@@ -77,6 +91,14 @@ var (
+@@ -82,6 +96,14 @@ var (
  	InlineCodeBlockRegex = regexp.MustCompile("`[^`]+`")
  )
 
@@ -50,7 +48,15 @@ index 2e65827bf7..2d474077a5 100644
  // CSS class for action keywords (e.g. "closes: #1")
  const keywordClass = "issue-keyword"
 
-@@ -152,6 +174,7 @@ var defaultProcessors = []processor{
+@@ -158,6 +180,7 @@ var defaultProcessors = []processor{
+ 	commitCrossReferencePatternProcessor,
+ 	hashCurrentPatternProcessor,
+ 	fediAddressProcessor,
++	gerritCLPatternProcessor,
+ 	emailAddressProcessor,
+ 	emojiProcessor,
+ 	emojiShortCodeProcessor,
+@@ -185,6 +208,7 @@ var commitMessageProcessors = []processor{
  	issueIndexPatternProcessor,
  	commitCrossReferencePatternProcessor,
  	hashCurrentPatternProcessor,
@@ -58,15 +64,7 @@ index 2e65827bf7..2d474077a5 100644
  	emailAddressProcessor,
  	emojiProcessor,
  	emojiShortCodeProcessor,
-@@ -179,6 +202,7 @@ var commitMessageProcessors = []processor{
- 	issueIndexPatternProcessor,
- 	commitCrossReferencePatternProcessor,
- 	hashCurrentPatternProcessor,
-+	gerritCLPatternProcessor,
- 	emailAddressProcessor,
- 	emojiProcessor,
- 	emojiShortCodeProcessor,
-@@ -788,6 +812,41 @@ func shortLinkProcessor(ctx *RenderContext, node *html.Node) {
+@@ -792,6 +816,41 @@ func shortLinkProcessor(ctx *RenderContext, node *html.Node) {
  	}
  }
 
@@ -109,5 +107,4 @@ index 2e65827bf7..2d474077a5 100644
  	if ctx.Metas == nil {
  		return
 --
-2.47.0
-
+2.49.0

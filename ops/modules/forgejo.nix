@@ -9,34 +9,26 @@ let
   inherit (lib) types mkEnableOption mkOption mkIf;
   emojo =
     let
-      handlePostFetch = ''
-        for i in $out/*_256.png; do
-          mv $i $(echo $i | sed -E 's/_256//g')
-        done
-      '';
       drgn = pkgs.fetchzip {
-        url = "https://volpeon.ink/emojis/drgn/drgn.zip";
+        url = "https://web.archive.org/web/20250724193550/https://strapi.volpeon.ink/uploads/drgn_d23daa833a.zip";
+        hash = "sha256-X46WhsksMpPDC8q3nuvsk4rydg0iFwe70qvsgaKqHMU=";
         stripRoot = false;
-        sha256 = "sha256-/2MpbxMJC92a4YhwG5rP6TsDC/q1Ng5fFq4xe2cBrrM=";
-        postFetch = handlePostFetch;
       };
       neocat = pkgs.fetchzip {
-        url = "https://volpeon.ink/emojis/neocat/neocat.zip";
+        url = "https://web.archive.org/web/20250724194945/https://strapi.volpeon.ink/uploads/neocat_5359f48261.zip";
+        hash = "sha256-+oGg5H1o7MOLrZv0efpiW65OKH9veHM7EHsTmtPMrNQ=";
         stripRoot = false;
-        sha256 = "sha256-Irh6Mv6ICDkaaenIFf8Cm1AFkdZy0gRVbXqgnwpk3Qw=";
-        postFetch = handlePostFetch;
       };
       neofox = pkgs.fetchzip {
-        url = "https://volpeon.ink/emojis/neofox/neofox.zip";
+        url = "http://web.archive.org/web/20250724195231/https://strapi.volpeon.ink/uploads/neofox_e17e757433.zip";
+        hash = "sha256-OS8pT/YGKhfNGaIngU+EwnbVZCkZbnRWaTTYI+q0gpg=";
         stripRoot = false;
-        sha256 = "sha256-FSTVYP/Bt25JfLr/Ny1g9oI9aAvAYLYhct31j3XRXYc=";
-        postFetch = handlePostFetch;
       };
-      dragon = pkgs.fetchFromGitHub {
+      dragn = pkgs.fetchFromGitHub {
         owner = "chr-1x";
         repo = "dragn-emoji";
         rev = "969543d9918ce2f0794ccd1e41b276d1ab22f0d5";
-        sha256 = "sha256-+40e9nKaIpQYZUiXh3Qe5jp2uvRbAQYDdXMGLEWHJio=";
+        hash = "sha256-+40e9nKaIpQYZUiXh3Qe5jp2uvRbAQYDdXMGLEWHJio=";
         postFetch = ''
           for i in $out/*.svg; do
             ${pkgs.librsvg}/bin/rsvg-convert -h 256 $i > a.png;
@@ -47,7 +39,7 @@ let
         '';
       };
     in
-    pkgs.symlinkJoin { name = "emojo"; paths = [ drgn neocat neofox dragon ]; };
+    pkgs.symlinkJoin { name = "emojo"; paths = [ drgn neocat neofox dragn ]; };
 in
 {
   options.services.depot.forgejo = {
