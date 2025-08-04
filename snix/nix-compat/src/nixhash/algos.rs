@@ -39,9 +39,6 @@ impl Display for HashAlgo {
     }
 }
 
-/// TODO(Raito): this could be automated via macros, I suppose.
-/// But this may be more expensive than just doing it by hand
-/// and ensuring that is kept in sync.
 #[cfg(feature = "serde")]
 pub const SUPPORTED_ALGOS: [&str; 4] = ["md5", "sha1", "sha256", "sha512"];
 
