@@ -64,6 +64,10 @@ pub struct Lambda {
     /// runtime.
     pub(crate) upvalue_count: usize,
     pub(crate) formals: Option<Formals>,
+
+    /// Parameter name for simple functions (e.g., `name: ...`).
+    /// Used by builtins.toXML to generate proper parameter names.
+    pub(crate) param_name: String,
 }
 
 impl Lambda {

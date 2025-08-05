@@ -1195,6 +1195,10 @@ impl Compiler<'_, '_> {
 
                 let idx = self.declare_local(&param, &name);
                 self.scope_mut().mark_initialised(idx);
+
+                // Store the parameter name for toXML
+                self.context_mut().lambda.param_name = name;
+
                 None
             }
         };
@@ -1202,6 +1206,8 @@ impl Compiler<'_, '_> {
         self.compile(slot, node.body().unwrap());
         if let Some((formals, throw_idx)) = formals {
             self.context_mut().lambda.formals = Some(formals);
+            // For formals, there's no single parameter name, use empty string
+            self.context_mut().lambda.param_name = String::new();
             Some(throw_idx)
         } else {
             self.context_mut().lambda.formals = None;

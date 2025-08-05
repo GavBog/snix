@@ -97,16 +97,8 @@ fn value_variant_to_xml<W: Write>(w: &mut XmlEmitter<W>, value: &Value) -> Resul
                     w.write_closing_tag("attrspat")?;
                 }
                 None => {
-                    // TODO(tazjin): snix does not currently persist function
-                    // argument names anywhere (whereas we do for formals, as
-                    // that is required for other runtime behaviour). Because of
-                    // this the implementation here is fake, always returning
-                    // the same argument name.
-                    //
-                    // If we don't want to persist the data, we can re-parse the
-                    // AST from the spans of the lambda's bytecode and figure it
-                    // out that way, but it needs some investigating.
-                    w.write_self_closing_tag("varpat", &[("name", /* fake: */ "x")])?;
+                    // Use the stored parameter name
+                    w.write_self_closing_tag("varpat", &[("name", &c.lambda.param_name)])?;
                 }
             }
 
@@ -316,5 +308,47 @@ mod tests {
             ),
             Cow::Borrowed(s) => panic!("s should be owned {s}"),
         }
+    }
+
+    #[test]
+    fn test_function_param_name_in_xml() {
+        use crate::Evaluation;
+
+        // Create a simple function with parameter name "myParam"
+        let code = r#"builtins.toXML (myParam: myParam)"#;
+        let eval = Evaluation::builder_pure().build();
+        let result = eval.evaluate(code, None);
+
+        assert!(
+            result.errors.is_empty(),
+            "Evaluation should succeed, but got errors: {:?}",
+            result.errors
+        );
+
+        // Get the XML string from the result
+        let xml_output = result
+            .value
+            .expect("Result should have a value")
+            .to_str()
+            .expect("Result should be a contextless string")
+            .to_string();
+
+        // Verify the XML contains varpat element
+        assert!(
+            xml_output.contains("<varpat"),
+            "XML should contain a varpat element, got: {xml_output}"
+        );
+
+        // Verify the parameter name is correctly included
+        assert!(
+            xml_output.contains("myParam"),
+            "XML should contain parameter name 'myParam', got: {xml_output}"
+        );
+
+        // Verify it contains the function structure
+        assert!(
+            xml_output.contains("<function>"),
+            "XML should contain a function element"
+        );
     }
 }
