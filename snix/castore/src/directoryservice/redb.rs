@@ -3,7 +3,7 @@ use prost::Message;
 use redb::{Database, TableDefinition};
 use std::{path::PathBuf, sync::Arc};
 use tonic::async_trait;
-use tracing::{instrument, warn};
+use tracing::{info, instrument, warn};
 
 use super::{
     Directory, DirectoryGraph, DirectoryPutter, DirectoryService, LeavesToRootValidator,
@@ -41,7 +41,15 @@ impl RedbDirectoryService {
         }
 
         let db = tokio::task::spawn_blocking(|| -> Result<_, redb::Error> {
-            let db = redb::Database::create(path)?;
+            let mut db = redb::Database::builder()
+                .create_with_file_format_v3(true)
+                .create(path)?;
+
+            // Upgrade redb database file format.
+            if db.upgrade()? {
+                info!("Upgraded database format");
+            };
+
             create_schema(&db)?;
             Ok(db)
         })
@@ -55,8 +63,9 @@ impl RedbDirectoryService {
 
     /// Constructs a new instance using the in-memory backend.
     pub fn new_temporary() -> Result<Self, Error> {
-        let db =
-            redb::Database::builder().create_with_backend(redb::backends::InMemoryBackend::new())?;
+        let db = redb::Database::builder()
+            .create_with_file_format_v3(true)
+            .create_with_backend(redb::backends::InMemoryBackend::new())?;
 
         create_schema(&db)?;
 
