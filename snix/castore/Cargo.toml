@@ -31,9 +31,17 @@ tokio = { workspace = true, features = [
   "rt-multi-thread",
   "signal",
 ] }
+tokio-listener = { workspace = true, features = [
+  "clap",
+  "multi-listener",
+  "sd_listen",
+  "tonic012",
+] }
 toml = { version = "0.8.19", optional = true }
 tonic.workspace = true
+tonic-health.workspace = true
 tower.workspace = true
+tower-http = { workspace = true, features = ["trace"] }
 tracing.workspace = true
 tracing-indicatif.workspace = true
 snix-tracing = { path = "../tracing", features = ["tonic"] }

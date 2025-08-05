@@ -13788,6 +13788,11 @@ rec {
             features = [ "fs" "macros" "net" "rt" "rt-multi-thread" "signal" ];
           }
           {
+            name = "tokio-listener";
+            packageId = "tokio-listener";
+            features = [ "clap" "multi-listener" "sd_listen" "tonic012" ];
+          }
+          {
             name = "tokio-stream";
             packageId = "tokio-stream";
             features = [ "fs" "net" ];
@@ -13811,6 +13816,11 @@ rec {
             packageId = "tonic";
           }
           {
+            name = "tonic-health";
+            packageId = "tonic-health";
+            usesDefaultFeatures = false;
+          }
+          {
             name = "tonic-reflection";
             packageId = "tonic-reflection";
             optional = true;
@@ -13818,6 +13828,11 @@ rec {
           {
             name = "tower";
             packageId = "tower 0.4.13";
+          }
+          {
+            name = "tower-http";
+            packageId = "tower-http";
+            features = [ "trace" ];
           }
           {
             name = "tracing";
