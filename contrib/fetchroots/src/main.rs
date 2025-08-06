@@ -39,6 +39,7 @@ struct Meta {
 }
 
 #[tokio::main]
+#[allow(clippy::too_many_lines)]
 async fn main() {
     let sdk_config = aws_config::load_defaults(aws_config::BehaviorVersion::v2023_11_09())
         .await
@@ -141,7 +142,9 @@ async fn main() {
                     Ok(Some(buf))
                 }
                 Err(e) => {
-                    if e.as_service_error().is_some_and(|e| e.is_no_such_key()) {
+                    if e.as_service_error().is_some_and(
+                        aws_sdk_s3::operation::get_object::GetObjectError::is_no_such_key,
+                    ) {
                         Ok(None)
                     } else {
                         Err(e)
@@ -223,7 +226,7 @@ impl Format {
                             .read_to_string(&mut buf)
                             .unwrap();
                     }
-                    _ => unreachable!(),
+                    Format::StorePathsXz => unreachable!(),
                 }
 
                 let buf = buf

@@ -3,6 +3,9 @@ name = "fetchroots"
 version = "0.0.0"
 edition = "2024"
 
+[lints.clippy]
+pedantic = "warn"
+
 [workspace]
 members = ["."]
 
