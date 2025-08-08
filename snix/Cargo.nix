@@ -14851,10 +14851,6 @@ rec {
             optional = true;
           }
           {
-            name = "indicatif";
-            packageId = "indicatif";
-          }
-          {
             name = "opentelemetry";
             packageId = "opentelemetry";
             optional = true;

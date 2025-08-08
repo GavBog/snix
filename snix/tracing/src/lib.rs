@@ -1,8 +1,8 @@
-use indicatif::ProgressStyle;
 use std::sync::LazyLock;
 use tracing::level_filters::LevelFilter;
 use tracing_indicatif::{
-    IndicatifLayer, IndicatifWriter, filter::IndicatifFilter, util::FilteredFormatFields, writer,
+    IndicatifLayer, IndicatifWriter, filter::IndicatifFilter, style::ProgressStyle,
+    util::FilteredFormatFields, writer,
 };
 use tracing_subscriber::{
     EnvFilter, Layer, Registry,

@@ -9,7 +9,6 @@ tracing = { workspace = true, features = [
   "release_max_level_debug",
 ] }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-indicatif.workspace = true
 tracing-indicatif.workspace = true
 tokio = { workspace = true, features = ["sync", "rt"] }
 thiserror.workspace = true
