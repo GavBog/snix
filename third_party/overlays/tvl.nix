@@ -1,9 +1,10 @@
 # This overlay is used to make TVL-specific modifications in the
 # nixpkgs tree, where required.
-{ lib
-, depot
-, localSystem
-, ...
+{
+  lib,
+  depot,
+  localSystem,
+  ...
 }:
 
 self: super:
@@ -43,14 +44,13 @@ depot.nix.readTree.drvTargets {
   # https://github.com/NixOS/nixpkgs/pull/320197
   fuse =
     if super.stdenv.isDarwin then
-      super.fuse.overrideAttrs
-        (old: rec {
-          version = "4.8.0";
-          src = super.fetchurl {
-            url = "https://github.com/osxfuse/osxfuse/releases/download/macfuse-${version}/macfuse-${version}.dmg";
-            hash = "sha256-ucTzO2qdN4QkowMVvC3+4pjEVjbwMsB0xFk+bvQxwtQ=";
-          };
-        })
+      super.fuse.overrideAttrs (old: rec {
+        version = "4.8.0";
+        src = super.fetchurl {
+          url = "https://github.com/osxfuse/osxfuse/releases/download/macfuse-${version}/macfuse-${version}.dmg";
+          hash = "sha256-ucTzO2qdN4QkowMVvC3+4pjEVjbwMsB0xFk+bvQxwtQ=";
+        };
+      })
     else
       super.fuse;
 

@@ -1,7 +1,8 @@
-{ depot
-, config
-, lib
-, ...
+{
+  depot,
+  config,
+  lib,
+  ...
 }:
 let
   cfg = config.services.depot.grafana;

@@ -1,42 +1,56 @@
 # Helper functions for instantiating depot-compatible NixOS machines.
-{ depot, lib, pkgs, ... }@args:
+{
+  depot,
+  lib,
+  pkgs,
+  ...
+}@args:
 
-let inherit (lib) findFirst;
-in rec {
+let
+  inherit (lib) findFirst;
+in
+rec {
   # This provides our standard set of arguments to all NixOS modules.
-  baseModule = { ... }: {
-    nix.nixPath =
-      let
-        # Due to nixpkgsBisectPath, pkgs.path is not always in the nix store
-        nixpkgsStorePath =
-          if lib.hasPrefix builtins.storeDir (toString pkgs.path)
-          then builtins.storePath pkgs.path # nixpkgs is already in the store
-          else pkgs.path; # we need to dump nixpkgs to the store either way
-      in
-      [
-        ("nixos=" + nixpkgsStorePath)
-        ("nixpkgs=" + nixpkgsStorePath)
-      ];
-  };
-
-  nixosFor = configuration: (depot.third_party.nixos {
-    configuration = { ... }: {
-      imports = [
-        baseModule
-        configuration
-      ];
+  baseModule =
+    { ... }:
+    {
+      nix.nixPath =
+        let
+          # Due to nixpkgsBisectPath, pkgs.path is not always in the nix store
+          nixpkgsStorePath =
+            if lib.hasPrefix builtins.storeDir (toString pkgs.path) then
+              builtins.storePath pkgs.path # nixpkgs is already in the store
+            else
+              pkgs.path; # we need to dump nixpkgs to the store either way
+        in
+        [
+          ("nixos=" + nixpkgsStorePath)
+          ("nixpkgs=" + nixpkgsStorePath)
+        ];
     };
 
-    specialArgs = {
-      inherit (args) depot;
-    };
-  });
+  nixosFor =
+    configuration:
+    (depot.third_party.nixos {
+      configuration =
+        { ... }:
+        {
+          imports = [
+            baseModule
+            configuration
+          ];
+        };
 
-  findSystem = hostname:
-    (findFirst
-      (system: system.config.networking.hostName == hostname)
-      (throw "${hostname} is not a known NixOS host")
-      (map nixosFor depot.ops.machines.all-systems));
+      specialArgs = {
+        inherit (args) depot;
+      };
+    });
+
+  findSystem =
+    hostname:
+    (findFirst (
+      system: system.config.networking.hostName == hostname
+    ) (throw "${hostname} is not a known NixOS host") (map nixosFor depot.ops.machines.all-systems));
 
   # Systems that should be built in CI
   archivistEC2System = nixosFor depot.ops.machines.archivist-ec2;

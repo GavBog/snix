@@ -4,7 +4,12 @@
 #
 # Execute language tests found in snix_tests and nix_tests
 # using the C++ Nix implementation. Based on NixOS/nix:tests/lang.sh.
-{ depot, pkgs, lib, ... }:
+{
+  depot,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   testRoot = ../eval/src/tests;
@@ -13,30 +18,36 @@ let
   # The latest Nix version we've verified to work for our testing suite.
   nix_latest_verified = pkgs.nixVersions.nix_2_30;
 
-  parseTest = dir: baseName:
+  parseTest =
+    dir: baseName:
     let
       tokens = builtins.match "(eval|parse)-(okay|fail).+\\.nix" baseName;
     in
-    if tokens == null
-    then null
-    else {
-      type = builtins.elemAt tokens 0;
-      expectedSuccess = (builtins.elemAt tokens 1) == "okay";
-      fileName = "${dir}/${baseName}";
-    };
+    if tokens == null then
+      null
+    else
+      {
+        type = builtins.elemAt tokens 0;
+        expectedSuccess = (builtins.elemAt tokens 1) == "okay";
+        fileName = "${dir}/${baseName}";
+      };
 
   allLangTests =
     lib.concatMap
       (
         dir:
-        lib.pipe
-          (builtins.readDir (testRoot + "/${dir}"))
-          [
-            builtins.attrNames
-            (builtins.map (parseTest dir))
-            (builtins.filter (t: t != null))
-          ]
-      ) [ "nix_tests" "nix_tests/notyetpassing" "snix_tests" "snix_tests/notyetpassing" ];
+        lib.pipe (builtins.readDir (testRoot + "/${dir}")) [
+          builtins.attrNames
+          (builtins.map (parseTest dir))
+          (builtins.filter (t: t != null))
+        ]
+      )
+      [
+        "nix_tests"
+        "nix_tests/notyetpassing"
+        "snix_tests"
+        "snix_tests/notyetpassing"
+      ];
 
   skippedLangTests = {
     # TODO(sterni): set up NIX_PATH in sandbox
@@ -82,8 +93,7 @@ let
     # https://github.com/NixOS/nix/issues/9779
     "eval-okay-builtins-map-propagate-catchable.nix" = [ nix_latest_verified ];
     "eval-okay-builtins-gen-list-propagate-catchable.nix" = [ nix_latest_verified ];
-    "eval-okay-builtins-replace-strings-propagate-catchable.nix" =
-      [ nix_latest_verified ];
+    "eval-okay-builtins-replace-strings-propagate-catchable.nix" = [ nix_latest_verified ];
     "eval-okay-builtins-map-function-strictness.nix" = [ nix_latest_verified ];
     "eval-okay-builtins-genList-function-strictness.nix" = [ nix_latest_verified ];
 
@@ -96,19 +106,26 @@ let
     "eval-okay-dirof.nix" = [ nix_latest_verified ];
   };
 
-  runCppNixLangTests = cpp-nix:
+  runCppNixLangTests =
+    cpp-nix:
     let
-      testCommand = { fileName, type, expectedSuccess, ... }:
+      testCommand =
+        {
+          fileName,
+          type,
+          expectedSuccess,
+          ...
+        }:
         let
           testBase = lib.removeSuffix ".nix" fileName;
           expFile =
             let
-              possibleFiles =
-                builtins.filter
-                  (path: builtins.pathExists (testRoot + "/${path}"))
-                  (builtins.map
-                    (ext: "${testBase}.${ext}")
-                    [ "exp" "exp.xml" ]);
+              possibleFiles = builtins.filter (path: builtins.pathExists (testRoot + "/${path}")) (
+                builtins.map (ext: "${testBase}.${ext}") [
+                  "exp"
+                  "exp.xml"
+                ]
+              );
             in
             if possibleFiles == [ ] then null else builtins.head possibleFiles;
           outFile = "${testBase}.out";
@@ -119,60 +136,64 @@ let
             let
               doSkip = skippedLangTests.${builtins.baseNameOf fileName} or false;
             in
-            if type == "eval" && expectedSuccess && (expFile == null) then true
-            else if builtins.isBool doSkip then doSkip
-            else builtins.any (drv: cpp-nix == drv) doSkip;
+            if type == "eval" && expectedSuccess && (expFile == null) then
+              true
+            else if builtins.isBool doSkip then
+              doSkip
+            else
+              builtins.any (drv: cpp-nix == drv) doSkip;
 
           flagsFile = "${testBase}.flags";
 
           instantiateFlags =
-            lib.escapeShellArgs
-              (
-                [ "--${type}" fileName ]
-                ++ lib.optionals (type == "eval") [ "--strict" ]
-                ++ lib.optionals (expFile != null && lib.hasSuffix "xml" expFile)
-                  [
-                    "--no-location"
-                    "--xml"
-                  ]
-              )
-            + lib.optionalString (builtins.pathExists (testRoot + "/${flagsFile}"))
-              " $(cat '${flagsFile}')";
+            lib.escapeShellArgs (
+              [
+                "--${type}"
+                fileName
+              ]
+              ++ lib.optionals (type == "eval") [ "--strict" ]
+              ++ lib.optionals (expFile != null && lib.hasSuffix "xml" expFile) [
+                "--no-location"
+                "--xml"
+              ]
+            )
+            + lib.optionalString (builtins.pathExists (testRoot + "/${flagsFile}")) " $(cat '${flagsFile}')";
         in
 
-        if skip
-        then "echo \"SKIP ${type} ${fileName}\"\n"
-        else ''
-          thisTestPassed=true
+        if skip then
+          "echo \"SKIP ${type} ${fileName}\"\n"
+        else
+          ''
+            thisTestPassed=true
 
-          echo "RUN  ${type} ${fileName} ${
-            lib.optionalString (!expectedSuccess) "(expecting failure)"
-          }"
+            echo "RUN  ${type} ${fileName} ${lib.optionalString (!expectedSuccess) "(expecting failure)"}"
 
-          if ! expect ${if expectedSuccess then "0" else "1"} \
-                 nix-instantiate ${instantiateFlags} \
-                 ${if expectedSuccess then "1" else "2"}> \
-                 ${if expFile != null then outFile else "/dev/null"};
-          then
-            echo -n "FAIL"
-            thisTestPassed=false
-          fi
-        '' + lib.optionalString (expFile != null) ''
-          if ! diff --color=always -u '${outFile}' '${expFile}'; then
-            thisTestPassed=false
-          fi
-        '' + ''
-          if $thisTestPassed; then
-            echo -n "PASS"
-          else
-            echo -n "FAIL"
-            passed=false
-          fi
+            if ! expect ${if expectedSuccess then "0" else "1"} \
+                   nix-instantiate ${instantiateFlags} \
+                   ${if expectedSuccess then "1" else "2"}> \
+                   ${if expFile != null then outFile else "/dev/null"};
+            then
+              echo -n "FAIL"
+              thisTestPassed=false
+            fi
+          ''
+          + lib.optionalString (expFile != null) ''
+            if ! diff --color=always -u '${outFile}' '${expFile}'; then
+              thisTestPassed=false
+            fi
+          ''
+          + ''
+            if $thisTestPassed; then
+              echo -n "PASS"
+            else
+              echo -n "FAIL"
+              passed=false
+            fi
 
-          echo " ${type} ${fileName}"
+            echo " ${type} ${fileName}"
 
-          unset thisTestPassed
-        '';
+            unset thisTestPassed
+          '';
     in
 
     pkgs.stdenv.mkDerivation {
@@ -227,9 +248,9 @@ let
 in
 depot.nix.readTree.drvTargets {
   "nix-${lib.versions.majorMinor nix_2_3.version}" = runCppNixLangTests nix_2_3;
-  "nix-${lib.versions.majorMinor nix_latest_verified.version}" = lib.warnIf (lib.versionOlder nix_latest_verified.version pkgs.nixVersions.latest.version)
-    "The latest verified Nix version is out of date, consider updating the value of `nix_latest_verified` and verifying that the tests still pass."
-    runCppNixLangTests
-    nix_latest_verified;
+  "nix-${lib.versions.majorMinor nix_latest_verified.version}" =
+    lib.warnIf (lib.versionOlder nix_latest_verified.version pkgs.nixVersions.latest.version)
+      "The latest verified Nix version is out of date, consider updating the value of `nix_latest_verified` and verifying that the tests still pass."
+      runCppNixLangTests
+      nix_latest_verified;
 }
-

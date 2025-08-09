@@ -4,13 +4,19 @@ let
     name = "fail";
     builder = "/bin/false";
     system = "x86_64-linux";
-    outputs = [ "out" "foo" ];
+    outputs = [
+      "out"
+      "foo"
+    ];
   };
   other-drv = derivation {
     name = "other-fail";
     builder = "/bin/false";
     system = "x86_64-linux";
-    outputs = [ "out" "bar" ];
+    outputs = [
+      "out"
+      "bar"
+    ];
   };
   a-path-drv = builtins.path {
     name = "a-path-drv";
@@ -26,14 +32,15 @@ let
 
   combo-path = "${path}${drv.outPath}${drv.foo.outPath}${drv.drvPath}";
 
-  mergeContext = a: b:
-    builtins.getContext a // builtins.getContext b;
+  mergeContext = a: b: builtins.getContext a // builtins.getContext b;
 
-  preserveContext = origin: result:
-    builtins.getContext "${result}" == builtins.getContext "${origin}";
+  preserveContext =
+    origin: result: builtins.getContext "${result}" == builtins.getContext "${origin}";
 
-  preserveContexts = origins: result:
-    let union = builtins.foldl' (x: y: x // y) { } (builtins.map (d: builtins.getContext "${d}") origins);
+  preserveContexts =
+    origins: result:
+    let
+      union = builtins.foldl' (x: y: x // y) { } (builtins.map (d: builtins.getContext "${d}") origins);
     in
     union == builtins.getContext "${result}";
 in
@@ -73,7 +80,9 @@ in
   # Context should appear by a successful replacement.
   (preserveContext "${drv}" (builtins.replaceStrings [ "a" ] [ "${drv}" ] "a"))
   # We test multiple successful replacements.
-  (preserveContexts [ drv other-drv ] (builtins.replaceStrings [ "a" "b" ] [ "${drv}" "${other-drv}" ] "ab"))
+  (preserveContexts [ drv other-drv ] (
+    builtins.replaceStrings [ "a" "b" ] [ "${drv}" "${other-drv}" ] "ab"
+  ))
   # We test *empty* string replacements.
   (preserveContext "${drv}" (builtins.replaceStrings [ "" ] [ "${drv}" ] "abc"))
   (preserveContext "${drv}" (builtins.replaceStrings [ "" ] [ "${drv}" ] ""))
@@ -88,32 +97,77 @@ in
   (preserveContext "${drv}" (builtins.baseNameOf drv))
   (preserveContext "abc" (builtins.baseNameOf "abc"))
   # `concatStringsSep` preserves contexts of both arguments.
-  (preserveContexts [ drv other-drv ] (builtins.concatStringsSep "${other-drv}" (map toString [ drv drv drv drv drv ])))
-  (preserveContext drv (builtins.concatStringsSep "|" (map toString [ drv drv drv drv drv ])))
-  (preserveContext other-drv (builtins.concatStringsSep "${other-drv}" [ "abc" "def" ]))
+  (preserveContexts [ drv other-drv ] (
+    builtins.concatStringsSep "${other-drv}" (
+      map toString [
+        drv
+        drv
+        drv
+        drv
+        drv
+      ]
+    )
+  ))
+  (preserveContext drv (
+    builtins.concatStringsSep "|" (
+      map toString [
+        drv
+        drv
+        drv
+        drv
+        drv
+      ]
+    )
+  ))
+  (preserveContext other-drv (
+    builtins.concatStringsSep "${other-drv}" [
+      "abc"
+      "def"
+    ]
+  ))
   # `attrNames` will never ever produce context.
-  (preserveContext "abc" (toString (builtins.attrNames { a = { }; b = { }; c = { }; })))
+  (preserveContext "abc" (
+    toString (
+      builtins.attrNames {
+        a = { };
+        b = { };
+        c = { };
+      }
+    )
+  ))
   # `toJSON` preserves context of its inputs.
-  (preserveContexts [ drv other-drv ] (builtins.toJSON {
-    a = [ drv ];
-    b = [ other-drv ];
-  }))
-  (preserveContexts [ drv other-drv ] (builtins.toJSON {
-    a.deep = [ drv ];
-    b = [ other-drv ];
-  }))
-  (preserveContexts [ drv other-drv ] (builtins.toJSON {
-    a = "${drv}";
-    b = [ other-drv ];
-  }))
-  (preserveContexts [ drv other-drv ] (builtins.toJSON {
-    a.deep = "${drv}";
-    b = [ other-drv ];
-  }))
-  (preserveContexts [ drv other-drv ] (builtins.toJSON {
-    a = "${drv} ${other-drv}";
-  }))
-  (preserveContexts [ drv other-drv ] (builtins.toJSON {
-    a.b.c.d.e.f = "${drv} ${other-drv}";
-  }))
+  (preserveContexts [ drv other-drv ] (
+    builtins.toJSON {
+      a = [ drv ];
+      b = [ other-drv ];
+    }
+  ))
+  (preserveContexts [ drv other-drv ] (
+    builtins.toJSON {
+      a.deep = [ drv ];
+      b = [ other-drv ];
+    }
+  ))
+  (preserveContexts [ drv other-drv ] (
+    builtins.toJSON {
+      a = "${drv}";
+      b = [ other-drv ];
+    }
+  ))
+  (preserveContexts [ drv other-drv ] (
+    builtins.toJSON {
+      a.deep = "${drv}";
+      b = [ other-drv ];
+    }
+  ))
+  (preserveContexts [ drv other-drv ] (
+    builtins.toJSON {
+      a = "${drv} ${other-drv}";
+    }
+  ))
+  (preserveContexts [ drv other-drv ] (
+    builtins.toJSON {
+      a.b.c.d.e.f = "${drv} ${other-drv}";
+    }
+  ))
 ]

@@ -1,4 +1,5 @@
-{ config, depot, ... }: {
+{ config, depot, ... }:
+{
   imports = [
     depot.third_party.alertmanager-irc-relay.module
   ];
@@ -10,7 +11,10 @@
       irc_port = 6697;
       irc_nickname = "silentfox";
       irc_channels = [
-        { name = "#snix"; password = "$CHANNEL_PASSWORD"; }
+        {
+          name = "#snix";
+          password = "$CHANNEL_PASSWORD";
+        }
       ];
     };
     environmentFiles = [

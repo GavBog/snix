@@ -9,7 +9,7 @@ depot.nix.lazy-deps {
   gerrit.attr = "tools.gerrit-cli";
   mg.attr = "tools.magrathea";
   niv.attr = "third_party.nixpkgs.niv";
-  nixpkgs-fmt.attr = "third_party.nixpkgs.nixpkgs-fmt";
+  nixfmt.attr = "third_party.nixpkgs.nixfmt";
 
   tf-buildkite = {
     attr = "ops.buildkite.terraform";

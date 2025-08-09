@@ -1,9 +1,10 @@
 # Configuration for the snix buildkite agents.
-{ config
-, depot
-, pkgs
-, lib
-, ...
+{
+  config,
+  depot,
+  pkgs,
+  lib,
+  ...
 }:
 
 let
@@ -50,61 +51,56 @@ in
   config = lib.mkIf cfg.enable {
     # Run the Buildkite agents using the default upstream module.
     services.buildkite-agents = builtins.listToAttrs (
-      map
-        (n: rec {
-          name = "${hostname}-${toString n}";
-          value =
-            {
-              inherit name;
-              enable = true;
-              tokenPath = config.age.secretsDir + "/buildkite-agent-token";
-              privateSshKeyPath = config.age.secretsDir + "/buildkite-private-key";
-              hooks.post-command = "${buildkiteHooks}/bin/post-command";
-              tags.queue = "default";
-              hooks.environment = ''
-                export PATH=$PATH:/run/wrappers/bin
-              '';
+      map (n: rec {
+        name = "${hostname}-${toString n}";
+        value = {
+          inherit name;
+          enable = true;
+          tokenPath = config.age.secretsDir + "/buildkite-agent-token";
+          privateSshKeyPath = config.age.secretsDir + "/buildkite-private-key";
+          hooks.post-command = "${buildkiteHooks}/bin/post-command";
+          tags.queue = "default";
+          hooks.environment = ''
+            export PATH=$PATH:/run/wrappers/bin
+          '';
 
-              tags = {
-                # all agents support small jobs
-                small = "true";
-                inherit hostname;
-                large = if n <= cfg.largeSlots then "true" else "false";
-              };
+          tags = {
+            # all agents support small jobs
+            small = "true";
+            inherit hostname;
+            large = if n <= cfg.largeSlots then "true" else "false";
+          };
 
-              runtimePackages = with pkgs; [
-                bash
-                coreutils
-                credentialHelper
-                curl
-                git
-                gnutar
-                gzip
-                jq
-                nix
-              ];
-            };
-        })
-        agents
+          runtimePackages = with pkgs; [
+            bash
+            coreutils
+            credentialHelper
+            curl
+            git
+            gnutar
+            gzip
+            jq
+            nix
+          ];
+        };
+      }) agents
     );
 
     # Set up a group for all Buildkite agent users
     users = {
       groups.buildkite-agents = { };
       users = builtins.listToAttrs (
-        map
-          (n: rec {
-            name = "buildkite-agent-${hostname}-${toString n}";
-            value = {
-              isSystemUser = true;
-              group = lib.mkForce "buildkite-agents";
-              extraGroups = [
-                name
-                "docker"
-              ];
-            };
-          })
-          agents
+        map (n: rec {
+          name = "buildkite-agent-${hostname}-${toString n}";
+          value = {
+            isSystemUser = true;
+            group = lib.mkForce "buildkite-agents";
+            extraGroups = [
+              name
+              "docker"
+            ];
+          };
+        }) agents
       );
     };
   };

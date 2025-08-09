@@ -1,5 +1,11 @@
 # Nix helpers for projects under //snix
-{ pkgs, lib, depot, here, ... }:
+{
+  pkgs,
+  lib,
+  depot,
+  here,
+  ...
+}:
 
 let
   # Load the crate2nix crate tree.
@@ -13,13 +19,18 @@ let
     # Extract the hashes from `crates` / Cargo.nix, we already get them from cargo2nix.
     # This returns an attribute set containing "${crateName}-${version}" as key,
     # and the outputHash as value.
-    outputHashes = builtins.listToAttrs
-      (map
-        (k:
-          (lib.nameValuePair "${crates.internal.crates.${k}.crateName}-${crates.internal.crates.${k}.version}" crates.internal.crates.${k}.src.outputHash)
-        ) [
-        "wu-manber"
-      ]);
+    outputHashes = builtins.listToAttrs (
+      map
+        (
+          k:
+          (lib.nameValuePair "${crates.internal.crates.${k}.crateName}-${
+            crates.internal.crates.${k}.version
+          }" crates.internal.crates.${k}.src.outputHash)
+        )
+        [
+          "wu-manber"
+        ]
+    );
   };
 
   # The cleaned sources.
@@ -36,32 +47,42 @@ let
     ];
   };
 
-  mkCargoBuild = args: pkgs.stdenv.mkDerivation ({
-    inherit cargoDeps src;
-    PROTO_ROOT = protos;
-    SNIX_BUILD_SANDBOX_SHELL = "/homeless-shelter";
+  mkCargoBuild =
+    args:
+    pkgs.stdenv.mkDerivation (
+      {
+        inherit cargoDeps src;
+        PROTO_ROOT = protos;
+        SNIX_BUILD_SANDBOX_SHELL = "/homeless-shelter";
 
-    nativeBuildInputs = with pkgs; [
-      cargo
-      pkg-config
-      protobuf
-      rustc
-      rustPlatform.cargoSetupHook
-    ] ++ (args.nativeBuildInputs or [ ]);
-  } // (pkgs.lib.removeAttrs args [ "nativeBuildInputs" ]));
+        nativeBuildInputs =
+          with pkgs;
+          [
+            cargo
+            pkg-config
+            protobuf
+            rustc
+            rustPlatform.cargoSetupHook
+          ]
+          ++ (args.nativeBuildInputs or [ ]);
+      }
+      // (pkgs.lib.removeAttrs args [ "nativeBuildInputs" ])
+    );
 in
 {
   inherit crates protos mkCargoBuild;
 
   # Provide the snix logo in both .webp and .png format.
-  logo = pkgs.runCommand "logo"
-    {
-      nativeBuildInputs = [ pkgs.imagemagick ];
-    } ''
-    mkdir -p $out
-    cp ${./logo.webp} $out/logo.webp
-    convert $out/logo.webp $out/logo.png
-  '';
+  logo =
+    pkgs.runCommand "logo"
+      {
+        nativeBuildInputs = [ pkgs.imagemagick ];
+      }
+      ''
+        mkdir -p $out
+        cp ${./logo.webp} $out/logo.webp
+        convert $out/logo.webp $out/logo.png
+      '';
 
   # Provide a shell for the combined dependencies of all snix Rust
   # projects. Note that as this is manually maintained it may be
@@ -73,7 +94,12 @@ in
   shell = (import ./shell.nix { inherit pkgs; });
 
   # Shell, but with tools necessary to run the integration tests
-  shell-integration = (import ./shell.nix { inherit pkgs; withIntegration = true; });
+  shell-integration = (
+    import ./shell.nix {
+      inherit pkgs;
+      withIntegration = true;
+    }
+  );
 
   # Build the Rust documentation for publishing on snix.dev/rustdoc.
   rust-docs = mkCargoBuild {
@@ -81,7 +107,8 @@ in
 
     buildInputs = [
       pkgs.fuse
-    ] ++ lib.optional pkgs.stdenv.isDarwin pkgs.libiconv;
+    ]
+    ++ lib.optional pkgs.stdenv.isDarwin pkgs.libiconv;
 
     buildPhase = ''
       RUSTDOCFLAGS="-D rustdoc::broken-intra-doc-links" cargo doc --document-private-items

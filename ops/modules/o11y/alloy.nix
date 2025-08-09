@@ -1,15 +1,25 @@
-{ depot
-, config
-, lib
-, ...
+{
+  depot,
+  config,
+  lib,
+  ...
 }:
 let
   cfg = config.infra.monitoring.alloy;
-  inherit (lib) mkEnableOption mkOption mkIf types mapAttrs' nameValuePair;
+  inherit (lib)
+    mkEnableOption
+    mkOption
+    mkIf
+    types
+    mapAttrs'
+    nameValuePair
+    ;
 in
 {
   options.infra.monitoring.alloy = {
-    enable = (mkEnableOption "Grafana Alloy") // { default = true; };
+    enable = (mkEnableOption "Grafana Alloy") // {
+      default = true;
+    };
 
     exporters = mkOption {
       description = ''
@@ -19,12 +29,17 @@ in
         internally, which ends up exported as `job` label
         on all metrics of that exporter.
       '';
-      type = types.attrsOf (types.submodule ({ config, name, ... }: {
-        options.port = mkOption {
-          description = "Exporter port";
-          type = types.int;
-        };
-      }));
+      type = types.attrsOf (
+        types.submodule (
+          { config, name, ... }:
+          {
+            options.port = mkOption {
+              description = "Exporter port";
+              type = types.int;
+            };
+          }
+        )
+      );
       default = { };
     };
   };
@@ -70,8 +85,10 @@ in
           }
         }
       '';
-    } // (mapAttrs'
-      (name: v: nameValuePair "alloy/scrape_${name}.alloy" {
+    }
+    // (mapAttrs' (
+      name: v:
+      nameValuePair "alloy/scrape_${name}.alloy" {
         text = ''
           prometheus.scrape "${name}" {
             targets = [
@@ -80,8 +97,8 @@ in
             forward_to = [prometheus.remote_write.mimir.receiver]
           }
         '';
-      })
-      cfg.exporters);
+      }
+    ) cfg.exporters);
 
     systemd.services.alloy.serviceConfig = {
       LoadCredential = [

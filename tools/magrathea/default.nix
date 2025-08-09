@@ -20,7 +20,10 @@ stdenv.mkDerivation {
   src = ./.;
   dontInstall = true;
 
-  nativeBuildInputs = [ chicken makeWrapper ];
+  nativeBuildInputs = [
+    chicken
+    makeWrapper
+  ];
   buildInputs = with chickenPackages.chickenEggs; [
     matchable
     srfi-13

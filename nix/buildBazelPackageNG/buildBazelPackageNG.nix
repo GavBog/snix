@@ -1,17 +1,19 @@
-{ stdenv
-, lib
-, pkgs
-, coreutils
+{
+  stdenv,
+  lib,
+  pkgs,
+  coreutils,
 }:
 
-{ name ? "${baseAttrs.pname}-${baseAttrs.version}"
-, bazelTargets
-, bazel ? pkgs.bazel
-, depsHash
-, extraCacheInstall ? ""
-, extraBuildSetup ? ""
-, extraBuildInstall ? ""
-, ...
+{
+  name ? "${baseAttrs.pname}-${baseAttrs.version}",
+  bazelTargets,
+  bazel ? pkgs.bazel,
+  depsHash,
+  extraCacheInstall ? "",
+  extraBuildSetup ? "",
+  extraBuildInstall ? "",
+  ...
 }@baseAttrs:
 
 let
@@ -24,20 +26,23 @@ let
   ];
   attrs = cleanAttrs baseAttrs;
 
-  base = stdenv.mkDerivation (attrs // {
-    nativeBuildInputs = (attrs.nativeBuildInputs or [ ]) ++ [
-      bazel
-    ];
+  base = stdenv.mkDerivation (
+    attrs
+    // {
+      nativeBuildInputs = (attrs.nativeBuildInputs or [ ]) ++ [
+        bazel
+      ];
 
-    preUnpack = ''
-      if [[ ! -d $HOME ]]; then
-        export HOME=$NIX_BUILD_TOP/home
-        mkdir -p $HOME
-      fi
-    '';
+      preUnpack = ''
+        if [[ ! -d $HOME ]]; then
+          export HOME=$NIX_BUILD_TOP/home
+          mkdir -p $HOME
+        fi
+      '';
 
-    bazelTargetNames = builtins.attrNames bazelTargets;
-  });
+      bazelTargetNames = builtins.attrNames bazelTargets;
+    }
+  );
 
   cache = base.overrideAttrs (base: {
     name = "${name}-deps";
@@ -89,18 +94,23 @@ let
     installPhase = ''
       runHook preInstall
 
-      ${builtins.concatStringsSep "\n" (lib.mapAttrsToList (target: outPath: lib.optionalString (outPath != null) ''
-        TARGET_OUTPUTS="$(bazel cquery --repository_cache=$cache/repository-cache $bazelFlags "''${bazelFlagsArray[@]}" --output=files "${target}")"
-        if [[ "$(echo "$TARGET_OUTPUTS" | wc -l)" -gt 1 ]]; then
-          echo "Installing ${target}'s outputs ($TARGET_OUTPUTS) into ${outPath} as a directory"
-          mkdir -p "${outPath}"
-          cp $TARGET_OUTPUTS "${outPath}"
-        else
-          echo "Installing ${target}'s output ($TARGET_OUTPUTS) to ${outPath}"
-          mkdir -p "${dirOf outPath}"
-          cp "$TARGET_OUTPUTS" "${outPath}"
-        fi
-      '') bazelTargets)}
+      ${builtins.concatStringsSep "\n" (
+        lib.mapAttrsToList (
+          target: outPath:
+          lib.optionalString (outPath != null) ''
+            TARGET_OUTPUTS="$(bazel cquery --repository_cache=$cache/repository-cache $bazelFlags "''${bazelFlagsArray[@]}" --output=files "${target}")"
+            if [[ "$(echo "$TARGET_OUTPUTS" | wc -l)" -gt 1 ]]; then
+              echo "Installing ${target}'s outputs ($TARGET_OUTPUTS) into ${outPath} as a directory"
+              mkdir -p "${outPath}"
+              cp $TARGET_OUTPUTS "${outPath}"
+            else
+              echo "Installing ${target}'s output ($TARGET_OUTPUTS) to ${outPath}"
+              mkdir -p "${dirOf outPath}"
+              cp "$TARGET_OUTPUTS" "${outPath}"
+            fi
+          ''
+        ) bazelTargets
+      )}
       ${extraBuildInstall}
 
       runHook postInstall

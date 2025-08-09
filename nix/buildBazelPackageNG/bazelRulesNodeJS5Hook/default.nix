@@ -1,13 +1,14 @@
-{ stdenvNoCC
-, lib
-, makeSetupHook
-, fetchFromGitHub
-, coreutils
-, gnugrep
-, nodejs
-, yarn
-, git
-, cacert
+{
+  stdenvNoCC,
+  lib,
+  makeSetupHook,
+  fetchFromGitHub,
+  coreutils,
+  gnugrep,
+  nodejs,
+  yarn,
+  git,
+  cacert,
 }:
 let
   rulesNodeJS = stdenvNoCC.mkDerivation rec {
@@ -30,7 +31,12 @@ let
           --replace-quiet '#!/usr/bin/env bash' '#!${stdenvNoCC.shell}' \
           --replace-quiet '#!/bin/bash' '#!${stdenvNoCC.shell}'
       done
-      sed -i '/^#!/a export PATH=${lib.makeBinPath [ coreutils gnugrep ]}:$PATH' internal/node/launcher.sh
+      sed -i '/^#!/a export PATH=${
+        lib.makeBinPath [
+          coreutils
+          gnugrep
+        ]
+      }:$PATH' internal/node/launcher.sh
     '';
 
     installPhase = ''
@@ -38,8 +44,7 @@ let
     '';
   };
 in
-makeSetupHook
-{
+makeSetupHook {
   name = "bazelbuild-rules_nodejs-5-hook";
   propagatedBuildInputs = [
     nodejs
@@ -48,7 +53,12 @@ makeSetupHook
     cacert
   ];
   substitutions = {
-    inherit nodejs yarn cacert rulesNodeJS;
+    inherit
+      nodejs
+      yarn
+      cacert
+      rulesNodeJS
+      ;
     local_node = ./local_node;
     local_yarn = ./local_yarn;
   };

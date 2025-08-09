@@ -1,4 +1,9 @@
-{ depot, lib, pkgs, ... }:
+{
+  depot,
+  lib,
+  pkgs,
+  ...
+}:
 
 depot.nix.readTree.drvTargets rec {
   terraform = pkgs.terraform.withPlugins (p: [

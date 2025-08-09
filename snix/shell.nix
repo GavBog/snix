@@ -25,7 +25,8 @@ pkgs.mkShell {
     pkgs.rustfmt
     pkgs.plantuml
     pkgs.protobuf
-  ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+  ]
+  ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
     pkgs.runc
     pkgs.cbtemulator
     pkgs.google-cloud-bigtable-tool
@@ -37,7 +38,9 @@ pkgs.mkShell {
   # should also benchmark with a more static nixpkgs checkout, so nixpkgs
   # refactorings are not observed as eval perf changes.
   shellHook = ''
-    export SNIX_BUILD_SANDBOX_SHELL=${if pkgs.stdenv.isLinux then pkgs.busybox-sandbox-shell + "/bin/busybox" else "/bin/sh"}
+    export SNIX_BUILD_SANDBOX_SHELL=${
+      if pkgs.stdenv.isLinux then pkgs.busybox-sandbox-shell + "/bin/busybox" else "/bin/sh"
+    }
     export SNIX_BENCH_NIX_PATH=nixpkgs=${pkgs.path}
 
     snixShellHook() {

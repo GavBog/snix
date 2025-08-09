@@ -174,7 +174,8 @@ in
     };
   };
 
-  systemd.services.grafana.serviceConfig.LoadCredential = "github_auth_client_secret:/etc/secrets/grafana_github_auth_client_secret";
+  systemd.services.grafana.serviceConfig.LoadCredential =
+    "github_auth_client_secret:/etc/secrets/grafana_github_auth_client_secret";
   systemd.services.grafana.serviceConfig.RuntimeDirectory = "grafana";
   systemd.services.grafana.serviceConfig.SupplementaryGroups = "nginx";
 

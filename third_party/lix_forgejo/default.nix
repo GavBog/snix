@@ -1,6 +1,7 @@
 # Patches that the Lix core team developed for git.lix.systems
 # Re-applied for git.snix.dev
-{ ... }: {
+{ ... }:
+{
   patches = {
     # Show a link to upstream for a nixos/nix repository.
     upstream_link = ./upstream-link.patch;

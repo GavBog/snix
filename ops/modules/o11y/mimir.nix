@@ -1,7 +1,8 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 let
   cfg = config.services.depot.prometheus;
@@ -9,15 +10,17 @@ let
 
   mimirPort = config.services.mimir.configuration.server.http_listen_port;
 
-  alerts = pkgs.runCommand "mimir-alerts-checked"
-    {
-      src = ./alerts;
-      nativeBuildInputs = with pkgs; [ prometheus.cli ];
-    } ''
-    promtool check rules $src/*
-    mkdir $out
-    cp -R $src $out/anonymous/
-  '';
+  alerts =
+    pkgs.runCommand "mimir-alerts-checked"
+      {
+        src = ./alerts;
+        nativeBuildInputs = with pkgs; [ prometheus.cli ];
+      }
+      ''
+        promtool check rules $src/*
+        mkdir $out
+        cp -R $src $out/anonymous/
+      '';
 in
 {
   options.services.depot.prometheus.enable = mkEnableOption "Prometheus scraper";
@@ -42,13 +45,34 @@ in
         };
 
         # TODO: Such a ugly hack.
-        distributor.ring.instance_interface_names = [ "enp1s0" "lo" ];
-        ingester.ring.instance_interface_names = [ "enp1s0" "lo" ];
-        frontend.instance_interface_names = [ "enp1s0" "lo" ];
-        query_scheduler.ring.instance_interface_names = [ "enp1s0" "lo" ];
-        ruler.ring.instance_interface_names = [ "enp1s0" "lo" ];
-        compactor.sharding_ring.instance_interface_names = [ "enp1s0" "lo" ];
-        store_gateway.sharding_ring.instance_interface_names = [ "enp1s0" "lo" ];
+        distributor.ring.instance_interface_names = [
+          "enp1s0"
+          "lo"
+        ];
+        ingester.ring.instance_interface_names = [
+          "enp1s0"
+          "lo"
+        ];
+        frontend.instance_interface_names = [
+          "enp1s0"
+          "lo"
+        ];
+        query_scheduler.ring.instance_interface_names = [
+          "enp1s0"
+          "lo"
+        ];
+        ruler.ring.instance_interface_names = [
+          "enp1s0"
+          "lo"
+        ];
+        compactor.sharding_ring.instance_interface_names = [
+          "enp1s0"
+          "lo"
+        ];
+        store_gateway.sharding_ring.instance_interface_names = [
+          "enp1s0"
+          "lo"
+        ];
 
         memberlist = {
           advertise_addr = "127.0.0.1";
@@ -91,11 +115,13 @@ in
             receivers = [
               {
                 name = "irc";
-                webhook_configs = [{
-                  # Mimir can't expand environment variables in external config files,
-                  # so work around it.
-                  url_file = "/run/credentials/mimir.service/webhook-url";
-                }];
+                webhook_configs = [
+                  {
+                    # Mimir can't expand environment variables in external config files,
+                    # so work around it.
+                    url_file = "/run/credentials/mimir.service/webhook-url";
+                  }
+                ];
               }
             ];
           };

@@ -1,13 +1,21 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 let
   cfg = config.services.alertmanager-irc-relay;
   yaml = pkgs.formats.yaml { };
   configFile = yaml.generate "config.yaml" cfg.settings;
-  inherit (lib) mkEnableOption mkIf types mkOption mapAttrs mkPackageOption;
+  inherit (lib)
+    mkEnableOption
+    mkIf
+    types
+    mkOption
+    mapAttrs
+    mkPackageOption
+    ;
 in
 {
   options.services.alertmanager-irc-relay = {
@@ -50,4 +58,3 @@ in
     };
   };
 }
-

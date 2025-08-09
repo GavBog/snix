@@ -1,9 +1,14 @@
 # Check protobuf breaking. Lints already happen in individual targets.
 #
-{ depot, pkgs, lib, ... }:
+{
+  depot,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
-  inherit (depot.nix) bufCheck;# self reference
+  inherit (depot.nix) bufCheck; # self reference
 
   script = pkgs.writeShellScriptBin "ci-buf-check" ''
     export PATH="$PATH:${pkgs.lib.makeBinPath [ pkgs.buf ]}"

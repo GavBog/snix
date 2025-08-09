@@ -12,10 +12,12 @@ let
   agePubkey = types.typedef "age pubkey" (s: isString s && hasPrefix "age" s);
 
   agenixSecret = types.struct "agenixSecret" {
-    publicKeys = types.listOf (types.union [
-      sshPubkey
-      agePubkey
-    ]);
+    publicKeys = types.listOf (
+      types.union [
+        sshPubkey
+        agePubkey
+      ]
+    );
   };
 
 in

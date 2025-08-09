@@ -9,25 +9,26 @@ in
   name = "build-go";
   src = depot.third_party.gitignoreSource ./.;
   vendorHash = "sha256:1j652an8ir1ybyj21znaipsir7mbs3v972mw27ppsjz9dgh2crx6";
-}).overrideAttrs (_: {
-  meta.ci.extraSteps = {
-    check = {
-      label = ":water_buffalo: ensure generated protobuf files match";
-      needsOutput = true;
-      command = pkgs.writeShellScript "pb-go-check" ''
-        ${regenerate}
-        if [[ -n "$(git status --porcelain -unormal)" ]]; then
-            echo "-----------------------------"
-            echo ".pb.go files need to be updated, mg run //snix/build-go/regenerate"
-            echo "-----------------------------"
-            git status -unormal
-            exit 1
-        fi
-      '';
-      alwaysRun = true;
+}).overrideAttrs
+  (_: {
+    meta.ci.extraSteps = {
+      check = {
+        label = ":water_buffalo: ensure generated protobuf files match";
+        needsOutput = true;
+        command = pkgs.writeShellScript "pb-go-check" ''
+          ${regenerate}
+          if [[ -n "$(git status --porcelain -unormal)" ]]; then
+              echo "-----------------------------"
+              echo ".pb.go files need to be updated, mg run //snix/build-go/regenerate"
+              echo "-----------------------------"
+              git status -unormal
+              exit 1
+          fi
+        '';
+        alwaysRun = true;
+      };
     };
-  };
-  # https://git.snix.dev/snix/snix/issues/60
-  meta.ci.skip = true;
-  passthru.regenerate = regenerate;
-})
+    # https://git.snix.dev/snix/snix/issues/60
+    meta.ci.skip = true;
+    passthru.regenerate = regenerate;
+  })

@@ -20,13 +20,21 @@ let
 
   superadmins = raito ++ edef ++ flokli;
 
-  allDefault.publicKeys = superadmins ++ [ gerrit01 public01 build01 meta01 ];
+  allDefault.publicKeys = superadmins ++ [
+    gerrit01
+    public01
+    build01
+    meta01
+  ];
   terraform.publicKeys = superadmins;
   gerrit01Default.publicKeys = superadmins ++ [ gerrit01 ];
   public01Default.publicKeys = superadmins ++ [ public01 ];
   build01Default.publicKeys = superadmins ++ [ build01 ];
   meta01Default.publicKeys = superadmins ++ [ meta01 ];
-  ciDefault.publicKeys = superadmins ++ [ gerrit01 build01 ];
+  ciDefault.publicKeys = superadmins ++ [
+    gerrit01
+    build01
+  ];
 in
 {
   "grafana-agent-password.age" = allDefault;

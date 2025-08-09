@@ -1,4 +1,9 @@
-{ config, depot, lib, ... }:
+{
+  config,
+  depot,
+  lib,
+  ...
+}:
 
 let
   cfg = config.services.depot.gerrit-webhook-to-irccat;
@@ -21,8 +26,9 @@ in
   config = lib.mkIf cfg.enable {
     systemd.services.gerrit-webhook-to-irccat = {
       serviceConfig = {
-        ExecStart = "${depot.ops.gerrit-webhook-to-irccat}/bin/gerrit-webhook-to-irccat" +
-          " -irccat-url ${cfg.irccatUrl}";
+        ExecStart =
+          "${depot.ops.gerrit-webhook-to-irccat}/bin/gerrit-webhook-to-irccat"
+          + " -irccat-url ${cfg.irccatUrl}";
         Restart = "always";
         RestartSec = 5;
         User = "gerrit-webhook-to-irccat";

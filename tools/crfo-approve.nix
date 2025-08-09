@@ -22,7 +22,12 @@ pkgs.writeShellScriptBin "crfo-approve" ''
     exit 1
   fi
 
-  export PATH="${pkgs.lib.makeBinPath [ pkgs.httpie pkgs.jq ]}:''${PATH}"
+  export PATH="${
+    pkgs.lib.makeBinPath [
+      pkgs.httpie
+      pkgs.jq
+    ]
+  }:''${PATH}"
 
   readonly CL_ID="''${1}"
   readonly PATCHSET="''${2}"

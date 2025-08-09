@@ -1,6 +1,7 @@
-{ depot
-, pkgs
-, ...
+{
+  depot,
+  pkgs,
+  ...
 }:
 
 let
@@ -13,27 +14,33 @@ let
   '';
   # clickhouse has a very odd AWS config concept.
   # Configure it to be a bit more sane.
-  clickhouseLocalFixedAWS = pkgs.runCommand "clickhouse-local-fixed"
-    {
-      nativeBuildInputs = [ pkgs.makeWrapper ];
-    } ''
-    mkdir -p $out/bin
-    makeWrapper ${pkgs.clickhouse}/bin/clickhouse-local $out/bin/clickhouse-local \
-      --append-flags "-C ${clickhouseConfigAWS}"
-  '';
+  clickhouseLocalFixedAWS =
+    pkgs.runCommand "clickhouse-local-fixed"
+      {
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+      }
+      ''
+        mkdir -p $out/bin
+        makeWrapper ${pkgs.clickhouse}/bin/clickhouse-local $out/bin/clickhouse-local \
+          --append-flags "-C ${clickhouseConfigAWS}"
+      '';
 
 in
 depot.nix.readTree.drvTargets {
   inherit clickhouseLocalFixedAWS;
 
-  parse-bucket-logs = pkgs.runCommand "archivist-parse-bucket-logs"
-    {
-      nativeBuildInputs = [ pkgs.makeWrapper ];
-    } ''
-    mkdir -p $out/bin
-    makeWrapper ${(pkgs.writers.writeRust "parse-bucket-logs-unwrapped" {} ./parse_bucket_logs.rs)} $out/bin/archivist-parse-bucket-logs \
-      --prefix PATH : ${pkgs.lib.makeBinPath [ clickhouseLocalFixedAWS ]}
-  '';
+  parse-bucket-logs =
+    pkgs.runCommand "archivist-parse-bucket-logs"
+      {
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+      }
+      ''
+        mkdir -p $out/bin
+        makeWrapper ${
+          (pkgs.writers.writeRust "parse-bucket-logs-unwrapped" { } ./parse_bucket_logs.rs)
+        } $out/bin/archivist-parse-bucket-logs \
+          --prefix PATH : ${pkgs.lib.makeBinPath [ clickhouseLocalFixedAWS ]}
+      '';
 
   # A shell, by default pointing us to the archivist SSO profile / account by default.
   shell = pkgs.mkShell {

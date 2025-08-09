@@ -1,19 +1,22 @@
-{ depot, pkgs, lib, ... }:
+{
+  depot,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
-  our-crates = lib.filter (v: v ? outPath)
-    (builtins.attrValues depot.third_party.rust-crates);
+  our-crates = lib.filter (v: v ? outPath) (builtins.attrValues depot.third_party.rust-crates);
 
-  our-crates-lock-file = pkgs.writeText "our-crates-Cargo.lock"
-    (lib.concatMapStrings
-      (crate: ''
-        [[package]]
-        name = "${crate.crateName}"
-        version = "${crate.version}"
-        source = "registry+https://github.com/rust-lang/crates.io-index"
+  our-crates-lock-file = pkgs.writeText "our-crates-Cargo.lock" (
+    lib.concatMapStrings (crate: ''
+      [[package]]
+      name = "${crate.crateName}"
+      version = "${crate.version}"
+      source = "registry+https://github.com/rust-lang/crates.io-index"
 
-      '')
-      our-crates);
+    '') our-crates
+  );
 
   lock-file-report = pkgs.writers.writeBash "lock-file-report" ''
     set -u
@@ -66,9 +69,10 @@ let
   '';
 
   buildkiteReportStep =
-    { command
-    , context ? null
-    , style ? "warning"
+    {
+      command,
+      context ? null,
+      style ? "warning",
     }:
     let
       commandName = depot.nix.utils.storePathName (builtins.head command);
@@ -82,13 +86,16 @@ let
       if test $? -ne 0; then
          printf "%s" "$report" | \
          buildkite-agent annotate ${
-           lib.escapeShellArgs ([
-             "--style"
-             style
-           ] ++ lib.optionals (context != null) [
-             "--context"
-             context
-           ])
+           lib.escapeShellArgs (
+             [
+               "--style"
+               style
+             ]
+             ++ lib.optionals (context != null) [
+               "--context"
+               context
+             ]
+           )
          }
       fi
     '';

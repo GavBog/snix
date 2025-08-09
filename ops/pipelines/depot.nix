@@ -1,6 +1,11 @@
 # This file configures the primary build pipeline used for the
 # top-level list of depot targets.
-{ depot, pkgs, externalArgs, ... }:
+{
+  depot,
+  pkgs,
+  externalArgs,
+  ...
+}:
 
 let
   pipeline = depot.nix.buildkite.mkPipeline {
@@ -8,9 +13,10 @@ let
     drvTargets = depot.ci.targets;
 
     parentTargetMap =
-      if (externalArgs ? parentTargetMap)
-      then builtins.fromJSON (builtins.readFile externalArgs.parentTargetMap)
-      else { };
+      if (externalArgs ? parentTargetMap) then
+        builtins.fromJSON (builtins.readFile externalArgs.parentTargetMap)
+      else
+        { };
 
     postBuildSteps = [
       # After successful builds, create a gcroot for builds on canon.

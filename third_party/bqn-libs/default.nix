@@ -12,7 +12,12 @@
 # search path, so the design space is unconstrained. The most obvious solution
 # would be to implement some kind of search part ourselves. Unfortunately, there
 # is no portable way to access environment variables in BQN at the moment.
-{ depot, pkgs, lib, ... }:
+{
+  depot,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   src = pkgs.fetchFromGitHub {
@@ -26,14 +31,15 @@ let
 in
 
 pkgs.runCommandNoCC "bqn-libs-${builtins.substring 0 7 src.rev}"
-{
-  nativeBuildInputs = [
-    pkgs.cbqn
-  ];
-  meta.license = lib.licenses.bsd0;
-} ''
-  BQN "${src}/test/main.bqn"
+  {
+    nativeBuildInputs = [
+      pkgs.cbqn
+    ];
+    meta.license = lib.licenses.bsd0;
+  }
+  ''
+    BQN "${src}/test/main.bqn"
 
-  install -Dm644 "${src}/"*.bqn -t "$out/lib"
-  install -Dm644 "${src}/LICENSE" -t "$out/share/doc/bqn-libs"
-''
+    install -Dm644 "${src}/"*.bqn -t "$out/lib"
+    install -Dm644 "${src}/LICENSE" -t "$out/share/doc/bqn-libs"
+  ''

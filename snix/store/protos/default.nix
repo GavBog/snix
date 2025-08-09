@@ -1,4 +1,9 @@
-{ depot, pkgs, lib, ... }:
+{
+  depot,
+  pkgs,
+  lib,
+  ...
+}:
 let
   protos = lib.sourceByRegex depot.path.origSrc [
     "buf.yaml"

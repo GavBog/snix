@@ -1,4 +1,9 @@
-{ depot, lib, pkgs, ... }:
+{
+  depot,
+  lib,
+  pkgs,
+  ...
+}:
 
 depot.nix.readTree.drvTargets rec {
   # Provide a Terraform wrapper with the right provider installed.

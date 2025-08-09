@@ -3,10 +3,21 @@
 # Thanks to all the Lix core developers for this!
 # vim: et:ts=2:sw=2:
 #
-{ depot, pkgs, lib, config, ... }:
+{
+  depot,
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   cfg = config.services.depot.forgejo;
-  inherit (lib) types mkEnableOption mkOption mkIf;
+  inherit (lib)
+    types
+    mkEnableOption
+    mkOption
+    mkIf
+    ;
   emojo =
     let
       drgn = pkgs.fetchzip {
@@ -39,7 +50,15 @@ let
         '';
       };
     in
-    pkgs.symlinkJoin { name = "emojo"; paths = [ drgn neocat neofox dragn ]; };
+    pkgs.symlinkJoin {
+      name = "emojo";
+      paths = [
+        drgn
+        neocat
+        neofox
+        dragn
+      ];
+    };
 in
 {
   options.services.depot.forgejo = {
@@ -77,13 +96,15 @@ in
       enable = true;
 
       package = pkgs.forgejo.overrideAttrs (old: {
-        patches = old.patches ++ (with depot.third_party.lix_forgejo.patches; [
-          upstream_link
-          signin_redirect
-          api_dont_notify
-          forgejo_is_now_gerrit_native
-          forgejo_knows_about_gerrit
-        ]);
+        patches =
+          old.patches
+          ++ (with depot.third_party.lix_forgejo.patches; [
+            upstream_link
+            signin_redirect
+            api_dont_notify
+            forgejo_is_now_gerrit_native
+            forgejo_knows_about_gerrit
+          ]);
       });
 
       # General settings.
@@ -294,10 +315,14 @@ in
     services.mysql.enable = lib.mkForce true;
     services.mysql.package = lib.mkForce pkgs.mariadb;
 
-    systemd.tmpfiles.rules = let cfg = config.services.forgejo; in [
-      "d '${cfg.customDir}/public/assets' 0750 ${cfg.user} ${cfg.group} - -"
-      "d '${cfg.customDir}/public/assets/img' 0750 ${cfg.user} ${cfg.group} - -"
-      "L+ '${cfg.customDir}/public/assets/img/emoji' - - - - ${emojo}"
-    ];
+    systemd.tmpfiles.rules =
+      let
+        cfg = config.services.forgejo;
+      in
+      [
+        "d '${cfg.customDir}/public/assets' 0750 ${cfg.user} ${cfg.group} - -"
+        "d '${cfg.customDir}/public/assets/img' 0750 ${cfg.user} ${cfg.group} - -"
+        "L+ '${cfg.customDir}/public/assets/img/emoji' - - - - ${emojo}"
+      ];
   };
 }

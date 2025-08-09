@@ -13,21 +13,21 @@ in
   validateTerraform =
     {
       # Environment name to use (inconsequential, only for drv name)
-      name ? "main"
-    , # Terraform package to use. Should be pre-configured with the
+      name ? "main",
+      # Terraform package to use. Should be pre-configured with the
       # correct providers.
-      terraform ? pkgs.terraform
-    , # Source path for Terraform configuration. Be careful about
+      terraform ? pkgs.terraform,
+      # Source path for Terraform configuration. Be careful about
       # relative imports. Use the 'subDir' parameter to optionally cd
       # into a subdirectory of source, e.g. if there is a flat structure
       # with modules.
-      src
-    , # Sub-directory of $src from which to run the check. Useful in
+      src,
+      # Sub-directory of $src from which to run the check. Useful in
       # case of relative Terraform imports from a code tree
-      subDir ? "."
-    , # Environment variables to pass to Terraform. Necessary in case of
+      subDir ? ".",
+      # Environment variables to pass to Terraform. Necessary in case of
       # dummy environment variables that need to be set.
-      env ? { }
+      env ? { },
     }:
     pkgs.runCommand "tf-validate-${sanitizeDerivationName name}" env ''
       cp -r ${src}/* . && chmod -R u+w .

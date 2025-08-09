@@ -1,6 +1,7 @@
-{ config
-, lib
-, ...
+{
+  config,
+  lib,
+  ...
 }:
 let
   cfg = config.services.depot.loki;
@@ -38,7 +39,10 @@ in
           ring = {
             kvstore.store = "memberlist";
             # TODO: Such a ugly hack.
-            instance_interface_names = [ "enp1s0" "lo" ];
+            instance_interface_names = [
+              "enp1s0"
+              "lo"
+            ];
           };
           replication_factor = 1;
         };

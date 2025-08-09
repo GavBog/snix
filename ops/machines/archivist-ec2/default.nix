@@ -21,10 +21,11 @@ in
     path = [ depot.contrib.archivist.parse-bucket-logs ];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = (pkgs.writers.writePython3 "parse-bucket-logs-continuously"
-        {
+      ExecStart = (
+        pkgs.writers.writePython3 "parse-bucket-logs-continuously" {
           libraries = [ pkgs.python3Packages.boto3 ];
-        } ./parse-bucket-logs-continuously.py);
+        } ./parse-bucket-logs-continuously.py
+      );
       DynamicUser = "yes";
       StateDirectory = "parse-bucket-logs";
     };
@@ -38,4 +39,3 @@ in
 
   system.stateVersion = "23.05"; # Did you read the comment?
 }
-

@@ -1,4 +1,5 @@
-{ here, ... }: {
+{ here, ... }:
+{
   attr1 = "foo";
   attr2 = here.attr1;
 

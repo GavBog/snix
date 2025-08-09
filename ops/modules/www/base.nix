@@ -2,7 +2,10 @@
 
 {
   config = {
-    networking.firewall.allowedTCPPorts = [ 80 443 ];
+    networking.firewall.allowedTCPPorts = [
+      80
+      443
+    ];
 
     security.acme = {
       acceptTerms = true;

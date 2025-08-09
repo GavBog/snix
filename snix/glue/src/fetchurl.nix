@@ -5,21 +5,42 @@
 #
 # Source: https://github.com/NixOS/nix/blob/2.3.16/corepkgs/fetchurl.nix
 
-{ system ? "" # obsolete
-, url
-, hash ? "" # an SRI hash
+{
+  system ? "", # obsolete
+  url,
+  hash ? "", # an SRI hash
 
   # Legacy hash specification
-, md5 ? ""
-, sha1 ? ""
-, sha256 ? ""
-, sha512 ? ""
-, outputHash ? if hash != "" then hash else if sha512 != "" then sha512 else if sha1 != "" then sha1 else if md5 != "" then md5 else sha256
-, outputHashAlgo ? if hash != "" then "" else if sha512 != "" then "sha512" else if sha1 != "" then "sha1" else if md5 != "" then "md5" else "sha256"
+  md5 ? "",
+  sha1 ? "",
+  sha256 ? "",
+  sha512 ? "",
+  outputHash ?
+    if hash != "" then
+      hash
+    else if sha512 != "" then
+      sha512
+    else if sha1 != "" then
+      sha1
+    else if md5 != "" then
+      md5
+    else
+      sha256,
+  outputHashAlgo ?
+    if hash != "" then
+      ""
+    else if sha512 != "" then
+      "sha512"
+    else if sha1 != "" then
+      "sha1"
+    else if md5 != "" then
+      "md5"
+    else
+      "sha256",
 
-, executable ? false
-, unpack ? false
-, name ? baseNameOf (toString url)
+  executable ? false,
+  unpack ? false,
+  name ? baseNameOf (toString url),
 }:
 
 derivation {
@@ -29,7 +50,12 @@ derivation {
   inherit outputHashAlgo outputHash;
   outputHashMode = if unpack || executable then "recursive" else "flat";
 
-  inherit name url executable unpack;
+  inherit
+    name
+    url
+    executable
+    unpack
+    ;
 
   system = "builtin";
 

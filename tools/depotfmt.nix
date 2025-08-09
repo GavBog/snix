@@ -10,10 +10,11 @@ let
     includes = ["*.go"]
 
     [formatter.nix]
-    command = "${pkgs.nixpkgs-fmt}/bin/nixpkgs-fmt"
+    command = "${pkgs.nixfmt}/bin/nixfmt"
     includes = [ "*.nix" ]
     excludes = [
       "snix/eval/src/tests/nix_tests/*",
+      "snix/eval/src/tests/snix_tests/*"
     ]
 
     [formatter.rust]

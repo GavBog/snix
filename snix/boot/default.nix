@@ -16,22 +16,25 @@ rec {
   # A kernel with virtiofs support baked in
   # TODO: make a smaller kernel, we don't need a gazillion filesystems and
   # device drivers in it.
-  kernel = pkgs.buildLinux ({ } // {
-    inherit (pkgs.linuxPackages_latest.kernel) src version modDirVersion;
-    autoModules = false;
-    kernelPreferBuiltin = true;
-    ignoreConfigErrors = true;
-    kernelPatches = [ ];
-    structuredExtraConfig = with pkgs.lib.kernel; {
-      FUSE_FS = option yes;
-      DAX_DRIVER = option yes;
-      DAX = option yes;
-      FS_DAX = option yes;
-      VIRTIO_FS = option yes;
-      VIRTIO = option yes;
-      ZONE_DEVICE = option yes;
-    };
-  });
+  kernel = pkgs.buildLinux (
+    { }
+    // {
+      inherit (pkgs.linuxPackages_latest.kernel) src version modDirVersion;
+      autoModules = false;
+      kernelPreferBuiltin = true;
+      ignoreConfigErrors = true;
+      kernelPatches = [ ];
+      structuredExtraConfig = with pkgs.lib.kernel; {
+        FUSE_FS = option yes;
+        DAX_DRIVER = option yes;
+        DAX = option yes;
+        FS_DAX = option yes;
+        VIRTIO_FS = option yes;
+        VIRTIO = option yes;
+        ZONE_DEVICE = option yes;
+      };
+    }
+  );
 
   # A build framework for minimal initrds
   uroot = pkgs.buildGoModule rec {

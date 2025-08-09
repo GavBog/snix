@@ -9,13 +9,15 @@
     virtualHosts.${config.machine.domain} = {
       locations."=/" = {
         tryFiles = "$uri $uri/index.html =404";
-        root = pkgs.runCommand "index"
-          {
-            nativeBuildInputs = [ pkgs.markdown2html-converter ];
-          } ''
-          mkdir -p $out
-          markdown2html-converter ${./README.md} -o $out/index.html
-        '';
+        root =
+          pkgs.runCommand "index"
+            {
+              nativeBuildInputs = [ pkgs.markdown2html-converter ];
+            }
+            ''
+              mkdir -p $out
+              markdown2html-converter ${./README.md} -o $out/index.html
+            '';
       };
       locations."/" = {
         proxyPass = "http://unix:/run/nar-bridge.sock:/";

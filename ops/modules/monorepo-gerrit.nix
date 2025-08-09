@@ -1,5 +1,11 @@
 # Gerrit configuration for the snix monorepo
-{ depot, pkgs, config, lib, ... }:
+{
+  depot,
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 
 let
   cfg = config.services.gerrit;
@@ -7,10 +13,12 @@ let
   gerritPackage = depot.third_party.nix-gerrit.gerrit_3_12;
   gerritPlugins = depot.third_party.nix-gerrit.plugins_3_12;
 
-  besadiiWithConfig = name: pkgs.writeShellScript "besadii-gerrit01" ''
-    export BESADII_CONFIG=/run/agenix/gerrit-besadii-config
-    exec -a ${name} ${depot.ops.besadii}/bin/besadii "$@"
-  '';
+  besadiiWithConfig =
+    name:
+    pkgs.writeShellScript "besadii-gerrit01" ''
+      export BESADII_CONFIG=/run/agenix/gerrit-besadii-config
+      exec -a ${name} ${depot.ops.besadii}/bin/besadii "$@"
+    '';
 
   gerritHooks = pkgs.runCommand "gerrit-hooks" { } ''
     mkdir -p $out

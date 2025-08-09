@@ -1,7 +1,8 @@
 # This file imports the pinned disko.
 
-{ depot ? { }
-, ...
+{
+  depot ? { },
+  ...
 }:
 
 {

@@ -5,5 +5,10 @@ let
 in
 {
   hasContext = builtins.hasContext storePath;
-  contextMatches = context == { "${path}" = { path = true; }; };
+  contextMatches =
+    context == {
+      "${path}" = {
+        path = true;
+      };
+    };
 }

@@ -1,4 +1,9 @@
-{ depot, lib, pkgs, ... }: # readTree options
+{
+  depot,
+  lib,
+  pkgs,
+  ...
+}: # readTree options
 { config, ... }: # passed by module system
 let
   mod = name: depot.path.origSrc + ("/ops/modules/" + name);
@@ -24,7 +29,11 @@ in
   boot.specialFileSystems = lib.mkForce {
     "/run/wrappers" = {
       fsType = "tmpfs";
-      options = [ "nodev" "mode=755" "size=${config.security.wrapperDirSize}" ];
+      options = [
+        "nodev"
+        "mode=755"
+        "size=${config.security.wrapperDirSize}"
+      ];
     };
   };
 
@@ -56,10 +65,17 @@ in
 
     interfaces.host0.ipv6 = {
       addresses = [
-        { address = "2001:bc8:38ee:100:7000::20"; prefixLength = 64; }
+        {
+          address = "2001:bc8:38ee:100:7000::20";
+          prefixLength = 64;
+        }
       ];
       routes = [
-        { address = "64:ff9b::"; via = "2001:bc8:38ee:100::100"; prefixLength = 96; }
+        {
+          address = "64:ff9b::";
+          via = "2001:bc8:38ee:100::100";
+          prefixLength = 96;
+        }
       ];
     };
 
@@ -112,7 +128,8 @@ in
   ];
 
   time.timeZone = "UTC";
-  users.users.root.openssh.authorizedKeys.keys = depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
+  users.users.root.openssh.authorizedKeys.keys =
+    depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
   users.groups.kvm = { };
   users.users.root.extraGroups = [ "kvm" ];
 

@@ -1,4 +1,9 @@
-{ pkgs, depot, lib, ... }:
+{
+  pkgs,
+  depot,
+  lib,
+  ...
+}:
 
 (pkgs.callPackage ./Cargo.nix {
   defaultCrateOverrides = (depot.snix.utils.defaultCrateOverridesForPkgs pkgs) // {
@@ -10,6 +15,7 @@
       nativeBuildInputs = [ pkgs.protobuf ];
     };
   };
-}).rootCrate.build.overrideAttrs {
-  meta.ci.extraSteps.crate2nix-check = depot.snix.utils.mkCrate2nixCheck ./Cargo.nix;
-}
+}).rootCrate.build.overrideAttrs
+  {
+    meta.ci.extraSteps.crate2nix-check = depot.snix.utils.mkCrate2nixCheck ./Cargo.nix;
+  }

@@ -1,6 +1,7 @@
-{ config
-, lib
-, ...
+{
+  config,
+  lib,
+  ...
 }:
 let
   cfg = config.services.depot.tempo;
@@ -48,11 +49,14 @@ in
       };
     };
 
-    systemd.services.tempo.serviceConfig.EnvironmentFile = [ config.age.secrets.tempo-environment.path ];
+    systemd.services.tempo.serviceConfig.EnvironmentFile = [
+      config.age.secrets.tempo-environment.path
+    ];
 
     services.nginx = {
       upstreams.tempo = {
-        servers."${config.services.tempo.settings.distributor.receivers.otlp.protocols.http.endpoint}" = { };
+        servers."${config.services.tempo.settings.distributor.receivers.otlp.protocols.http.endpoint}" =
+          { };
         extraConfig = "keepalive 16;";
       };
 

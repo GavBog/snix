@@ -1,4 +1,9 @@
-{ depot, lib, pkgs, ... }: # readTree options
+{
+  depot,
+  lib,
+  pkgs,
+  ...
+}: # readTree options
 { config, ... }: # passed by module system
 
 let
@@ -111,7 +116,8 @@ in
       createHome = true;
       home = "/var/lib/git";
     };
-    users.root.openssh.authorizedKeys.keys = depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
+    users.root.openssh.authorizedKeys.keys =
+      depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
   };
 
   boot.initrd.systemd.enable = true;

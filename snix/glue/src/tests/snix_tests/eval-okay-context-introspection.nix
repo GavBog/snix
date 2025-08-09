@@ -6,7 +6,10 @@ let
     name = "fail";
     builder = "/bin/false";
     system = "x86_64-linux";
-    outputs = [ "out" "foo" ];
+    outputs = [
+      "out"
+      "foo"
+    ];
   };
 
   # `substr` propagates context, we truncate to an empty string and concatenate to the target
@@ -30,7 +33,10 @@ let
       path = true;
     };
     "${builtins.unsafeDiscardStringContext drv.drvPath}" = {
-      outputs = [ "foo" "out" ];
+      outputs = [
+        "foo"
+        "out"
+      ];
       allOutputs = true;
     };
   };
@@ -38,8 +44,7 @@ let
   combo-path = "${path}${drv.outPath}${drv.foo.outPath}${drv.drvPath}";
   legit-context = builtins.getContext combo-path;
 
-  reconstructed-path = appendContextFrom combo-path
-    (builtins.unsafeDiscardStringContext combo-path);
+  reconstructed-path = appendContextFrom combo-path (builtins.unsafeDiscardStringContext combo-path);
 
   an-str = {
     a = "${drv}";
@@ -49,26 +54,30 @@ let
   };
 
   # Eta rule for strings with context.
-  etaRule = str:
-    str == appendContextFrom
-      str
-      (builtins.unsafeDiscardStringContext str);
+  etaRule = str: str == appendContextFrom str (builtins.unsafeDiscardStringContext str);
 
-  etaRule' = str:
-    str == appendContextFrom
-      str
-      (discardContext str);
+  etaRule' = str: str == appendContextFrom str (discardContext str);
 
 in
 [
   (!hasContextInAttrKeys desired-context)
   (legit-context."${builtins.unsafeDiscardStringContext path}".path)
-  (legit-context."${builtins.unsafeDiscardStringContext drv.drvPath}".outputs == [ "foo" "out" ])
+  (
+    legit-context."${builtins.unsafeDiscardStringContext drv.drvPath}".outputs == [
+      "foo"
+      "out"
+    ]
+  )
   # `allOutputs` is present only on DrvClosure-style context string, i.e. the
   # context string of a drvPath itself, not an outPath.
-  (!builtins.hasAttr "allOutputs" (builtins.getContext drv.outPath)."${builtins.unsafeDiscardStringContext drv.drvPath}")
+  (
+    !builtins.hasAttr "allOutputs"
+      (builtins.getContext drv.outPath)."${builtins.unsafeDiscardStringContext drv.drvPath}"
+  )
   (builtins.hasAttr "allOutputs" legit-context."${builtins.unsafeDiscardStringContext drv.drvPath}")
-  (builtins.hasAttr "allOutputs" (builtins.getContext drv.drvPath)."${builtins.unsafeDiscardStringContext drv.drvPath}")
+  (builtins.hasAttr "allOutputs"
+    (builtins.getContext drv.drvPath)."${builtins.unsafeDiscardStringContext drv.drvPath}"
+  )
   (legit-context == desired-context) # FIXME(raitobezarius): this should not use `builtins.seq`, this is a consequence of excessive laziness of Snix, I believe.
   (reconstructed-path == combo-path)
   # These still fail with an internal error

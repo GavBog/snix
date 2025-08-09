@@ -4,12 +4,18 @@
 {
   programs.ssh.knownHosts = {
     public01 = {
-      hostNames = [ "public01.infra.snix.dev" "git.snix.dev" ];
+      hostNames = [
+        "public01.infra.snix.dev"
+        "git.snix.dev"
+      ];
       publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICzB7bqXWcv+sVokySvj1d74zRlVLSNqBw7/OY3c7QYd";
     };
 
     gerrit01 = {
-      hostNames = [ "gerrit01.infra.snix.dev" "cl.snix.dev" ];
+      hostNames = [
+        "gerrit01.infra.snix.dev"
+        "cl.snix.dev"
+      ];
       publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN+RCLAExaM5EC70UsCPMtDT1Cfa80Ux/vex95fLk9S4";
     };
 

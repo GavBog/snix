@@ -2,34 +2,33 @@
 #   "generate" "--all-features"
 # See https://github.com/kolloch/crate2nix for more info.
 
-{ nixpkgs ? <nixpkgs>
-, pkgs ? import nixpkgs { config = { }; }
-, lib ? pkgs.lib
-, stdenv ? pkgs.stdenv
-, buildRustCrateForPkgs ? pkgs: pkgs.buildRustCrate
+{
+  nixpkgs ? <nixpkgs>,
+  pkgs ? import nixpkgs { config = { }; },
+  lib ? pkgs.lib,
+  stdenv ? pkgs.stdenv,
+  buildRustCrateForPkgs ? pkgs: pkgs.buildRustCrate,
   # This is used as the `crateOverrides` argument for `buildRustCrate`.
-, defaultCrateOverrides ? pkgs.defaultCrateOverrides
+  defaultCrateOverrides ? pkgs.defaultCrateOverrides,
   # The features to enable for the root_crate or the workspace_members.
-, rootFeatures ? [ "default" ]
+  rootFeatures ? [ "default" ],
   # If true, throw errors instead of issueing deprecation warnings.
-, strictDeprecation ? false
+  strictDeprecation ? false,
   # Elements to add to the `-C target-feature=` argument passed to `rustc`
   # (separated by `,`, prefixed with `+`).
   # Used for conditional compilation based on CPU feature detection.
-, targetFeatures ? [ ]
+  targetFeatures ? [ ],
   # Whether to perform release builds: longer compile times, faster binaries.
-, release ? true
+  release ? true,
   # Additional crate2nix configuration if it exists.
-, crateConfig ? if builtins.pathExists ./crate-config.nix
-  then pkgs.callPackage ./crate-config.nix { }
-  else { }
+  crateConfig ?
+    if builtins.pathExists ./crate-config.nix then pkgs.callPackage ./crate-config.nix { } else { },
 }:
 
 rec {
   #
   # "public" attributes that we attempt to keep stable with new versions of crate2nix.
   #
-
 
   # Refer your crate build derivation by name here.
   # You can override the features with
@@ -191,8 +190,10 @@ rec {
   allWorkspaceMembers = pkgs.symlinkJoin {
     name = "all-workspace-members";
     paths =
-      let members = builtins.attrValues workspaceMembers;
-      in builtins.map (m: m.build) members;
+      let
+        members = builtins.attrValues workspaceMembers;
+      in
+      builtins.map (m: m.build) members;
   };
 
   #
@@ -228,15 +229,38 @@ rec {
         features = {
           "all" = [ "bin" ];
           "alloc" = [ "dep:alloc" ];
-          "bin" = [ "loader" "rustc-demangle" "cpp_demangle" "fallible-iterator" "smallvec" "dep:clap" ];
+          "bin" = [
+            "loader"
+            "rustc-demangle"
+            "cpp_demangle"
+            "fallible-iterator"
+            "smallvec"
+            "dep:clap"
+          ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
           "cpp_demangle" = [ "dep:cpp_demangle" ];
-          "default" = [ "rustc-demangle" "cpp_demangle" "loader" "fallible-iterator" "smallvec" ];
+          "default" = [
+            "rustc-demangle"
+            "cpp_demangle"
+            "loader"
+            "fallible-iterator"
+            "smallvec"
+          ];
           "fallible-iterator" = [ "dep:fallible-iterator" ];
-          "loader" = [ "std" "dep:object" "dep:memmap2" "dep:typed-arena" ];
+          "loader" = [
+            "std"
+            "dep:object"
+            "dep:memmap2"
+            "dep:typed-arena"
+          ];
           "rustc-demangle" = [ "dep:rustc-demangle" ];
-          "rustc-dep-of-std" = [ "core" "alloc" "compiler_builtins" "gimli/rustc-dep-of-std" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "alloc"
+            "compiler_builtins"
+            "gimli/rustc-dep-of-std"
+          ];
           "smallvec" = [ "dep:smallvec" ];
           "std" = [ "gimli/std" ];
         };
@@ -254,7 +278,10 @@ rec {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
           "default" = [ "std" ];
-          "rustc-dep-of-std" = [ "core" "compiler_builtins" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+          ];
         };
       };
       "aho-corasick" = rec {
@@ -275,12 +302,18 @@ rec {
           }
         ];
         features = {
-          "default" = [ "std" "perf-literal" ];
+          "default" = [
+            "std"
+            "perf-literal"
+          ];
           "logging" = [ "dep:log" ];
           "perf-literal" = [ "dep:memchr" ];
           "std" = [ "memchr?/std" ];
         };
-        resolvedDefaultFeatures = [ "perf-literal" "std" ];
+        resolvedDefaultFeatures = [
+          "perf-literal"
+          "std"
+        ];
       };
       "allocator-api2" = rec {
         crateName = "allocator-api2";
@@ -379,10 +412,17 @@ rec {
         ];
         features = {
           "auto" = [ "dep:anstyle-query" ];
-          "default" = [ "auto" "wincon" ];
+          "default" = [
+            "auto"
+            "wincon"
+          ];
           "wincon" = [ "dep:anstyle-wincon" ];
         };
-        resolvedDefaultFeatures = [ "auto" "default" "wincon" ];
+        resolvedDefaultFeatures = [
+          "auto"
+          "default"
+          "wincon"
+        ];
       };
       "anstyle" = rec {
         crateName = "anstyle";
@@ -392,7 +432,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "anstyle-parse" = rec {
         crateName = "anstyle-parse";
@@ -412,7 +455,10 @@ rec {
           "default" = [ "utf8" ];
           "utf8" = [ "dep:utf8parse" ];
         };
-        resolvedDefaultFeatures = [ "default" "utf8" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "utf8"
+        ];
       };
       "anstyle-query" = rec {
         crateName = "anstyle-query";
@@ -425,7 +471,10 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_System_Console" "Win32_Foundation" ];
+            features = [
+              "Win32_System_Console"
+              "Win32_Foundation"
+            ];
           }
         ];
 
@@ -445,7 +494,10 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_System_Console" "Win32_Foundation" ];
+            features = [
+              "Win32_System_Console"
+              "Win32_Foundation"
+            ];
           }
         ];
 
@@ -462,7 +514,10 @@ rec {
           "backtrace" = [ "dep:backtrace" ];
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "arc-swap" = rec {
         crateName = "arc-swap";
@@ -562,9 +617,15 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "std" = [ "concurrent-queue/std" "event-listener-strategy/std" ];
+          "std" = [
+            "concurrent-queue/std"
+            "event-listener-strategy/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "async-compression" = rec {
         crateName = "async-compression";
@@ -630,13 +691,34 @@ rec {
             name = "tokio";
             packageId = "tokio";
             usesDefaultFeatures = false;
-            features = [ "io-util" "macros" "rt-multi-thread" "io-std" ];
+            features = [
+              "io-util"
+              "macros"
+              "rt-multi-thread"
+              "io-std"
+            ];
           }
         ];
         features = {
-          "all" = [ "all-implementations" "all-algorithms" ];
-          "all-algorithms" = [ "brotli" "bzip2" "deflate" "gzip" "lzma" "xz" "zlib" "zstd" "deflate64" ];
-          "all-implementations" = [ "futures-io" "tokio" ];
+          "all" = [
+            "all-implementations"
+            "all-algorithms"
+          ];
+          "all-algorithms" = [
+            "brotli"
+            "bzip2"
+            "deflate"
+            "gzip"
+            "lzma"
+            "xz"
+            "zlib"
+            "zstd"
+            "deflate64"
+          ];
+          "all-implementations" = [
+            "futures-io"
+            "tokio"
+          ];
           "brotli" = [ "dep:brotli" ];
           "bzip2" = [ "dep:bzip2" ];
           "deflate" = [ "flate2" ];
@@ -650,11 +732,27 @@ rec {
           "xz" = [ "xz2" ];
           "xz2" = [ "dep:xz2" ];
           "zlib" = [ "flate2" ];
-          "zstd" = [ "libzstd" "zstd-safe" ];
+          "zstd" = [
+            "libzstd"
+            "zstd-safe"
+          ];
           "zstd-safe" = [ "dep:zstd-safe" ];
-          "zstdmt" = [ "zstd" "zstd-safe/zstdmt" ];
+          "zstdmt" = [
+            "zstd"
+            "zstd-safe/zstdmt"
+          ];
         };
-        resolvedDefaultFeatures = [ "bzip2" "flate2" "gzip" "libzstd" "tokio" "xz" "xz2" "zstd" "zstd-safe" ];
+        resolvedDefaultFeatures = [
+          "bzip2"
+          "flate2"
+          "gzip"
+          "libzstd"
+          "tokio"
+          "xz"
+          "xz2"
+          "zstd"
+          "zstd-safe"
+        ];
       };
       "async-io" = rec {
         crateName = "async-io";
@@ -701,7 +799,11 @@ rec {
             name = "rustix";
             packageId = "rustix";
             usesDefaultFeatures = false;
-            features = [ "fs" "net" "std" ];
+            features = [
+              "fs"
+              "net"
+              "std"
+            ];
           }
           {
             name = "slab";
@@ -748,10 +850,19 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "loom" = [ "event-listener/loom" "dep:loom" ];
-          "std" = [ "event-listener/std" "event-listener-strategy/std" ];
+          "loom" = [
+            "event-listener/loom"
+            "dep:loom"
+          ];
+          "std" = [
+            "event-listener/std"
+            "event-listener-strategy/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "async-process" = rec {
         crateName = "async-process";
@@ -808,14 +919,21 @@ rec {
             packageId = "rustix";
             usesDefaultFeatures = false;
             target = { target, features }: ((target."unix" or false) && (!("linux" == target."os" or null)));
-            features = [ "std" "fs" "process" ];
+            features = [
+              "std"
+              "fs"
+              "process"
+            ];
           }
           {
             name = "rustix";
             packageId = "rustix";
             usesDefaultFeatures = false;
             target = { target, features }: (target."unix" or false);
-            features = [ "std" "fs" ];
+            features = [
+              "std"
+              "fs"
+            ];
           }
           {
             name = "tracing";
@@ -868,7 +986,10 @@ rec {
             packageId = "rustix";
             usesDefaultFeatures = false;
             target = { target, features }: (target."unix" or false);
-            features = [ "process" "std" ];
+            features = [
+              "process"
+              "std"
+            ];
           }
           {
             name = "signal-hook-registry";
@@ -885,7 +1006,10 @@ rec {
             packageId = "windows-sys 0.59.0";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_System_Console" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_System_Console"
+            ];
           }
         ];
         devDependencies = [
@@ -943,7 +1067,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "visit-mut" ];
+            features = [
+              "full"
+              "visit-mut"
+            ];
           }
         ];
 
@@ -961,7 +1088,10 @@ rec {
           "default" = [ "std" ];
           "portable-atomic" = [ "dep:portable-atomic" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "async-tempfile" = rec {
         crateName = "async-tempfile";
@@ -989,14 +1119,20 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "rt-multi-thread" "macros" ];
+            features = [
+              "rt-multi-thread"
+              "macros"
+            ];
           }
         ];
         features = {
           "default" = [ "uuid" ];
           "uuid" = [ "dep:uuid" ];
         };
-        resolvedDefaultFeatures = [ "default" "uuid" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "uuid"
+        ];
       };
       "async-trait" = rec {
         crateName = "async-trait";
@@ -1021,7 +1157,13 @@ rec {
             name = "syn";
             packageId = "syn 2.0.93";
             usesDefaultFeatures = false;
-            features = [ "full" "parsing" "printing" "proc-macro" "visit-mut" ];
+            features = [
+              "full"
+              "parsing"
+              "printing"
+              "proc-macro"
+              "visit-mut"
+            ];
           }
         ];
 
@@ -1073,7 +1215,11 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "visit" "visit-mut" ];
+            features = [
+              "full"
+              "visit"
+              "visit-mut"
+            ];
           }
         ];
 
@@ -1138,7 +1284,11 @@ rec {
             name = "hyper-util";
             packageId = "hyper-util";
             optional = true;
-            features = [ "tokio" "server" "service" ];
+            features = [
+              "tokio"
+              "server"
+              "service"
+            ];
           }
           {
             name = "itoa";
@@ -1240,13 +1390,26 @@ rec {
             name = "tokio";
             packageId = "tokio";
             rename = "tokio";
-            features = [ "macros" "rt" "rt-multi-thread" "net" "test-util" ];
+            features = [
+              "macros"
+              "rt"
+              "rt-multi-thread"
+              "net"
+              "test-util"
+            ];
           }
           {
             name = "tower";
             packageId = "tower 0.5.2";
             rename = "tower";
-            features = [ "util" "timeout" "limit" "load-shed" "steer" "filter" ];
+            features = [
+              "util"
+              "timeout"
+              "limit"
+              "load-shed"
+              "steer"
+              "filter"
+            ];
           }
           {
             name = "tracing";
@@ -1254,21 +1417,75 @@ rec {
           }
         ];
         features = {
-          "__private_docs" = [ "axum-core/__private_docs" "tower/full" "dep:tower-http" ];
-          "default" = [ "form" "http1" "json" "matched-path" "original-uri" "query" "tokio" "tower-log" "tracing" ];
+          "__private_docs" = [
+            "axum-core/__private_docs"
+            "tower/full"
+            "dep:tower-http"
+          ];
+          "default" = [
+            "form"
+            "http1"
+            "json"
+            "matched-path"
+            "original-uri"
+            "query"
+            "tokio"
+            "tower-log"
+            "tracing"
+          ];
           "form" = [ "dep:serde_urlencoded" ];
-          "http1" = [ "dep:hyper" "hyper?/http1" "hyper-util?/http1" ];
-          "http2" = [ "dep:hyper" "hyper?/http2" "hyper-util?/http2" ];
-          "json" = [ "dep:serde_json" "dep:serde_path_to_error" ];
+          "http1" = [
+            "dep:hyper"
+            "hyper?/http1"
+            "hyper-util?/http1"
+          ];
+          "http2" = [
+            "dep:hyper"
+            "hyper?/http2"
+            "hyper-util?/http2"
+          ];
+          "json" = [
+            "dep:serde_json"
+            "dep:serde_path_to_error"
+          ];
           "macros" = [ "dep:axum-macros" ];
           "multipart" = [ "dep:multer" ];
           "query" = [ "dep:serde_urlencoded" ];
-          "tokio" = [ "dep:hyper-util" "dep:tokio" "tokio/net" "tokio/rt" "tower/make" "tokio/macros" ];
+          "tokio" = [
+            "dep:hyper-util"
+            "dep:tokio"
+            "tokio/net"
+            "tokio/rt"
+            "tower/make"
+            "tokio/macros"
+          ];
           "tower-log" = [ "tower/log" ];
-          "tracing" = [ "dep:tracing" "axum-core/tracing" ];
-          "ws" = [ "dep:hyper" "tokio" "dep:tokio-tungstenite" "dep:sha1" "dep:base64" ];
+          "tracing" = [
+            "dep:tracing"
+            "axum-core/tracing"
+          ];
+          "ws" = [
+            "dep:hyper"
+            "tokio"
+            "dep:tokio-tungstenite"
+            "dep:sha1"
+            "dep:base64"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "form" "http1" "http2" "json" "macros" "matched-path" "original-uri" "query" "tokio" "tower-log" "tracing" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "form"
+          "http1"
+          "http2"
+          "json"
+          "macros"
+          "matched-path"
+          "original-uri"
+          "query"
+          "tokio"
+          "tower-log"
+          "tracing"
+        ];
       };
       "axum-core" = rec {
         crateName = "axum-core";
@@ -1442,25 +1659,70 @@ rec {
           }
         ];
         features = {
-          "async-read-body" = [ "dep:tokio-util" "tokio-util?/io" "dep:tokio" ];
+          "async-read-body" = [
+            "dep:tokio-util"
+            "tokio-util?/io"
+            "dep:tokio"
+          ];
           "attachment" = [ "dep:tracing" ];
           "cookie" = [ "dep:cookie" ];
-          "cookie-key-expansion" = [ "cookie" "cookie?/key-expansion" ];
-          "cookie-private" = [ "cookie" "cookie?/private" ];
-          "cookie-signed" = [ "cookie" "cookie?/signed" ];
-          "default" = [ "tracing" "multipart" ];
-          "erased-json" = [ "dep:serde_json" "dep:typed-json" ];
+          "cookie-key-expansion" = [
+            "cookie"
+            "cookie?/key-expansion"
+          ];
+          "cookie-private" = [
+            "cookie"
+            "cookie?/private"
+          ];
+          "cookie-signed" = [
+            "cookie"
+            "cookie?/signed"
+          ];
+          "default" = [
+            "tracing"
+            "multipart"
+          ];
+          "erased-json" = [
+            "dep:serde_json"
+            "dep:typed-json"
+          ];
           "form" = [ "dep:serde_html_form" ];
-          "json-deserializer" = [ "dep:serde_json" "dep:serde_path_to_error" ];
-          "json-lines" = [ "dep:serde_json" "dep:tokio-util" "dep:tokio-stream" "tokio-util?/io" "tokio-stream?/io-util" "dep:tokio" ];
-          "multipart" = [ "dep:multer" "dep:fastrand" ];
+          "json-deserializer" = [
+            "dep:serde_json"
+            "dep:serde_path_to_error"
+          ];
+          "json-lines" = [
+            "dep:serde_json"
+            "dep:tokio-util"
+            "dep:tokio-stream"
+            "tokio-util?/io"
+            "tokio-stream?/io-util"
+            "dep:tokio"
+          ];
+          "multipart" = [
+            "dep:multer"
+            "dep:fastrand"
+          ];
           "protobuf" = [ "dep:prost" ];
           "query" = [ "dep:serde_html_form" ];
-          "tracing" = [ "axum-core/tracing" "axum/tracing" ];
+          "tracing" = [
+            "axum-core/tracing"
+            "axum/tracing"
+          ];
           "typed-header" = [ "dep:headers" ];
-          "typed-routing" = [ "dep:axum-macros" "dep:percent-encoding" "dep:serde_html_form" "dep:form_urlencoded" ];
+          "typed-routing" = [
+            "dep:axum-macros"
+            "dep:percent-encoding"
+            "dep:serde_html_form"
+            "dep:form_urlencoded"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "multipart" "tracing" "typed-header" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "multipart"
+          "tracing"
+          "typed-header"
+        ];
       };
       "axum-macros" = rec {
         crateName = "axum-macros";
@@ -1481,14 +1743,21 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "parsing" "extra-traits" ];
+            features = [
+              "full"
+              "parsing"
+              "extra-traits"
+            ];
           }
         ];
         devDependencies = [
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "extra-traits" ];
+            features = [
+              "full"
+              "extra-traits"
+            ];
           }
         ];
         features = {
@@ -1534,7 +1803,10 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "fs" "io-util" ];
+            features = [
+              "fs"
+              "io-util"
+            ];
           }
         ];
         devDependencies = [
@@ -1546,10 +1818,15 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "rt" "rt-multi-thread" "macros" ];
+            features = [
+              "rt"
+              "rt-multi-thread"
+              "macros"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "axum-test" = rec {
         crateName = "axum-test";
@@ -1605,7 +1882,11 @@ rec {
           {
             name = "hyper-util";
             packageId = "hyper-util";
-            features = [ "client" "http1" "client-legacy" ];
+            features = [
+              "client"
+              "http1"
+              "client-legacy"
+            ];
           }
           {
             name = "mime";
@@ -1648,7 +1929,10 @@ rec {
           {
             name = "tower";
             packageId = "tower 0.5.2";
-            features = [ "util" "make" ];
+            features = [
+              "util"
+              "make"
+            ];
           }
           {
             name = "url";
@@ -1659,26 +1943,54 @@ rec {
           {
             name = "axum";
             packageId = "axum";
-            features = [ "multipart" "tokio" "ws" ];
+            features = [
+              "multipart"
+              "tokio"
+              "ws"
+            ];
           }
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "rt" "rt-multi-thread" "sync" "time" "macros" ];
+            features = [
+              "rt"
+              "rt-multi-thread"
+              "sync"
+              "time"
+              "macros"
+            ];
           }
         ];
         features = {
-          "all" = [ "pretty-assertions" "yaml" "msgpack" "reqwest" "shuttle" "typed-routing" "ws" ];
+          "all" = [
+            "pretty-assertions"
+            "yaml"
+            "msgpack"
+            "reqwest"
+            "shuttle"
+            "typed-routing"
+            "ws"
+          ];
           "default" = [ "pretty-assertions" ];
           "msgpack" = [ "dep:rmp-serde" ];
           "pretty-assertions" = [ "dep:pretty_assertions" ];
           "reqwest" = [ "dep:reqwest" ];
           "shuttle" = [ "dep:shuttle-axum" ];
           "typed-routing" = [ "dep:axum-extra" ];
-          "ws" = [ "axum/ws" "tokio/time" "dep:uuid" "dep:base64" "dep:tokio-tungstenite" "dep:futures-util" ];
+          "ws" = [
+            "axum/ws"
+            "tokio/time"
+            "dep:uuid"
+            "dep:base64"
+            "dep:tokio-tungstenite"
+            "dep:futures-util"
+          ];
           "yaml" = [ "dep:serde_yaml" ];
         };
-        resolvedDefaultFeatures = [ "default" "pretty-assertions" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "pretty-assertions"
+        ];
       };
       "backtrace" = rec {
         crateName = "backtrace";
@@ -1693,7 +2005,15 @@ rec {
             name = "addr2line";
             packageId = "addr2line";
             usesDefaultFeatures = false;
-            target = { target, features }: (!((target."windows" or false) && ("msvc" == target."env" or null) && (!("uwp" == target."vendor" or null))));
+            target =
+              { target, features }:
+              (
+                !(
+                  (target."windows" or false)
+                  && ("msvc" == target."env" or null)
+                  && (!("uwp" == target."vendor" or null))
+                )
+              );
           }
           {
             name = "cfg-if";
@@ -1703,20 +2023,52 @@ rec {
             name = "libc";
             packageId = "libc";
             usesDefaultFeatures = false;
-            target = { target, features }: (!((target."windows" or false) && ("msvc" == target."env" or null) && (!("uwp" == target."vendor" or null))));
+            target =
+              { target, features }:
+              (
+                !(
+                  (target."windows" or false)
+                  && ("msvc" == target."env" or null)
+                  && (!("uwp" == target."vendor" or null))
+                )
+              );
           }
           {
             name = "miniz_oxide";
             packageId = "miniz_oxide";
             usesDefaultFeatures = false;
-            target = { target, features }: (!((target."windows" or false) && ("msvc" == target."env" or null) && (!("uwp" == target."vendor" or null))));
+            target =
+              { target, features }:
+              (
+                !(
+                  (target."windows" or false)
+                  && ("msvc" == target."env" or null)
+                  && (!("uwp" == target."vendor" or null))
+                )
+              );
           }
           {
             name = "object";
             packageId = "object";
             usesDefaultFeatures = false;
-            target = { target, features }: (!((target."windows" or false) && ("msvc" == target."env" or null) && (!("uwp" == target."vendor" or null))));
-            features = [ "read_core" "elf" "macho" "pe" "xcoff" "unaligned" "archive" ];
+            target =
+              { target, features }:
+              (
+                !(
+                  (target."windows" or false)
+                  && ("msvc" == target."env" or null)
+                  && (!("uwp" == target."vendor" or null))
+                )
+              );
+            features = [
+              "read_core"
+              "elf"
+              "macho"
+              "pe"
+              "xcoff"
+              "unaligned"
+              "archive"
+            ];
           }
           {
             name = "rustc-demangle";
@@ -1734,7 +2086,10 @@ rec {
           "serde" = [ "dep:serde" ];
           "serialize-serde" = [ "serde" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "base64 0.21.7" = rec {
         crateName = "base64";
@@ -1749,7 +2104,11 @@ rec {
           "default" = [ "std" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "base64 0.22.1" = rec {
         crateName = "base64";
@@ -1763,7 +2122,11 @@ rec {
           "default" = [ "std" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "base64ct" = rec {
         crateName = "base64ct";
@@ -1846,7 +2209,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls" "transport" ];
+            features = [
+              "tls"
+              "transport"
+            ];
           }
           {
             name = "tower";
@@ -1882,7 +2248,10 @@ rec {
         features = {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [ "core" "compiler_builtins" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+          ];
         };
         resolvedDefaultFeatures = [ "default" ];
       };
@@ -1899,7 +2268,10 @@ rec {
           "bytemuck" = [ "dep:bytemuck" ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [ "core" "compiler_builtins" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+          ];
           "serde" = [ "dep:serde" ];
         };
         resolvedDefaultFeatures = [ "std" ];
@@ -1953,13 +2325,27 @@ rec {
         features = {
           "default" = [ "std" ];
           "digest" = [ "dep:digest" ];
-          "mmap" = [ "std" "dep:memmap2" ];
-          "rayon" = [ "dep:rayon-core" "std" ];
+          "mmap" = [
+            "std"
+            "dep:memmap2"
+          ];
+          "rayon" = [
+            "dep:rayon-core"
+            "std"
+          ];
           "serde" = [ "dep:serde" ];
           "traits-preview" = [ "dep:digest" ];
-          "zeroize" = [ "dep:zeroize" "arrayvec/zeroize" ];
+          "zeroize" = [
+            "dep:zeroize"
+            "arrayvec/zeroize"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "rayon" "std" "traits-preview" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "rayon"
+          "std"
+          "traits-preview"
+        ];
       };
       "block-buffer" = rec {
         crateName = "block-buffer";
@@ -2050,13 +2436,29 @@ rec {
           }
         ];
         features = {
-          "alloc" = [ "memchr/alloc" "serde?/alloc" ];
-          "default" = [ "std" "unicode" ];
+          "alloc" = [
+            "memchr/alloc"
+            "serde?/alloc"
+          ];
+          "default" = [
+            "std"
+            "unicode"
+          ];
           "serde" = [ "dep:serde" ];
-          "std" = [ "alloc" "memchr/std" "serde?/std" ];
+          "std" = [
+            "alloc"
+            "memchr/std"
+            "serde?/std"
+          ];
           "unicode" = [ "dep:regex-automata" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "serde" "std" "unicode" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "serde"
+          "std"
+          "unicode"
+        ];
       };
       "bumpalo" = rec {
         crateName = "bumpalo";
@@ -2097,7 +2499,10 @@ rec {
           "default" = [ "std" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "bytesize" = rec {
         crateName = "bytesize";
@@ -2133,7 +2538,10 @@ rec {
         features = {
           "futures" = [ "dep:futures" ];
           "static" = [ "bzip2-sys/static" ];
-          "tokio" = [ "tokio-io" "futures" ];
+          "tokio" = [
+            "tokio-io"
+            "futures"
+          ];
           "tokio-io" = [ "dep:tokio-io" ];
         };
       };
@@ -2164,7 +2572,8 @@ rec {
             packageId = "pkg-config";
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "caps" = rec {
         crateName = "caps";
@@ -2197,7 +2606,8 @@ rec {
         authors = [
           "Jorge Aparicio <jorge@japaric.io>"
         ];
-        features = { };
+        features = {
+        };
       };
       "cc" = rec {
         crateName = "cc";
@@ -2227,7 +2637,10 @@ rec {
           }
         ];
         features = {
-          "parallel" = [ "dep:libc" "dep:jobserver" ];
+          "parallel" = [
+            "dep:libc"
+            "dep:jobserver"
+          ];
         };
         resolvedDefaultFeatures = [ "parallel" ];
       };
@@ -2243,7 +2656,10 @@ rec {
         features = {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [ "core" "compiler_builtins" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+          ];
         };
       };
       "cfg_aliases" = rec {
@@ -2279,7 +2695,12 @@ rec {
             name = "js-sys";
             packageId = "js-sys";
             optional = true;
-            target = { target, features }: (("wasm32" == target."arch" or null) && (!(("emscripten" == target."os" or null) || ("wasi" == target."os" or null))));
+            target =
+              { target, features }:
+              (
+                ("wasm32" == target."arch" or null)
+                && (!(("emscripten" == target."os" or null) || ("wasi" == target."os" or null)))
+              );
           }
           {
             name = "num-traits";
@@ -2296,7 +2717,12 @@ rec {
             name = "wasm-bindgen";
             packageId = "wasm-bindgen";
             optional = true;
-            target = { target, features }: (("wasm32" == target."arch" or null) && (!(("emscripten" == target."os" or null) || ("wasi" == target."os" or null))));
+            target =
+              { target, features }:
+              (
+                ("wasm32" == target."arch" or null)
+                && (!(("emscripten" == target."os" or null) || ("wasi" == target."os" or null)))
+              );
           }
           {
             name = "windows-targets";
@@ -2308,26 +2734,66 @@ rec {
         features = {
           "android-tzdata" = [ "dep:android-tzdata" ];
           "arbitrary" = [ "dep:arbitrary" ];
-          "clock" = [ "winapi" "iana-time-zone" "android-tzdata" "now" ];
-          "default" = [ "clock" "std" "oldtime" "wasmbind" ];
+          "clock" = [
+            "winapi"
+            "iana-time-zone"
+            "android-tzdata"
+            "now"
+          ];
+          "default" = [
+            "clock"
+            "std"
+            "oldtime"
+            "wasmbind"
+          ];
           "iana-time-zone" = [ "dep:iana-time-zone" ];
           "js-sys" = [ "dep:js-sys" ];
           "now" = [ "std" ];
           "pure-rust-locales" = [ "dep:pure-rust-locales" ];
-          "rkyv" = [ "dep:rkyv" "rkyv/size_32" ];
-          "rkyv-16" = [ "dep:rkyv" "rkyv?/size_16" ];
-          "rkyv-32" = [ "dep:rkyv" "rkyv?/size_32" ];
-          "rkyv-64" = [ "dep:rkyv" "rkyv?/size_64" ];
+          "rkyv" = [
+            "dep:rkyv"
+            "rkyv/size_32"
+          ];
+          "rkyv-16" = [
+            "dep:rkyv"
+            "rkyv?/size_16"
+          ];
+          "rkyv-32" = [
+            "dep:rkyv"
+            "rkyv?/size_32"
+          ];
+          "rkyv-64" = [
+            "dep:rkyv"
+            "rkyv?/size_64"
+          ];
           "rkyv-validation" = [ "rkyv?/validation" ];
           "serde" = [ "dep:serde" ];
           "std" = [ "alloc" ];
           "unstable-locales" = [ "pure-rust-locales" ];
           "wasm-bindgen" = [ "dep:wasm-bindgen" ];
-          "wasmbind" = [ "wasm-bindgen" "js-sys" ];
+          "wasmbind" = [
+            "wasm-bindgen"
+            "js-sys"
+          ];
           "winapi" = [ "windows-targets" ];
           "windows-targets" = [ "dep:windows-targets" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "android-tzdata" "clock" "default" "iana-time-zone" "js-sys" "now" "oldtime" "serde" "std" "wasm-bindgen" "wasmbind" "winapi" "windows-targets" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "android-tzdata"
+          "clock"
+          "default"
+          "iana-time-zone"
+          "js-sys"
+          "now"
+          "oldtime"
+          "serde"
+          "std"
+          "wasm-bindgen"
+          "wasmbind"
+          "winapi"
+          "windows-targets"
+        ];
       };
       "ciborium" = rec {
         crateName = "ciborium";
@@ -2351,14 +2817,23 @@ rec {
             name = "serde";
             packageId = "serde";
             usesDefaultFeatures = false;
-            features = [ "alloc" "derive" ];
+            features = [
+              "alloc"
+              "derive"
+            ];
           }
         ];
         features = {
           "default" = [ "std" ];
-          "std" = [ "ciborium-io/std" "serde/std" ];
+          "std" = [
+            "ciborium-io/std"
+            "serde/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "ciborium-io" = rec {
         crateName = "ciborium-io";
@@ -2372,7 +2847,10 @@ rec {
         features = {
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "std"
+        ];
       };
       "ciborium-ll" = rec {
         crateName = "ciborium-ll";
@@ -2395,7 +2873,10 @@ rec {
           }
         ];
         features = {
-          "std" = [ "alloc" "half/std" ];
+          "std" = [
+            "alloc"
+            "half/std"
+          ];
         };
       };
       "clap" = rec {
@@ -2419,9 +2900,22 @@ rec {
         features = {
           "cargo" = [ "clap_builder/cargo" ];
           "color" = [ "clap_builder/color" ];
-          "debug" = [ "clap_builder/debug" "clap_derive?/debug" ];
-          "default" = [ "std" "color" "help" "usage" "error-context" "suggestions" ];
-          "deprecated" = [ "clap_builder/deprecated" "clap_derive?/deprecated" ];
+          "debug" = [
+            "clap_builder/debug"
+            "clap_derive?/debug"
+          ];
+          "default" = [
+            "std"
+            "color"
+            "help"
+            "usage"
+            "error-context"
+            "suggestions"
+          ];
+          "deprecated" = [
+            "clap_builder/deprecated"
+            "clap_derive?/deprecated"
+          ];
           "derive" = [ "dep:clap_derive" ];
           "env" = [ "clap_builder/env" ];
           "error-context" = [ "clap_builder/error-context" ];
@@ -2430,14 +2924,31 @@ rec {
           "string" = [ "clap_builder/string" ];
           "suggestions" = [ "clap_builder/suggestions" ];
           "unicode" = [ "clap_builder/unicode" ];
-          "unstable-doc" = [ "clap_builder/unstable-doc" "derive" ];
+          "unstable-doc" = [
+            "clap_builder/unstable-doc"
+            "derive"
+          ];
           "unstable-ext" = [ "clap_builder/unstable-ext" ];
           "unstable-styles" = [ "clap_builder/unstable-styles" ];
-          "unstable-v5" = [ "clap_builder/unstable-v5" "clap_derive?/unstable-v5" "deprecated" ];
+          "unstable-v5" = [
+            "clap_builder/unstable-v5"
+            "clap_derive?/unstable-v5"
+            "deprecated"
+          ];
           "usage" = [ "clap_builder/usage" ];
           "wrap_help" = [ "clap_builder/wrap_help" ];
         };
-        resolvedDefaultFeatures = [ "color" "default" "derive" "env" "error-context" "help" "std" "suggestions" "usage" ];
+        resolvedDefaultFeatures = [
+          "color"
+          "default"
+          "derive"
+          "env"
+          "error-context"
+          "help"
+          "std"
+          "suggestions"
+          "usage"
+        ];
       };
       "clap_builder" = rec {
         crateName = "clap_builder";
@@ -2467,16 +2978,47 @@ rec {
         features = {
           "color" = [ "dep:anstream" ];
           "debug" = [ "dep:backtrace" ];
-          "default" = [ "std" "color" "help" "usage" "error-context" "suggestions" ];
+          "default" = [
+            "std"
+            "color"
+            "help"
+            "usage"
+            "error-context"
+            "suggestions"
+          ];
           "std" = [ "anstyle/std" ];
-          "suggestions" = [ "dep:strsim" "error-context" ];
-          "unicode" = [ "dep:unicode-width" "dep:unicase" ];
-          "unstable-doc" = [ "cargo" "wrap_help" "env" "unicode" "string" "unstable-ext" ];
+          "suggestions" = [
+            "dep:strsim"
+            "error-context"
+          ];
+          "unicode" = [
+            "dep:unicode-width"
+            "dep:unicase"
+          ];
+          "unstable-doc" = [
+            "cargo"
+            "wrap_help"
+            "env"
+            "unicode"
+            "string"
+            "unstable-ext"
+          ];
           "unstable-styles" = [ "color" ];
           "unstable-v5" = [ "deprecated" ];
-          "wrap_help" = [ "help" "dep:terminal_size" ];
+          "wrap_help" = [
+            "help"
+            "dep:terminal_size"
+          ];
         };
-        resolvedDefaultFeatures = [ "color" "env" "error-context" "help" "std" "suggestions" "usage" ];
+        resolvedDefaultFeatures = [
+          "color"
+          "env"
+          "error-context"
+          "help"
+          "std"
+          "suggestions"
+          "usage"
+        ];
       };
       "clap_derive" = rec {
         crateName = "clap_derive";
@@ -2541,7 +3083,16 @@ rec {
             packageId = "winapi";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
-            features = [ "basetsd" "shellapi" "winbase" "winuser" "winerror" "stringapiset" "errhandlingapi" "synchapi" ];
+            features = [
+              "basetsd"
+              "shellapi"
+              "winbase"
+              "winuser"
+              "winerror"
+              "stringapiset"
+              "errhandlingapi"
+              "synchapi"
+            ];
           }
         ];
         features = {
@@ -2610,7 +3161,10 @@ rec {
           "loom" = [ "dep:loom" ];
           "portable-atomic" = [ "dep:portable-atomic" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "console" = rec {
         crateName = "console";
@@ -2643,15 +3197,26 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_System_Console" "Win32_Storage_FileSystem" "Win32_UI_Input_KeyboardAndMouse" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_System_Console"
+              "Win32_Storage_FileSystem"
+              "Win32_UI_Input_KeyboardAndMouse"
+            ];
           }
         ];
         features = {
-          "default" = [ "unicode-width" "ansi-parsing" ];
+          "default" = [
+            "unicode-width"
+            "ansi-parsing"
+          ];
           "unicode-width" = [ "dep:unicode-width" ];
           "windows-console-colors" = [ "ansi-parsing" ];
         };
-        resolvedDefaultFeatures = [ "ansi-parsing" "unicode-width" ];
+        resolvedDefaultFeatures = [
+          "ansi-parsing"
+          "unicode-width"
+        ];
       };
       "const-oid" = rec {
         crateName = "const-oid";
@@ -2674,7 +3239,8 @@ rec {
         authors = [
           "Cesar Eduardo Barros <cesarb@cesarb.eti.br>"
         ];
-        features = { };
+        features = {
+        };
       };
       "cookie" = rec {
         crateName = "cookie";
@@ -2690,7 +3256,12 @@ rec {
             name = "time";
             packageId = "time";
             usesDefaultFeatures = false;
-            features = [ "std" "parsing" "formatting" "macros" ];
+            features = [
+              "std"
+              "parsing"
+              "formatting"
+              "macros"
+            ];
           }
         ];
         buildDependencies = [
@@ -2704,14 +3275,32 @@ rec {
           "base64" = [ "dep:base64" ];
           "hkdf" = [ "dep:hkdf" ];
           "hmac" = [ "dep:hmac" ];
-          "key-expansion" = [ "sha2" "hkdf" ];
+          "key-expansion" = [
+            "sha2"
+            "hkdf"
+          ];
           "percent-encode" = [ "percent-encoding" ];
           "percent-encoding" = [ "dep:percent-encoding" ];
-          "private" = [ "aes-gcm" "base64" "rand" "subtle" ];
+          "private" = [
+            "aes-gcm"
+            "base64"
+            "rand"
+            "subtle"
+          ];
           "rand" = [ "dep:rand" ];
-          "secure" = [ "private" "signed" "key-expansion" ];
+          "secure" = [
+            "private"
+            "signed"
+            "key-expansion"
+          ];
           "sha2" = [ "dep:sha2" ];
-          "signed" = [ "hmac" "sha2" "base64" "rand" "subtle" ];
+          "signed" = [
+            "hmac"
+            "sha2"
+            "base64"
+            "rand"
+            "subtle"
+          ];
           "subtle" = [ "dep:subtle" ];
         };
       };
@@ -2743,7 +3332,10 @@ rec {
           "uuid" = [ "dep:uuid" ];
           "with-uuid" = [ "uuid" ];
         };
-        resolvedDefaultFeatures = [ "default" "link" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "link"
+        ];
       };
       "core-foundation-sys" = rec {
         crateName = "core-foundation-sys";
@@ -2757,7 +3349,10 @@ rec {
         features = {
           "default" = [ "link" ];
         };
-        resolvedDefaultFeatures = [ "default" "link" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "link"
+        ];
       };
       "count-write" = rec {
         crateName = "count-write";
@@ -2785,7 +3380,11 @@ rec {
         ];
         features = {
           "dashmap" = [ "dep:dashmap" ];
-          "enable" = [ "dashmap" "once_cell" "rustc-hash" ];
+          "enable" = [
+            "dashmap"
+            "once_cell"
+            "rustc-hash"
+          ];
           "once_cell" = [ "dep:once_cell" ];
           "print_at_exit" = [ "enable" ];
           "rustc-hash" = [ "dep:rustc-hash" ];
@@ -2808,17 +3407,22 @@ rec {
           {
             name = "libc";
             packageId = "libc";
-            target = { target, features }: (("aarch64" == target."arch" or null) && ("linux" == target."os" or null));
+            target =
+              { target, features }: (("aarch64" == target."arch" or null) && ("linux" == target."os" or null));
           }
           {
             name = "libc";
             packageId = "libc";
-            target = { target, features }: (("aarch64" == target."arch" or null) && ("apple" == target."vendor" or null));
+            target =
+              { target, features }:
+              (("aarch64" == target."arch" or null) && ("apple" == target."vendor" or null));
           }
           {
             name = "libc";
             packageId = "libc";
-            target = { target, features }: (("loongarch64" == target."arch" or null) && ("linux" == target."os" or null));
+            target =
+              { target, features }:
+              (("loongarch64" == target."arch" or null) && ("linux" == target."os" or null));
           }
         ];
 
@@ -2841,7 +3445,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "criterion" = rec {
         crateName = "criterion";
@@ -2902,7 +3509,11 @@ rec {
             packageId = "plotters";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "svg_backend" "area_series" "line_series" ];
+            features = [
+              "svg_backend"
+              "area_series"
+              "line_series"
+            ];
           }
           {
             name = "rayon";
@@ -2939,21 +3550,50 @@ rec {
         features = {
           "async" = [ "futures" ];
           "async-std" = [ "dep:async-std" ];
-          "async_futures" = [ "futures/executor" "async" ];
-          "async_smol" = [ "smol" "async" ];
-          "async_std" = [ "async-std" "async" ];
-          "async_tokio" = [ "tokio" "async" ];
+          "async_futures" = [
+            "futures/executor"
+            "async"
+          ];
+          "async_smol" = [
+            "smol"
+            "async"
+          ];
+          "async_std" = [
+            "async-std"
+            "async"
+          ];
+          "async_tokio" = [
+            "tokio"
+            "async"
+          ];
           "csv" = [ "dep:csv" ];
           "csv_output" = [ "csv" ];
-          "default" = [ "rayon" "plotters" "cargo_bench_support" ];
+          "default" = [
+            "rayon"
+            "plotters"
+            "cargo_bench_support"
+          ];
           "futures" = [ "dep:futures" ];
           "plotters" = [ "dep:plotters" ];
           "rayon" = [ "dep:rayon" ];
           "smol" = [ "dep:smol" ];
-          "stable" = [ "csv_output" "html_reports" "async_futures" "async_smol" "async_tokio" "async_std" ];
+          "stable" = [
+            "csv_output"
+            "html_reports"
+            "async_futures"
+            "async_smol"
+            "async_tokio"
+            "async_std"
+          ];
           "tokio" = [ "dep:tokio" ];
         };
-        resolvedDefaultFeatures = [ "cargo_bench_support" "default" "html_reports" "plotters" "rayon" ];
+        resolvedDefaultFeatures = [
+          "cargo_bench_support"
+          "default"
+          "html_reports"
+          "plotters"
+          "rayon"
+        ];
       };
       "criterion-plot" = rec {
         crateName = "criterion-plot";
@@ -2997,9 +3637,15 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "std" = [ "crossbeam-epoch/std" "crossbeam-utils/std" ];
+          "std" = [
+            "crossbeam-epoch/std"
+            "crossbeam-utils/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "crossbeam-epoch" = rec {
         crateName = "crossbeam-epoch";
@@ -3016,12 +3662,21 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "loom" = [ "loom-crate" "crossbeam-utils/loom" ];
+          "loom" = [
+            "loom-crate"
+            "crossbeam-utils/loom"
+          ];
           "loom-crate" = [ "dep:loom-crate" ];
           "nightly" = [ "crossbeam-utils/nightly" ];
-          "std" = [ "alloc" "crossbeam-utils/std" ];
+          "std" = [
+            "alloc"
+            "crossbeam-utils/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "std"
+        ];
       };
       "crossbeam-utils" = rec {
         crateName = "crossbeam-utils";
@@ -3033,7 +3688,10 @@ rec {
           "default" = [ "std" ];
           "loom" = [ "dep:loom" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "crunchy" = rec {
         crateName = "crunchy";
@@ -3046,7 +3704,10 @@ rec {
         features = {
           "default" = [ "limit_128" ];
         };
-        resolvedDefaultFeatures = [ "default" "limit_128" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "limit_128"
+        ];
       };
       "crypto-common" = rec {
         crateName = "crypto-common";
@@ -3097,7 +3758,13 @@ rec {
           {
             name = "curve25519-dalek-derive";
             packageId = "curve25519-dalek-derive";
-            target = { target, features }: ((!("fiat" == target."curve25519_dalek_backend" or null)) && (!("serial" == target."curve25519_dalek_backend" or null)) && ("x86_64" == target."arch" or null));
+            target =
+              { target, features }:
+              (
+                (!("fiat" == target."curve25519_dalek_backend" or null))
+                && (!("serial" == target."curve25519_dalek_backend" or null))
+                && ("x86_64" == target."arch" or null)
+              );
           }
           {
             name = "digest";
@@ -3131,16 +3798,31 @@ rec {
         ];
         features = {
           "alloc" = [ "zeroize?/alloc" ];
-          "default" = [ "alloc" "precomputed-tables" "zeroize" ];
+          "default" = [
+            "alloc"
+            "precomputed-tables"
+            "zeroize"
+          ];
           "digest" = [ "dep:digest" ];
           "ff" = [ "dep:ff" ];
-          "group" = [ "dep:group" "rand_core" ];
-          "group-bits" = [ "group" "ff/bits" ];
+          "group" = [
+            "dep:group"
+            "rand_core"
+          ];
+          "group-bits" = [
+            "group"
+            "ff/bits"
+          ];
           "rand_core" = [ "dep:rand_core" ];
           "serde" = [ "dep:serde" ];
           "zeroize" = [ "dep:zeroize" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "digest" "precomputed-tables" "zeroize" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "digest"
+          "precomputed-tables"
+          "zeroize"
+        ];
       };
       "curve25519-dalek-derive" = rec {
         crateName = "curve25519-dalek-derive";
@@ -3189,7 +3871,10 @@ rec {
           "diagnostics" = [ "darling_core/diagnostics" ];
           "suggestions" = [ "darling_core/suggestions" ];
         };
-        resolvedDefaultFeatures = [ "default" "suggestions" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "suggestions"
+        ];
       };
       "darling_core" = rec {
         crateName = "darling_core";
@@ -3224,14 +3909,20 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "extra-traits" ];
+            features = [
+              "full"
+              "extra-traits"
+            ];
           }
         ];
         features = {
           "strsim" = [ "dep:strsim" ];
           "suggestions" = [ "strsim" ];
         };
-        resolvedDefaultFeatures = [ "strsim" "suggestions" ];
+        resolvedDefaultFeatures = [
+          "strsim"
+          "suggestions"
+        ];
       };
       "darling_macro" = rec {
         crateName = "darling_macro";
@@ -3271,7 +3962,11 @@ rec {
           "default" = [ "std" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "der" = rec {
         crateName = "der";
@@ -3296,17 +3991,33 @@ rec {
         ];
         features = {
           "alloc" = [ "zeroize?/alloc" ];
-          "arbitrary" = [ "dep:arbitrary" "const-oid?/arbitrary" "std" ];
-          "bytes" = [ "dep:bytes" "alloc" ];
+          "arbitrary" = [
+            "dep:arbitrary"
+            "const-oid?/arbitrary"
+            "std"
+          ];
+          "bytes" = [
+            "dep:bytes"
+            "alloc"
+          ];
           "derive" = [ "dep:der_derive" ];
           "flagset" = [ "dep:flagset" ];
           "oid" = [ "dep:const-oid" ];
-          "pem" = [ "dep:pem-rfc7468" "alloc" "zeroize" ];
+          "pem" = [
+            "dep:pem-rfc7468"
+            "alloc"
+            "zeroize"
+          ];
           "std" = [ "alloc" ];
           "time" = [ "dep:time" ];
           "zeroize" = [ "dep:zeroize" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "oid" "std" "zeroize" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "oid"
+          "std"
+          "zeroize"
+        ];
       };
       "deranged" = rec {
         crateName = "deranged";
@@ -3334,12 +4045,20 @@ rec {
           "default" = [ "std" ];
           "num" = [ "dep:num-traits" ];
           "powerfmt" = [ "dep:powerfmt" ];
-          "quickcheck" = [ "dep:quickcheck" "alloc" ];
+          "quickcheck" = [
+            "dep:quickcheck"
+            "alloc"
+          ];
           "rand" = [ "dep:rand" ];
           "serde" = [ "dep:serde" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "powerfmt" "serde" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "powerfmt"
+          "serde"
+          "std"
+        ];
       };
       "derive_builder" = rec {
         crateName = "derive_builder";
@@ -3364,7 +4083,10 @@ rec {
           "default" = [ "std" ];
           "std" = [ "derive_builder_macro/lib_has_std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "derive_builder_core" = rec {
         crateName = "derive_builder_core";
@@ -3393,10 +4115,14 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "extra-traits" ];
+            features = [
+              "full"
+              "extra-traits"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "lib_has_std" ];
       };
       "derive_builder_macro" = rec {
@@ -3419,7 +4145,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "extra-traits" ];
+            features = [
+              "full"
+              "extra-traits"
+            ];
           }
         ];
         features = {
@@ -3474,10 +4203,21 @@ rec {
           "mac" = [ "subtle" ];
           "oid" = [ "const-oid" ];
           "rand_core" = [ "crypto-common/rand_core" ];
-          "std" = [ "alloc" "crypto-common/std" ];
+          "std" = [
+            "alloc"
+            "crypto-common/std"
+          ];
           "subtle" = [ "dep:subtle" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "block-buffer" "core-api" "default" "mac" "std" "subtle" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "block-buffer"
+          "core-api"
+          "default"
+          "mac"
+          "std"
+          "subtle"
+        ];
       };
       "dirs" = rec {
         crateName = "dirs";
@@ -3541,7 +4281,13 @@ rec {
             name = "winapi";
             packageId = "winapi";
             target = { target, features }: (target."windows" or false);
-            features = [ "knownfolders" "objbase" "shlobj" "winbase" "winerror" ];
+            features = [
+              "knownfolders"
+              "objbase"
+              "shlobj"
+              "winbase"
+              "winerror"
+            ];
           }
         ];
 
@@ -3571,7 +4317,13 @@ rec {
             name = "winapi";
             packageId = "winapi";
             target = { target, features }: (target."windows" or false);
-            features = [ "knownfolders" "objbase" "shlobj" "winbase" "winerror" ];
+            features = [
+              "knownfolders"
+              "objbase"
+              "shlobj"
+              "winbase"
+              "winerror"
+            ];
           }
         ];
 
@@ -3622,7 +4374,8 @@ rec {
         authors = [
           "Guillaume Gomez <guillaume1.gomez@gmail.com>"
         ];
-        features = { };
+        features = {
+        };
       };
       "document-features" = rec {
         crateName = "document-features";
@@ -3642,7 +4395,8 @@ rec {
             usesDefaultFeatures = false;
           }
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "downcast" = rec {
@@ -3656,7 +4410,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "ed25519" = rec {
         crateName = "ed25519";
@@ -3681,14 +4438,27 @@ rec {
         features = {
           "alloc" = [ "pkcs8?/alloc" ];
           "default" = [ "std" ];
-          "pem" = [ "alloc" "pkcs8/pem" ];
+          "pem" = [
+            "alloc"
+            "pkcs8/pem"
+          ];
           "pkcs8" = [ "dep:pkcs8" ];
           "serde" = [ "dep:serde" ];
-          "serde_bytes" = [ "serde" "dep:serde_bytes" ];
-          "std" = [ "pkcs8?/std" "signature/std" ];
+          "serde_bytes" = [
+            "serde"
+            "dep:serde_bytes"
+          ];
+          "std" = [
+            "pkcs8?/std"
+            "signature/std"
+          ];
           "zeroize" = [ "dep:zeroize" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "ed25519-dalek" = rec {
         crateName = "ed25519-dalek";
@@ -3741,7 +4511,10 @@ rec {
             name = "curve25519-dalek";
             packageId = "curve25519-dalek";
             usesDefaultFeatures = false;
-            features = [ "digest" "rand_core" ];
+            features = [
+              "digest"
+              "rand_core"
+            ];
           }
           {
             name = "serde";
@@ -3750,23 +4523,57 @@ rec {
           }
         ];
         features = {
-          "alloc" = [ "curve25519-dalek/alloc" "ed25519/alloc" "serde?/alloc" "zeroize/alloc" ];
+          "alloc" = [
+            "curve25519-dalek/alloc"
+            "ed25519/alloc"
+            "serde?/alloc"
+            "zeroize/alloc"
+          ];
           "asm" = [ "sha2/asm" ];
-          "batch" = [ "alloc" "merlin" "rand_core" ];
-          "default" = [ "fast" "std" "zeroize" ];
+          "batch" = [
+            "alloc"
+            "merlin"
+            "rand_core"
+          ];
+          "default" = [
+            "fast"
+            "std"
+            "zeroize"
+          ];
           "digest" = [ "signature/digest" ];
           "fast" = [ "curve25519-dalek/precomputed-tables" ];
           "legacy_compatibility" = [ "curve25519-dalek/legacy_compatibility" ];
           "merlin" = [ "dep:merlin" ];
-          "pem" = [ "alloc" "ed25519/pem" "pkcs8" ];
+          "pem" = [
+            "alloc"
+            "ed25519/pem"
+            "pkcs8"
+          ];
           "pkcs8" = [ "ed25519/pkcs8" ];
           "rand_core" = [ "dep:rand_core" ];
-          "serde" = [ "dep:serde" "ed25519/serde" ];
+          "serde" = [
+            "dep:serde"
+            "ed25519/serde"
+          ];
           "signature" = [ "dep:signature" ];
-          "std" = [ "alloc" "ed25519/std" "serde?/std" "sha2/std" ];
-          "zeroize" = [ "dep:zeroize" "curve25519-dalek/zeroize" ];
+          "std" = [
+            "alloc"
+            "ed25519/std"
+            "serde?/std"
+            "sha2/std"
+          ];
+          "zeroize" = [
+            "dep:zeroize"
+            "curve25519-dalek/zeroize"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "fast" "std" "zeroize" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "fast"
+          "std"
+          "zeroize"
+        ];
       };
       "either" = rec {
         crateName = "either";
@@ -3794,7 +4601,10 @@ rec {
           "ascii" = [ "dep:ascii" ];
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "encoding_rs" = rec {
         crateName = "encoding_rs";
@@ -3813,11 +4623,20 @@ rec {
         features = {
           "any_all_workaround" = [ "dep:any_all_workaround" ];
           "default" = [ "alloc" ];
-          "fast-legacy-encode" = [ "fast-hangul-encode" "fast-hanja-encode" "fast-kanji-encode" "fast-gb-hanzi-encode" "fast-big5-hanzi-encode" ];
+          "fast-legacy-encode" = [
+            "fast-hangul-encode"
+            "fast-hanja-encode"
+            "fast-kanji-encode"
+            "fast-gb-hanzi-encode"
+            "fast-big5-hanzi-encode"
+          ];
           "serde" = [ "dep:serde" ];
           "simd-accel" = [ "any_all_workaround" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+        ];
       };
       "endian-type" = rec {
         crateName = "endian-type";
@@ -3887,9 +4706,16 @@ rec {
         features = {
           "alloc" = [ "serde/alloc" ];
           "default" = [ "std" ];
-          "std" = [ "alloc" "serde/std" ];
+          "std" = [
+            "alloc"
+            "serde/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "errno" = rec {
         crateName = "errno";
@@ -3922,7 +4748,10 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_System_Diagnostics_Debug" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_System_Diagnostics_Debug"
+            ];
           }
         ];
         features = {
@@ -3951,7 +4780,8 @@ rec {
             packageId = "str-buf";
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "event-listener" = rec {
         crateName = "event-listener";
@@ -3982,14 +4812,29 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "loom" = [ "concurrent-queue/loom" "parking?/loom" "dep:loom" ];
+          "loom" = [
+            "concurrent-queue/loom"
+            "parking?/loom"
+            "dep:loom"
+          ];
           "parking" = [ "dep:parking" ];
-          "portable-atomic" = [ "portable-atomic-util" "portable_atomic_crate" "concurrent-queue/portable-atomic" ];
+          "portable-atomic" = [
+            "portable-atomic-util"
+            "portable_atomic_crate"
+            "concurrent-queue/portable-atomic"
+          ];
           "portable-atomic-util" = [ "dep:portable-atomic-util" ];
           "portable_atomic_crate" = [ "dep:portable_atomic_crate" ];
-          "std" = [ "concurrent-queue/std" "parking" ];
+          "std" = [
+            "concurrent-queue/std"
+            "parking"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "parking" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "parking"
+          "std"
+        ];
       };
       "event-listener-strategy" = rec {
         crateName = "event-listener-strategy";
@@ -4069,16 +4914,31 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "fs" "io-util" "rt" "rt-multi-thread" "macros" ];
+            features = [
+              "fs"
+              "io-util"
+              "rt"
+              "rt-multi-thread"
+              "macros"
+            ];
           }
         ];
         features = {
           "async-stream" = [ "dep:async-stream" ];
           "futures" = [ "dep:futures" ];
-          "tokio" = [ "dep:tokio" "tokio-stream" "async-stream" ];
+          "tokio" = [
+            "dep:tokio"
+            "tokio-stream"
+            "async-stream"
+          ];
           "tokio-stream" = [ "dep:tokio-stream" ];
         };
-        resolvedDefaultFeatures = [ "async-stream" "default" "tokio" "tokio-stream" ];
+        resolvedDefaultFeatures = [
+          "async-stream"
+          "default"
+          "tokio"
+          "tokio-stream"
+        ];
       };
       "fastrand" = rec {
         crateName = "fastrand";
@@ -4091,10 +4951,17 @@ rec {
         features = {
           "default" = [ "std" ];
           "getrandom" = [ "dep:getrandom" ];
-          "js" = [ "std" "getrandom" ];
+          "js" = [
+            "std"
+            "getrandom"
+          ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "fd-lock" = rec {
         crateName = "fd-lock";
@@ -4120,7 +4987,11 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.48.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_Storage_FileSystem" "Win32_System_IO" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Storage_FileSystem"
+              "Win32_System_IO"
+            ];
           }
         ];
 
@@ -4165,7 +5036,10 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_Storage_FileSystem" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Storage_FileSystem"
+            ];
           }
         ];
 
@@ -4208,28 +5082,56 @@ rec {
             name = "miniz_oxide";
             packageId = "miniz_oxide";
             usesDefaultFeatures = false;
-            target = { target, features }: (("wasm32" == target."arch" or null) && (!("emscripten" == target."os" or null)));
+            target =
+              { target, features }:
+              (("wasm32" == target."arch" or null) && (!("emscripten" == target."os" or null)));
             features = [ "with-alloc" ];
           }
         ];
         features = {
           "any_zlib" = [ "any_impl" ];
           "cloudflare-zlib-sys" = [ "dep:cloudflare-zlib-sys" ];
-          "cloudflare_zlib" = [ "any_zlib" "cloudflare-zlib-sys" ];
+          "cloudflare_zlib" = [
+            "any_zlib"
+            "cloudflare-zlib-sys"
+          ];
           "default" = [ "rust_backend" ];
           "libz-ng-sys" = [ "dep:libz-ng-sys" ];
           "libz-rs-sys" = [ "dep:libz-rs-sys" ];
           "libz-sys" = [ "dep:libz-sys" ];
           "miniz-sys" = [ "rust_backend" ];
           "miniz_oxide" = [ "dep:miniz_oxide" ];
-          "rust_backend" = [ "miniz_oxide" "any_impl" ];
-          "zlib" = [ "any_zlib" "libz-sys" ];
-          "zlib-default" = [ "any_zlib" "libz-sys/default" ];
-          "zlib-ng" = [ "any_zlib" "libz-ng-sys" ];
-          "zlib-ng-compat" = [ "zlib" "libz-sys/zlib-ng" ];
-          "zlib-rs" = [ "any_zlib" "libz-rs-sys" ];
+          "rust_backend" = [
+            "miniz_oxide"
+            "any_impl"
+          ];
+          "zlib" = [
+            "any_zlib"
+            "libz-sys"
+          ];
+          "zlib-default" = [
+            "any_zlib"
+            "libz-sys/default"
+          ];
+          "zlib-ng" = [
+            "any_zlib"
+            "libz-ng-sys"
+          ];
+          "zlib-ng-compat" = [
+            "zlib"
+            "libz-sys/zlib-ng"
+          ];
+          "zlib-rs" = [
+            "any_zlib"
+            "libz-rs-sys"
+          ];
         };
-        resolvedDefaultFeatures = [ "any_impl" "default" "miniz_oxide" "rust_backend" ];
+        resolvedDefaultFeatures = [
+          "any_impl"
+          "default"
+          "miniz_oxide"
+          "rust_backend"
+        ];
       };
       "fnv" = rec {
         crateName = "fnv";
@@ -4243,7 +5145,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "foldhash" = rec {
         crateName = "foldhash";
@@ -4275,9 +5180,16 @@ rec {
         features = {
           "alloc" = [ "percent-encoding/alloc" ];
           "default" = [ "std" ];
-          "std" = [ "alloc" "percent-encoding/std" ];
+          "std" = [
+            "alloc"
+            "percent-encoding/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "fragile" = rec {
         crateName = "fragile";
@@ -4338,7 +5250,10 @@ rec {
           {
             name = "mio";
             packageId = "mio 0.8.11";
-            features = [ "os-poll" "os-ext" ];
+            features = [
+              "os-poll"
+              "os-ext"
+            ];
           }
           {
             name = "nix";
@@ -4374,7 +5289,10 @@ rec {
           {
             name = "vm-memory";
             packageId = "vm-memory";
-            features = [ "backend-mmap" "backend-bitmap" ];
+            features = [
+              "backend-mmap"
+              "backend-bitmap"
+            ];
           }
           {
             name = "vmm-sys-util";
@@ -4382,26 +5300,61 @@ rec {
           }
         ];
         features = {
-          "async-io" = [ "async-trait" "tokio-uring" "tokio/fs" "tokio/net" "tokio/sync" "tokio/rt" "tokio/macros" "io-uring" ];
+          "async-io" = [
+            "async-trait"
+            "tokio-uring"
+            "tokio/fs"
+            "tokio/net"
+            "tokio/sync"
+            "tokio/rt"
+            "tokio/macros"
+            "io-uring"
+          ];
           "async-trait" = [ "dep:async-trait" ];
           "caps" = [ "dep:caps" ];
           "core-foundation-sys" = [ "dep:core-foundation-sys" ];
           "dbs-snapshot" = [ "dep:dbs-snapshot" ];
           "default" = [ "fusedev" ];
-          "fusedev" = [ "vmm-sys-util" "caps" "core-foundation-sys" ];
+          "fusedev" = [
+            "vmm-sys-util"
+            "caps"
+            "core-foundation-sys"
+          ];
           "io-uring" = [ "dep:io-uring" ];
-          "persist" = [ "dbs-snapshot" "versionize" "versionize_derive" ];
+          "persist" = [
+            "dbs-snapshot"
+            "versionize"
+            "versionize_derive"
+          ];
           "tokio" = [ "dep:tokio" ];
           "tokio-uring" = [ "dep:tokio-uring" ];
           "versionize" = [ "dep:versionize" ];
           "versionize_derive" = [ "dep:versionize_derive" ];
           "vhost" = [ "dep:vhost" ];
-          "vhost-user-fs" = [ "virtiofs" "vhost" "caps" ];
+          "vhost-user-fs" = [
+            "virtiofs"
+            "vhost"
+            "caps"
+          ];
           "virtio-queue" = [ "dep:virtio-queue" ];
-          "virtiofs" = [ "virtio-queue" "caps" "vmm-sys-util" ];
+          "virtiofs" = [
+            "virtio-queue"
+            "caps"
+            "vmm-sys-util"
+          ];
           "vmm-sys-util" = [ "dep:vmm-sys-util" ];
         };
-        resolvedDefaultFeatures = [ "caps" "core-foundation-sys" "default" "fusedev" "vhost" "vhost-user-fs" "virtio-queue" "virtiofs" "vmm-sys-util" ];
+        resolvedDefaultFeatures = [
+          "caps"
+          "core-foundation-sys"
+          "default"
+          "fusedev"
+          "vhost"
+          "vhost-user-fs"
+          "virtio-queue"
+          "virtiofs"
+          "vmm-sys-util"
+        ];
       };
       "futures" = rec {
         crateName = "futures";
@@ -4449,20 +5402,67 @@ rec {
           }
         ];
         features = {
-          "alloc" = [ "futures-core/alloc" "futures-task/alloc" "futures-sink/alloc" "futures-channel/alloc" "futures-util/alloc" ];
-          "async-await" = [ "futures-util/async-await" "futures-util/async-await-macro" ];
+          "alloc" = [
+            "futures-core/alloc"
+            "futures-task/alloc"
+            "futures-sink/alloc"
+            "futures-channel/alloc"
+            "futures-util/alloc"
+          ];
+          "async-await" = [
+            "futures-util/async-await"
+            "futures-util/async-await-macro"
+          ];
           "bilock" = [ "futures-util/bilock" ];
-          "compat" = [ "std" "futures-util/compat" ];
-          "default" = [ "std" "async-await" "executor" ];
-          "executor" = [ "std" "futures-executor/std" ];
+          "compat" = [
+            "std"
+            "futures-util/compat"
+          ];
+          "default" = [
+            "std"
+            "async-await"
+            "executor"
+          ];
+          "executor" = [
+            "std"
+            "futures-executor/std"
+          ];
           "futures-executor" = [ "dep:futures-executor" ];
-          "io-compat" = [ "compat" "futures-util/io-compat" ];
-          "std" = [ "alloc" "futures-core/std" "futures-task/std" "futures-io/std" "futures-sink/std" "futures-util/std" "futures-util/io" "futures-util/channel" ];
-          "thread-pool" = [ "executor" "futures-executor/thread-pool" ];
-          "unstable" = [ "futures-core/unstable" "futures-task/unstable" "futures-channel/unstable" "futures-io/unstable" "futures-util/unstable" ];
+          "io-compat" = [
+            "compat"
+            "futures-util/io-compat"
+          ];
+          "std" = [
+            "alloc"
+            "futures-core/std"
+            "futures-task/std"
+            "futures-io/std"
+            "futures-sink/std"
+            "futures-util/std"
+            "futures-util/io"
+            "futures-util/channel"
+          ];
+          "thread-pool" = [
+            "executor"
+            "futures-executor/thread-pool"
+          ];
+          "unstable" = [
+            "futures-core/unstable"
+            "futures-task/unstable"
+            "futures-channel/unstable"
+            "futures-io/unstable"
+            "futures-util/unstable"
+          ];
           "write-all-vectored" = [ "futures-util/write-all-vectored" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "async-await" "default" "executor" "futures-executor" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "async-await"
+          "default"
+          "executor"
+          "futures-executor"
+          "std"
+        ];
       };
       "futures-channel" = rec {
         crateName = "futures-channel";
@@ -4488,9 +5488,18 @@ rec {
           "default" = [ "std" ];
           "futures-sink" = [ "dep:futures-sink" ];
           "sink" = [ "futures-sink" ];
-          "std" = [ "alloc" "futures-core/std" ];
+          "std" = [
+            "alloc"
+            "futures-core/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "futures-sink" "sink" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "futures-sink"
+          "sink"
+          "std"
+        ];
       };
       "futures-core" = rec {
         crateName = "futures-core";
@@ -4503,7 +5512,11 @@ rec {
           "portable-atomic" = [ "dep:portable-atomic" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "futures-executor" = rec {
         crateName = "futures-executor";
@@ -4531,10 +5544,20 @@ rec {
         features = {
           "default" = [ "std" ];
           "num_cpus" = [ "dep:num_cpus" ];
-          "std" = [ "futures-core/std" "futures-task/std" "futures-util/std" ];
-          "thread-pool" = [ "std" "num_cpus" ];
+          "std" = [
+            "futures-core/std"
+            "futures-task/std"
+            "futures-util/std"
+          ];
+          "thread-pool" = [
+            "std"
+            "num_cpus"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "futures-io" = rec {
         crateName = "futures-io";
@@ -4545,7 +5568,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "futures-lite" = rec {
         crateName = "futures-lite";
@@ -4585,15 +5611,31 @@ rec {
           }
         ];
         features = {
-          "default" = [ "race" "std" ];
+          "default" = [
+            "race"
+            "std"
+          ];
           "fastrand" = [ "dep:fastrand" ];
           "futures-io" = [ "dep:futures-io" ];
           "memchr" = [ "dep:memchr" ];
           "parking" = [ "dep:parking" ];
           "race" = [ "fastrand" ];
-          "std" = [ "alloc" "fastrand/std" "futures-io" "parking" ];
+          "std" = [
+            "alloc"
+            "fastrand/std"
+            "futures-io"
+            "parking"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "fastrand" "futures-io" "parking" "race" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "fastrand"
+          "futures-io"
+          "parking"
+          "race"
+          "std"
+        ];
       };
       "futures-macro" = rec {
         crateName = "futures-macro";
@@ -4629,7 +5671,11 @@ rec {
           "default" = [ "std" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "futures-task" = rec {
         crateName = "futures-task";
@@ -4641,7 +5687,10 @@ rec {
           "default" = [ "std" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "std"
+        ];
       };
       "futures-timer" = rec {
         crateName = "futures-timer";
@@ -4655,7 +5704,10 @@ rec {
         features = {
           "gloo-timers" = [ "dep:gloo-timers" ];
           "send_wrapper" = [ "dep:send_wrapper" ];
-          "wasm-bindgen" = [ "gloo-timers" "send_wrapper" ];
+          "wasm-bindgen" = [
+            "gloo-timers"
+            "send_wrapper"
+          ];
         };
       };
       "futures-util" = rec {
@@ -4721,28 +5773,75 @@ rec {
           }
         ];
         features = {
-          "alloc" = [ "futures-core/alloc" "futures-task/alloc" ];
-          "async-await-macro" = [ "async-await" "futures-macro" ];
-          "channel" = [ "std" "futures-channel" ];
-          "compat" = [ "std" "futures_01" ];
-          "default" = [ "std" "async-await" "async-await-macro" ];
+          "alloc" = [
+            "futures-core/alloc"
+            "futures-task/alloc"
+          ];
+          "async-await-macro" = [
+            "async-await"
+            "futures-macro"
+          ];
+          "channel" = [
+            "std"
+            "futures-channel"
+          ];
+          "compat" = [
+            "std"
+            "futures_01"
+          ];
+          "default" = [
+            "std"
+            "async-await"
+            "async-await-macro"
+          ];
           "futures-channel" = [ "dep:futures-channel" ];
           "futures-io" = [ "dep:futures-io" ];
           "futures-macro" = [ "dep:futures-macro" ];
           "futures-sink" = [ "dep:futures-sink" ];
           "futures_01" = [ "dep:futures_01" ];
-          "io" = [ "std" "futures-io" "memchr" ];
-          "io-compat" = [ "io" "compat" "tokio-io" ];
+          "io" = [
+            "std"
+            "futures-io"
+            "memchr"
+          ];
+          "io-compat" = [
+            "io"
+            "compat"
+            "tokio-io"
+          ];
           "memchr" = [ "dep:memchr" ];
           "portable-atomic" = [ "futures-core/portable-atomic" ];
           "sink" = [ "futures-sink" ];
           "slab" = [ "dep:slab" ];
-          "std" = [ "alloc" "futures-core/std" "futures-task/std" "slab" ];
+          "std" = [
+            "alloc"
+            "futures-core/std"
+            "futures-task/std"
+            "slab"
+          ];
           "tokio-io" = [ "dep:tokio-io" ];
-          "unstable" = [ "futures-core/unstable" "futures-task/unstable" ];
+          "unstable" = [
+            "futures-core/unstable"
+            "futures-task/unstable"
+          ];
           "write-all-vectored" = [ "io" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "async-await" "async-await-macro" "channel" "default" "futures-channel" "futures-io" "futures-macro" "futures-sink" "io" "memchr" "sink" "slab" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "async-await"
+          "async-await-macro"
+          "channel"
+          "default"
+          "futures-channel"
+          "futures-io"
+          "futures-macro"
+          "futures-sink"
+          "io"
+          "memchr"
+          "sink"
+          "slab"
+          "std"
+        ];
       };
       "gcp_auth" = rec {
         crateName = "gcp_auth";
@@ -4783,13 +5882,20 @@ rec {
             name = "hyper";
             packageId = "hyper";
             usesDefaultFeatures = false;
-            features = [ "client" "http1" "http2" ];
+            features = [
+              "client"
+              "http1"
+              "http2"
+            ];
           }
           {
             name = "hyper-rustls";
             packageId = "hyper-rustls";
             usesDefaultFeatures = false;
-            features = [ "http1" "http2" ];
+            features = [
+              "http1"
+              "http2"
+            ];
           }
           {
             name = "hyper-util";
@@ -4807,7 +5913,10 @@ rec {
           {
             name = "serde";
             packageId = "serde";
-            features = [ "derive" "rc" ];
+            features = [
+              "derive"
+              "rc"
+            ];
           }
           {
             name = "serde_json";
@@ -4820,7 +5929,10 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "fs" "sync" ];
+            features = [
+              "fs"
+              "sync"
+            ];
           }
           {
             name = "tracing";
@@ -4839,11 +5951,18 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "macros" "parking_lot" "rt-multi-thread" ];
+            features = [
+              "macros"
+              "parking_lot"
+              "rt-multi-thread"
+            ];
           }
         ];
         features = {
-          "default" = [ "hyper-rustls/rustls-native-certs" "hyper-rustls/ring" ];
+          "default" = [
+            "hyper-rustls/rustls-native-certs"
+            "hyper-rustls/ring"
+          ];
           "webpki-roots" = [ "hyper-rustls/webpki-roots" ];
         };
         resolvedDefaultFeatures = [ "default" ];
@@ -4868,7 +5987,11 @@ rec {
           "futures03" = [ "futures-core" ];
           "genawaiter-proc-macro" = [ "dep:genawaiter-proc-macro" ];
           "proc-macro-hack" = [ "dep:proc-macro-hack" ];
-          "proc_macro" = [ "genawaiter-proc-macro" "proc-macro-hack" "genawaiter-macro/proc_macro" ];
+          "proc_macro" = [
+            "genawaiter-proc-macro"
+            "proc-macro-hack"
+            "genawaiter-macro/proc_macro"
+          ];
         };
       };
       "genawaiter-macro" = rec {
@@ -4880,7 +6003,8 @@ rec {
         authors = [
           "Devin R <devin.ragotzy@gmail.com>"
         ];
-        features = { };
+        features = {
+        };
       };
       "generator" = rec {
         crateName = "generator";
@@ -4908,7 +6032,13 @@ rec {
             name = "windows";
             packageId = "windows";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_System_Memory" "Win32_System_Kernel" "Win32_Foundation" "Win32_System_SystemInformation" "Win32_System_Diagnostics_Debug" ];
+            features = [
+              "Win32_System_Memory"
+              "Win32_System_Kernel"
+              "Win32_Foundation"
+              "Win32_System_SystemInformation"
+              "Win32_System_Diagnostics_Debug"
+            ];
           }
         ];
         buildDependencies = [
@@ -4964,7 +6094,12 @@ rec {
             name = "js-sys";
             packageId = "js-sys";
             optional = true;
-            target = { target, features }: ((("wasm32" == target."arch" or null) || ("wasm64" == target."arch" or null)) && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              (
+                (("wasm32" == target."arch" or null) || ("wasm64" == target."arch" or null))
+                && ("unknown" == target."os" or null)
+              );
           }
           {
             name = "libc";
@@ -4983,18 +6118,36 @@ rec {
             packageId = "wasm-bindgen";
             optional = true;
             usesDefaultFeatures = false;
-            target = { target, features }: ((("wasm32" == target."arch" or null) || ("wasm64" == target."arch" or null)) && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              (
+                (("wasm32" == target."arch" or null) || ("wasm64" == target."arch" or null))
+                && ("unknown" == target."os" or null)
+              );
           }
         ];
         features = {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "js" = [ "wasm-bindgen" "js-sys" ];
+          "js" = [
+            "wasm-bindgen"
+            "js-sys"
+          ];
           "js-sys" = [ "dep:js-sys" ];
-          "rustc-dep-of-std" = [ "compiler_builtins" "core" "libc/rustc-dep-of-std" "wasi/rustc-dep-of-std" ];
+          "rustc-dep-of-std" = [
+            "compiler_builtins"
+            "core"
+            "libc/rustc-dep-of-std"
+            "wasi/rustc-dep-of-std"
+          ];
           "wasm-bindgen" = [ "dep:wasm-bindgen" ];
         };
-        resolvedDefaultFeatures = [ "js" "js-sys" "std" "wasm-bindgen" ];
+        resolvedDefaultFeatures = [
+          "js"
+          "js-sys"
+          "std"
+          "wasm-bindgen"
+        ];
       };
       "getset" = rec {
         crateName = "getset";
@@ -5033,16 +6186,37 @@ rec {
         edition = "2018";
         sha256 = "0gvqc0ramx8szv76jhfd4dms0zyamvlg4whhiz11j34hh3dqxqh7";
         features = {
-          "default" = [ "read-all" "write" ];
-          "endian-reader" = [ "read" "dep:stable_deref_trait" ];
+          "default" = [
+            "read-all"
+            "write"
+          ];
+          "endian-reader" = [
+            "read"
+            "dep:stable_deref_trait"
+          ];
           "fallible-iterator" = [ "dep:fallible-iterator" ];
           "read" = [ "read-core" ];
-          "read-all" = [ "read" "std" "fallible-iterator" "endian-reader" ];
-          "rustc-dep-of-std" = [ "dep:core" "dep:alloc" "dep:compiler_builtins" ];
-          "std" = [ "fallible-iterator?/std" "stable_deref_trait?/std" ];
+          "read-all" = [
+            "read"
+            "std"
+            "fallible-iterator"
+            "endian-reader"
+          ];
+          "rustc-dep-of-std" = [
+            "dep:core"
+            "dep:alloc"
+            "dep:compiler_builtins"
+          ];
+          "std" = [
+            "fallible-iterator?/std"
+            "stable_deref_trait?/std"
+          ];
           "write" = [ "dep:indexmap" ];
         };
-        resolvedDefaultFeatures = [ "read" "read-core" ];
+        resolvedDefaultFeatures = [
+          "read"
+          "read-core"
+        ];
       };
       "glob" = rec {
         crateName = "glob";
@@ -5107,7 +6281,10 @@ rec {
           {
             name = "tokio-util";
             packageId = "tokio-util";
-            features = [ "codec" "io" ];
+            features = [
+              "codec"
+              "io"
+            ];
           }
           {
             name = "tracing";
@@ -5120,10 +6297,16 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "rt-multi-thread" "macros" "sync" "net" ];
+            features = [
+              "rt-multi-thread"
+              "macros"
+              "sync"
+              "net"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "half" = rec {
         crateName = "half";
@@ -5154,7 +6337,10 @@ rec {
           "bytemuck" = [ "dep:bytemuck" ];
           "default" = [ "std" ];
           "num-traits" = [ "dep:num-traits" ];
-          "rand_distr" = [ "dep:rand" "dep:rand_distr" ];
+          "rand_distr" = [
+            "dep:rand"
+            "dep:rand_distr"
+          ];
           "rkyv" = [ "dep:rkyv" ];
           "serde" = [ "dep:serde" ];
           "std" = [ "alloc" ];
@@ -5176,9 +6362,18 @@ rec {
           "bumpalo" = [ "dep:bumpalo" ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "default" = [ "ahash" "inline-more" ];
+          "default" = [
+            "ahash"
+            "inline-more"
+          ];
           "rayon" = [ "dep:rayon" ];
-          "rustc-dep-of-std" = [ "nightly" "core" "compiler_builtins" "alloc" "rustc-internal-api" ];
+          "rustc-dep-of-std" = [
+            "nightly"
+            "core"
+            "compiler_builtins"
+            "alloc"
+            "rustc-internal-api"
+          ];
           "serde" = [ "dep:serde" ];
         };
         resolvedDefaultFeatures = [ "raw" ];
@@ -5197,12 +6392,25 @@ rec {
           "allocator-api2" = [ "dep:allocator-api2" ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "default" = [ "ahash" "inline-more" "allocator-api2" ];
+          "default" = [
+            "ahash"
+            "inline-more"
+            "allocator-api2"
+          ];
           "equivalent" = [ "dep:equivalent" ];
-          "nightly" = [ "allocator-api2?/nightly" "bumpalo/allocator_api" ];
+          "nightly" = [
+            "allocator-api2?/nightly"
+            "bumpalo/allocator_api"
+          ];
           "rayon" = [ "dep:rayon" ];
           "rkyv" = [ "dep:rkyv" ];
-          "rustc-dep-of-std" = [ "nightly" "core" "compiler_builtins" "alloc" "rustc-internal-api" ];
+          "rustc-dep-of-std" = [
+            "nightly"
+            "core"
+            "compiler_builtins"
+            "alloc"
+            "rustc-internal-api"
+          ];
           "serde" = [ "dep:serde" ];
         };
         resolvedDefaultFeatures = [ "inline-more" ];
@@ -5241,15 +6449,38 @@ rec {
           "allocator-api2" = [ "dep:allocator-api2" ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "default" = [ "default-hasher" "inline-more" "allocator-api2" "equivalent" "raw-entry" ];
+          "default" = [
+            "default-hasher"
+            "inline-more"
+            "allocator-api2"
+            "equivalent"
+            "raw-entry"
+          ];
           "default-hasher" = [ "dep:foldhash" ];
           "equivalent" = [ "dep:equivalent" ];
-          "nightly" = [ "allocator-api2?/nightly" "bumpalo/allocator_api" ];
+          "nightly" = [
+            "allocator-api2?/nightly"
+            "bumpalo/allocator_api"
+          ];
           "rayon" = [ "dep:rayon" ];
-          "rustc-dep-of-std" = [ "nightly" "core" "compiler_builtins" "alloc" "rustc-internal-api" "raw-entry" ];
+          "rustc-dep-of-std" = [
+            "nightly"
+            "core"
+            "compiler_builtins"
+            "alloc"
+            "rustc-internal-api"
+            "raw-entry"
+          ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "allocator-api2" "default" "default-hasher" "equivalent" "inline-more" "raw-entry" ];
+        resolvedDefaultFeatures = [
+          "allocator-api2"
+          "default"
+          "default-hasher"
+          "equivalent"
+          "inline-more"
+          "raw-entry"
+        ];
       };
       "headers" = rec {
         crateName = "headers";
@@ -5289,7 +6520,8 @@ rec {
             packageId = "sha1";
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "headers-core" = rec {
         crateName = "headers-core";
@@ -5342,7 +6574,11 @@ rec {
           "alloc" = [ "dep:alloc" ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [ "core" "alloc" "compiler_builtins/rustc-dep-of-std" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "alloc"
+            "compiler_builtins/rustc-dep-of-std"
+          ];
         };
         resolvedDefaultFeatures = [ "default" ];
       };
@@ -5359,7 +6595,11 @@ rec {
           "alloc" = [ "dep:alloc" ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [ "core" "alloc" "compiler_builtins/rustc-dep-of-std" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "alloc"
+            "compiler_builtins/rustc-dep-of-std"
+          ];
         };
         resolvedDefaultFeatures = [ "default" ];
       };
@@ -5402,7 +6642,11 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_UI_Shell" "Win32_System_Com" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_UI_Shell"
+              "Win32_System_Com"
+            ];
           }
         ];
 
@@ -5460,7 +6704,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "http-body" = rec {
         crateName = "http-body";
@@ -5532,7 +6779,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "httpdate" = rec {
         crateName = "httpdate";
@@ -5615,7 +6865,10 @@ rec {
             name = "smallvec";
             packageId = "smallvec";
             optional = true;
-            features = [ "const_generics" "const_new" ];
+            features = [
+              "const_generics"
+              "const_new"
+            ];
           }
           {
             name = "tokio";
@@ -5638,7 +6891,10 @@ rec {
             name = "futures-util";
             packageId = "futures-util";
             usesDefaultFeatures = false;
-            features = [ "alloc" "sink" ];
+            features = [
+              "alloc"
+              "sink"
+            ];
           }
           {
             name = "pin-project-lite";
@@ -5647,19 +6903,61 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "fs" "macros" "net" "io-std" "io-util" "rt" "rt-multi-thread" "sync" "time" "test-util" ];
+            features = [
+              "fs"
+              "macros"
+              "net"
+              "io-std"
+              "io-util"
+              "rt"
+              "rt-multi-thread"
+              "sync"
+              "time"
+              "test-util"
+            ];
           }
         ];
         features = {
-          "client" = [ "dep:want" "dep:pin-project-lite" "dep:smallvec" ];
-          "ffi" = [ "dep:http-body-util" "futures-util?/alloc" ];
-          "full" = [ "client" "http1" "http2" "server" ];
-          "http1" = [ "dep:futures-channel" "dep:futures-util" "dep:httparse" "dep:itoa" ];
-          "http2" = [ "dep:futures-channel" "dep:futures-util" "dep:h2" ];
-          "server" = [ "dep:httpdate" "dep:pin-project-lite" "dep:smallvec" ];
+          "client" = [
+            "dep:want"
+            "dep:pin-project-lite"
+            "dep:smallvec"
+          ];
+          "ffi" = [
+            "dep:http-body-util"
+            "futures-util?/alloc"
+          ];
+          "full" = [
+            "client"
+            "http1"
+            "http2"
+            "server"
+          ];
+          "http1" = [
+            "dep:futures-channel"
+            "dep:futures-util"
+            "dep:httparse"
+            "dep:itoa"
+          ];
+          "http2" = [
+            "dep:futures-channel"
+            "dep:futures-util"
+            "dep:h2"
+          ];
+          "server" = [
+            "dep:httpdate"
+            "dep:pin-project-lite"
+            "dep:smallvec"
+          ];
           "tracing" = [ "dep:tracing" ];
         };
-        resolvedDefaultFeatures = [ "client" "default" "http1" "http2" "server" ];
+        resolvedDefaultFeatures = [
+          "client"
+          "default"
+          "http1"
+          "http2"
+          "server"
+        ];
       };
       "hyper-rustls" = rec {
         crateName = "hyper-rustls";
@@ -5686,7 +6984,10 @@ rec {
             name = "hyper-util";
             packageId = "hyper-util";
             usesDefaultFeatures = false;
-            features = [ "client-legacy" "tokio" ];
+            features = [
+              "client-legacy"
+              "tokio"
+            ];
           }
           {
             name = "rustls";
@@ -5733,26 +7034,54 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "io-std" "macros" "net" "rt-multi-thread" ];
+            features = [
+              "io-std"
+              "macros"
+              "net"
+              "rt-multi-thread"
+            ];
           }
         ];
         features = {
           "aws-lc-rs" = [ "rustls/aws_lc_rs" ];
-          "default" = [ "native-tokio" "http1" "tls12" "logging" "aws-lc-rs" ];
-          "fips" = [ "aws-lc-rs" "rustls/fips" ];
+          "default" = [
+            "native-tokio"
+            "http1"
+            "tls12"
+            "logging"
+            "aws-lc-rs"
+          ];
+          "fips" = [
+            "aws-lc-rs"
+            "rustls/fips"
+          ];
           "http1" = [ "hyper-util/http1" ];
           "http2" = [ "hyper-util/http2" ];
           "log" = [ "dep:log" ];
-          "logging" = [ "log" "tokio-rustls/logging" "rustls/logging" ];
+          "logging" = [
+            "log"
+            "tokio-rustls/logging"
+            "rustls/logging"
+          ];
           "native-tokio" = [ "rustls-native-certs" ];
           "ring" = [ "rustls/ring" ];
           "rustls-native-certs" = [ "dep:rustls-native-certs" ];
           "rustls-platform-verifier" = [ "dep:rustls-platform-verifier" ];
-          "tls12" = [ "tokio-rustls/tls12" "rustls/tls12" ];
+          "tls12" = [
+            "tokio-rustls/tls12"
+            "rustls/tls12"
+          ];
           "webpki-roots" = [ "dep:webpki-roots" ];
           "webpki-tokio" = [ "webpki-roots" ];
         };
-        resolvedDefaultFeatures = [ "http1" "http2" "native-tokio" "ring" "rustls-native-certs" "tls12" ];
+        resolvedDefaultFeatures = [
+          "http1"
+          "http2"
+          "native-tokio"
+          "ring"
+          "rustls-native-certs"
+          "tls12"
+        ];
       };
       "hyper-timeout" = rec {
         crateName = "hyper-timeout";
@@ -5771,7 +7100,10 @@ rec {
           {
             name = "hyper-util";
             packageId = "hyper-util";
-            features = [ "client-legacy" "http1" ];
+            features = [
+              "client-legacy"
+              "http1"
+            ];
           }
           {
             name = "pin-project-lite";
@@ -5795,12 +7127,21 @@ rec {
           {
             name = "hyper-util";
             packageId = "hyper-util";
-            features = [ "client-legacy" "http1" "server" "server-graceful" ];
+            features = [
+              "client-legacy"
+              "http1"
+              "server"
+              "server-graceful"
+            ];
           }
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "io-std" "io-util" "macros" ];
+            features = [
+              "io-std"
+              "io-util"
+              "macros"
+            ];
           }
         ];
 
@@ -5883,22 +7224,68 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "macros" "test-util" "signal" ];
+            features = [
+              "macros"
+              "test-util"
+              "signal"
+            ];
           }
         ];
         features = {
-          "client" = [ "hyper/client" "dep:tracing" "dep:futures-channel" "dep:tower-service" ];
-          "client-legacy" = [ "client" "dep:socket2" "tokio/sync" ];
-          "full" = [ "client" "client-legacy" "server" "server-auto" "server-graceful" "service" "http1" "http2" "tokio" ];
+          "client" = [
+            "hyper/client"
+            "dep:tracing"
+            "dep:futures-channel"
+            "dep:tower-service"
+          ];
+          "client-legacy" = [
+            "client"
+            "dep:socket2"
+            "tokio/sync"
+          ];
+          "full" = [
+            "client"
+            "client-legacy"
+            "server"
+            "server-auto"
+            "server-graceful"
+            "service"
+            "http1"
+            "http2"
+            "tokio"
+          ];
           "http1" = [ "hyper/http1" ];
           "http2" = [ "hyper/http2" ];
           "server" = [ "hyper/server" ];
-          "server-auto" = [ "server" "http1" "http2" ];
-          "server-graceful" = [ "server" "tokio/sync" "futures-util/alloc" ];
+          "server-auto" = [
+            "server"
+            "http1"
+            "http2"
+          ];
+          "server-graceful" = [
+            "server"
+            "tokio/sync"
+            "futures-util/alloc"
+          ];
           "service" = [ "dep:tower-service" ];
-          "tokio" = [ "dep:tokio" "tokio/net" "tokio/rt" "tokio/time" ];
+          "tokio" = [
+            "dep:tokio"
+            "tokio/net"
+            "tokio/rt"
+            "tokio/time"
+          ];
         };
-        resolvedDefaultFeatures = [ "client" "client-legacy" "default" "http1" "http2" "server" "server-auto" "service" "tokio" ];
+        resolvedDefaultFeatures = [
+          "client"
+          "client-legacy"
+          "default"
+          "http1"
+          "http2"
+          "server"
+          "server-auto"
+          "service"
+          "tokio"
+        ];
       };
       "iana-time-zone" = rec {
         crateName = "iana-time-zone";
@@ -5930,12 +7317,14 @@ rec {
           {
             name = "js-sys";
             packageId = "js-sys";
-            target = { target, features }: (("wasm32" == target."arch" or null) && ("unknown" == target."os" or null));
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && ("unknown" == target."os" or null));
           }
           {
             name = "wasm-bindgen";
             packageId = "wasm-bindgen";
-            target = { target, features }: (("wasm32" == target."arch" or null) && ("unknown" == target."os" or null));
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && ("unknown" == target."os" or null));
           }
           {
             name = "windows-core";
@@ -5943,7 +7332,8 @@ rec {
             target = { target, features }: ("windows" == target."os" or null);
           }
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "fallback" ];
       };
       "iana-time-zone-haiku" = rec {
@@ -5993,12 +7383,21 @@ rec {
             name = "zerovec";
             packageId = "zerovec";
             usesDefaultFeatures = false;
-            features = [ "derive" "yoke" ];
+            features = [
+              "derive"
+              "yoke"
+            ];
           }
         ];
         features = {
-          "databake" = [ "dep:databake" "zerovec/databake" ];
-          "serde" = [ "dep:serde" "zerovec/serde" ];
+          "databake" = [
+            "dep:databake"
+            "zerovec/databake"
+          ];
+          "serde" = [
+            "dep:serde"
+            "zerovec/serde"
+          ];
         };
       };
       "icu_locid" = rec {
@@ -6042,7 +7441,10 @@ rec {
         features = {
           "bench" = [ "serde" ];
           "databake" = [ "dep:databake" ];
-          "serde" = [ "dep:serde" "tinystr/serde" ];
+          "serde" = [
+            "dep:serde"
+            "tinystr/serde"
+          ];
           "zerovec" = [ "dep:zerovec" ];
         };
         resolvedDefaultFeatures = [ "zerovec" ];
@@ -6083,7 +7485,10 @@ rec {
             name = "tinystr";
             packageId = "tinystr";
             usesDefaultFeatures = false;
-            features = [ "alloc" "zerovec" ];
+            features = [
+              "alloc"
+              "zerovec"
+            ];
           }
           {
             name = "zerovec";
@@ -6095,9 +7500,21 @@ rec {
         features = {
           "bench" = [ "serde" ];
           "compiled_data" = [ "dep:icu_locid_transform_data" ];
-          "datagen" = [ "serde" "dep:databake" "zerovec/databake" "icu_locid/databake" "tinystr/databake" ];
+          "datagen" = [
+            "serde"
+            "dep:databake"
+            "zerovec/databake"
+            "icu_locid/databake"
+            "tinystr/databake"
+          ];
           "default" = [ "compiled_data" ];
-          "serde" = [ "dep:serde" "icu_locid/serde" "tinystr/serde" "zerovec/serde" "icu_provider/serde" ];
+          "serde" = [
+            "dep:serde"
+            "icu_locid/serde"
+            "tinystr/serde"
+            "zerovec/serde"
+            "icu_provider/serde"
+          ];
         };
         resolvedDefaultFeatures = [ "compiled_data" ];
       };
@@ -6183,13 +7600,34 @@ rec {
           }
         ];
         features = {
-          "compiled_data" = [ "dep:icu_normalizer_data" "icu_properties/compiled_data" ];
-          "datagen" = [ "serde" "dep:databake" "icu_collections/databake" "zerovec/databake" "icu_properties/datagen" ];
+          "compiled_data" = [
+            "dep:icu_normalizer_data"
+            "icu_properties/compiled_data"
+          ];
+          "datagen" = [
+            "serde"
+            "dep:databake"
+            "icu_collections/databake"
+            "zerovec/databake"
+            "icu_properties/datagen"
+          ];
           "default" = [ "compiled_data" ];
-          "serde" = [ "dep:serde" "icu_collections/serde" "zerovec/serde" "icu_properties/serde" ];
-          "std" = [ "icu_collections/std" "icu_properties/std" "icu_provider/std" ];
+          "serde" = [
+            "dep:serde"
+            "icu_collections/serde"
+            "zerovec/serde"
+            "icu_properties/serde"
+          ];
+          "std" = [
+            "icu_collections/std"
+            "icu_properties/std"
+            "icu_provider/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "compiled_data" "default" ];
+        resolvedDefaultFeatures = [
+          "compiled_data"
+          "default"
+        ];
       };
       "icu_normalizer_data" = rec {
         crateName = "icu_normalizer_data";
@@ -6243,7 +7681,10 @@ rec {
             name = "tinystr";
             packageId = "tinystr";
             usesDefaultFeatures = false;
-            features = [ "alloc" "zerovec" ];
+            features = [
+              "alloc"
+              "zerovec"
+            ];
           }
           {
             name = "zerovec";
@@ -6254,13 +7695,34 @@ rec {
         ];
         features = {
           "bidi" = [ "dep:unicode-bidi" ];
-          "compiled_data" = [ "dep:icu_properties_data" "dep:icu_locid_transform" ];
-          "datagen" = [ "serde" "dep:databake" "zerovec/databake" "icu_collections/databake" "tinystr/databake" ];
+          "compiled_data" = [
+            "dep:icu_properties_data"
+            "dep:icu_locid_transform"
+          ];
+          "datagen" = [
+            "serde"
+            "dep:databake"
+            "zerovec/databake"
+            "icu_collections/databake"
+            "tinystr/databake"
+          ];
           "default" = [ "compiled_data" ];
-          "serde" = [ "dep:serde" "tinystr/serde" "zerovec/serde" "icu_collections/serde" "icu_provider/serde" ];
-          "std" = [ "icu_collections/std" "icu_provider/std" ];
+          "serde" = [
+            "dep:serde"
+            "tinystr/serde"
+            "zerovec/serde"
+            "icu_collections/serde"
+            "icu_provider/serde"
+          ];
+          "std" = [
+            "icu_collections/std"
+            "icu_provider/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "compiled_data" "default" ];
+        resolvedDefaultFeatures = [
+          "compiled_data"
+          "default"
+        ];
       };
       "icu_properties_data" = rec {
         crateName = "icu_properties_data";
@@ -6316,13 +7778,19 @@ rec {
             name = "yoke";
             packageId = "yoke";
             usesDefaultFeatures = false;
-            features = [ "alloc" "derive" ];
+            features = [
+              "alloc"
+              "derive"
+            ];
           }
           {
             name = "zerofrom";
             packageId = "zerofrom";
             usesDefaultFeatures = false;
-            features = [ "alloc" "derive" ];
+            features = [
+              "alloc"
+              "derive"
+            ];
           }
           {
             name = "zerovec";
@@ -6332,14 +7800,33 @@ rec {
           }
         ];
         features = {
-          "datagen" = [ "serde" "dep:erased-serde" "dep:databake" "std" "sync" ];
-          "deserialize_bincode_1" = [ "serde" "dep:bincode" "std" ];
-          "deserialize_json" = [ "serde" "dep:serde_json" ];
-          "deserialize_postcard_1" = [ "serde" "dep:postcard" ];
+          "datagen" = [
+            "serde"
+            "dep:erased-serde"
+            "dep:databake"
+            "std"
+            "sync"
+          ];
+          "deserialize_bincode_1" = [
+            "serde"
+            "dep:bincode"
+            "std"
+          ];
+          "deserialize_json" = [
+            "serde"
+            "dep:serde_json"
+          ];
+          "deserialize_postcard_1" = [
+            "serde"
+            "dep:postcard"
+          ];
           "log_error_context" = [ "logging" ];
           "logging" = [ "dep:log" ];
           "macros" = [ "dep:icu_provider_macros" ];
-          "serde" = [ "dep:serde" "yoke/serde" ];
+          "serde" = [
+            "dep:serde"
+            "yoke/serde"
+          ];
           "std" = [ "icu_locid/std" ];
         };
         resolvedDefaultFeatures = [ "macros" ];
@@ -6404,10 +7891,17 @@ rec {
         ];
         features = {
           "compiled_data" = [ "idna_adapter/compiled_data" ];
-          "default" = [ "std" "compiled_data" ];
+          "default" = [
+            "std"
+            "compiled_data"
+          ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "compiled_data" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "compiled_data"
+          "std"
+        ];
       };
       "idna_adapter" = rec {
         crateName = "idna_adapter";
@@ -6428,7 +7922,10 @@ rec {
           }
         ];
         features = {
-          "compiled_data" = [ "icu_normalizer/compiled_data" "icu_properties/compiled_data" ];
+          "compiled_data" = [
+            "icu_normalizer/compiled_data"
+            "icu_properties/compiled_data"
+          ];
         };
         resolvedDefaultFeatures = [ "compiled_data" ];
       };
@@ -6465,7 +7962,11 @@ rec {
           "serde" = [ "dep:serde" ];
           "serde-1" = [ "serde" ];
         };
-        resolvedDefaultFeatures = [ "serde" "serde-1" "std" ];
+        resolvedDefaultFeatures = [
+          "serde"
+          "serde-1"
+          "std"
+        ];
       };
       "indexmap 2.7.0" = rec {
         crateName = "indexmap";
@@ -6499,7 +8000,11 @@ rec {
           "rustc-rayon" = [ "dep:rustc-rayon" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "default" "serde" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "serde"
+          "std"
+        ];
       };
       "indicatif" = rec {
         crateName = "indicatif";
@@ -6538,9 +8043,16 @@ rec {
           }
         ];
         features = {
-          "default" = [ "unicode-width" "console/unicode-width" ];
+          "default" = [
+            "unicode-width"
+            "console/unicode-width"
+          ];
           "futures" = [ "dep:futures-core" ];
-          "improved_unicode" = [ "unicode-segmentation" "unicode-width" "console/unicode-width" ];
+          "improved_unicode" = [
+            "unicode-segmentation"
+            "unicode-width"
+            "console/unicode-width"
+          ];
           "in_memory" = [ "vt100" ];
           "rayon" = [ "dep:rayon" ];
           "tokio" = [ "dep:tokio" ];
@@ -6548,7 +8060,12 @@ rec {
           "unicode-width" = [ "dep:unicode-width" ];
           "vt100" = [ "dep:vt100" ];
         };
-        resolvedDefaultFeatures = [ "default" "in_memory" "unicode-width" "vt100" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "in_memory"
+          "unicode-width"
+          "vt100"
+        ];
       };
       "inventory" = rec {
         crateName = "inventory";
@@ -6562,7 +8079,8 @@ rec {
           {
             name = "rustversion";
             packageId = "rustversion";
-            target = { target, features }: (("emscripten" == target."os" or null) || ("wasi" == target."os" or null));
+            target =
+              { target, features }: (("emscripten" == target."os" or null) || ("wasi" == target."os" or null));
           }
         ];
         devDependencies = [
@@ -6584,12 +8102,18 @@ rec {
         features = {
           "default" = [ "std" ];
           "heapless" = [ "dep:heapless" ];
-          "json" = [ "serde" "schemars" ];
+          "json" = [
+            "serde"
+            "schemars"
+          ];
           "schemars" = [ "dep:schemars" ];
           "ser_as_str" = [ "heapless" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "is-terminal" = rec {
         crateName = "is-terminal";
@@ -6616,7 +8140,11 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_Storage_FileSystem" "Win32_System_Console" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Storage_FileSystem"
+              "Win32_System_Console"
+            ];
           }
         ];
         devDependencies = [
@@ -6633,7 +8161,8 @@ rec {
         version = "1.70.1";
         edition = "2021";
         sha256 = "1kwfgglh91z33kl0w5i338mfpa3zs0hidq5j4ny4rmjwrikchhvr";
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "itertools 0.10.5" = rec {
@@ -6653,9 +8182,16 @@ rec {
         ];
         features = {
           "default" = [ "use_std" ];
-          "use_std" = [ "use_alloc" "either/use_std" ];
+          "use_std" = [
+            "use_alloc"
+            "either/use_std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "use_alloc" "use_std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "use_alloc"
+          "use_std"
+        ];
       };
       "itertools 0.12.1" = rec {
         crateName = "itertools";
@@ -6674,9 +8210,16 @@ rec {
         ];
         features = {
           "default" = [ "use_std" ];
-          "use_std" = [ "use_alloc" "either/use_std" ];
+          "use_std" = [
+            "use_alloc"
+            "either/use_std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "use_alloc" "use_std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "use_alloc"
+          "use_std"
+        ];
       };
       "itertools 0.13.0" = rec {
         crateName = "itertools";
@@ -6695,9 +8238,16 @@ rec {
         ];
         features = {
           "default" = [ "use_std" ];
-          "use_std" = [ "use_alloc" "either/use_std" ];
+          "use_std" = [
+            "use_alloc"
+            "either/use_std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "use_alloc" "use_std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "use_alloc"
+          "use_std"
+        ];
       };
       "itoa" = rec {
         crateName = "itoa";
@@ -6753,7 +8303,10 @@ rec {
           "default" = [ "std" ];
           "std" = [ "wasm-bindgen/std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "lazy_static" = rec {
         crateName = "lazy_static";
@@ -6809,27 +8362,118 @@ rec {
           }
         ];
         features = {
-          "compact" = [ "lexical-write-integer/compact" "lexical-write-float/compact" "lexical-parse-integer/compact" "lexical-parse-float/compact" ];
-          "default" = [ "std" "write-integers" "write-floats" "parse-integers" "parse-floats" ];
-          "f128" = [ "lexical-util/f128" "lexical-parse-float/f128" "lexical-write-float/f128" ];
-          "f16" = [ "lexical-util/f16" "lexical-parse-float/f16" "lexical-write-float/f16" ];
-          "format" = [ "lexical-util/format" "lexical-parse-integer/format" "lexical-parse-float/format" "lexical-write-integer/format" "lexical-write-float/format" ];
+          "compact" = [
+            "lexical-write-integer/compact"
+            "lexical-write-float/compact"
+            "lexical-parse-integer/compact"
+            "lexical-parse-float/compact"
+          ];
+          "default" = [
+            "std"
+            "write-integers"
+            "write-floats"
+            "parse-integers"
+            "parse-floats"
+          ];
+          "f128" = [
+            "lexical-util/f128"
+            "lexical-parse-float/f128"
+            "lexical-write-float/f128"
+          ];
+          "f16" = [
+            "lexical-util/f16"
+            "lexical-parse-float/f16"
+            "lexical-write-float/f16"
+          ];
+          "format" = [
+            "lexical-util/format"
+            "lexical-parse-integer/format"
+            "lexical-parse-float/format"
+            "lexical-write-integer/format"
+            "lexical-write-float/format"
+          ];
           "lexical-parse-float" = [ "dep:lexical-parse-float" ];
           "lexical-parse-integer" = [ "dep:lexical-parse-integer" ];
           "lexical-write-float" = [ "dep:lexical-write-float" ];
           "lexical-write-integer" = [ "dep:lexical-write-integer" ];
-          "lint" = [ "lexical-util/lint" "lexical-write-integer/lint" "lexical-write-float/lint" "lexical-parse-integer/lint" "lexical-parse-float/lint" ];
-          "nightly" = [ "lexical-write-integer/nightly" "lexical-write-float/nightly" "lexical-parse-integer/nightly" "lexical-parse-float/nightly" ];
-          "parse-floats" = [ "lexical-parse-float" "parse" "floats" ];
-          "parse-integers" = [ "lexical-parse-integer" "parse" "integers" ];
-          "power-of-two" = [ "lexical-util/power-of-two" "lexical-write-integer/power-of-two" "lexical-write-float/power-of-two" "lexical-parse-integer/power-of-two" "lexical-parse-float/power-of-two" ];
-          "radix" = [ "lexical-util/radix" "lexical-write-integer/radix" "lexical-write-float/radix" "lexical-parse-integer/radix" "lexical-parse-float/radix" ];
-          "safe" = [ "lexical-write-integer/safe" "lexical-write-float/safe" "lexical-parse-integer/safe" "lexical-parse-float/safe" ];
-          "std" = [ "lexical-util/std" "lexical-write-integer/std" "lexical-write-float/std" "lexical-parse-integer/std" "lexical-parse-float/std" ];
-          "write-floats" = [ "lexical-write-float" "write" "floats" ];
-          "write-integers" = [ "lexical-write-integer" "write" "integers" ];
+          "lint" = [
+            "lexical-util/lint"
+            "lexical-write-integer/lint"
+            "lexical-write-float/lint"
+            "lexical-parse-integer/lint"
+            "lexical-parse-float/lint"
+          ];
+          "nightly" = [
+            "lexical-write-integer/nightly"
+            "lexical-write-float/nightly"
+            "lexical-parse-integer/nightly"
+            "lexical-parse-float/nightly"
+          ];
+          "parse-floats" = [
+            "lexical-parse-float"
+            "parse"
+            "floats"
+          ];
+          "parse-integers" = [
+            "lexical-parse-integer"
+            "parse"
+            "integers"
+          ];
+          "power-of-two" = [
+            "lexical-util/power-of-two"
+            "lexical-write-integer/power-of-two"
+            "lexical-write-float/power-of-two"
+            "lexical-parse-integer/power-of-two"
+            "lexical-parse-float/power-of-two"
+          ];
+          "radix" = [
+            "lexical-util/radix"
+            "lexical-write-integer/radix"
+            "lexical-write-float/radix"
+            "lexical-parse-integer/radix"
+            "lexical-parse-float/radix"
+          ];
+          "safe" = [
+            "lexical-write-integer/safe"
+            "lexical-write-float/safe"
+            "lexical-parse-integer/safe"
+            "lexical-parse-float/safe"
+          ];
+          "std" = [
+            "lexical-util/std"
+            "lexical-write-integer/std"
+            "lexical-write-float/std"
+            "lexical-parse-integer/std"
+            "lexical-parse-float/std"
+          ];
+          "write-floats" = [
+            "lexical-write-float"
+            "write"
+            "floats"
+          ];
+          "write-integers" = [
+            "lexical-write-integer"
+            "write"
+            "integers"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "floats" "format" "integers" "lexical-parse-float" "lexical-parse-integer" "lexical-write-float" "lexical-write-integer" "parse" "parse-floats" "parse-integers" "std" "write" "write-floats" "write-integers" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "floats"
+          "format"
+          "integers"
+          "lexical-parse-float"
+          "lexical-parse-integer"
+          "lexical-write-float"
+          "lexical-write-integer"
+          "parse"
+          "parse-floats"
+          "parse-integers"
+          "std"
+          "write"
+          "write-floats"
+          "write-integers"
+        ];
       };
       "lexical-parse-float" = rec {
         crateName = "lexical-parse-float";
@@ -6858,19 +8502,41 @@ rec {
           }
         ];
         features = {
-          "compact" = [ "lexical-util/compact" "lexical-parse-integer/compact" ];
+          "compact" = [
+            "lexical-util/compact"
+            "lexical-parse-integer/compact"
+          ];
           "default" = [ "std" ];
           "f128" = [ "lexical-util/f128" ];
           "f16" = [ "lexical-util/f16" ];
-          "format" = [ "lexical-util/format" "lexical-parse-integer/format" ];
-          "lint" = [ "lexical-util/lint" "lexical-parse-integer/lint" ];
+          "format" = [
+            "lexical-util/format"
+            "lexical-parse-integer/format"
+          ];
+          "lint" = [
+            "lexical-util/lint"
+            "lexical-parse-integer/lint"
+          ];
           "nightly" = [ "lexical-parse-integer/nightly" ];
-          "power-of-two" = [ "lexical-util/power-of-two" "lexical-parse-integer/power-of-two" ];
-          "radix" = [ "lexical-util/radix" "lexical-parse-integer/radix" "power-of-two" ];
+          "power-of-two" = [
+            "lexical-util/power-of-two"
+            "lexical-parse-integer/power-of-two"
+          ];
+          "radix" = [
+            "lexical-util/radix"
+            "lexical-parse-integer/radix"
+            "power-of-two"
+          ];
           "safe" = [ "lexical-parse-integer/safe" ];
-          "std" = [ "lexical-util/std" "lexical-parse-integer/std" ];
+          "std" = [
+            "lexical-util/std"
+            "lexical-parse-integer/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "format" "std" ];
+        resolvedDefaultFeatures = [
+          "format"
+          "std"
+        ];
       };
       "lexical-parse-integer" = rec {
         crateName = "lexical-parse-integer";
@@ -6899,10 +8565,16 @@ rec {
           "format" = [ "lexical-util/format" ];
           "lint" = [ "lexical-util/lint" ];
           "power-of-two" = [ "lexical-util/power-of-two" ];
-          "radix" = [ "lexical-util/radix" "power-of-two" ];
+          "radix" = [
+            "lexical-util/radix"
+            "power-of-two"
+          ];
           "std" = [ "lexical-util/std" ];
         };
-        resolvedDefaultFeatures = [ "format" "std" ];
+        resolvedDefaultFeatures = [
+          "format"
+          "std"
+        ];
       };
       "lexical-util" = rec {
         crateName = "lexical-util";
@@ -6923,13 +8595,36 @@ rec {
           "default" = [ "std" ];
           "f128" = [ "floats" ];
           "f16" = [ "floats" ];
-          "parse-floats" = [ "parse" "floats" ];
-          "parse-integers" = [ "parse" "integers" ];
+          "parse-floats" = [
+            "parse"
+            "floats"
+          ];
+          "parse-integers" = [
+            "parse"
+            "integers"
+          ];
           "radix" = [ "power-of-two" ];
-          "write-floats" = [ "write" "floats" ];
-          "write-integers" = [ "write" "integers" ];
+          "write-floats" = [
+            "write"
+            "floats"
+          ];
+          "write-integers" = [
+            "write"
+            "integers"
+          ];
         };
-        resolvedDefaultFeatures = [ "floats" "format" "integers" "parse" "parse-floats" "parse-integers" "std" "write" "write-floats" "write-integers" ];
+        resolvedDefaultFeatures = [
+          "floats"
+          "format"
+          "integers"
+          "parse"
+          "parse-floats"
+          "parse-integers"
+          "std"
+          "write"
+          "write-floats"
+          "write-integers"
+        ];
       };
       "lexical-write-float" = rec {
         crateName = "lexical-write-float";
@@ -6958,19 +8653,38 @@ rec {
           }
         ];
         features = {
-          "compact" = [ "lexical-util/compact" "lexical-write-integer/compact" ];
+          "compact" = [
+            "lexical-util/compact"
+            "lexical-write-integer/compact"
+          ];
           "default" = [ "std" ];
           "f128" = [ "lexical-util/f128" ];
           "f16" = [ "lexical-util/f16" ];
           "format" = [ "lexical-util/format" ];
-          "lint" = [ "lexical-util/lint" "lexical-write-integer/lint" ];
+          "lint" = [
+            "lexical-util/lint"
+            "lexical-write-integer/lint"
+          ];
           "nightly" = [ "lexical-write-integer/nightly" ];
-          "power-of-two" = [ "lexical-util/power-of-two" "lexical-write-integer/power-of-two" ];
-          "radix" = [ "lexical-util/radix" "lexical-write-integer/radix" "power-of-two" ];
+          "power-of-two" = [
+            "lexical-util/power-of-two"
+            "lexical-write-integer/power-of-two"
+          ];
+          "radix" = [
+            "lexical-util/radix"
+            "lexical-write-integer/radix"
+            "power-of-two"
+          ];
           "safe" = [ "lexical-write-integer/safe" ];
-          "std" = [ "lexical-util/std" "lexical-write-integer/std" ];
+          "std" = [
+            "lexical-util/std"
+            "lexical-write-integer/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "format" "std" ];
+        resolvedDefaultFeatures = [
+          "format"
+          "std"
+        ];
       };
       "lexical-write-integer" = rec {
         crateName = "lexical-write-integer";
@@ -6999,10 +8713,16 @@ rec {
           "format" = [ "lexical-util/format" ];
           "lint" = [ "lexical-util/lint" ];
           "power-of-two" = [ "lexical-util/power-of-two" ];
-          "radix" = [ "lexical-util/radix" "power-of-two" ];
+          "radix" = [
+            "lexical-util/radix"
+            "power-of-two"
+          ];
           "std" = [ "lexical-util/std" ];
         };
-        resolvedDefaultFeatures = [ "format" "std" ];
+        resolvedDefaultFeatures = [
+          "format"
+          "std"
+        ];
       };
       "libc" = rec {
         crateName = "libc";
@@ -7014,11 +8734,18 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "rustc-dep-of-std" = [ "align" "rustc-std-workspace-core" ];
+          "rustc-dep-of-std" = [
+            "align"
+            "rustc-std-workspace-core"
+          ];
           "rustc-std-workspace-core" = [ "dep:rustc-std-workspace-core" ];
           "use_std" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "extra_traits" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "extra_traits"
+          "std"
+        ];
       };
       "libmimalloc-sys" = rec {
         crateName = "libmimalloc-sys";
@@ -7071,12 +8798,21 @@ rec {
           }
         ];
         features = {
-          "default" = [ "call" "std" "redox_syscall" ];
+          "default" = [
+            "call"
+            "std"
+            "redox_syscall"
+          ];
           "ioslice" = [ "dep:ioslice" ];
           "mkns" = [ "ioslice" ];
           "redox_syscall" = [ "dep:redox_syscall" ];
         };
-        resolvedDefaultFeatures = [ "call" "default" "redox_syscall" "std" ];
+        resolvedDefaultFeatures = [
+          "call"
+          "default"
+          "redox_syscall"
+          "std"
+        ];
       };
       "linux-raw-sys" = rec {
         crateName = "linux-raw-sys";
@@ -7090,10 +8826,30 @@ rec {
         features = {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "default" = [ "std" "general" "errno" ];
-          "rustc-dep-of-std" = [ "core" "compiler_builtins" "no_std" ];
+          "default" = [
+            "std"
+            "general"
+            "errno"
+          ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+            "no_std"
+          ];
         };
-        resolvedDefaultFeatures = [ "elf" "errno" "general" "if_ether" "ioctl" "net" "netlink" "no_std" "prctl" "std" "xdp" ];
+        resolvedDefaultFeatures = [
+          "elf"
+          "errno"
+          "general"
+          "if_ether"
+          "ioctl"
+          "net"
+          "netlink"
+          "no_std"
+          "prctl"
+          "std"
+          "xdp"
+        ];
       };
       "litemap" = rec {
         crateName = "litemap";
@@ -7154,7 +8910,10 @@ rec {
           "owning_ref" = [ "dep:owning_ref" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "atomic_usize" "default" ];
+        resolvedDefaultFeatures = [
+          "atomic_usize"
+          "default"
+        ];
       };
       "log" = rec {
         crateName = "log";
@@ -7165,13 +8924,38 @@ rec {
           "The Rust Project Developers"
         ];
         features = {
-          "kv_serde" = [ "kv_std" "value-bag/serde" "serde" ];
-          "kv_std" = [ "std" "kv" "value-bag/error" ];
-          "kv_sval" = [ "kv" "value-bag/sval" "sval" "sval_ref" ];
-          "kv_unstable" = [ "kv" "value-bag" ];
-          "kv_unstable_serde" = [ "kv_serde" "kv_unstable_std" ];
-          "kv_unstable_std" = [ "kv_std" "kv_unstable" ];
-          "kv_unstable_sval" = [ "kv_sval" "kv_unstable" ];
+          "kv_serde" = [
+            "kv_std"
+            "value-bag/serde"
+            "serde"
+          ];
+          "kv_std" = [
+            "std"
+            "kv"
+            "value-bag/error"
+          ];
+          "kv_sval" = [
+            "kv"
+            "value-bag/sval"
+            "sval"
+            "sval_ref"
+          ];
+          "kv_unstable" = [
+            "kv"
+            "value-bag"
+          ];
+          "kv_unstable_serde" = [
+            "kv_serde"
+            "kv_unstable_std"
+          ];
+          "kv_unstable_std" = [
+            "kv_std"
+            "kv_unstable"
+          ];
+          "kv_unstable_sval" = [
+            "kv_sval"
+            "kv_unstable"
+          ];
           "serde" = [ "dep:serde" ];
           "sval" = [ "dep:sval" ];
           "sval_ref" = [ "dep:sval_ref" ];
@@ -7213,7 +8997,10 @@ rec {
           }
         ];
         features = {
-          "checkpoint" = [ "serde" "serde_json" ];
+          "checkpoint" = [
+            "serde"
+            "serde_json"
+          ];
           "futures" = [ "pin-utils" ];
           "pin-utils" = [ "dep:pin-utils" ];
           "serde" = [ "dep:serde" ];
@@ -7239,9 +9026,15 @@ rec {
         features = {
           "default" = [ "hashbrown" ];
           "hashbrown" = [ "dep:hashbrown" ];
-          "nightly" = [ "hashbrown" "hashbrown/nightly" ];
+          "nightly" = [
+            "hashbrown"
+            "hashbrown/nightly"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "hashbrown" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "hashbrown"
+        ];
       };
       "lzma-sys" = rec {
         crateName = "lzma-sys";
@@ -7269,7 +9062,8 @@ rec {
             packageId = "pkg-config";
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "magic" = rec {
         crateName = "magic";
@@ -7344,7 +9138,22 @@ rec {
           "v5-38" = [ "v5-35" ];
           "v5-40" = [ "v5-38" ];
         };
-        resolvedDefaultFeatures = [ "default" "v5-04" "v5-05" "v5-10" "v5-13" "v5-20" "v5-21" "v5-22" "v5-23" "v5-25" "v5-27" "v5-32" "v5-35" "v5-38" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "v5-04"
+          "v5-05"
+          "v5-10"
+          "v5-13"
+          "v5-20"
+          "v5-21"
+          "v5-22"
+          "v5-23"
+          "v5-25"
+          "v5-27"
+          "v5-32"
+          "v5-35"
+          "v5-38"
+        ];
       };
       "matchers" = rec {
         crateName = "matchers";
@@ -7370,7 +9179,8 @@ rec {
         authors = [
           "Ibraheem Ahmed <ibraheem@ibraheem.ca>"
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "matchit 0.8.5" = rec {
@@ -7381,7 +9191,8 @@ rec {
         authors = [
           "Ibraheem Ahmed <ibraheem@ibraheem.ca>"
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "md-5" = rec {
@@ -7417,7 +9228,10 @@ rec {
           "oid" = [ "digest/oid" ];
           "std" = [ "digest/std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "memchr" = rec {
         crateName = "memchr";
@@ -7433,11 +9247,18 @@ rec {
           "core" = [ "dep:core" ];
           "default" = [ "std" ];
           "logging" = [ "dep:log" ];
-          "rustc-dep-of-std" = [ "core" "compiler_builtins" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+          ];
           "std" = [ "alloc" ];
           "use_std" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "memoffset" = rec {
         crateName = "memoffset";
@@ -7453,7 +9274,8 @@ rec {
             packageId = "autocfg";
           }
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "mimalloc" = rec {
@@ -7521,7 +9343,10 @@ rec {
         features = {
           "default" = [ "rev-mappings" ];
         };
-        resolvedDefaultFeatures = [ "default" "rev-mappings" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "rev-mappings"
+        ];
       };
       "miniz_oxide" = rec {
         crateName = "miniz_oxide";
@@ -7544,7 +9369,12 @@ rec {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
           "default" = [ "with-alloc" ];
-          "rustc-dep-of-std" = [ "core" "alloc" "compiler_builtins" "adler2/rustc-dep-of-std" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "alloc"
+            "compiler_builtins"
+            "adler2/rustc-dep-of-std"
+          ];
           "simd" = [ "simd-adler32" ];
           "simd-adler32" = [ "dep:simd-adler32" ];
         };
@@ -7585,15 +9415,30 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.48.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_Networking_WinSock" "Win32_Storage_FileSystem" "Win32_System_IO" "Win32_System_WindowsProgramming" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Networking_WinSock"
+              "Win32_Storage_FileSystem"
+              "Win32_System_IO"
+              "Win32_System_WindowsProgramming"
+            ];
           }
         ];
         features = {
           "default" = [ "log" ];
           "log" = [ "dep:log" ];
-          "os-ext" = [ "os-poll" "windows-sys/Win32_System_Pipes" "windows-sys/Win32_Security" ];
+          "os-ext" = [
+            "os-poll"
+            "windows-sys/Win32_System_Pipes"
+            "windows-sys/Win32_Security"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "log" "os-ext" "os-poll" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "log"
+          "os-ext"
+          "os-poll"
+        ];
       };
       "mio 1.0.3" = rec {
         crateName = "mio";
@@ -7630,15 +9475,32 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Wdk_Foundation" "Wdk_Storage_FileSystem" "Wdk_System_IO" "Win32_Foundation" "Win32_Networking_WinSock" "Win32_Storage_FileSystem" "Win32_System_IO" "Win32_System_WindowsProgramming" ];
+            features = [
+              "Wdk_Foundation"
+              "Wdk_Storage_FileSystem"
+              "Wdk_System_IO"
+              "Win32_Foundation"
+              "Win32_Networking_WinSock"
+              "Win32_Storage_FileSystem"
+              "Win32_System_IO"
+              "Win32_System_WindowsProgramming"
+            ];
           }
         ];
         features = {
           "default" = [ "log" ];
           "log" = [ "dep:log" ];
-          "os-ext" = [ "os-poll" "windows-sys/Win32_System_Pipes" "windows-sys/Win32_Security" ];
+          "os-ext" = [
+            "os-poll"
+            "windows-sys/Win32_System_Pipes"
+            "windows-sys/Win32_Security"
+          ];
         };
-        resolvedDefaultFeatures = [ "net" "os-ext" "os-poll" ];
+        resolvedDefaultFeatures = [
+          "net"
+          "os-ext"
+          "os-poll"
+        ];
       };
       "mockall" = rec {
         crateName = "mockall";
@@ -7676,7 +9538,10 @@ rec {
           }
         ];
         features = {
-          "nightly" = [ "mockall_derive/nightly_derive" "downcast/nightly" ];
+          "nightly" = [
+            "mockall_derive/nightly_derive"
+            "downcast/nightly"
+          ];
         };
       };
       "mockall_derive" = rec {
@@ -7704,7 +9569,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "extra-traits" "full" ];
+            features = [
+              "extra-traits"
+              "full"
+            ];
           }
         ];
         features = {
@@ -7764,12 +9632,18 @@ rec {
         ];
         features = {
           "all" = [ "json" ];
-          "json" = [ "serde" "serde_json" ];
+          "json" = [
+            "serde"
+            "serde_json"
+          ];
           "log" = [ "dep:log" ];
           "serde" = [ "dep:serde" ];
           "serde_json" = [ "dep:serde_json" ];
           "tokio" = [ "dep:tokio" ];
-          "tokio-io" = [ "tokio" "tokio-util" ];
+          "tokio-io" = [
+            "tokio"
+            "tokio-util"
+          ];
           "tokio-util" = [ "dep:tokio-util" ];
         };
         resolvedDefaultFeatures = [ "default" ];
@@ -7799,7 +9673,10 @@ rec {
             requiredFeatures = [ ];
           }
         ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./nar-bridge; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./nar-bridge;
+        };
         libName = "nar_bridge";
         dependencies = [
           {
@@ -7822,7 +9699,10 @@ rec {
           {
             name = "clap";
             packageId = "clap";
-            features = [ "derive" "env" ];
+            features = [
+              "derive"
+              "env"
+            ];
           }
           {
             name = "data-encoding";
@@ -7877,7 +9757,10 @@ rec {
           {
             name = "snix-tracing";
             packageId = "snix-tracing";
-            features = [ "tonic" "axum" ];
+            features = [
+              "tonic"
+              "axum"
+            ];
           }
           {
             name = "thiserror";
@@ -7890,17 +9773,29 @@ rec {
           {
             name = "tokio-listener";
             packageId = "tokio-listener";
-            features = [ "axum07" "clap" "multi-listener" "sd_listen" ];
+            features = [
+              "axum07"
+              "clap"
+              "multi-listener"
+              "sd_listen"
+            ];
           }
           {
             name = "tokio-util";
             packageId = "tokio-util";
-            features = [ "io" "io-util" "compat" ];
+            features = [
+              "io"
+              "io-util"
+              "compat"
+            ];
           }
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls" "tls-roots" ];
+            features = [
+              "tls"
+              "tls-roots"
+            ];
           }
           {
             name = "tower";
@@ -7909,7 +9804,10 @@ rec {
           {
             name = "tower-http";
             packageId = "tower-http";
-            features = [ "compression-zstd" "trace" ];
+            features = [
+              "compression-zstd"
+              "trace"
+            ];
           }
           {
             name = "tower-otel-http-metrics";
@@ -7964,11 +9862,19 @@ rec {
         ];
         features = {
           "default" = [ "otlp" ];
-          "otlp" = [ "snix-tracing/otlp" "tower-otel-http-metrics" ];
+          "otlp" = [
+            "snix-tracing/otlp"
+            "tower-otel-http-metrics"
+          ];
           "tower-otel-http-metrics" = [ "dep:tower-otel-http-metrics" ];
           "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
         };
-        resolvedDefaultFeatures = [ "default" "otlp" "tower-otel-http-metrics" "xp-store-composition-cli" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "otlp"
+          "tower-otel-http-metrics"
+          "xp-store-composition-cli"
+        ];
       };
       "nibble_vec" = rec {
         crateName = "nibble_vec";
@@ -8016,7 +9922,40 @@ rec {
           }
         ];
         features = {
-          "default" = [ "acct" "aio" "dir" "env" "event" "feature" "fs" "hostname" "inotify" "ioctl" "kmod" "mman" "mount" "mqueue" "net" "personality" "poll" "process" "pthread" "ptrace" "quota" "reboot" "resource" "sched" "signal" "socket" "term" "time" "ucontext" "uio" "user" "zerocopy" ];
+          "default" = [
+            "acct"
+            "aio"
+            "dir"
+            "env"
+            "event"
+            "feature"
+            "fs"
+            "hostname"
+            "inotify"
+            "ioctl"
+            "kmod"
+            "mman"
+            "mount"
+            "mqueue"
+            "net"
+            "personality"
+            "poll"
+            "process"
+            "pthread"
+            "ptrace"
+            "quota"
+            "reboot"
+            "resource"
+            "sched"
+            "signal"
+            "socket"
+            "term"
+            "time"
+            "ucontext"
+            "uio"
+            "user"
+            "zerocopy"
+          ];
           "dir" = [ "fs" ];
           "memoffset" = [ "dep:memoffset" ];
           "mount" = [ "uio" ];
@@ -8028,9 +9967,47 @@ rec {
           "socket" = [ "memoffset" ];
           "ucontext" = [ "signal" ];
           "user" = [ "feature" ];
-          "zerocopy" = [ "fs" "uio" ];
+          "zerocopy" = [
+            "fs"
+            "uio"
+          ];
         };
-        resolvedDefaultFeatures = [ "acct" "aio" "default" "dir" "env" "event" "feature" "fs" "hostname" "inotify" "ioctl" "kmod" "memoffset" "mman" "mount" "mqueue" "net" "personality" "poll" "process" "pthread" "ptrace" "quota" "reboot" "resource" "sched" "signal" "socket" "term" "time" "ucontext" "uio" "user" "zerocopy" ];
+        resolvedDefaultFeatures = [
+          "acct"
+          "aio"
+          "default"
+          "dir"
+          "env"
+          "event"
+          "feature"
+          "fs"
+          "hostname"
+          "inotify"
+          "ioctl"
+          "kmod"
+          "memoffset"
+          "mman"
+          "mount"
+          "mqueue"
+          "net"
+          "personality"
+          "poll"
+          "process"
+          "pthread"
+          "ptrace"
+          "quota"
+          "reboot"
+          "resource"
+          "sched"
+          "signal"
+          "socket"
+          "term"
+          "time"
+          "ucontext"
+          "uio"
+          "user"
+          "zerocopy"
+        ];
       };
       "nix 0.25.1" = rec {
         crateName = "nix";
@@ -8063,7 +10040,40 @@ rec {
         ];
         features = {
           "aio" = [ "pin-utils" ];
-          "default" = [ "acct" "aio" "dir" "env" "event" "feature" "fs" "hostname" "inotify" "ioctl" "kmod" "mman" "mount" "mqueue" "net" "personality" "poll" "process" "pthread" "ptrace" "quota" "reboot" "resource" "sched" "signal" "socket" "term" "time" "ucontext" "uio" "user" "zerocopy" ];
+          "default" = [
+            "acct"
+            "aio"
+            "dir"
+            "env"
+            "event"
+            "feature"
+            "fs"
+            "hostname"
+            "inotify"
+            "ioctl"
+            "kmod"
+            "mman"
+            "mount"
+            "mqueue"
+            "net"
+            "personality"
+            "poll"
+            "process"
+            "pthread"
+            "ptrace"
+            "quota"
+            "reboot"
+            "resource"
+            "sched"
+            "signal"
+            "socket"
+            "term"
+            "time"
+            "ucontext"
+            "uio"
+            "user"
+            "zerocopy"
+          ];
           "dir" = [ "fs" ];
           "memoffset" = [ "dep:memoffset" ];
           "mount" = [ "uio" ];
@@ -8076,9 +10086,19 @@ rec {
           "socket" = [ "memoffset" ];
           "ucontext" = [ "signal" ];
           "user" = [ "feature" ];
-          "zerocopy" = [ "fs" "uio" ];
+          "zerocopy" = [
+            "fs"
+            "uio"
+          ];
         };
-        resolvedDefaultFeatures = [ "fs" "ioctl" "poll" "process" "signal" "term" ];
+        resolvedDefaultFeatures = [
+          "fs"
+          "ioctl"
+          "poll"
+          "process"
+          "signal"
+          "term"
+        ];
       };
       "nix 0.26.4" = rec {
         crateName = "nix";
@@ -8105,7 +10125,40 @@ rec {
         ];
         features = {
           "aio" = [ "pin-utils" ];
-          "default" = [ "acct" "aio" "dir" "env" "event" "feature" "fs" "hostname" "inotify" "ioctl" "kmod" "mman" "mount" "mqueue" "net" "personality" "poll" "process" "pthread" "ptrace" "quota" "reboot" "resource" "sched" "signal" "socket" "term" "time" "ucontext" "uio" "user" "zerocopy" ];
+          "default" = [
+            "acct"
+            "aio"
+            "dir"
+            "env"
+            "event"
+            "feature"
+            "fs"
+            "hostname"
+            "inotify"
+            "ioctl"
+            "kmod"
+            "mman"
+            "mount"
+            "mqueue"
+            "net"
+            "personality"
+            "poll"
+            "process"
+            "pthread"
+            "ptrace"
+            "quota"
+            "reboot"
+            "resource"
+            "sched"
+            "signal"
+            "socket"
+            "term"
+            "time"
+            "ucontext"
+            "uio"
+            "user"
+            "zerocopy"
+          ];
           "dir" = [ "fs" ];
           "memoffset" = [ "dep:memoffset" ];
           "mount" = [ "uio" ];
@@ -8118,9 +10171,16 @@ rec {
           "socket" = [ "memoffset" ];
           "ucontext" = [ "signal" ];
           "user" = [ "feature" ];
-          "zerocopy" = [ "fs" "uio" ];
+          "zerocopy" = [
+            "fs"
+            "uio"
+          ];
         };
-        resolvedDefaultFeatures = [ "feature" "fs" "user" ];
+        resolvedDefaultFeatures = [
+          "feature"
+          "fs"
+          "user"
+        ];
       };
       "nix 0.27.1" = rec {
         crateName = "nix";
@@ -8159,9 +10219,15 @@ rec {
           "socket" = [ "memoffset" ];
           "ucontext" = [ "signal" ];
           "user" = [ "feature" ];
-          "zerocopy" = [ "fs" "uio" ];
+          "zerocopy" = [
+            "fs"
+            "uio"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "fs" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "fs"
+        ];
       };
       "nix 0.29.0" = rec {
         crateName = "nix";
@@ -8206,9 +10272,16 @@ rec {
           "socket" = [ "memoffset" ];
           "ucontext" = [ "signal" ];
           "user" = [ "feature" ];
-          "zerocopy" = [ "fs" "uio" ];
+          "zerocopy" = [
+            "fs"
+            "uio"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "feature" "user" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "feature"
+          "user"
+        ];
       };
       "nix-compat" = rec {
         crateName = "nix-compat";
@@ -8221,7 +10294,10 @@ rec {
             requiredFeatures = [ "serde" ];
           }
         ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./nix-compat; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./nix-compat;
+        };
         libName = "nix_compat";
         dependencies = [
           {
@@ -8231,7 +10307,11 @@ rec {
           {
             name = "bstr";
             packageId = "bstr";
-            features = [ "alloc" "unicode" "serde" ];
+            features = [
+              "alloc"
+              "unicode"
+              "serde"
+            ];
           }
           {
             name = "bytes";
@@ -8319,7 +10399,11 @@ rec {
             name = "tokio";
             packageId = "tokio";
             optional = true;
-            features = [ "io-util" "macros" "sync" ];
+            features = [
+              "io-util"
+              "macros"
+              "sync"
+            ];
           }
           {
             name = "tracing";
@@ -8362,7 +10446,11 @@ rec {
             name = "proptest";
             packageId = "proptest";
             usesDefaultFeatures = false;
-            features = [ "std" "alloc" "tempfile" ];
+            features = [
+              "std"
+              "alloc"
+              "tempfile"
+            ];
           }
           {
             name = "rstest";
@@ -8384,24 +10472,58 @@ rec {
         features = {
           "async" = [ "tokio" ];
           "bytes" = [ "dep:bytes" ];
-          "daemon" = [ "tokio" "nix-compat-derive" "futures" ];
-          "default" = [ "async" "daemon" "wire" "nix-compat-derive" ];
+          "daemon" = [
+            "tokio"
+            "nix-compat-derive"
+            "futures"
+          ];
+          "default" = [
+            "async"
+            "daemon"
+            "wire"
+            "nix-compat-derive"
+          ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
           "nix-compat-derive" = [ "dep:nix-compat-derive" ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
-          "serde" = [ "dep:serde" "dep:serde_json" "dep:serde_with" ];
+          "serde" = [
+            "dep:serde"
+            "dep:serde_json"
+            "dep:serde_with"
+          ];
           "tokio" = [ "dep:tokio" ];
           "url" = [ "dep:url" ];
-          "wire" = [ "tokio" "pin-project-lite" "bytes" ];
+          "wire" = [
+            "tokio"
+            "pin-project-lite"
+            "bytes"
+          ];
         };
-        resolvedDefaultFeatures = [ "async" "bytes" "daemon" "default" "flakeref" "futures" "nix-compat-derive" "pin-project-lite" "serde" "test" "tokio" "url" "wire" ];
+        resolvedDefaultFeatures = [
+          "async"
+          "bytes"
+          "daemon"
+          "default"
+          "flakeref"
+          "futures"
+          "nix-compat-derive"
+          "pin-project-lite"
+          "serde"
+          "test"
+          "tokio"
+          "url"
+          "wire"
+        ];
       };
       "nix-compat-derive" = rec {
         crateName = "nix-compat-derive";
         version = "0.1.0";
         edition = "2024";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./nix-compat-derive; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./nix-compat-derive;
+        };
         procMacro = true;
         libName = "nix_compat_derive";
         dependencies = [
@@ -8418,7 +10540,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "extra-traits" ];
+            features = [
+              "full"
+              "extra-traits"
+            ];
           }
         ];
         devDependencies = [
@@ -8430,7 +10555,11 @@ rec {
             name = "nix-compat";
             packageId = "nix-compat";
             usesDefaultFeatures = false;
-            features = [ "async" "wire" "test" ];
+            features = [
+              "async"
+              "wire"
+              "test"
+            ];
           }
           {
             name = "pretty_assertions";
@@ -8440,7 +10569,11 @@ rec {
             name = "proptest";
             packageId = "proptest";
             usesDefaultFeatures = false;
-            features = [ "std" "alloc" "tempfile" ];
+            features = [
+              "std"
+              "alloc"
+              "tempfile"
+            ];
           }
           {
             name = "rstest";
@@ -8449,7 +10582,10 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "io-util" "macros" ];
+            features = [
+              "io-util"
+              "macros"
+            ];
           }
           {
             name = "tokio-test";
@@ -8462,7 +10598,10 @@ rec {
         crateName = "nix-compat-derive-tests";
         version = "0.1.0";
         edition = "2024";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./nix-compat-derive-tests; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./nix-compat-derive-tests;
+        };
         devDependencies = [
           {
             name = "hex-literal";
@@ -8471,7 +10610,10 @@ rec {
           {
             name = "nix-compat";
             packageId = "nix-compat";
-            features = [ "test" "wire" ];
+            features = [
+              "test"
+              "wire"
+            ];
           }
           {
             name = "nix-compat-derive";
@@ -8488,7 +10630,10 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "io-util" "macros" ];
+            features = [
+              "io-util"
+              "macros"
+            ];
           }
           {
             name = "tokio-test";
@@ -8512,7 +10657,10 @@ rec {
             requiredFeatures = [ ];
           }
         ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./nix-daemon; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./nix-daemon;
+        };
         libName = "nix_daemon";
         dependencies = [
           {
@@ -8522,7 +10670,10 @@ rec {
           {
             name = "clap";
             packageId = "clap";
-            features = [ "derive" "env" ];
+            features = [
+              "derive"
+              "env"
+            ];
           }
           {
             name = "futures";
@@ -8551,7 +10702,14 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "fs" "macros" "net" "rt" "rt-multi-thread" "signal" ];
+            features = [
+              "fs"
+              "macros"
+              "net"
+              "rt"
+              "rt-multi-thread"
+              "signal"
+            ];
           }
           {
             name = "tokio-listener";
@@ -8566,7 +10724,10 @@ rec {
           "default" = [ "otlp" ];
           "otlp" = [ "snix-tracing/otlp" ];
         };
-        resolvedDefaultFeatures = [ "default" "otlp" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "otlp"
+        ];
       };
       "nohash-hasher" = rec {
         crateName = "nohash-hasher";
@@ -8580,7 +10741,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "nom" = rec {
         crateName = "nom";
@@ -8599,9 +10763,16 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "std" = [ "alloc" "memchr/std" ];
+          "std" = [
+            "alloc"
+            "memchr/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "nom8" = rec {
         crateName = "nom8";
@@ -8617,10 +10788,20 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "std" = [ "alloc" "memchr/std" ];
-          "unstable-doc" = [ "alloc" "std" ];
+          "std" = [
+            "alloc"
+            "memchr/std"
+          ];
+          "unstable-doc" = [
+            "alloc"
+            "std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "nu-ansi-term" = rec {
         crateName = "nu-ansi-term";
@@ -8643,7 +10824,13 @@ rec {
             name = "winapi";
             packageId = "winapi";
             target = { target, features }: ("windows" == target."os" or null);
-            features = [ "consoleapi" "errhandlingapi" "fileapi" "handleapi" "processenv" ];
+            features = [
+              "consoleapi"
+              "errhandlingapi"
+              "fileapi"
+              "handleapi"
+              "processenv"
+            ];
           }
         ];
         features = {
@@ -8681,7 +10868,10 @@ rec {
           "default" = [ "std" ];
           "libm" = [ "dep:libm" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "num_cpus" = rec {
         crateName = "num_cpus";
@@ -8727,7 +10917,10 @@ rec {
           "default" = [ "std" ];
           "std" = [ "num_enum_derive/std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "num_enum_derive" = rec {
         crateName = "num_enum_derive";
@@ -8764,7 +10957,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "extra-traits" "parsing" ];
+            features = [
+              "extra-traits"
+              "parsing"
+            ];
           }
         ];
         features = {
@@ -8773,7 +10969,10 @@ rec {
           "proc-macro-crate" = [ "dep:proc-macro-crate" ];
           "std" = [ "proc-macro-crate" ];
         };
-        resolvedDefaultFeatures = [ "proc-macro-crate" "std" ];
+        resolvedDefaultFeatures = [
+          "proc-macro-crate"
+          "std"
+        ];
       };
       "number_prefix" = rec {
         crateName = "number_prefix";
@@ -8786,7 +10985,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "object" = rec {
         crateName = "object";
@@ -8801,26 +11003,102 @@ rec {
           }
         ];
         features = {
-          "all" = [ "read" "write" "build" "std" "compression" "wasm" ];
+          "all" = [
+            "read"
+            "write"
+            "build"
+            "std"
+            "compression"
+            "wasm"
+          ];
           "alloc" = [ "dep:alloc" ];
-          "build" = [ "build_core" "write_std" "elf" ];
-          "build_core" = [ "read_core" "write_core" ];
+          "build" = [
+            "build_core"
+            "write_std"
+            "elf"
+          ];
+          "build_core" = [
+            "read_core"
+            "write_core"
+          ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
-          "compression" = [ "dep:flate2" "dep:ruzstd" "std" ];
+          "compression" = [
+            "dep:flate2"
+            "dep:ruzstd"
+            "std"
+          ];
           "core" = [ "dep:core" ];
-          "default" = [ "read" "compression" ];
-          "doc" = [ "read_core" "write_std" "build_core" "std" "compression" "archive" "coff" "elf" "macho" "pe" "wasm" "xcoff" ];
+          "default" = [
+            "read"
+            "compression"
+          ];
+          "doc" = [
+            "read_core"
+            "write_std"
+            "build_core"
+            "std"
+            "compression"
+            "archive"
+            "coff"
+            "elf"
+            "macho"
+            "pe"
+            "wasm"
+            "xcoff"
+          ];
           "pe" = [ "coff" ];
-          "read" = [ "read_core" "archive" "coff" "elf" "macho" "pe" "xcoff" "unaligned" ];
-          "rustc-dep-of-std" = [ "core" "compiler_builtins" "alloc" "memchr/rustc-dep-of-std" ];
+          "read" = [
+            "read_core"
+            "archive"
+            "coff"
+            "elf"
+            "macho"
+            "pe"
+            "xcoff"
+            "unaligned"
+          ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+            "alloc"
+            "memchr/rustc-dep-of-std"
+          ];
           "std" = [ "memchr/std" ];
-          "unstable-all" = [ "all" "unstable" ];
+          "unstable-all" = [
+            "all"
+            "unstable"
+          ];
           "wasm" = [ "dep:wasmparser" ];
-          "write" = [ "write_std" "coff" "elf" "macho" "pe" "xcoff" ];
-          "write_core" = [ "dep:crc32fast" "dep:indexmap" "dep:hashbrown" ];
-          "write_std" = [ "write_core" "std" "indexmap?/std" "crc32fast?/std" ];
+          "write" = [
+            "write_std"
+            "coff"
+            "elf"
+            "macho"
+            "pe"
+            "xcoff"
+          ];
+          "write_core" = [
+            "dep:crc32fast"
+            "dep:indexmap"
+            "dep:hashbrown"
+          ];
+          "write_std" = [
+            "write_core"
+            "std"
+            "indexmap?/std"
+            "crc32fast?/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "archive" "coff" "elf" "macho" "pe" "read_core" "unaligned" "xcoff" ];
+        resolvedDefaultFeatures = [
+          "archive"
+          "coff"
+          "elf"
+          "macho"
+          "pe"
+          "read_core"
+          "unaligned"
+          "xcoff"
+        ];
       };
       "object_store" = rec {
         crateName = "object_store";
@@ -8885,21 +11163,30 @@ rec {
             name = "quick-xml";
             packageId = "quick-xml";
             optional = true;
-            features = [ "serialize" "overlapped-lists" ];
+            features = [
+              "serialize"
+              "overlapped-lists"
+            ];
           }
           {
             name = "rand";
             packageId = "rand";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "std" "std_rng" ];
+            features = [
+              "std"
+              "std_rng"
+            ];
           }
           {
             name = "reqwest";
             packageId = "reqwest";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "rustls-tls-native-roots" "http2" ];
+            features = [
+              "rustls-tls-native-roots"
+              "http2"
+            ];
           }
           {
             name = "ring";
@@ -8935,7 +11222,13 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "sync" "macros" "rt" "time" "io-util" ];
+            features = [
+              "sync"
+              "macros"
+              "rt"
+              "time"
+              "io-util"
+            ];
           }
           {
             name = "tracing";
@@ -8962,11 +11255,29 @@ rec {
           }
         ];
         features = {
-          "aws" = [ "cloud" "md-5" ];
+          "aws" = [
+            "cloud"
+            "md-5"
+          ];
           "azure" = [ "cloud" ];
           "base64" = [ "dep:base64" ];
-          "cloud" = [ "serde" "serde_json" "quick-xml" "hyper" "reqwest" "reqwest/json" "reqwest/stream" "chrono/serde" "base64" "rand" "ring" ];
-          "gcp" = [ "cloud" "rustls-pemfile" ];
+          "cloud" = [
+            "serde"
+            "serde_json"
+            "quick-xml"
+            "hyper"
+            "reqwest"
+            "reqwest/json"
+            "reqwest/stream"
+            "chrono/serde"
+            "base64"
+            "rand"
+            "ring"
+          ];
+          "gcp" = [
+            "cloud"
+            "rustls-pemfile"
+          ];
           "http" = [ "cloud" ];
           "hyper" = [ "dep:hyper" ];
           "md-5" = [ "dep:md-5" ];
@@ -8979,7 +11290,23 @@ rec {
           "serde_json" = [ "dep:serde_json" ];
           "tls-webpki-roots" = [ "reqwest?/rustls-tls-webpki-roots" ];
         };
-        resolvedDefaultFeatures = [ "aws" "azure" "base64" "cloud" "gcp" "http" "hyper" "md-5" "quick-xml" "rand" "reqwest" "ring" "rustls-pemfile" "serde" "serde_json" ];
+        resolvedDefaultFeatures = [
+          "aws"
+          "azure"
+          "base64"
+          "cloud"
+          "gcp"
+          "http"
+          "hyper"
+          "md-5"
+          "quick-xml"
+          "rand"
+          "reqwest"
+          "ring"
+          "rustls-pemfile"
+          "serde"
+          "serde_json"
+        ];
       };
       "oci-spec" = rec {
         crateName = "oci-spec";
@@ -9035,11 +11362,20 @@ rec {
           }
         ];
         features = {
-          "default" = [ "distribution" "image" "runtime" ];
+          "default" = [
+            "distribution"
+            "image"
+            "runtime"
+          ];
           "proptests" = [ "quickcheck" ];
           "quickcheck" = [ "dep:quickcheck" ];
         };
-        resolvedDefaultFeatures = [ "default" "distribution" "image" "runtime" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "distribution"
+          "image"
+          "runtime"
+        ];
       };
       "once_cell" = rec {
         crateName = "once_cell";
@@ -9052,13 +11388,21 @@ rec {
         features = {
           "alloc" = [ "race" ];
           "atomic-polyfill" = [ "critical-section" ];
-          "critical-section" = [ "dep:critical-section" "portable-atomic" ];
+          "critical-section" = [
+            "dep:critical-section"
+            "portable-atomic"
+          ];
           "default" = [ "std" ];
           "parking_lot" = [ "dep:parking_lot_core" ];
           "portable-atomic" = [ "dep:portable-atomic" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "race" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "race"
+          "std"
+        ];
       };
       "oorandom" = rec {
         crateName = "oorandom";
@@ -9100,7 +11444,8 @@ rec {
           {
             name = "js-sys";
             packageId = "js-sys";
-            target = { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
           }
           {
             name = "pin-project-lite";
@@ -9121,7 +11466,12 @@ rec {
           }
         ];
         features = {
-          "default" = [ "trace" "metrics" "logs" "internal-logs" ];
+          "default" = [
+            "trace"
+            "metrics"
+            "logs"
+            "internal-logs"
+          ];
           "futures-core" = [ "dep:futures-core" ];
           "futures-sink" = [ "dep:futures-sink" ];
           "internal-logs" = [ "tracing" ];
@@ -9129,10 +11479,26 @@ rec {
           "spec_unstable_logs_enabled" = [ "logs" ];
           "testing" = [ "trace" ];
           "thiserror" = [ "dep:thiserror" ];
-          "trace" = [ "pin-project-lite" "futures-sink" "futures-core" "thiserror" ];
+          "trace" = [
+            "pin-project-lite"
+            "futures-sink"
+            "futures-core"
+            "thiserror"
+          ];
           "tracing" = [ "dep:tracing" ];
         };
-        resolvedDefaultFeatures = [ "default" "futures-core" "futures-sink" "internal-logs" "logs" "metrics" "pin-project-lite" "thiserror" "trace" "tracing" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "futures-core"
+          "futures-sink"
+          "internal-logs"
+          "logs"
+          "metrics"
+          "pin-project-lite"
+          "thiserror"
+          "trace"
+          "tracing"
+        ];
       };
       "opentelemetry-http" = rec {
         crateName = "opentelemetry-http";
@@ -9176,14 +11542,33 @@ rec {
         ];
         features = {
           "default" = [ "internal-logs" ];
-          "hyper" = [ "dep:http-body-util" "dep:hyper" "dep:hyper-util" "dep:tokio" ];
-          "internal-logs" = [ "tracing" "opentelemetry/internal-logs" ];
+          "hyper" = [
+            "dep:http-body-util"
+            "dep:hyper"
+            "dep:hyper-util"
+            "dep:tokio"
+          ];
+          "internal-logs" = [
+            "tracing"
+            "opentelemetry/internal-logs"
+          ];
           "reqwest" = [ "dep:reqwest" ];
-          "reqwest-rustls" = [ "reqwest" "reqwest/rustls-tls-native-roots" ];
-          "reqwest-rustls-webpki-roots" = [ "reqwest" "reqwest/rustls-tls-webpki-roots" ];
+          "reqwest-rustls" = [
+            "reqwest"
+            "reqwest/rustls-tls-native-roots"
+          ];
+          "reqwest-rustls-webpki-roots" = [
+            "reqwest"
+            "reqwest/rustls-tls-webpki-roots"
+          ];
           "tracing" = [ "dep:tracing" ];
         };
-        resolvedDefaultFeatures = [ "default" "internal-logs" "reqwest" "tracing" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "internal-logs"
+          "reqwest"
+          "tracing"
+        ];
       };
       "opentelemetry-otlp" = rec {
         crateName = "opentelemetry-otlp";
@@ -9248,7 +11633,10 @@ rec {
             packageId = "tokio";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "sync" "rt" ];
+            features = [
+              "sync"
+              "rt"
+            ];
           }
           {
             name = "tonic";
@@ -9268,41 +11656,131 @@ rec {
             name = "tokio";
             packageId = "tokio";
             usesDefaultFeatures = false;
-            features = [ "macros" "rt-multi-thread" ];
+            features = [
+              "macros"
+              "rt-multi-thread"
+            ];
           }
         ];
         features = {
-          "default" = [ "http-proto" "reqwest-blocking-client" "trace" "metrics" "logs" "internal-logs" ];
-          "grpc-tonic" = [ "tonic" "prost" "http" "tokio" "opentelemetry-proto/gen-tonic" ];
+          "default" = [
+            "http-proto"
+            "reqwest-blocking-client"
+            "trace"
+            "metrics"
+            "logs"
+            "internal-logs"
+          ];
+          "grpc-tonic" = [
+            "tonic"
+            "prost"
+            "http"
+            "tokio"
+            "opentelemetry-proto/gen-tonic"
+          ];
           "gzip-tonic" = [ "tonic/gzip" ];
           "http" = [ "dep:http" ];
-          "http-json" = [ "serde_json" "prost" "opentelemetry-http" "opentelemetry-proto/gen-tonic-messages" "opentelemetry-proto/with-serde" "http" "trace" "metrics" ];
-          "http-proto" = [ "prost" "opentelemetry-http" "opentelemetry-proto/gen-tonic-messages" "http" "trace" "metrics" ];
+          "http-json" = [
+            "serde_json"
+            "prost"
+            "opentelemetry-http"
+            "opentelemetry-proto/gen-tonic-messages"
+            "opentelemetry-proto/with-serde"
+            "http"
+            "trace"
+            "metrics"
+          ];
+          "http-proto" = [
+            "prost"
+            "opentelemetry-http"
+            "opentelemetry-proto/gen-tonic-messages"
+            "http"
+            "trace"
+            "metrics"
+          ];
           "hyper-client" = [ "opentelemetry-http/hyper" ];
-          "integration-testing" = [ "tonic" "prost" "tokio/full" "trace" "logs" ];
-          "internal-logs" = [ "tracing" "opentelemetry/internal-logs" ];
-          "logs" = [ "opentelemetry/logs" "opentelemetry_sdk/logs" "opentelemetry-proto/logs" ];
-          "metrics" = [ "opentelemetry/metrics" "opentelemetry_sdk/metrics" "opentelemetry-proto/metrics" ];
+          "integration-testing" = [
+            "tonic"
+            "prost"
+            "tokio/full"
+            "trace"
+            "logs"
+          ];
+          "internal-logs" = [
+            "tracing"
+            "opentelemetry/internal-logs"
+          ];
+          "logs" = [
+            "opentelemetry/logs"
+            "opentelemetry_sdk/logs"
+            "opentelemetry-proto/logs"
+          ];
+          "metrics" = [
+            "opentelemetry/metrics"
+            "opentelemetry_sdk/metrics"
+            "opentelemetry-proto/metrics"
+          ];
           "opentelemetry-http" = [ "dep:opentelemetry-http" ];
           "prost" = [ "dep:prost" ];
           "reqwest" = [ "dep:reqwest" ];
-          "reqwest-blocking-client" = [ "reqwest/blocking" "opentelemetry-http/reqwest" ];
-          "reqwest-client" = [ "reqwest" "opentelemetry-http/reqwest" ];
-          "reqwest-rustls" = [ "reqwest" "opentelemetry-http/reqwest-rustls" ];
-          "reqwest-rustls-webpki-roots" = [ "reqwest" "opentelemetry-http/reqwest-rustls-webpki-roots" ];
+          "reqwest-blocking-client" = [
+            "reqwest/blocking"
+            "opentelemetry-http/reqwest"
+          ];
+          "reqwest-client" = [
+            "reqwest"
+            "opentelemetry-http/reqwest"
+          ];
+          "reqwest-rustls" = [
+            "reqwest"
+            "opentelemetry-http/reqwest-rustls"
+          ];
+          "reqwest-rustls-webpki-roots" = [
+            "reqwest"
+            "opentelemetry-http/reqwest-rustls-webpki-roots"
+          ];
           "serde" = [ "dep:serde" ];
           "serde_json" = [ "dep:serde_json" ];
-          "serialize" = [ "serde" "serde_json" ];
+          "serialize" = [
+            "serde"
+            "serde_json"
+          ];
           "tls" = [ "tonic/tls" ];
-          "tls-roots" = [ "tls" "tonic/tls-roots" ];
-          "tls-webpki-roots" = [ "tls" "tonic/tls-webpki-roots" ];
+          "tls-roots" = [
+            "tls"
+            "tonic/tls-roots"
+          ];
+          "tls-webpki-roots" = [
+            "tls"
+            "tonic/tls-webpki-roots"
+          ];
           "tokio" = [ "dep:tokio" ];
           "tonic" = [ "dep:tonic" ];
-          "trace" = [ "opentelemetry/trace" "opentelemetry_sdk/trace" "opentelemetry-proto/trace" ];
+          "trace" = [
+            "opentelemetry/trace"
+            "opentelemetry_sdk/trace"
+            "opentelemetry-proto/trace"
+          ];
           "tracing" = [ "dep:tracing" ];
           "zstd-tonic" = [ "tonic/zstd" ];
         };
-        resolvedDefaultFeatures = [ "default" "grpc-tonic" "http" "http-proto" "internal-logs" "logs" "metrics" "opentelemetry-http" "prost" "reqwest" "reqwest-blocking-client" "tokio" "tonic" "trace" "tracing" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "grpc-tonic"
+          "http"
+          "http-proto"
+          "internal-logs"
+          "logs"
+          "metrics"
+          "opentelemetry-http"
+          "prost"
+          "reqwest"
+          "reqwest-blocking-client"
+          "tokio"
+          "tonic"
+          "trace"
+          "tracing"
+        ];
       };
       "opentelemetry-proto" = rec {
         crateName = "opentelemetry-proto";
@@ -9331,31 +11809,69 @@ rec {
             packageId = "tonic";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "codegen" "prost" ];
+            features = [
+              "codegen"
+              "prost"
+            ];
           }
         ];
         features = {
           "base64" = [ "dep:base64" ];
           "default" = [ "full" ];
-          "full" = [ "gen-tonic" "trace" "logs" "metrics" "zpages" "with-serde" "internal-logs" ];
-          "gen-tonic" = [ "gen-tonic-messages" "tonic/transport" ];
-          "gen-tonic-messages" = [ "tonic" "prost" ];
+          "full" = [
+            "gen-tonic"
+            "trace"
+            "logs"
+            "metrics"
+            "zpages"
+            "with-serde"
+            "internal-logs"
+          ];
+          "gen-tonic" = [
+            "gen-tonic-messages"
+            "tonic/transport"
+          ];
+          "gen-tonic-messages" = [
+            "tonic"
+            "prost"
+          ];
           "hex" = [ "dep:hex" ];
           "internal-logs" = [ "tracing" ];
-          "logs" = [ "opentelemetry/logs" "opentelemetry_sdk/logs" ];
-          "metrics" = [ "opentelemetry/metrics" "opentelemetry_sdk/metrics" ];
+          "logs" = [
+            "opentelemetry/logs"
+            "opentelemetry_sdk/logs"
+          ];
+          "metrics" = [
+            "opentelemetry/metrics"
+            "opentelemetry_sdk/metrics"
+          ];
           "prost" = [ "dep:prost" ];
           "schemars" = [ "dep:schemars" ];
           "serde" = [ "dep:serde" ];
           "testing" = [ "opentelemetry/testing" ];
           "tonic" = [ "dep:tonic" ];
-          "trace" = [ "opentelemetry/trace" "opentelemetry_sdk/trace" ];
+          "trace" = [
+            "opentelemetry/trace"
+            "opentelemetry_sdk/trace"
+          ];
           "tracing" = [ "dep:tracing" ];
           "with-schemars" = [ "schemars" ];
-          "with-serde" = [ "serde" "hex" "base64" ];
+          "with-serde" = [
+            "serde"
+            "hex"
+            "base64"
+          ];
           "zpages" = [ "trace" ];
         };
-        resolvedDefaultFeatures = [ "gen-tonic" "gen-tonic-messages" "logs" "metrics" "prost" "tonic" "trace" ];
+        resolvedDefaultFeatures = [
+          "gen-tonic"
+          "gen-tonic-messages"
+          "logs"
+          "metrics"
+          "prost"
+          "tonic"
+          "trace"
+        ];
       };
       "opentelemetry-semantic-conventions" = rec {
         crateName = "opentelemetry-semantic-conventions";
@@ -9363,7 +11879,8 @@ rec {
         edition = "2021";
         sha256 = "1dzra5yspllg0qi6hry2ncm19h7vxnmvh4y3sqn3cm9dikvs5crg";
         libName = "opentelemetry_semantic_conventions";
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "opentelemetry_sdk" = rec {
@@ -9389,7 +11906,11 @@ rec {
             name = "futures-util";
             packageId = "futures-util";
             usesDefaultFeatures = false;
-            features = [ "std" "sink" "async-await-macro" ];
+            features = [
+              "std"
+              "sink"
+              "async-await-macro"
+            ];
           }
           {
             name = "glob";
@@ -9410,7 +11931,11 @@ rec {
             packageId = "rand";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "std" "std_rng" "small_rng" ];
+            features = [
+              "std"
+              "std_rng"
+              "small_rng"
+            ];
           }
           {
             name = "serde_json";
@@ -9427,7 +11952,10 @@ rec {
             packageId = "tokio";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "rt" "time" ];
+            features = [
+              "rt"
+              "time"
+            ];
           }
           {
             name = "tokio-stream";
@@ -9444,7 +11972,12 @@ rec {
         features = {
           "async-std" = [ "dep:async-std" ];
           "async-trait" = [ "dep:async-trait" ];
-          "default" = [ "trace" "metrics" "logs" "internal-logs" ];
+          "default" = [
+            "trace"
+            "metrics"
+            "logs"
+            "internal-logs"
+          ];
           "experimental_logs_batch_log_processor_with_async_runtime" = [ "logs" ];
           "experimental_metrics_disable_name_validation" = [ "metrics" ];
           "experimental_metrics_periodicreader_with_async_runtime" = [ "metrics" ];
@@ -9452,27 +11985,85 @@ rec {
           "glob" = [ "dep:glob" ];
           "http" = [ "dep:http" ];
           "internal-logs" = [ "tracing" ];
-          "jaeger_remote_sampler" = [ "trace" "opentelemetry-http" "http" "serde" "serde_json" "url" ];
-          "logs" = [ "opentelemetry/logs" "serde_json" ];
-          "metrics" = [ "opentelemetry/metrics" "glob" "async-trait" ];
+          "jaeger_remote_sampler" = [
+            "trace"
+            "opentelemetry-http"
+            "http"
+            "serde"
+            "serde_json"
+            "url"
+          ];
+          "logs" = [
+            "opentelemetry/logs"
+            "serde_json"
+          ];
+          "metrics" = [
+            "opentelemetry/metrics"
+            "glob"
+            "async-trait"
+          ];
           "opentelemetry-http" = [ "dep:opentelemetry-http" ];
           "percent-encoding" = [ "dep:percent-encoding" ];
           "rand" = [ "dep:rand" ];
-          "rt-async-std" = [ "async-std" "experimental_async_runtime" ];
-          "rt-tokio" = [ "tokio" "tokio-stream" "experimental_async_runtime" ];
-          "rt-tokio-current-thread" = [ "tokio" "tokio-stream" "experimental_async_runtime" ];
+          "rt-async-std" = [
+            "async-std"
+            "experimental_async_runtime"
+          ];
+          "rt-tokio" = [
+            "tokio"
+            "tokio-stream"
+            "experimental_async_runtime"
+          ];
+          "rt-tokio-current-thread" = [
+            "tokio"
+            "tokio-stream"
+            "experimental_async_runtime"
+          ];
           "serde" = [ "dep:serde" ];
           "serde_json" = [ "dep:serde_json" ];
-          "spec_unstable_logs_enabled" = [ "logs" "opentelemetry/spec_unstable_logs_enabled" ];
+          "spec_unstable_logs_enabled" = [
+            "logs"
+            "opentelemetry/spec_unstable_logs_enabled"
+          ];
           "spec_unstable_metrics_views" = [ "metrics" ];
-          "testing" = [ "opentelemetry/testing" "trace" "metrics" "logs" "rt-async-std" "rt-tokio" "rt-tokio-current-thread" "tokio/macros" "tokio/rt-multi-thread" ];
+          "testing" = [
+            "opentelemetry/testing"
+            "trace"
+            "metrics"
+            "logs"
+            "rt-async-std"
+            "rt-tokio"
+            "rt-tokio-current-thread"
+            "tokio/macros"
+            "tokio/rt-multi-thread"
+          ];
           "tokio" = [ "dep:tokio" ];
           "tokio-stream" = [ "dep:tokio-stream" ];
-          "trace" = [ "opentelemetry/trace" "rand" "percent-encoding" ];
+          "trace" = [
+            "opentelemetry/trace"
+            "rand"
+            "percent-encoding"
+          ];
           "tracing" = [ "dep:tracing" ];
           "url" = [ "dep:url" ];
         };
-        resolvedDefaultFeatures = [ "async-trait" "default" "experimental_async_runtime" "glob" "internal-logs" "logs" "metrics" "percent-encoding" "rand" "rt-tokio" "serde_json" "tokio" "tokio-stream" "trace" "tracing" ];
+        resolvedDefaultFeatures = [
+          "async-trait"
+          "default"
+          "experimental_async_runtime"
+          "glob"
+          "internal-logs"
+          "logs"
+          "metrics"
+          "percent-encoding"
+          "rand"
+          "rt-tokio"
+          "serde_json"
+          "tokio"
+          "tokio-stream"
+          "trace"
+          "tracing"
+        ];
       };
       "os_str_bytes" = rec {
         crateName = "os_str_bytes";
@@ -9491,12 +12082,20 @@ rec {
         ];
         features = {
           "checked_conversions" = [ "conversions" ];
-          "default" = [ "memchr" "raw_os_str" ];
+          "default" = [
+            "memchr"
+            "raw_os_str"
+          ];
           "memchr" = [ "dep:memchr" ];
           "print_bytes" = [ "dep:print_bytes" ];
           "uniquote" = [ "dep:uniquote" ];
         };
-        resolvedDefaultFeatures = [ "conversions" "default" "memchr" "raw_os_str" ];
+        resolvedDefaultFeatures = [
+          "conversions"
+          "default"
+          "memchr"
+          "raw_os_str"
+        ];
       };
       "overload" = rec {
         crateName = "overload";
@@ -9542,7 +12141,10 @@ rec {
         features = {
           "arc_lock" = [ "lock_api/arc_lock" ];
           "deadlock_detection" = [ "parking_lot_core/deadlock_detection" ];
-          "nightly" = [ "parking_lot_core/nightly" "lock_api/nightly" ];
+          "nightly" = [
+            "parking_lot_core/nightly"
+            "lock_api/nightly"
+          ];
           "owning_ref" = [ "lock_api/owning_ref" ];
           "serde" = [ "lock_api/serde" ];
         };
@@ -9583,7 +12185,11 @@ rec {
         ];
         features = {
           "backtrace" = [ "dep:backtrace" ];
-          "deadlock_detection" = [ "petgraph" "thread-id" "backtrace" ];
+          "deadlock_detection" = [
+            "petgraph"
+            "thread-id"
+            "backtrace"
+          ];
           "petgraph" = [ "dep:petgraph" ];
           "thread-id" = [ "dep:thread-id" ];
         };
@@ -9612,7 +12218,11 @@ rec {
           "default" = [ "std" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "petgraph" = rec {
         crateName = "petgraph";
@@ -9635,16 +12245,38 @@ rec {
           }
         ];
         features = {
-          "all" = [ "unstable" "quickcheck" "matrix_graph" "stable_graph" "graphmap" "rayon" ];
-          "default" = [ "graphmap" "stable_graph" "matrix_graph" ];
+          "all" = [
+            "unstable"
+            "quickcheck"
+            "matrix_graph"
+            "stable_graph"
+            "graphmap"
+            "rayon"
+          ];
+          "default" = [
+            "graphmap"
+            "stable_graph"
+            "matrix_graph"
+          ];
           "quickcheck" = [ "dep:quickcheck" ];
-          "rayon" = [ "dep:rayon" "indexmap/rayon" ];
+          "rayon" = [
+            "dep:rayon"
+            "indexmap/rayon"
+          ];
           "serde" = [ "dep:serde" ];
-          "serde-1" = [ "serde" "serde_derive" ];
+          "serde-1" = [
+            "serde"
+            "serde_derive"
+          ];
           "serde_derive" = [ "dep:serde_derive" ];
           "unstable" = [ "generate" ];
         };
-        resolvedDefaultFeatures = [ "default" "graphmap" "matrix_graph" "stable_graph" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "graphmap"
+          "matrix_graph"
+          "stable_graph"
+        ];
       };
       "pin-project" = rec {
         crateName = "pin-project";
@@ -9680,7 +12312,14 @@ rec {
             name = "syn";
             packageId = "syn 2.0.93";
             usesDefaultFeatures = false;
-            features = [ "parsing" "printing" "clone-impls" "proc-macro" "full" "visit-mut" ];
+            features = [
+              "parsing"
+              "printing"
+              "clone-impls"
+              "proc-macro"
+              "full"
+              "visit-mut"
+            ];
           }
         ];
 
@@ -9732,12 +12371,23 @@ rec {
         features = {
           "default" = [ "std" ];
           "futures-io" = [ "dep:futures-io" ];
-          "portable-atomic" = [ "atomic-waker/portable-atomic" "portable_atomic_crate" "portable-atomic-util" ];
+          "portable-atomic" = [
+            "atomic-waker/portable-atomic"
+            "portable_atomic_crate"
+            "portable-atomic-util"
+          ];
           "portable-atomic-util" = [ "dep:portable-atomic-util" ];
           "portable_atomic_crate" = [ "dep:portable_atomic_crate" ];
-          "std" = [ "fastrand/std" "futures-io" ];
+          "std" = [
+            "fastrand/std"
+            "futures-io"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "futures-io" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "futures-io"
+          "std"
+        ];
       };
       "pkcs8" = rec {
         crateName = "pkcs8";
@@ -9759,19 +12409,48 @@ rec {
           }
         ];
         features = {
-          "3des" = [ "encryption" "pkcs5/3des" ];
-          "alloc" = [ "der/alloc" "der/zeroize" "spki/alloc" ];
-          "des-insecure" = [ "encryption" "pkcs5/des-insecure" ];
-          "encryption" = [ "alloc" "pkcs5/alloc" "pkcs5/pbes2" "rand_core" ];
+          "3des" = [
+            "encryption"
+            "pkcs5/3des"
+          ];
+          "alloc" = [
+            "der/alloc"
+            "der/zeroize"
+            "spki/alloc"
+          ];
+          "des-insecure" = [
+            "encryption"
+            "pkcs5/des-insecure"
+          ];
+          "encryption" = [
+            "alloc"
+            "pkcs5/alloc"
+            "pkcs5/pbes2"
+            "rand_core"
+          ];
           "getrandom" = [ "rand_core/getrandom" ];
-          "pem" = [ "alloc" "der/pem" "spki/pem" ];
+          "pem" = [
+            "alloc"
+            "der/pem"
+            "spki/pem"
+          ];
           "pkcs5" = [ "dep:pkcs5" ];
           "rand_core" = [ "dep:rand_core" ];
-          "sha1-insecure" = [ "encryption" "pkcs5/sha1-insecure" ];
-          "std" = [ "alloc" "der/std" "spki/std" ];
+          "sha1-insecure" = [
+            "encryption"
+            "pkcs5/sha1-insecure"
+          ];
+          "std" = [
+            "alloc"
+            "der/std"
+            "spki/std"
+          ];
           "subtle" = [ "dep:subtle" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "std"
+        ];
       };
       "pkg-config" = rec {
         crateName = "pkg-config";
@@ -9809,27 +12488,68 @@ rec {
           {
             name = "wasm-bindgen";
             packageId = "wasm-bindgen";
-            target = { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
           }
           {
             name = "web-sys";
             packageId = "web-sys";
-            target = { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
-            features = [ "Document" "DomRect" "Element" "HtmlElement" "Node" "Window" "HtmlCanvasElement" "CanvasRenderingContext2d" ];
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
+            features = [
+              "Document"
+              "DomRect"
+              "Element"
+              "HtmlElement"
+              "Node"
+              "Window"
+              "HtmlCanvasElement"
+              "CanvasRenderingContext2d"
+            ];
           }
         ];
         features = {
-          "ab_glyph" = [ "dep:ab_glyph" "once_cell" ];
-          "all_elements" = [ "errorbar" "candlestick" "boxplot" "histogram" ];
-          "all_series" = [ "area_series" "line_series" "point_series" "surface_series" ];
+          "ab_glyph" = [
+            "dep:ab_glyph"
+            "once_cell"
+          ];
+          "all_elements" = [
+            "errorbar"
+            "candlestick"
+            "boxplot"
+            "histogram"
+          ];
+          "all_series" = [
+            "area_series"
+            "line_series"
+            "point_series"
+            "surface_series"
+          ];
           "bitmap_backend" = [ "plotters-bitmap" ];
           "bitmap_encoder" = [ "plotters-bitmap/image_encoder" ];
           "bitmap_gif" = [ "plotters-bitmap/gif_backend" ];
           "chrono" = [ "dep:chrono" ];
           "datetime" = [ "chrono" ];
-          "default" = [ "bitmap_backend" "bitmap_encoder" "bitmap_gif" "svg_backend" "chrono" "ttf" "image" "deprecated_items" "all_series" "all_elements" "full_palette" "colormaps" ];
+          "default" = [
+            "bitmap_backend"
+            "bitmap_encoder"
+            "bitmap_gif"
+            "svg_backend"
+            "chrono"
+            "ttf"
+            "image"
+            "deprecated_items"
+            "all_series"
+            "all_elements"
+            "full_palette"
+            "colormaps"
+          ];
           "evcxr" = [ "svg_backend" ];
-          "evcxr_bitmap" = [ "evcxr" "bitmap_backend" "plotters-svg/bitmap_encoder" ];
+          "evcxr_bitmap" = [
+            "evcxr"
+            "bitmap_backend"
+            "plotters-svg/bitmap_encoder"
+          ];
           "font-kit" = [ "dep:font-kit" ];
           "fontconfig-dlopen" = [ "font-kit/source-fontconfig-dlopen" ];
           "image" = [ "dep:image" ];
@@ -9839,10 +12559,20 @@ rec {
           "plotters-bitmap" = [ "dep:plotters-bitmap" ];
           "plotters-svg" = [ "dep:plotters-svg" ];
           "svg_backend" = [ "plotters-svg" ];
-          "ttf" = [ "font-kit" "ttf-parser" "lazy_static" "pathfinder_geometry" ];
+          "ttf" = [
+            "font-kit"
+            "ttf-parser"
+            "lazy_static"
+            "pathfinder_geometry"
+          ];
           "ttf-parser" = [ "dep:ttf-parser" ];
         };
-        resolvedDefaultFeatures = [ "area_series" "line_series" "plotters-svg" "svg_backend" ];
+        resolvedDefaultFeatures = [
+          "area_series"
+          "line_series"
+          "plotters-svg"
+          "svg_backend"
+        ];
       };
       "plotters-backend" = rec {
         crateName = "plotters-backend";
@@ -9908,8 +12638,19 @@ rec {
             name = "rustix";
             packageId = "rustix";
             usesDefaultFeatures = false;
-            target = { target, features }: ((target."unix" or false) || ("fuchsia" == target."os" or null) || ("vxworks" == target."os" or null));
-            features = [ "event" "fs" "pipe" "process" "std" "time" ];
+            target =
+              { target, features }:
+              (
+                (target."unix" or false) || ("fuchsia" == target."os" or null) || ("vxworks" == target."os" or null)
+              );
+            features = [
+              "event"
+              "fs"
+              "pipe"
+              "process"
+              "std"
+              "time"
+            ];
           }
           {
             name = "tracing";
@@ -9920,7 +12661,18 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Wdk_Foundation" "Wdk_Storage_FileSystem" "Win32_Foundation" "Win32_Networking_WinSock" "Win32_Security" "Win32_Storage_FileSystem" "Win32_System_IO" "Win32_System_LibraryLoader" "Win32_System_Threading" "Win32_System_WindowsProgramming" ];
+            features = [
+              "Wdk_Foundation"
+              "Wdk_Storage_FileSystem"
+              "Win32_Foundation"
+              "Win32_Networking_WinSock"
+              "Win32_Security"
+              "Win32_Storage_FileSystem"
+              "Win32_System_IO"
+              "Win32_System_LibraryLoader"
+              "Win32_System_Threading"
+              "Win32_System_WindowsProgramming"
+            ];
           }
         ];
 
@@ -9936,7 +12688,10 @@ rec {
           "default" = [ "fallback" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "default" "fallback" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "fallback"
+        ];
       };
       "powerfmt" = rec {
         crateName = "powerfmt";
@@ -9947,7 +12702,10 @@ rec {
           "Jacob Pratt <jacob@jhpratt.dev>"
         ];
         features = {
-          "default" = [ "std" "macros" ];
+          "default" = [
+            "std"
+            "macros"
+          ];
           "macros" = [ "dep:powerfmt-macros" ];
           "std" = [ "alloc" ];
         };
@@ -9965,13 +12723,19 @@ rec {
           {
             name = "zerocopy";
             packageId = "zerocopy";
-            features = [ "simd" "derive" ];
+            features = [
+              "simd"
+              "derive"
+            ];
           }
         ];
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "simd" "std" ];
+        resolvedDefaultFeatures = [
+          "simd"
+          "std"
+        ];
       };
       "predicates" = rec {
         crateName = "predicates";
@@ -9992,7 +12756,13 @@ rec {
           }
         ];
         features = {
-          "default" = [ "diff" "regex" "float-cmp" "normalize-line-endings" "color" ];
+          "default" = [
+            "diff"
+            "regex"
+            "float-cmp"
+            "normalize-line-endings"
+            "color"
+          ];
           "diff" = [ "dep:difflib" ];
           "float-cmp" = [ "dep:float-cmp" ];
           "normalize-line-endings" = [ "dep:normalize-line-endings" ];
@@ -10054,7 +12824,11 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" "unstable" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+          "unstable"
+        ];
       };
       "prettyplease" = rec {
         crateName = "prettyplease";
@@ -10176,7 +12950,10 @@ rec {
           "default" = [ "syn-error" ];
           "syn-error" = [ "dep:syn" ];
         };
-        resolvedDefaultFeatures = [ "default" "syn-error" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "syn-error"
+        ];
       };
       "proc-macro2" = rec {
         crateName = "proc-macro2";
@@ -10197,7 +12974,10 @@ rec {
         features = {
           "default" = [ "proc-macro" ];
         };
-        resolvedDefaultFeatures = [ "default" "proc-macro" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "proc-macro"
+        ];
       };
       "proptest" = rec {
         crateName = "proptest";
@@ -10254,10 +13034,27 @@ rec {
         ];
         features = {
           "attr-macro" = [ "proptest-macro" ];
-          "bit-set" = [ "dep:bit-set" "dep:bit-vec" ];
-          "default" = [ "std" "fork" "timeout" "bit-set" ];
-          "default-code-coverage" = [ "std" "fork" "timeout" "bit-set" ];
-          "fork" = [ "std" "rusty-fork" "tempfile" ];
+          "bit-set" = [
+            "dep:bit-set"
+            "dep:bit-vec"
+          ];
+          "default" = [
+            "std"
+            "fork"
+            "timeout"
+            "bit-set"
+          ];
+          "default-code-coverage" = [
+            "std"
+            "fork"
+            "timeout"
+            "bit-set"
+          ];
+          "fork" = [
+            "std"
+            "rusty-fork"
+            "tempfile"
+          ];
           "handle-panics" = [ "std" ];
           "hardware-rng" = [ "x86" ];
           "lazy_static" = [ "dep:lazy_static" ];
@@ -10265,12 +13062,26 @@ rec {
           "proptest-macro" = [ "dep:proptest-macro" ];
           "regex-syntax" = [ "dep:regex-syntax" ];
           "rusty-fork" = [ "dep:rusty-fork" ];
-          "std" = [ "rand/std" "lazy_static" "regex-syntax" "num-traits/std" ];
+          "std" = [
+            "rand/std"
+            "lazy_static"
+            "regex-syntax"
+            "num-traits/std"
+          ];
           "tempfile" = [ "dep:tempfile" ];
-          "timeout" = [ "fork" "rusty-fork/timeout" ];
+          "timeout" = [
+            "fork"
+            "rusty-fork/timeout"
+          ];
           "x86" = [ "dep:x86" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "lazy_static" "regex-syntax" "std" "tempfile" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "lazy_static"
+          "regex-syntax"
+          "std"
+          "tempfile"
+        ];
       };
       "prost" = rec {
         crateName = "prost";
@@ -10296,11 +13107,19 @@ rec {
           }
         ];
         features = {
-          "default" = [ "derive" "std" ];
+          "default" = [
+            "derive"
+            "std"
+          ];
           "derive" = [ "dep:prost-derive" ];
           "prost-derive" = [ "derive" ];
         };
-        resolvedDefaultFeatures = [ "default" "derive" "prost-derive" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "derive"
+          "prost-derive"
+          "std"
+        ];
       };
       "prost-build" = rec {
         crateName = "prost-build";
@@ -10373,7 +13192,10 @@ rec {
             name = "regex";
             packageId = "regex";
             usesDefaultFeatures = false;
-            features = [ "std" "unicode-bool" ];
+            features = [
+              "std"
+              "unicode-bool"
+            ];
           }
           {
             name = "syn";
@@ -10387,11 +13209,21 @@ rec {
           }
         ];
         features = {
-          "cleanup-markdown" = [ "dep:pulldown-cmark" "dep:pulldown-cmark-to-cmark" ];
+          "cleanup-markdown" = [
+            "dep:pulldown-cmark"
+            "dep:pulldown-cmark-to-cmark"
+          ];
           "default" = [ "format" ];
-          "format" = [ "dep:prettyplease" "dep:syn" ];
+          "format" = [
+            "dep:prettyplease"
+            "dep:syn"
+          ];
         };
-        resolvedDefaultFeatures = [ "cleanup-markdown" "default" "format" ];
+        resolvedDefaultFeatures = [
+          "cleanup-markdown"
+          "default"
+          "format"
+        ];
       };
       "prost-derive" = rec {
         crateName = "prost-derive";
@@ -10455,7 +13287,10 @@ rec {
           "default" = [ "std" ];
           "std" = [ "prost/std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "prost-wkt" = rec {
         crateName = "prost-wkt";
@@ -10599,7 +13434,10 @@ rec {
           "vendored-protoc" = [ "protobuf-src" ];
           "vendored-protox" = [ "protox" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "pulldown-cmark" = rec {
         crateName = "pulldown-cmark";
@@ -10627,7 +13465,10 @@ rec {
           }
         ];
         features = {
-          "default" = [ "getopts" "html" ];
+          "default" = [
+            "getopts"
+            "html"
+          ];
           "getopts" = [ "dep:getopts" ];
           "html" = [ "pulldown-cmark-escape" ];
           "pulldown-cmark-escape" = [ "dep:pulldown-cmark-escape" ];
@@ -10684,7 +13525,12 @@ rec {
           "serialize" = [ "serde" ];
           "tokio" = [ "dep:tokio" ];
         };
-        resolvedDefaultFeatures = [ "default" "overlapped-lists" "serde" "serialize" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "overlapped-lists"
+          "serde"
+          "serialize"
+        ];
       };
       "quinn" = rec {
         crateName = "quinn";
@@ -10748,7 +13594,13 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "sync" "rt" "rt-multi-thread" "time" "macros" ];
+            features = [
+              "sync"
+              "rt"
+              "rt-multi-thread"
+              "time"
+              "macros"
+            ];
           }
         ];
         features = {
@@ -10756,22 +13608,61 @@ rec {
           "async-std" = [ "dep:async-std" ];
           "aws-lc-rs" = [ "proto/aws-lc-rs" ];
           "aws-lc-rs-fips" = [ "proto/aws-lc-rs-fips" ];
-          "default" = [ "log" "platform-verifier" "runtime-tokio" "rustls-ring" ];
+          "default" = [
+            "log"
+            "platform-verifier"
+            "runtime-tokio"
+            "rustls-ring"
+          ];
           "futures-io" = [ "dep:futures-io" ];
-          "log" = [ "tracing/log" "proto/log" "udp/log" ];
+          "log" = [
+            "tracing/log"
+            "proto/log"
+            "udp/log"
+          ];
           "platform-verifier" = [ "proto/platform-verifier" ];
           "ring" = [ "proto/ring" ];
-          "runtime-async-std" = [ "async-io" "async-std" ];
-          "runtime-smol" = [ "async-io" "smol" ];
-          "runtime-tokio" = [ "tokio/time" "tokio/rt" "tokio/net" ];
+          "runtime-async-std" = [
+            "async-io"
+            "async-std"
+          ];
+          "runtime-smol" = [
+            "async-io"
+            "smol"
+          ];
+          "runtime-tokio" = [
+            "tokio/time"
+            "tokio/rt"
+            "tokio/net"
+          ];
           "rustls" = [ "rustls-ring" ];
-          "rustls-aws-lc-rs" = [ "dep:rustls" "aws-lc-rs" "proto/rustls-aws-lc-rs" "proto/aws-lc-rs" ];
-          "rustls-aws-lc-rs-fips" = [ "dep:rustls" "aws-lc-rs-fips" "proto/rustls-aws-lc-rs-fips" "proto/aws-lc-rs-fips" ];
+          "rustls-aws-lc-rs" = [
+            "dep:rustls"
+            "aws-lc-rs"
+            "proto/rustls-aws-lc-rs"
+            "proto/aws-lc-rs"
+          ];
+          "rustls-aws-lc-rs-fips" = [
+            "dep:rustls"
+            "aws-lc-rs-fips"
+            "proto/rustls-aws-lc-rs-fips"
+            "proto/aws-lc-rs-fips"
+          ];
           "rustls-log" = [ "rustls?/logging" ];
-          "rustls-ring" = [ "dep:rustls" "ring" "proto/rustls-ring" "proto/ring" ];
+          "rustls-ring" = [
+            "dep:rustls"
+            "ring"
+            "proto/rustls-ring"
+            "proto/ring"
+          ];
           "smol" = [ "dep:smol" ];
         };
-        resolvedDefaultFeatures = [ "ring" "runtime-tokio" "rustls" "rustls-ring" ];
+        resolvedDefaultFeatures = [
+          "ring"
+          "runtime-tokio"
+          "rustls"
+          "rustls-ring"
+        ];
       };
       "quinn-proto" = rec {
         crateName = "quinn-proto";
@@ -10788,7 +13679,9 @@ rec {
             name = "getrandom";
             packageId = "getrandom";
             usesDefaultFeatures = false;
-            target = { target, features }: ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
             features = [ "js" ];
           }
           {
@@ -10803,7 +13696,9 @@ rec {
           {
             name = "ring";
             packageId = "ring";
-            target = { target, features }: ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
             features = [ "wasm32_unknown_unknown_js" ];
           }
           {
@@ -10820,7 +13715,9 @@ rec {
           {
             name = "rustls-pki-types";
             packageId = "rustls-pki-types";
-            target = { target, features }: ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
             features = [ "web" ];
           }
           {
@@ -10834,7 +13731,10 @@ rec {
           {
             name = "tinyvec";
             packageId = "tinyvec";
-            features = [ "alloc" "alloc" ];
+            features = [
+              "alloc"
+              "alloc"
+            ];
           }
           {
             name = "tracing";
@@ -10845,24 +13745,50 @@ rec {
           {
             name = "web-time";
             packageId = "web-time";
-            target = { target, features }: ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
           }
         ];
         features = {
           "arbitrary" = [ "dep:arbitrary" ];
-          "aws-lc-rs" = [ "dep:aws-lc-rs" "aws-lc-rs?/aws-lc-sys" "aws-lc-rs?/prebuilt-nasm" ];
-          "aws-lc-rs-fips" = [ "aws-lc-rs" "aws-lc-rs?/fips" ];
-          "default" = [ "rustls-ring" "log" ];
+          "aws-lc-rs" = [
+            "dep:aws-lc-rs"
+            "aws-lc-rs?/aws-lc-sys"
+            "aws-lc-rs?/prebuilt-nasm"
+          ];
+          "aws-lc-rs-fips" = [
+            "aws-lc-rs"
+            "aws-lc-rs?/fips"
+          ];
+          "default" = [
+            "rustls-ring"
+            "log"
+          ];
           "log" = [ "tracing/log" ];
           "platform-verifier" = [ "dep:rustls-platform-verifier" ];
           "ring" = [ "dep:ring" ];
           "rustls" = [ "rustls-ring" ];
-          "rustls-aws-lc-rs" = [ "dep:rustls" "rustls?/aws-lc-rs" "aws-lc-rs" ];
-          "rustls-aws-lc-rs-fips" = [ "rustls-aws-lc-rs" "aws-lc-rs-fips" ];
+          "rustls-aws-lc-rs" = [
+            "dep:rustls"
+            "rustls?/aws-lc-rs"
+            "aws-lc-rs"
+          ];
+          "rustls-aws-lc-rs-fips" = [
+            "rustls-aws-lc-rs"
+            "aws-lc-rs-fips"
+          ];
           "rustls-log" = [ "rustls?/logging" ];
-          "rustls-ring" = [ "dep:rustls" "rustls?/ring" "ring" ];
+          "rustls-ring" = [
+            "dep:rustls"
+            "rustls?/ring"
+            "ring"
+          ];
         };
-        resolvedDefaultFeatures = [ "ring" "rustls-ring" ];
+        resolvedDefaultFeatures = [
+          "ring"
+          "rustls-ring"
+        ];
       };
       "quinn-udp" = rec {
         crateName = "quinn-udp";
@@ -10895,7 +13821,11 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_System_IO" "Win32_Networking_WinSock" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_System_IO"
+              "Win32_Networking_WinSock"
+            ];
           }
         ];
         buildDependencies = [
@@ -10905,7 +13835,10 @@ rec {
           }
         ];
         features = {
-          "default" = [ "tracing" "log" ];
+          "default" = [
+            "tracing"
+            "log"
+          ];
           "direct-log" = [ "dep:log" ];
           "log" = [ "tracing/log" ];
           "tracing" = [ "dep:tracing" ];
@@ -10931,7 +13864,10 @@ rec {
           "default" = [ "proc-macro" ];
           "proc-macro" = [ "proc-macro2/proc-macro" ];
         };
-        resolvedDefaultFeatures = [ "default" "proc-macro" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "proc-macro"
+        ];
       };
       "radix_trie" = rec {
         crateName = "radix_trie";
@@ -10985,19 +13921,40 @@ rec {
         ];
         features = {
           "alloc" = [ "rand_core/alloc" ];
-          "default" = [ "std" "std_rng" ];
+          "default" = [
+            "std"
+            "std_rng"
+          ];
           "getrandom" = [ "rand_core/getrandom" ];
           "libc" = [ "dep:libc" ];
           "log" = [ "dep:log" ];
           "packed_simd" = [ "dep:packed_simd" ];
           "rand_chacha" = [ "dep:rand_chacha" ];
           "serde" = [ "dep:serde" ];
-          "serde1" = [ "serde" "rand_core/serde1" ];
+          "serde1" = [
+            "serde"
+            "rand_core/serde1"
+          ];
           "simd_support" = [ "packed_simd" ];
-          "std" = [ "rand_core/std" "rand_chacha/std" "alloc" "getrandom" "libc" ];
+          "std" = [
+            "rand_core/std"
+            "rand_chacha/std"
+            "alloc"
+            "getrandom"
+            "libc"
+          ];
           "std_rng" = [ "rand_chacha" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "getrandom" "libc" "rand_chacha" "small_rng" "std" "std_rng" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "getrandom"
+          "libc"
+          "rand_chacha"
+          "small_rng"
+          "std"
+          "std_rng"
+        ];
       };
       "rand_chacha" = rec {
         crateName = "rand_chacha";
@@ -11049,9 +14006,17 @@ rec {
           "getrandom" = [ "dep:getrandom" ];
           "serde" = [ "dep:serde" ];
           "serde1" = [ "serde" ];
-          "std" = [ "alloc" "getrandom" "getrandom/std" ];
+          "std" = [
+            "alloc"
+            "getrandom"
+            "getrandom/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "getrandom" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "getrandom"
+          "std"
+        ];
       };
       "rand_xorshift" = rec {
         crateName = "rand_xorshift";
@@ -11094,7 +14059,10 @@ rec {
           }
         ];
         features = {
-          "web_spin_lock" = [ "dep:wasm_sync" "rayon-core/web_spin_lock" ];
+          "web_spin_lock" = [
+            "dep:wasm_sync"
+            "rayon-core/web_spin_lock"
+          ];
         };
       };
       "rayon-core" = rec {
@@ -11127,7 +14095,10 @@ rec {
         version = "2.4.0";
         edition = "2021";
         sha256 = "1ik3y8pdqrh4i378kv3qshh9r0dz7a43p0hqwg1rzpj0f76p42pa";
-        type = [ "cdylib" "rlib" ];
+        type = [
+          "cdylib"
+          "rlib"
+        ];
         authors = [
           "Christopher Berner <me@cberner.com>"
         ];
@@ -11151,7 +14122,10 @@ rec {
         ];
         features = {
           "logging" = [ "dep:log" ];
-          "python" = [ "dep:pyo3" "dep:pyo3-build-config" ];
+          "python" = [
+            "dep:pyo3"
+            "dep:pyo3-build-config"
+          ];
         };
         resolvedDefaultFeatures = [ "logging" ];
       };
@@ -11172,7 +14146,10 @@ rec {
         ];
         features = {
           "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [ "core" "bitflags/rustc-dep-of-std" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "bitflags/rustc-dep-of-std"
+          ];
         };
       };
       "redox_syscall 0.5.8" = rec {
@@ -11193,9 +14170,15 @@ rec {
         features = {
           "core" = [ "dep:core" ];
           "default" = [ "userspace" ];
-          "rustc-dep-of-std" = [ "core" "bitflags/rustc-dep-of-std" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "bitflags/rustc-dep-of-std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "userspace" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "userspace"
+        ];
       };
       "redox_users" = rec {
         crateName = "redox_users";
@@ -11216,7 +14199,10 @@ rec {
             name = "libredox";
             packageId = "libredox";
             usesDefaultFeatures = false;
-            features = [ "std" "call" ];
+            features = [
+              "std"
+              "call"
+            ];
           }
           {
             name = "thiserror";
@@ -11224,7 +14210,10 @@ rec {
           }
         ];
         features = {
-          "auth" = [ "rust-argon2" "zeroize" ];
+          "auth" = [
+            "rust-argon2"
+            "zeroize"
+          ];
           "default" = [ "auth" ];
           "rust-argon2" = [ "dep:rust-argon2" ];
           "zeroize" = [ "dep:zeroize" ];
@@ -11256,7 +14245,12 @@ rec {
             name = "regex-automata";
             packageId = "regex-automata 0.4.9";
             usesDefaultFeatures = false;
-            features = [ "alloc" "syntax" "meta" "nfa-pikevm" ];
+            features = [
+              "alloc"
+              "syntax"
+              "meta"
+              "nfa-pikevm"
+            ];
           }
           {
             name = "regex-syntax";
@@ -11265,28 +14259,106 @@ rec {
           }
         ];
         features = {
-          "default" = [ "std" "perf" "unicode" "regex-syntax/default" ];
-          "logging" = [ "aho-corasick?/logging" "memchr?/logging" "regex-automata/logging" ];
-          "perf" = [ "perf-cache" "perf-dfa" "perf-onepass" "perf-backtrack" "perf-inline" "perf-literal" ];
+          "default" = [
+            "std"
+            "perf"
+            "unicode"
+            "regex-syntax/default"
+          ];
+          "logging" = [
+            "aho-corasick?/logging"
+            "memchr?/logging"
+            "regex-automata/logging"
+          ];
+          "perf" = [
+            "perf-cache"
+            "perf-dfa"
+            "perf-onepass"
+            "perf-backtrack"
+            "perf-inline"
+            "perf-literal"
+          ];
           "perf-backtrack" = [ "regex-automata/nfa-backtrack" ];
           "perf-dfa" = [ "regex-automata/hybrid" ];
-          "perf-dfa-full" = [ "regex-automata/dfa-build" "regex-automata/dfa-search" ];
+          "perf-dfa-full" = [
+            "regex-automata/dfa-build"
+            "regex-automata/dfa-search"
+          ];
           "perf-inline" = [ "regex-automata/perf-inline" ];
-          "perf-literal" = [ "dep:aho-corasick" "dep:memchr" "regex-automata/perf-literal" ];
+          "perf-literal" = [
+            "dep:aho-corasick"
+            "dep:memchr"
+            "regex-automata/perf-literal"
+          ];
           "perf-onepass" = [ "regex-automata/dfa-onepass" ];
-          "std" = [ "aho-corasick?/std" "memchr?/std" "regex-automata/std" "regex-syntax/std" ];
-          "unicode" = [ "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" "regex-automata/unicode" "regex-syntax/unicode" ];
-          "unicode-age" = [ "regex-automata/unicode-age" "regex-syntax/unicode-age" ];
-          "unicode-bool" = [ "regex-automata/unicode-bool" "regex-syntax/unicode-bool" ];
-          "unicode-case" = [ "regex-automata/unicode-case" "regex-syntax/unicode-case" ];
-          "unicode-gencat" = [ "regex-automata/unicode-gencat" "regex-syntax/unicode-gencat" ];
-          "unicode-perl" = [ "regex-automata/unicode-perl" "regex-automata/unicode-word-boundary" "regex-syntax/unicode-perl" ];
-          "unicode-script" = [ "regex-automata/unicode-script" "regex-syntax/unicode-script" ];
-          "unicode-segment" = [ "regex-automata/unicode-segment" "regex-syntax/unicode-segment" ];
+          "std" = [
+            "aho-corasick?/std"
+            "memchr?/std"
+            "regex-automata/std"
+            "regex-syntax/std"
+          ];
+          "unicode" = [
+            "unicode-age"
+            "unicode-bool"
+            "unicode-case"
+            "unicode-gencat"
+            "unicode-perl"
+            "unicode-script"
+            "unicode-segment"
+            "regex-automata/unicode"
+            "regex-syntax/unicode"
+          ];
+          "unicode-age" = [
+            "regex-automata/unicode-age"
+            "regex-syntax/unicode-age"
+          ];
+          "unicode-bool" = [
+            "regex-automata/unicode-bool"
+            "regex-syntax/unicode-bool"
+          ];
+          "unicode-case" = [
+            "regex-automata/unicode-case"
+            "regex-syntax/unicode-case"
+          ];
+          "unicode-gencat" = [
+            "regex-automata/unicode-gencat"
+            "regex-syntax/unicode-gencat"
+          ];
+          "unicode-perl" = [
+            "regex-automata/unicode-perl"
+            "regex-automata/unicode-word-boundary"
+            "regex-syntax/unicode-perl"
+          ];
+          "unicode-script" = [
+            "regex-automata/unicode-script"
+            "regex-syntax/unicode-script"
+          ];
+          "unicode-segment" = [
+            "regex-automata/unicode-segment"
+            "regex-syntax/unicode-segment"
+          ];
           "unstable" = [ "pattern" ];
           "use_std" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "perf" "perf-backtrack" "perf-cache" "perf-dfa" "perf-inline" "perf-literal" "perf-onepass" "std" "unicode" "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "perf"
+          "perf-backtrack"
+          "perf-cache"
+          "perf-dfa"
+          "perf-inline"
+          "perf-literal"
+          "perf-onepass"
+          "std"
+          "unicode"
+          "unicode-age"
+          "unicode-bool"
+          "unicode-case"
+          "unicode-gencat"
+          "unicode-perl"
+          "unicode-script"
+          "unicode-segment"
+        ];
       };
       "regex-automata 0.1.10" = rec {
         crateName = "regex-automata";
@@ -11309,9 +14381,16 @@ rec {
           "fst" = [ "dep:fst" ];
           "regex-syntax" = [ "dep:regex-syntax" ];
           "std" = [ "regex-syntax" ];
-          "transducer" = [ "std" "fst" ];
+          "transducer" = [
+            "std"
+            "fst"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "regex-syntax" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "regex-syntax"
+          "std"
+        ];
       };
       "regex-automata 0.4.9" = rec {
         crateName = "regex-automata";
@@ -11344,26 +14423,89 @@ rec {
           }
         ];
         features = {
-          "default" = [ "std" "syntax" "perf" "unicode" "meta" "nfa" "dfa" "hybrid" ];
-          "dfa" = [ "dfa-build" "dfa-search" "dfa-onepass" ];
-          "dfa-build" = [ "nfa-thompson" "dfa-search" ];
+          "default" = [
+            "std"
+            "syntax"
+            "perf"
+            "unicode"
+            "meta"
+            "nfa"
+            "dfa"
+            "hybrid"
+          ];
+          "dfa" = [
+            "dfa-build"
+            "dfa-search"
+            "dfa-onepass"
+          ];
+          "dfa-build" = [
+            "nfa-thompson"
+            "dfa-search"
+          ];
           "dfa-onepass" = [ "nfa-thompson" ];
-          "hybrid" = [ "alloc" "nfa-thompson" ];
+          "hybrid" = [
+            "alloc"
+            "nfa-thompson"
+          ];
           "internal-instrument" = [ "internal-instrument-pikevm" ];
-          "internal-instrument-pikevm" = [ "logging" "std" ];
-          "logging" = [ "dep:log" "aho-corasick?/logging" "memchr?/logging" ];
-          "meta" = [ "syntax" "nfa-pikevm" ];
-          "nfa" = [ "nfa-thompson" "nfa-pikevm" "nfa-backtrack" ];
+          "internal-instrument-pikevm" = [
+            "logging"
+            "std"
+          ];
+          "logging" = [
+            "dep:log"
+            "aho-corasick?/logging"
+            "memchr?/logging"
+          ];
+          "meta" = [
+            "syntax"
+            "nfa-pikevm"
+          ];
+          "nfa" = [
+            "nfa-thompson"
+            "nfa-pikevm"
+            "nfa-backtrack"
+          ];
           "nfa-backtrack" = [ "nfa-thompson" ];
           "nfa-pikevm" = [ "nfa-thompson" ];
           "nfa-thompson" = [ "alloc" ];
-          "perf" = [ "perf-inline" "perf-literal" ];
-          "perf-literal" = [ "perf-literal-substring" "perf-literal-multisubstring" ];
-          "perf-literal-multisubstring" = [ "std" "dep:aho-corasick" ];
-          "perf-literal-substring" = [ "aho-corasick?/perf-literal" "dep:memchr" ];
-          "std" = [ "regex-syntax?/std" "memchr?/std" "aho-corasick?/std" "alloc" ];
-          "syntax" = [ "dep:regex-syntax" "alloc" ];
-          "unicode" = [ "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" "unicode-word-boundary" "regex-syntax?/unicode" ];
+          "perf" = [
+            "perf-inline"
+            "perf-literal"
+          ];
+          "perf-literal" = [
+            "perf-literal-substring"
+            "perf-literal-multisubstring"
+          ];
+          "perf-literal-multisubstring" = [
+            "std"
+            "dep:aho-corasick"
+          ];
+          "perf-literal-substring" = [
+            "aho-corasick?/perf-literal"
+            "dep:memchr"
+          ];
+          "std" = [
+            "regex-syntax?/std"
+            "memchr?/std"
+            "aho-corasick?/std"
+            "alloc"
+          ];
+          "syntax" = [
+            "dep:regex-syntax"
+            "alloc"
+          ];
+          "unicode" = [
+            "unicode-age"
+            "unicode-bool"
+            "unicode-case"
+            "unicode-gencat"
+            "unicode-perl"
+            "unicode-script"
+            "unicode-segment"
+            "unicode-word-boundary"
+            "regex-syntax?/unicode"
+          ];
           "unicode-age" = [ "regex-syntax?/unicode-age" ];
           "unicode-bool" = [ "regex-syntax?/unicode-bool" ];
           "unicode-case" = [ "regex-syntax?/unicode-case" ];
@@ -11372,7 +14514,31 @@ rec {
           "unicode-script" = [ "regex-syntax?/unicode-script" ];
           "unicode-segment" = [ "regex-syntax?/unicode-segment" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "dfa-onepass" "dfa-search" "hybrid" "meta" "nfa-backtrack" "nfa-pikevm" "nfa-thompson" "perf-inline" "perf-literal" "perf-literal-multisubstring" "perf-literal-substring" "std" "syntax" "unicode" "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" "unicode-word-boundary" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "dfa-onepass"
+          "dfa-search"
+          "hybrid"
+          "meta"
+          "nfa-backtrack"
+          "nfa-pikevm"
+          "nfa-thompson"
+          "perf-inline"
+          "perf-literal"
+          "perf-literal-multisubstring"
+          "perf-literal-substring"
+          "std"
+          "syntax"
+          "unicode"
+          "unicode-age"
+          "unicode-bool"
+          "unicode-case"
+          "unicode-gencat"
+          "unicode-perl"
+          "unicode-script"
+          "unicode-segment"
+          "unicode-word-boundary"
+        ];
       };
       "regex-syntax 0.6.29" = rec {
         crateName = "regex-syntax";
@@ -11385,9 +14551,27 @@ rec {
         ];
         features = {
           "default" = [ "unicode" ];
-          "unicode" = [ "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" ];
+          "unicode" = [
+            "unicode-age"
+            "unicode-bool"
+            "unicode-case"
+            "unicode-gencat"
+            "unicode-perl"
+            "unicode-script"
+            "unicode-segment"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "unicode" "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "unicode"
+          "unicode-age"
+          "unicode-bool"
+          "unicode-case"
+          "unicode-gencat"
+          "unicode-perl"
+          "unicode-script"
+          "unicode-segment"
+        ];
       };
       "regex-syntax 0.8.5" = rec {
         crateName = "regex-syntax";
@@ -11401,10 +14585,32 @@ rec {
         ];
         features = {
           "arbitrary" = [ "dep:arbitrary" ];
-          "default" = [ "std" "unicode" ];
-          "unicode" = [ "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" ];
+          "default" = [
+            "std"
+            "unicode"
+          ];
+          "unicode" = [
+            "unicode-age"
+            "unicode-bool"
+            "unicode-case"
+            "unicode-gencat"
+            "unicode-perl"
+            "unicode-script"
+            "unicode-segment"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" "unicode" "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+          "unicode"
+          "unicode-age"
+          "unicode-bool"
+          "unicode-case"
+          "unicode-gencat"
+          "unicode-perl"
+          "unicode-script"
+          "unicode-segment"
+        ];
       };
       "relative-path" = rec {
         crateName = "relative-path";
@@ -11477,7 +14683,10 @@ rec {
             name = "hyper";
             packageId = "hyper";
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "http1" "client" ];
+            features = [
+              "http1"
+              "client"
+            ];
           }
           {
             name = "hyper-rustls";
@@ -11485,13 +14694,21 @@ rec {
             optional = true;
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "http1" "tls12" ];
+            features = [
+              "http1"
+              "tls12"
+            ];
           }
           {
             name = "hyper-util";
             packageId = "hyper-util";
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "http1" "client" "client-legacy" "tokio" ];
+            features = [
+              "http1"
+              "client"
+              "client-legacy"
+              "tokio"
+            ];
           }
           {
             name = "ipnet";
@@ -11534,7 +14751,10 @@ rec {
             optional = true;
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "rustls" "runtime-tokio" ];
+            features = [
+              "rustls"
+              "runtime-tokio"
+            ];
           }
           {
             name = "rustls";
@@ -11542,7 +14762,10 @@ rec {
             optional = true;
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "std" "tls12" ];
+            features = [
+              "std"
+              "tls12"
+            ];
           }
           {
             name = "rustls-native-certs";
@@ -11591,7 +14814,10 @@ rec {
             packageId = "tokio";
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "net" "time" ];
+            features = [
+              "net"
+              "time"
+            ];
           }
           {
             name = "tokio-rustls";
@@ -11607,14 +14833,20 @@ rec {
             optional = true;
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "codec" "io" ];
+            features = [
+              "codec"
+              "io"
+            ];
           }
           {
             name = "tower";
             packageId = "tower 0.5.2";
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "timeout" "util" ];
+            features = [
+              "timeout"
+              "util"
+            ];
           }
           {
             name = "tower-service";
@@ -11644,7 +14876,23 @@ rec {
             name = "web-sys";
             packageId = "web-sys";
             target = { target, features }: ("wasm32" == target."arch" or null);
-            features = [ "AbortController" "AbortSignal" "Headers" "Request" "RequestInit" "RequestMode" "Response" "Window" "FormData" "Blob" "BlobPropertyBag" "ServiceWorkerGlobalScope" "RequestCredentials" "File" "ReadableStream" ];
+            features = [
+              "AbortController"
+              "AbortSignal"
+              "Headers"
+              "Request"
+              "RequestInit"
+              "RequestMode"
+              "Response"
+              "Window"
+              "FormData"
+              "Blob"
+              "BlobPropertyBag"
+              "ServiceWorkerGlobalScope"
+              "RequestCredentials"
+              "File"
+              "ReadableStream"
+            ];
           }
           {
             name = "windows-registry";
@@ -11658,20 +14906,35 @@ rec {
             packageId = "futures-util";
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "std" "alloc" ];
+            features = [
+              "std"
+              "alloc"
+            ];
           }
           {
             name = "hyper";
             packageId = "hyper";
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "http1" "http2" "client" "server" ];
+            features = [
+              "http1"
+              "http2"
+              "client"
+              "server"
+            ];
           }
           {
             name = "hyper-util";
             packageId = "hyper-util";
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "http1" "http2" "client" "client-legacy" "server-auto" "tokio" ];
+            features = [
+              "http1"
+              "http2"
+              "client"
+              "client-legacy"
+              "server-auto"
+              "tokio"
+            ];
           }
           {
             name = "rustls";
@@ -11691,7 +14954,10 @@ rec {
             packageId = "tokio";
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "macros" "rt-multi-thread" ];
+            features = [
+              "macros"
+              "rt-multi-thread"
+            ];
           }
           {
             name = "tower";
@@ -11707,40 +14973,141 @@ rec {
           }
         ];
         features = {
-          "__rustls" = [ "dep:hyper-rustls" "dep:tokio-rustls" "dep:rustls" "__tls" "dep:rustls-pemfile" "dep:rustls-pki-types" ];
-          "__rustls-ring" = [ "hyper-rustls?/ring" "tokio-rustls?/ring" "rustls?/ring" "quinn?/ring" ];
-          "__tls" = [ "dep:rustls-pemfile" "tokio/io-util" ];
-          "blocking" = [ "dep:futures-channel" "futures-channel?/sink" "futures-util/io" "futures-util/sink" "tokio/sync" ];
-          "brotli" = [ "dep:async-compression" "async-compression?/brotli" "dep:tokio-util" ];
+          "__rustls" = [
+            "dep:hyper-rustls"
+            "dep:tokio-rustls"
+            "dep:rustls"
+            "__tls"
+            "dep:rustls-pemfile"
+            "dep:rustls-pki-types"
+          ];
+          "__rustls-ring" = [
+            "hyper-rustls?/ring"
+            "tokio-rustls?/ring"
+            "rustls?/ring"
+            "quinn?/ring"
+          ];
+          "__tls" = [
+            "dep:rustls-pemfile"
+            "tokio/io-util"
+          ];
+          "blocking" = [
+            "dep:futures-channel"
+            "futures-channel?/sink"
+            "futures-util/io"
+            "futures-util/sink"
+            "tokio/sync"
+          ];
+          "brotli" = [
+            "dep:async-compression"
+            "async-compression?/brotli"
+            "dep:tokio-util"
+          ];
           "charset" = [ "dep:encoding_rs" ];
-          "cookies" = [ "dep:cookie_crate" "dep:cookie_store" ];
-          "default" = [ "default-tls" "charset" "http2" "macos-system-configuration" ];
-          "default-tls" = [ "dep:hyper-tls" "dep:native-tls-crate" "__tls" "dep:tokio-native-tls" ];
-          "deflate" = [ "dep:async-compression" "async-compression?/zlib" "dep:tokio-util" ];
-          "gzip" = [ "dep:async-compression" "async-compression?/gzip" "dep:tokio-util" ];
+          "cookies" = [
+            "dep:cookie_crate"
+            "dep:cookie_store"
+          ];
+          "default" = [
+            "default-tls"
+            "charset"
+            "http2"
+            "macos-system-configuration"
+          ];
+          "default-tls" = [
+            "dep:hyper-tls"
+            "dep:native-tls-crate"
+            "__tls"
+            "dep:tokio-native-tls"
+          ];
+          "deflate" = [
+            "dep:async-compression"
+            "async-compression?/zlib"
+            "dep:tokio-util"
+          ];
+          "gzip" = [
+            "dep:async-compression"
+            "async-compression?/gzip"
+            "dep:tokio-util"
+          ];
           "h2" = [ "dep:h2" ];
           "hickory-dns" = [ "dep:hickory-resolver" ];
-          "http2" = [ "h2" "hyper/http2" "hyper-util/http2" "hyper-rustls?/http2" ];
-          "http3" = [ "rustls-tls-manual-roots" "dep:h3" "dep:h3-quinn" "dep:quinn" "dep:slab" "dep:futures-channel" ];
+          "http2" = [
+            "h2"
+            "hyper/http2"
+            "hyper-util/http2"
+            "hyper-rustls?/http2"
+          ];
+          "http3" = [
+            "rustls-tls-manual-roots"
+            "dep:h3"
+            "dep:h3-quinn"
+            "dep:quinn"
+            "dep:slab"
+            "dep:futures-channel"
+          ];
           "json" = [ "dep:serde_json" ];
           "macos-system-configuration" = [ "dep:system-configuration" ];
           "multipart" = [ "dep:mime_guess" ];
           "native-tls" = [ "default-tls" ];
-          "native-tls-alpn" = [ "native-tls" "native-tls-crate?/alpn" "hyper-tls?/alpn" ];
-          "native-tls-vendored" = [ "native-tls" "native-tls-crate?/vendored" ];
+          "native-tls-alpn" = [
+            "native-tls"
+            "native-tls-crate?/alpn"
+            "hyper-tls?/alpn"
+          ];
+          "native-tls-vendored" = [
+            "native-tls"
+            "native-tls-crate?/vendored"
+          ];
           "rustls-tls" = [ "rustls-tls-webpki-roots" ];
-          "rustls-tls-manual-roots" = [ "rustls-tls-manual-roots-no-provider" "__rustls-ring" ];
+          "rustls-tls-manual-roots" = [
+            "rustls-tls-manual-roots-no-provider"
+            "__rustls-ring"
+          ];
           "rustls-tls-manual-roots-no-provider" = [ "__rustls" ];
-          "rustls-tls-native-roots" = [ "rustls-tls-native-roots-no-provider" "__rustls-ring" ];
-          "rustls-tls-native-roots-no-provider" = [ "dep:rustls-native-certs" "hyper-rustls?/native-tokio" "__rustls" ];
+          "rustls-tls-native-roots" = [
+            "rustls-tls-native-roots-no-provider"
+            "__rustls-ring"
+          ];
+          "rustls-tls-native-roots-no-provider" = [
+            "dep:rustls-native-certs"
+            "hyper-rustls?/native-tokio"
+            "__rustls"
+          ];
           "rustls-tls-no-provider" = [ "rustls-tls-manual-roots-no-provider" ];
-          "rustls-tls-webpki-roots" = [ "rustls-tls-webpki-roots-no-provider" "__rustls-ring" ];
-          "rustls-tls-webpki-roots-no-provider" = [ "dep:webpki-roots" "hyper-rustls?/webpki-tokio" "__rustls" ];
+          "rustls-tls-webpki-roots" = [
+            "rustls-tls-webpki-roots-no-provider"
+            "__rustls-ring"
+          ];
+          "rustls-tls-webpki-roots-no-provider" = [
+            "dep:webpki-roots"
+            "hyper-rustls?/webpki-tokio"
+            "__rustls"
+          ];
           "socks" = [ "dep:tokio-socks" ];
-          "stream" = [ "tokio/fs" "dep:tokio-util" "dep:wasm-streams" ];
-          "zstd" = [ "dep:async-compression" "async-compression?/zstd" "dep:tokio-util" ];
+          "stream" = [
+            "tokio/fs"
+            "dep:tokio-util"
+            "dep:wasm-streams"
+          ];
+          "zstd" = [
+            "dep:async-compression"
+            "async-compression?/zstd"
+            "dep:tokio-util"
+          ];
         };
-        resolvedDefaultFeatures = [ "__rustls" "__rustls-ring" "__tls" "blocking" "h2" "http2" "json" "rustls-tls-native-roots" "rustls-tls-native-roots-no-provider" "stream" ];
+        resolvedDefaultFeatures = [
+          "__rustls"
+          "__rustls-ring"
+          "__tls"
+          "blocking"
+          "h2"
+          "http2"
+          "json"
+          "rustls-tls-native-roots"
+          "rustls-tls-native-roots-no-provider"
+          "stream"
+        ];
       };
       "reqwest-middleware" = rec {
         crateName = "reqwest-middleware";
@@ -11863,23 +15230,50 @@ rec {
           }
         ];
         features = {
-          "opentelemetry_0_20" = [ "opentelemetry_0_20_pkg" "tracing-opentelemetry_0_21_pkg" ];
+          "opentelemetry_0_20" = [
+            "opentelemetry_0_20_pkg"
+            "tracing-opentelemetry_0_21_pkg"
+          ];
           "opentelemetry_0_20_pkg" = [ "dep:opentelemetry_0_20_pkg" ];
-          "opentelemetry_0_21" = [ "opentelemetry_0_21_pkg" "tracing-opentelemetry_0_22_pkg" ];
+          "opentelemetry_0_21" = [
+            "opentelemetry_0_21_pkg"
+            "tracing-opentelemetry_0_22_pkg"
+          ];
           "opentelemetry_0_21_pkg" = [ "dep:opentelemetry_0_21_pkg" ];
-          "opentelemetry_0_22" = [ "opentelemetry_0_22_pkg" "tracing-opentelemetry_0_23_pkg" ];
+          "opentelemetry_0_22" = [
+            "opentelemetry_0_22_pkg"
+            "tracing-opentelemetry_0_23_pkg"
+          ];
           "opentelemetry_0_22_pkg" = [ "dep:opentelemetry_0_22_pkg" ];
-          "opentelemetry_0_23" = [ "opentelemetry_0_23_pkg" "tracing-opentelemetry_0_24_pkg" ];
+          "opentelemetry_0_23" = [
+            "opentelemetry_0_23_pkg"
+            "tracing-opentelemetry_0_24_pkg"
+          ];
           "opentelemetry_0_23_pkg" = [ "dep:opentelemetry_0_23_pkg" ];
-          "opentelemetry_0_24" = [ "opentelemetry_0_24_pkg" "tracing-opentelemetry_0_25_pkg" ];
+          "opentelemetry_0_24" = [
+            "opentelemetry_0_24_pkg"
+            "tracing-opentelemetry_0_25_pkg"
+          ];
           "opentelemetry_0_24_pkg" = [ "dep:opentelemetry_0_24_pkg" ];
-          "opentelemetry_0_25" = [ "opentelemetry_0_25_pkg" "tracing-opentelemetry_0_26_pkg" ];
+          "opentelemetry_0_25" = [
+            "opentelemetry_0_25_pkg"
+            "tracing-opentelemetry_0_26_pkg"
+          ];
           "opentelemetry_0_25_pkg" = [ "dep:opentelemetry_0_25_pkg" ];
-          "opentelemetry_0_26" = [ "opentelemetry_0_26_pkg" "tracing-opentelemetry_0_27_pkg" ];
+          "opentelemetry_0_26" = [
+            "opentelemetry_0_26_pkg"
+            "tracing-opentelemetry_0_27_pkg"
+          ];
           "opentelemetry_0_26_pkg" = [ "dep:opentelemetry_0_26_pkg" ];
-          "opentelemetry_0_27" = [ "opentelemetry_0_27_pkg" "tracing-opentelemetry_0_28_pkg" ];
+          "opentelemetry_0_27" = [
+            "opentelemetry_0_27_pkg"
+            "tracing-opentelemetry_0_28_pkg"
+          ];
           "opentelemetry_0_27_pkg" = [ "dep:opentelemetry_0_27_pkg" ];
-          "opentelemetry_0_28" = [ "opentelemetry_0_28_pkg" "tracing-opentelemetry_0_29_pkg" ];
+          "opentelemetry_0_28" = [
+            "opentelemetry_0_28_pkg"
+            "tracing-opentelemetry_0_29_pkg"
+          ];
           "opentelemetry_0_28_pkg" = [ "dep:opentelemetry_0_28_pkg" ];
           "tracing-opentelemetry_0_21_pkg" = [ "dep:tracing-opentelemetry_0_21_pkg" ];
           "tracing-opentelemetry_0_22_pkg" = [ "dep:tracing-opentelemetry_0_22_pkg" ];
@@ -11891,7 +15285,11 @@ rec {
           "tracing-opentelemetry_0_28_pkg" = [ "dep:tracing-opentelemetry_0_28_pkg" ];
           "tracing-opentelemetry_0_29_pkg" = [ "dep:tracing-opentelemetry_0_29_pkg" ];
         };
-        resolvedDefaultFeatures = [ "opentelemetry_0_28" "opentelemetry_0_28_pkg" "tracing-opentelemetry_0_29_pkg" ];
+        resolvedDefaultFeatures = [
+          "opentelemetry_0_28"
+          "opentelemetry_0_28_pkg"
+          "tracing-opentelemetry_0_29_pkg"
+        ];
       };
       "reserve-port" = rec {
         crateName = "reserve-port";
@@ -11934,13 +15332,33 @@ rec {
             name = "libc";
             packageId = "libc";
             usesDefaultFeatures = false;
-            target = { target, features }: ((("aarch64" == target."arch" or null) && ("little" == target."endian" or null)) && ("apple" == target."vendor" or null) && (("ios" == target."os" or null) || ("macos" == target."os" or null) || ("tvos" == target."os" or null) || ("visionos" == target."os" or null) || ("watchos" == target."os" or null)));
+            target =
+              { target, features }:
+              (
+                (("aarch64" == target."arch" or null) && ("little" == target."endian" or null))
+                && ("apple" == target."vendor" or null)
+                && (
+                  ("ios" == target."os" or null)
+                  || ("macos" == target."os" or null)
+                  || ("tvos" == target."os" or null)
+                  || ("visionos" == target."os" or null)
+                  || ("watchos" == target."os" or null)
+                )
+              );
           }
           {
             name = "libc";
             packageId = "libc";
             usesDefaultFeatures = false;
-            target = { target, features }: (((("aarch64" == target."arch" or null) && ("little" == target."endian" or null)) || (("arm" == target."arch" or null) && ("little" == target."endian" or null))) && (("android" == target."os" or null) || ("linux" == target."os" or null)));
+            target =
+              { target, features }:
+              (
+                (
+                  (("aarch64" == target."arch" or null) && ("little" == target."endian" or null))
+                  || (("arm" == target."arch" or null) && ("little" == target."endian" or null))
+                )
+                && (("android" == target."os" or null) || ("linux" == target."os" or null))
+              );
           }
           {
             name = "untrusted";
@@ -11949,8 +15367,16 @@ rec {
           {
             name = "windows-sys";
             packageId = "windows-sys 0.52.0";
-            target = { target, features }: ((("aarch64" == target."arch" or null) && ("little" == target."endian" or null)) && ("windows" == target."os" or null));
-            features = [ "Win32_Foundation" "Win32_System_Threading" ];
+            target =
+              { target, features }:
+              (
+                (("aarch64" == target."arch" or null) && ("little" == target."endian" or null))
+                && ("windows" == target."os" or null)
+              );
+            features = [
+              "Win32_Foundation"
+              "Win32_System_Threading"
+            ];
           }
         ];
         buildDependencies = [
@@ -11965,15 +15391,26 @@ rec {
             name = "libc";
             packageId = "libc";
             usesDefaultFeatures = false;
-            target = { target, features }: ((target."unix" or false) || (target."windows" or false) || ("wasi" == target."os" or null));
+            target =
+              { target, features }:
+              ((target."unix" or false) || (target."windows" or false) || ("wasi" == target."os" or null));
           }
         ];
         features = {
-          "default" = [ "alloc" "dev_urandom_fallback" ];
+          "default" = [
+            "alloc"
+            "dev_urandom_fallback"
+          ];
           "std" = [ "alloc" ];
           "wasm32_unknown_unknown_js" = [ "getrandom/js" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "dev_urandom_fallback" "std" "wasm32_unknown_unknown_js" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "dev_urandom_fallback"
+          "std"
+          "wasm32_unknown_unknown_js"
+        ];
       };
       "rnix" = rec {
         crateName = "rnix";
@@ -12021,7 +15458,10 @@ rec {
         ];
         features = {
           "serde" = [ "dep:serde" ];
-          "serde1" = [ "serde" "text-size/serde" ];
+          "serde1" = [
+            "serde"
+            "text-size/serde"
+          ];
         };
       };
       "rstest" = rec {
@@ -12056,10 +15496,17 @@ rec {
           }
         ];
         features = {
-          "async-timeout" = [ "dep:futures" "dep:futures-timer" "rstest_macros/async-timeout" ];
+          "async-timeout" = [
+            "dep:futures"
+            "dep:futures-timer"
+            "rstest_macros/async-timeout"
+          ];
           "default" = [ "async-timeout" ];
         };
-        resolvedDefaultFeatures = [ "async-timeout" "default" ];
+        resolvedDefaultFeatures = [
+          "async-timeout"
+          "default"
+        ];
       };
       "rstest_macros" = rec {
         crateName = "rstest_macros";
@@ -12098,7 +15545,13 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "parsing" "extra-traits" "visit" "visit-mut" ];
+            features = [
+              "full"
+              "parsing"
+              "extra-traits"
+              "visit"
+              "visit-mut"
+            ];
           }
           {
             name = "unicode-ident";
@@ -12137,7 +15590,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "full" "extra-traits" ];
+            features = [
+              "full"
+              "extra-traits"
+            ];
           }
         ];
         buildDependencies = [
@@ -12217,7 +15673,10 @@ rec {
         features = {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [ "core" "compiler_builtins" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+          ];
         };
       };
       "rustc-hash 1.1.0" = rec {
@@ -12232,7 +15691,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "rustc-hash 2.1.0" = rec {
         crateName = "rustc-hash";
@@ -12245,9 +15707,15 @@ rec {
         ];
         features = {
           "default" = [ "std" ];
-          "rand" = [ "dep:rand" "std" ];
+          "rand" = [
+            "dep:rand"
+            "std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "rustc_version" = rec {
         crateName = "rustc_version";
@@ -12283,14 +15751,61 @@ rec {
             rename = "libc_errno";
             optional = true;
             usesDefaultFeatures = false;
-            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && ("linux" == target."os" or null) && (("little" == target."endian" or null) || ("s390x" == target."arch" or null)) && (("arm" == target."arch" or null) || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null)) || ("riscv64" == target."arch" or null) || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null)) || ("x86" == target."arch" or null) || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))));
+            target =
+              { target, features }:
+              (
+                (!(target."rustix_use_libc" or false))
+                && (!(target."miri" or false))
+                && ("linux" == target."os" or null)
+                && (("little" == target."endian" or null) || ("s390x" == target."arch" or null))
+                && (
+                  ("arm" == target."arch" or null)
+                  || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                  || ("riscv64" == target."arch" or null)
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                  || ("x86" == target."arch" or null)
+                  || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                )
+              );
           }
           {
             name = "errno";
             packageId = "errno";
             rename = "libc_errno";
             usesDefaultFeatures = false;
-            target = { target, features }: ((!(target."windows" or false)) && ((target."rustix_use_libc" or false) || (target."miri" or false) || (!(("linux" == target."os" or null) && (("little" == target."endian" or null) || ("s390x" == target."arch" or null)) && (("arm" == target."arch" or null) || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null)) || ("riscv64" == target."arch" or null) || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null)) || ("x86" == target."arch" or null) || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null)))))));
+            target =
+              { target, features }:
+              (
+                (!(target."windows" or false))
+                && (
+                  (target."rustix_use_libc" or false)
+                  || (target."miri" or false)
+                  || (
+                    !(
+                      ("linux" == target."os" or null)
+                      && (("little" == target."endian" or null) || ("s390x" == target."arch" or null))
+                      && (
+                        ("arm" == target."arch" or null)
+                        || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                        || ("riscv64" == target."arch" or null)
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                        || ("x86" == target."arch" or null)
+                        || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                      )
+                    )
+                  )
+                )
+              );
           }
           {
             name = "errno";
@@ -12304,33 +15819,142 @@ rec {
             packageId = "libc";
             optional = true;
             usesDefaultFeatures = false;
-            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && ("linux" == target."os" or null) && (("little" == target."endian" or null) || ("s390x" == target."arch" or null)) && (("arm" == target."arch" or null) || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null)) || ("riscv64" == target."arch" or null) || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null)) || ("x86" == target."arch" or null) || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))));
+            target =
+              { target, features }:
+              (
+                (!(target."rustix_use_libc" or false))
+                && (!(target."miri" or false))
+                && ("linux" == target."os" or null)
+                && (("little" == target."endian" or null) || ("s390x" == target."arch" or null))
+                && (
+                  ("arm" == target."arch" or null)
+                  || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                  || ("riscv64" == target."arch" or null)
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                  || ("x86" == target."arch" or null)
+                  || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                )
+              );
           }
           {
             name = "libc";
             packageId = "libc";
             usesDefaultFeatures = false;
-            target = { target, features }: ((!(target."windows" or false)) && ((target."rustix_use_libc" or false) || (target."miri" or false) || (!(("linux" == target."os" or null) && (("little" == target."endian" or null) || ("s390x" == target."arch" or null)) && (("arm" == target."arch" or null) || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null)) || ("riscv64" == target."arch" or null) || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null)) || ("x86" == target."arch" or null) || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null)))))));
+            target =
+              { target, features }:
+              (
+                (!(target."windows" or false))
+                && (
+                  (target."rustix_use_libc" or false)
+                  || (target."miri" or false)
+                  || (
+                    !(
+                      ("linux" == target."os" or null)
+                      && (("little" == target."endian" or null) || ("s390x" == target."arch" or null))
+                      && (
+                        ("arm" == target."arch" or null)
+                        || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                        || ("riscv64" == target."arch" or null)
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                        || ("x86" == target."arch" or null)
+                        || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                      )
+                    )
+                  )
+                )
+              );
           }
           {
             name = "linux-raw-sys";
             packageId = "linux-raw-sys";
             usesDefaultFeatures = false;
-            target = { target, features }: ((("android" == target."os" or null) || ("linux" == target."os" or null)) && ((target."rustix_use_libc" or false) || (target."miri" or false) || (!(("linux" == target."os" or null) && (("little" == target."endian" or null) || ("s390x" == target."arch" or null)) && (("arm" == target."arch" or null) || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null)) || ("riscv64" == target."arch" or null) || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null)) || ("x86" == target."arch" or null) || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null)))))));
-            features = [ "general" "ioctl" "no_std" ];
+            target =
+              { target, features }:
+              (
+                (("android" == target."os" or null) || ("linux" == target."os" or null))
+                && (
+                  (target."rustix_use_libc" or false)
+                  || (target."miri" or false)
+                  || (
+                    !(
+                      ("linux" == target."os" or null)
+                      && (("little" == target."endian" or null) || ("s390x" == target."arch" or null))
+                      && (
+                        ("arm" == target."arch" or null)
+                        || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                        || ("riscv64" == target."arch" or null)
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                        || ("x86" == target."arch" or null)
+                        || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                      )
+                    )
+                  )
+                )
+              );
+            features = [
+              "general"
+              "ioctl"
+              "no_std"
+            ];
           }
           {
             name = "linux-raw-sys";
             packageId = "linux-raw-sys";
             usesDefaultFeatures = false;
-            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && ("linux" == target."os" or null) && (("little" == target."endian" or null) || ("s390x" == target."arch" or null)) && (("arm" == target."arch" or null) || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null)) || ("riscv64" == target."arch" or null) || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null)) || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null)) || ("x86" == target."arch" or null) || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))));
-            features = [ "general" "errno" "ioctl" "no_std" "elf" ];
+            target =
+              { target, features }:
+              (
+                (!(target."rustix_use_libc" or false))
+                && (!(target."miri" or false))
+                && ("linux" == target."os" or null)
+                && (("little" == target."endian" or null) || ("s390x" == target."arch" or null))
+                && (
+                  ("arm" == target."arch" or null)
+                  || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                  || ("riscv64" == target."arch" or null)
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                  || ("x86" == target."arch" or null)
+                  || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                )
+              );
+            features = [
+              "general"
+              "errno"
+              "ioctl"
+              "no_std"
+              "elf"
+            ];
           }
           {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_Networking_WinSock" "Win32_NetworkManagement_IpHelper" "Win32_System_Threading" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Networking_WinSock"
+              "Win32_NetworkManagement_IpHelper"
+              "Win32_System_Threading"
+            ];
           }
         ];
         devDependencies = [
@@ -12346,32 +15970,101 @@ rec {
           }
         ];
         features = {
-          "all-apis" = [ "event" "fs" "io_uring" "mm" "mount" "net" "param" "pipe" "process" "procfs" "pty" "rand" "runtime" "shm" "stdio" "system" "termios" "thread" "time" ];
+          "all-apis" = [
+            "event"
+            "fs"
+            "io_uring"
+            "mm"
+            "mount"
+            "net"
+            "param"
+            "pipe"
+            "process"
+            "procfs"
+            "pty"
+            "rand"
+            "runtime"
+            "shm"
+            "stdio"
+            "system"
+            "termios"
+            "thread"
+            "time"
+          ];
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
-          "default" = [ "std" "use-libc-auxv" ];
-          "io_uring" = [ "event" "fs" "net" "linux-raw-sys/io_uring" ];
+          "default" = [
+            "std"
+            "use-libc-auxv"
+          ];
+          "io_uring" = [
+            "event"
+            "fs"
+            "net"
+            "linux-raw-sys/io_uring"
+          ];
           "itoa" = [ "dep:itoa" ];
           "libc" = [ "dep:libc" ];
           "libc-extra-traits" = [ "libc?/extra_traits" ];
           "libc_errno" = [ "dep:libc_errno" ];
           "linux_latest" = [ "linux_4_11" ];
-          "net" = [ "linux-raw-sys/net" "linux-raw-sys/netlink" "linux-raw-sys/if_ether" "linux-raw-sys/xdp" ];
+          "net" = [
+            "linux-raw-sys/net"
+            "linux-raw-sys/netlink"
+            "linux-raw-sys/if_ether"
+            "linux-raw-sys/xdp"
+          ];
           "once_cell" = [ "dep:once_cell" ];
           "param" = [ "fs" ];
           "process" = [ "linux-raw-sys/prctl" ];
-          "procfs" = [ "once_cell" "itoa" "fs" ];
-          "pty" = [ "itoa" "fs" ];
+          "procfs" = [
+            "once_cell"
+            "itoa"
+            "fs"
+          ];
+          "pty" = [
+            "itoa"
+            "fs"
+          ];
           "runtime" = [ "linux-raw-sys/prctl" ];
-          "rustc-dep-of-std" = [ "core" "rustc-std-workspace-alloc" "compiler_builtins" "linux-raw-sys/rustc-dep-of-std" "bitflags/rustc-dep-of-std" "compiler_builtins?/rustc-dep-of-std" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "rustc-std-workspace-alloc"
+            "compiler_builtins"
+            "linux-raw-sys/rustc-dep-of-std"
+            "bitflags/rustc-dep-of-std"
+            "compiler_builtins?/rustc-dep-of-std"
+          ];
           "rustc-std-workspace-alloc" = [ "dep:rustc-std-workspace-alloc" ];
           "shm" = [ "fs" ];
-          "std" = [ "bitflags/std" "alloc" "libc?/std" "libc_errno?/std" "libc-extra-traits" ];
+          "std" = [
+            "bitflags/std"
+            "alloc"
+            "libc?/std"
+            "libc_errno?/std"
+            "libc-extra-traits"
+          ];
           "system" = [ "linux-raw-sys/system" ];
           "thread" = [ "linux-raw-sys/prctl" ];
-          "use-libc" = [ "libc_errno" "libc" "libc-extra-traits" ];
+          "use-libc" = [
+            "libc_errno"
+            "libc"
+            "libc-extra-traits"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "event" "fs" "libc-extra-traits" "net" "pipe" "process" "std" "time" "use-libc-auxv" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "event"
+          "fs"
+          "libc-extra-traits"
+          "net"
+          "pipe"
+          "process"
+          "std"
+          "time"
+          "use-libc-auxv"
+        ];
       };
       "rustls" = rec {
         crateName = "rustls";
@@ -12388,7 +16081,10 @@ rec {
             name = "once_cell";
             packageId = "once_cell";
             usesDefaultFeatures = false;
-            features = [ "alloc" "race" ];
+            features = [
+              "alloc"
+              "race"
+            ];
           }
           {
             name = "ring";
@@ -12426,20 +16122,51 @@ rec {
         ];
         features = {
           "aws-lc-rs" = [ "aws_lc_rs" ];
-          "aws_lc_rs" = [ "dep:aws-lc-rs" "webpki/aws_lc_rs" ];
-          "brotli" = [ "dep:brotli" "dep:brotli-decompressor" "std" ];
-          "default" = [ "aws_lc_rs" "logging" "std" "tls12" ];
-          "fips" = [ "aws_lc_rs" "aws-lc-rs?/fips" ];
+          "aws_lc_rs" = [
+            "dep:aws-lc-rs"
+            "webpki/aws_lc_rs"
+          ];
+          "brotli" = [
+            "dep:brotli"
+            "dep:brotli-decompressor"
+            "std"
+          ];
+          "default" = [
+            "aws_lc_rs"
+            "logging"
+            "std"
+            "tls12"
+          ];
+          "fips" = [
+            "aws_lc_rs"
+            "aws-lc-rs?/fips"
+          ];
           "hashbrown" = [ "dep:hashbrown" ];
           "log" = [ "dep:log" ];
           "logging" = [ "log" ];
-          "read_buf" = [ "rustversion" "std" ];
-          "ring" = [ "dep:ring" "webpki/ring" ];
+          "read_buf" = [
+            "rustversion"
+            "std"
+          ];
+          "ring" = [
+            "dep:ring"
+            "webpki/ring"
+          ];
           "rustversion" = [ "dep:rustversion" ];
-          "std" = [ "webpki/std" "pki-types/std" "once_cell/std" ];
+          "std" = [
+            "webpki/std"
+            "pki-types/std"
+            "once_cell/std"
+          ];
           "zlib" = [ "dep:zlib-rs" ];
         };
-        resolvedDefaultFeatures = [ "log" "logging" "ring" "std" "tls12" ];
+        resolvedDefaultFeatures = [
+          "log"
+          "logging"
+          "ring"
+          "std"
+          "tls12"
+        ];
       };
       "rustls-native-certs" = rec {
         crateName = "rustls-native-certs";
@@ -12489,7 +16216,10 @@ rec {
           "default" = [ "std" ];
           "std" = [ "pki-types/std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "rustls-pki-types" = rec {
         crateName = "rustls-pki-types";
@@ -12502,7 +16232,9 @@ rec {
             name = "web-time";
             packageId = "web-time";
             optional = true;
-            target = { target, features }: ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
           }
         ];
         features = {
@@ -12511,7 +16243,13 @@ rec {
           "web" = [ "web-time" ];
           "web-time" = [ "dep:web-time" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" "web" "web-time" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+          "web"
+          "web-time"
+        ];
       };
       "rustls-webpki" = rec {
         crateName = "rustls-webpki";
@@ -12538,13 +16276,26 @@ rec {
           }
         ];
         features = {
-          "alloc" = [ "ring?/alloc" "pki-types/alloc" ];
+          "alloc" = [
+            "ring?/alloc"
+            "pki-types/alloc"
+          ];
           "aws_lc_rs" = [ "dep:aws-lc-rs" ];
-          "default" = [ "std" "ring" ];
+          "default" = [
+            "std"
+            "ring"
+          ];
           "ring" = [ "dep:ring" ];
-          "std" = [ "alloc" "pki-types/std" ];
+          "std" = [
+            "alloc"
+            "pki-types/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "ring" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "ring"
+          "std"
+        ];
       };
       "rustversion" = rec {
         crateName = "rustversion";
@@ -12606,7 +16357,13 @@ rec {
             packageId = "nix 0.25.1";
             usesDefaultFeatures = false;
             target = { target, features }: (target."unix" or false);
-            features = [ "fs" "ioctl" "poll" "signal" "term" ];
+            features = [
+              "fs"
+              "ioctl"
+              "poll"
+              "signal"
+              "term"
+            ];
           }
           {
             name = "radix_trie";
@@ -12635,13 +16392,26 @@ rec {
             name = "winapi";
             packageId = "winapi";
             target = { target, features }: (target."windows" or false);
-            features = [ "consoleapi" "handleapi" "synchapi" "minwindef" "processenv" "std" "winbase" "wincon" "winuser" ];
+            features = [
+              "consoleapi"
+              "handleapi"
+              "synchapi"
+              "minwindef"
+              "processenv"
+              "std"
+              "winbase"
+              "wincon"
+              "winuser"
+            ];
           }
         ];
         features = {
           "case_insensitive_history_search" = [ "regex" ];
           "custom-bindings" = [ "radix_trie" ];
-          "default" = [ "custom-bindings" "with-dirs" ];
+          "default" = [
+            "custom-bindings"
+            "with-dirs"
+          ];
           "dirs-next" = [ "dep:dirs-next" ];
           "radix_trie" = [ "dep:radix_trie" ];
           "regex" = [ "dep:regex" ];
@@ -12650,7 +16420,13 @@ rec {
           "with-dirs" = [ "dirs-next" ];
           "with-fuzzy" = [ "skim" ];
         };
-        resolvedDefaultFeatures = [ "custom-bindings" "default" "dirs-next" "radix_trie" "with-dirs" ];
+        resolvedDefaultFeatures = [
+          "custom-bindings"
+          "default"
+          "dirs-next"
+          "radix_trie"
+          "with-dirs"
+        ];
       };
       "ryu" = rec {
         crateName = "ryu";
@@ -12695,14 +16471,25 @@ rec {
           {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
-            features = [ "Win32_Foundation" "Win32_Security_Cryptography" "Win32_Security_Authentication_Identity" "Win32_Security_Credentials" "Win32_System_LibraryLoader" "Win32_System_Memory" "Win32_System_SystemInformation" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Security_Cryptography"
+              "Win32_Security_Authentication_Identity"
+              "Win32_Security_Credentials"
+              "Win32_System_LibraryLoader"
+              "Win32_System_Memory"
+              "Win32_System_SystemInformation"
+            ];
           }
         ];
         devDependencies = [
           {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
-            features = [ "Win32_System_SystemInformation" "Win32_System_Time" ];
+            features = [
+              "Win32_System_SystemInformation"
+              "Win32_System_Time"
+            ];
           }
         ];
 
@@ -12729,7 +16516,10 @@ rec {
         features = {
           "default" = [ "use_std" ];
         };
-        resolvedDefaultFeatures = [ "default" "use_std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "use_std"
+        ];
       };
       "security-framework" = rec {
         crateName = "security-framework";
@@ -12766,13 +16556,27 @@ rec {
         ];
         features = {
           "OSX_10_12" = [ "security-framework-sys/OSX_10_12" ];
-          "OSX_10_13" = [ "OSX_10_12" "security-framework-sys/OSX_10_13" "alpn" "session-tickets" ];
-          "OSX_10_14" = [ "OSX_10_13" "security-framework-sys/OSX_10_14" ];
-          "OSX_10_15" = [ "OSX_10_14" "security-framework-sys/OSX_10_15" ];
+          "OSX_10_13" = [
+            "OSX_10_12"
+            "security-framework-sys/OSX_10_13"
+            "alpn"
+            "session-tickets"
+          ];
+          "OSX_10_14" = [
+            "OSX_10_13"
+            "security-framework-sys/OSX_10_14"
+          ];
+          "OSX_10_15" = [
+            "OSX_10_14"
+            "security-framework-sys/OSX_10_15"
+          ];
           "default" = [ "OSX_10_12" ];
           "log" = [ "dep:log" ];
         };
-        resolvedDefaultFeatures = [ "OSX_10_12" "default" ];
+        resolvedDefaultFeatures = [
+          "OSX_10_12"
+          "default"
+        ];
       };
       "security-framework-sys" = rec {
         crateName = "security-framework-sys";
@@ -12803,7 +16607,12 @@ rec {
           "OSX_10_15" = [ "OSX_10_14" ];
           "default" = [ "OSX_10_12" ];
         };
-        resolvedDefaultFeatures = [ "OSX_10_10" "OSX_10_11" "OSX_10_12" "OSX_10_9" ];
+        resolvedDefaultFeatures = [
+          "OSX_10_10"
+          "OSX_10_11"
+          "OSX_10_12"
+          "OSX_10_9"
+        ];
       };
       "semver" = rec {
         crateName = "semver";
@@ -12817,7 +16626,10 @@ rec {
           "default" = [ "std" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "serde" = rec {
         crateName = "serde";
@@ -12851,7 +16663,14 @@ rec {
           "derive" = [ "serde_derive" ];
           "serde_derive" = [ "dep:serde_derive" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "derive" "rc" "serde_derive" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "derive"
+          "rc"
+          "serde_derive"
+          "std"
+        ];
       };
       "serde_derive" = rec {
         crateName = "serde_derive";
@@ -12880,10 +16699,17 @@ rec {
             name = "syn";
             packageId = "syn 2.0.93";
             usesDefaultFeatures = false;
-            features = [ "clone-impls" "derive" "parsing" "printing" "proc-macro" ];
+            features = [
+              "clone-impls"
+              "derive"
+              "parsing"
+              "printing"
+              "proc-macro"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "serde_json" = rec {
@@ -12926,10 +16752,21 @@ rec {
           "alloc" = [ "serde/alloc" ];
           "default" = [ "std" ];
           "indexmap" = [ "dep:indexmap" ];
-          "preserve_order" = [ "indexmap" "std" ];
-          "std" = [ "memchr/std" "serde/std" ];
+          "preserve_order" = [
+            "indexmap"
+            "std"
+          ];
+          "std" = [
+            "memchr/std"
+            "serde/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "raw_value" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "raw_value"
+          "std"
+        ];
       };
       "serde_path_to_error" = rec {
         crateName = "serde_path_to_error";
@@ -12977,14 +16814,30 @@ rec {
           "actix-web2" = [ "dep:actix-web2" ];
           "actix-web3" = [ "dep:actix-web3" ];
           "actix-web4" = [ "dep:actix-web4" ];
-          "actix2" = [ "actix-web2" "futures" ];
-          "actix3" = [ "actix-web3" "futures" ];
-          "actix4" = [ "actix-web4" "futures" ];
-          "axum" = [ "axum-framework" "futures" ];
+          "actix2" = [
+            "actix-web2"
+            "futures"
+          ];
+          "actix3" = [
+            "actix-web3"
+            "futures"
+          ];
+          "actix4" = [
+            "actix-web4"
+            "futures"
+          ];
+          "axum" = [
+            "axum-framework"
+            "futures"
+          ];
           "axum-framework" = [ "dep:axum-framework" ];
           "futures" = [ "dep:futures" ];
           "tracing" = [ "dep:tracing" ];
-          "warp" = [ "futures" "tracing" "warp-framework" ];
+          "warp" = [
+            "futures"
+            "tracing"
+            "warp-framework"
+          ];
           "warp-framework" = [ "dep:warp-framework" ];
         };
         resolvedDefaultFeatures = [ "default" ];
@@ -13036,7 +16889,11 @@ rec {
           "erased" = [ "erased-serde" ];
           "erased-serde" = [ "dep:erased-serde" ];
         };
-        resolvedDefaultFeatures = [ "default" "erased" "erased-serde" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "erased"
+          "erased-serde"
+        ];
       };
       "serde_urlencoded" = rec {
         crateName = "serde_urlencoded";
@@ -13154,25 +17011,80 @@ rec {
           }
         ];
         features = {
-          "alloc" = [ "serde/alloc" "base64?/alloc" "chrono_0_4?/alloc" "hex?/alloc" "serde_json?/alloc" "time_0_3?/alloc" ];
-          "base64" = [ "dep:base64" "alloc" ];
+          "alloc" = [
+            "serde/alloc"
+            "base64?/alloc"
+            "chrono_0_4?/alloc"
+            "hex?/alloc"
+            "serde_json?/alloc"
+            "time_0_3?/alloc"
+          ];
+          "base64" = [
+            "dep:base64"
+            "alloc"
+          ];
           "chrono" = [ "chrono_0_4" ];
           "chrono_0_4" = [ "dep:chrono_0_4" ];
-          "default" = [ "std" "macros" ];
-          "guide" = [ "dep:doc-comment" "dep:document-features" "macros" "std" ];
-          "hashbrown_0_14" = [ "dep:hashbrown_0_14" "alloc" ];
-          "hashbrown_0_15" = [ "dep:hashbrown_0_15" "alloc" ];
-          "hex" = [ "dep:hex" "alloc" ];
+          "default" = [
+            "std"
+            "macros"
+          ];
+          "guide" = [
+            "dep:doc-comment"
+            "dep:document-features"
+            "macros"
+            "std"
+          ];
+          "hashbrown_0_14" = [
+            "dep:hashbrown_0_14"
+            "alloc"
+          ];
+          "hashbrown_0_15" = [
+            "dep:hashbrown_0_15"
+            "alloc"
+          ];
+          "hex" = [
+            "dep:hex"
+            "alloc"
+          ];
           "indexmap" = [ "indexmap_1" ];
-          "indexmap_1" = [ "dep:indexmap_1" "alloc" ];
-          "indexmap_2" = [ "dep:indexmap_2" "alloc" ];
-          "json" = [ "dep:serde_json" "alloc" ];
+          "indexmap_1" = [
+            "dep:indexmap_1"
+            "alloc"
+          ];
+          "indexmap_2" = [
+            "dep:indexmap_2"
+            "alloc"
+          ];
+          "json" = [
+            "dep:serde_json"
+            "alloc"
+          ];
           "macros" = [ "dep:serde_with_macros" ];
-          "schemars_0_8" = [ "dep:schemars_0_8" "std" "serde_with_macros?/schemars_0_8" ];
-          "std" = [ "alloc" "serde/std" "chrono_0_4?/clock" "chrono_0_4?/std" "indexmap_1?/std" "indexmap_2?/std" "time_0_3?/serde-well-known" "time_0_3?/std" ];
+          "schemars_0_8" = [
+            "dep:schemars_0_8"
+            "std"
+            "serde_with_macros?/schemars_0_8"
+          ];
+          "std" = [
+            "alloc"
+            "serde/std"
+            "chrono_0_4?/clock"
+            "chrono_0_4?/std"
+            "indexmap_1?/std"
+            "indexmap_2?/std"
+            "time_0_3?/serde-well-known"
+            "time_0_3?/std"
+          ];
           "time_0_3" = [ "dep:time_0_3" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "base64" "default" "macros" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "base64"
+          "default"
+          "macros"
+          "std"
+        ];
       };
       "serde_with_macros" = rec {
         crateName = "serde_with_macros";
@@ -13199,10 +17111,15 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "extra-traits" "full" "parsing" ];
+            features = [
+              "extra-traits"
+              "full"
+              "parsing"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "sha1" = rec {
         crateName = "sha1";
@@ -13220,7 +17137,13 @@ rec {
           {
             name = "cpufeatures";
             packageId = "cpufeatures";
-            target = { target, features }: (("aarch64" == target."arch" or null) || ("x86" == target."arch" or null) || ("x86_64" == target."arch" or null));
+            target =
+              { target, features }:
+              (
+                ("aarch64" == target."arch" or null)
+                || ("x86" == target."arch" or null)
+                || ("x86_64" == target."arch" or null)
+              );
           }
           {
             name = "digest";
@@ -13241,7 +17164,10 @@ rec {
           "sha1-asm" = [ "dep:sha1-asm" ];
           "std" = [ "digest/std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "sha2" = rec {
         crateName = "sha2";
@@ -13259,7 +17185,13 @@ rec {
           {
             name = "cpufeatures";
             packageId = "cpufeatures";
-            target = { target, features }: (("aarch64" == target."arch" or null) || ("x86_64" == target."arch" or null) || ("x86" == target."arch" or null));
+            target =
+              { target, features }:
+              (
+                ("aarch64" == target."arch" or null)
+                || ("x86_64" == target."arch" or null)
+                || ("x86" == target."arch" or null)
+              );
           }
           {
             name = "digest";
@@ -13281,7 +17213,10 @@ rec {
           "sha2-asm" = [ "dep:sha2-asm" ];
           "std" = [ "digest/std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "sharded-slab" = rec {
         crateName = "sharded-slab";
@@ -13318,7 +17253,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "signal-hook-registry" = rec {
         crateName = "signal-hook-registry";
@@ -13358,9 +17296,15 @@ rec {
           "derive" = [ "dep:derive" ];
           "digest" = [ "dep:digest" ];
           "rand_core" = [ "dep:rand_core" ];
-          "std" = [ "alloc" "rand_core?/std" ];
+          "std" = [
+            "alloc"
+            "rand_core?/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "std"
+        ];
       };
       "slab" = rec {
         crateName = "slab";
@@ -13380,7 +17324,10 @@ rec {
           "default" = [ "std" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "smallvec" = rec {
         crateName = "smallvec";
@@ -13396,7 +17343,10 @@ rec {
           "drain_keep_rest" = [ "drain_filter" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "const_generics" "const_new" ];
+        resolvedDefaultFeatures = [
+          "const_generics"
+          "const_new"
+        ];
       };
       "smol_str" = rec {
         crateName = "smol_str";
@@ -13427,7 +17377,10 @@ rec {
           "serde" = [ "dep:serde" ];
           "std" = [ "serde?/std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "snafu" = rec {
         crateName = "snafu";
@@ -13450,21 +17403,44 @@ rec {
         ];
         features = {
           "backtrace" = [ "dep:backtrace" ];
-          "backtraces" = [ "std" "backtrace" ];
+          "backtraces" = [
+            "std"
+            "backtrace"
+          ];
           "backtraces-impl-backtrace-crate" = [ "backtraces" ];
-          "default" = [ "std" "rust_1_46" ];
-          "futures" = [ "futures-core-crate" "pin-project" ];
+          "default" = [
+            "std"
+            "rust_1_46"
+          ];
+          "futures" = [
+            "futures-core-crate"
+            "pin-project"
+          ];
           "futures-core-crate" = [ "dep:futures-core-crate" ];
           "futures-crate" = [ "dep:futures-crate" ];
           "internal-dev-dependencies" = [ "futures-crate" ];
           "pin-project" = [ "dep:pin-project" ];
           "rust_1_39" = [ "snafu-derive/rust_1_39" ];
-          "rust_1_46" = [ "rust_1_39" "snafu-derive/rust_1_46" ];
-          "rust_1_61" = [ "rust_1_46" "snafu-derive/rust_1_61" ];
-          "unstable-backtraces-impl-std" = [ "backtraces-impl-std" "snafu-derive/unstable-backtraces-impl-std" ];
+          "rust_1_46" = [
+            "rust_1_39"
+            "snafu-derive/rust_1_46"
+          ];
+          "rust_1_61" = [
+            "rust_1_46"
+            "snafu-derive/rust_1_61"
+          ];
+          "unstable-backtraces-impl-std" = [
+            "backtraces-impl-std"
+            "snafu-derive/unstable-backtraces-impl-std"
+          ];
           "unstable-provider-api" = [ "snafu-derive/unstable-provider-api" ];
         };
-        resolvedDefaultFeatures = [ "default" "rust_1_39" "rust_1_46" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "rust_1_39"
+          "rust_1_46"
+          "std"
+        ];
       };
       "snafu-derive" = rec {
         crateName = "snafu-derive";
@@ -13495,8 +17471,12 @@ rec {
             features = [ "full" ];
           }
         ];
-        features = { };
-        resolvedDefaultFeatures = [ "rust_1_39" "rust_1_46" ];
+        features = {
+        };
+        resolvedDefaultFeatures = [
+          "rust_1_39"
+          "rust_1_46"
+        ];
       };
       "snix-build" = rec {
         crateName = "snix-build";
@@ -13509,7 +17489,10 @@ rec {
             requiredFeatures = [ ];
           }
         ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./build; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./build;
+        };
         libName = "snix_build";
         dependencies = [
           {
@@ -13531,7 +17514,10 @@ rec {
           {
             name = "clap";
             packageId = "clap";
-            features = [ "derive" "env" ];
+            features = [
+              "derive"
+              "env"
+            ];
           }
           {
             name = "data-encoding";
@@ -13592,7 +17578,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls" "tls-roots" ];
+            features = [
+              "tls"
+              "tls-roots"
+            ];
           }
           {
             name = "tonic-reflection";
@@ -13634,9 +17623,15 @@ rec {
           }
         ];
         features = {
-          "tonic-reflection" = [ "dep:tonic-reflection" "snix-castore/tonic-reflection" ];
+          "tonic-reflection" = [
+            "dep:tonic-reflection"
+            "snix-castore/tonic-reflection"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "tonic-reflection" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "tonic-reflection"
+        ];
       };
       "snix-castore" = rec {
         crateName = "snix-castore";
@@ -13649,13 +17644,19 @@ rec {
             requiredFeatures = [ ];
           }
         ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./castore; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./castore;
+        };
         libName = "snix_castore";
         dependencies = [
           {
             name = "async-compression";
             packageId = "async-compression";
-            features = [ "tokio" "zstd" ];
+            features = [
+              "tokio"
+              "zstd"
+            ];
           }
           {
             name = "async-stream";
@@ -13677,7 +17678,11 @@ rec {
           {
             name = "blake3";
             packageId = "blake3";
-            features = [ "rayon" "std" "traits-preview" ];
+            features = [
+              "rayon"
+              "std"
+              "traits-preview"
+            ];
           }
           {
             name = "bstr";
@@ -13690,7 +17695,10 @@ rec {
           {
             name = "clap";
             packageId = "clap";
-            features = [ "derive" "env" ];
+            features = [
+              "derive"
+              "env"
+            ];
           }
           {
             name = "data-encoding";
@@ -13797,17 +17805,32 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "fs" "macros" "net" "rt" "rt-multi-thread" "signal" ];
+            features = [
+              "fs"
+              "macros"
+              "net"
+              "rt"
+              "rt-multi-thread"
+              "signal"
+            ];
           }
           {
             name = "tokio-listener";
             packageId = "tokio-listener";
-            features = [ "clap" "multi-listener" "sd_listen" "tonic012" ];
+            features = [
+              "clap"
+              "multi-listener"
+              "sd_listen"
+              "tonic012"
+            ];
           }
           {
             name = "tokio-stream";
             packageId = "tokio-stream";
-            features = [ "fs" "net" ];
+            features = [
+              "fs"
+              "net"
+            ];
           }
           {
             name = "tokio-tar";
@@ -13816,7 +17839,11 @@ rec {
           {
             name = "tokio-util";
             packageId = "tokio-util";
-            features = [ "io" "io-util" "codec" ];
+            features = [
+              "io"
+              "io-util"
+              "codec"
+            ];
           }
           {
             name = "toml";
@@ -13950,16 +17977,49 @@ rec {
           }
         ];
         features = {
-          "cloud" = [ "dep:bigtable_rs" "object_store/aws" "object_store/azure" "object_store/gcp" ];
+          "cloud" = [
+            "dep:bigtable_rs"
+            "object_store/aws"
+            "object_store/azure"
+            "object_store/gcp"
+          ];
           "default" = [ "cloud" ];
-          "fs" = [ "dep:fuse-backend-rs" "dep:threadpool" "dep:libc" ];
+          "fs" = [
+            "dep:fuse-backend-rs"
+            "dep:threadpool"
+            "dep:libc"
+          ];
           "fuse" = [ "fs" ];
           "toml" = [ "dep:toml" ];
           "tonic-reflection" = [ "dep:tonic-reflection" ];
-          "virtiofs" = [ "fs" "dep:vhost" "dep:vhost-user-backend" "dep:virtio-queue" "dep:vm-memory" "dep:vmm-sys-util" "dep:virtio-bindings" "fuse-backend-rs?/vhost-user-fs" "fuse-backend-rs?/virtiofs" ];
-          "xp-composition-cli" = [ "toml" "xp-composition-url-refs" ];
+          "virtiofs" = [
+            "fs"
+            "dep:vhost"
+            "dep:vhost-user-backend"
+            "dep:virtio-queue"
+            "dep:vm-memory"
+            "dep:vmm-sys-util"
+            "dep:virtio-bindings"
+            "fuse-backend-rs?/vhost-user-fs"
+            "fuse-backend-rs?/virtiofs"
+          ];
+          "xp-composition-cli" = [
+            "toml"
+            "xp-composition-url-refs"
+          ];
         };
-        resolvedDefaultFeatures = [ "cloud" "default" "fs" "fuse" "integration" "toml" "tonic-reflection" "virtiofs" "xp-composition-cli" "xp-composition-url-refs" ];
+        resolvedDefaultFeatures = [
+          "cloud"
+          "default"
+          "fs"
+          "fuse"
+          "integration"
+          "toml"
+          "tonic-reflection"
+          "virtiofs"
+          "xp-composition-cli"
+          "xp-composition-url-refs"
+        ];
       };
       "snix-castore-http" = rec {
         crateName = "snix-castore-http";
@@ -13972,7 +18032,10 @@ rec {
             requiredFeatures = [ ];
           }
         ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./castore-http; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./castore-http;
+        };
         libName = "snix_castore_http";
         dependencies = [
           {
@@ -14021,7 +18084,12 @@ rec {
           {
             name = "tokio-listener";
             packageId = "tokio-listener";
-            features = [ "axum07" "clap" "multi-listener" "sd_listen" ];
+            features = [
+              "axum07"
+              "clap"
+              "multi-listener"
+              "sd_listen"
+            ];
           }
           {
             name = "tokio-util";
@@ -14063,7 +18131,10 @@ rec {
             requiredFeatures = [ ];
           }
         ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./cli; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli;
+        };
         libName = "snix_cli";
         dependencies = [
           {
@@ -14073,7 +18144,10 @@ rec {
           {
             name = "clap";
             packageId = "clap";
-            features = [ "derive" "env" ];
+            features = [
+              "derive"
+              "env"
+            ];
           }
           {
             name = "dirs";
@@ -14159,13 +18233,20 @@ rec {
           "tracy" = [ "snix-tracing/tracy" ];
           "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
         };
-        resolvedDefaultFeatures = [ "default" "tracy" "xp-store-composition-cli" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "tracy"
+          "xp-store-composition-cli"
+        ];
       };
       "snix-eval" = rec {
         crateName = "snix-eval";
         version = "0.1.0";
         edition = "2024";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./eval; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./eval;
+        };
         libName = "snix_eval";
         dependencies = [
           {
@@ -14205,7 +18286,10 @@ rec {
           {
             name = "lexical-core";
             packageId = "lexical-core";
-            features = [ "format" "parse-floats" ];
+            features = [
+              "format"
+              "parse-floats"
+            ];
           }
           {
             name = "md-5";
@@ -14229,7 +18313,11 @@ rec {
             packageId = "proptest";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "std" "alloc" "tempfile" ];
+            features = [
+              "std"
+              "alloc"
+              "tempfile"
+            ];
           }
           {
             name = "regex";
@@ -14250,7 +18338,10 @@ rec {
           {
             name = "serde";
             packageId = "serde";
-            features = [ "rc" "derive" ];
+            features = [
+              "rc"
+              "derive"
+            ];
           }
           {
             name = "serde_json";
@@ -14323,18 +18414,36 @@ rec {
           }
         ];
         features = {
-          "arbitrary" = [ "proptest" "test-strategy" ];
-          "default" = [ "impure" "arbitrary" "nix_tests" ];
+          "arbitrary" = [
+            "proptest"
+            "test-strategy"
+          ];
+          "default" = [
+            "impure"
+            "arbitrary"
+            "nix_tests"
+          ];
           "proptest" = [ "dep:proptest" ];
           "test-strategy" = [ "dep:test-strategy" ];
         };
-        resolvedDefaultFeatures = [ "arbitrary" "default" "impure" "nix_tests" "no_leak" "proptest" "test-strategy" ];
+        resolvedDefaultFeatures = [
+          "arbitrary"
+          "default"
+          "impure"
+          "nix_tests"
+          "no_leak"
+          "proptest"
+          "test-strategy"
+        ];
       };
       "snix-eval-builtin-macros" = rec {
         crateName = "snix-eval-builtin-macros";
         version = "0.0.1";
         edition = "2024";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./eval/builtin-macros; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./eval/builtin-macros;
+        };
         procMacro = true;
         libName = "snix_eval_builtin_macros";
         authors = [
@@ -14352,7 +18461,14 @@ rec {
           {
             name = "syn";
             packageId = "syn 1.0.109";
-            features = [ "full" "parsing" "printing" "visit" "visit-mut" "extra-traits" ];
+            features = [
+              "full"
+              "parsing"
+              "printing"
+              "visit"
+              "visit-mut"
+              "extra-traits"
+            ];
           }
         ];
         devDependencies = [
@@ -14367,13 +18483,21 @@ rec {
         crateName = "snix-glue";
         version = "0.1.0";
         edition = "2024";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./glue; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./glue;
+        };
         libName = "snix_glue";
         dependencies = [
           {
             name = "async-compression";
             packageId = "async-compression";
-            features = [ "tokio" "gzip" "bzip2" "xz" ];
+            features = [
+              "tokio"
+              "gzip"
+              "bzip2"
+              "xz"
+            ];
           }
           {
             name = "async-stream";
@@ -14475,7 +18599,11 @@ rec {
           {
             name = "tokio-util";
             packageId = "tokio-util";
-            features = [ "io" "io-util" "compat" ];
+            features = [
+              "io"
+              "io-util"
+              "compat"
+            ];
           }
           {
             name = "tracing";
@@ -14529,13 +18657,19 @@ rec {
         features = {
           "default" = [ "nix_tests" ];
         };
-        resolvedDefaultFeatures = [ "default" "nix_tests" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "nix_tests"
+        ];
       };
       "snix-serde" = rec {
         crateName = "snix-serde";
         version = "0.1.0";
         edition = "2024";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./serde; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./serde;
+        };
         libName = "snix_serde";
         dependencies = [
           {
@@ -14566,7 +18700,10 @@ rec {
             requiredFeatures = [ ];
           }
         ];
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./store; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./store;
+        };
         libName = "snix_store";
         dependencies = [
           {
@@ -14576,7 +18713,13 @@ rec {
           {
             name = "async-compression";
             packageId = "async-compression";
-            features = [ "tokio" "bzip2" "gzip" "xz" "zstd" ];
+            features = [
+              "tokio"
+              "bzip2"
+              "gzip"
+              "xz"
+              "zstd"
+            ];
           }
           {
             name = "async-stream";
@@ -14594,7 +18737,10 @@ rec {
           {
             name = "blake3";
             packageId = "blake3";
-            features = [ "rayon" "std" ];
+            features = [
+              "rayon"
+              "std"
+            ];
           }
           {
             name = "bstr";
@@ -14607,7 +18753,10 @@ rec {
           {
             name = "clap";
             packageId = "clap";
-            features = [ "derive" "env" ];
+            features = [
+              "derive"
+              "env"
+            ];
           }
           {
             name = "count-write";
@@ -14648,7 +18797,10 @@ rec {
           {
             name = "nix-compat";
             packageId = "nix-compat";
-            features = [ "async" "serde" ];
+            features = [
+              "async"
+              "serde"
+            ];
           }
           {
             name = "parking_lot";
@@ -14671,7 +18823,10 @@ rec {
             name = "reqwest";
             packageId = "reqwest";
             usesDefaultFeatures = false;
-            features = [ "rustls-tls-native-roots" "stream" ];
+            features = [
+              "rustls-tls-native-roots"
+              "stream"
+            ];
           }
           {
             name = "reqwest-middleware";
@@ -14712,7 +18867,10 @@ rec {
           {
             name = "snix-tracing";
             packageId = "snix-tracing";
-            features = [ "tonic" "reqwest" ];
+            features = [
+              "tonic"
+              "reqwest"
+            ];
           }
           {
             name = "thiserror";
@@ -14721,12 +18879,24 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "fs" "macros" "net" "rt" "rt-multi-thread" "signal" ];
+            features = [
+              "fs"
+              "macros"
+              "net"
+              "rt"
+              "rt-multi-thread"
+              "signal"
+            ];
           }
           {
             name = "tokio-listener";
             packageId = "tokio-listener";
-            features = [ "clap" "multi-listener" "sd_listen" "tonic012" ];
+            features = [
+              "clap"
+              "multi-listener"
+              "sd_listen"
+              "tonic012"
+            ];
           }
           {
             name = "tokio-stream";
@@ -14736,7 +18906,11 @@ rec {
           {
             name = "tokio-util";
             packageId = "tokio-util";
-            features = [ "io" "io-util" "compat" ];
+            features = [
+              "io"
+              "io-util"
+              "compat"
+            ];
           }
           {
             name = "toml";
@@ -14746,7 +18920,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls" "tls-roots" ];
+            features = [
+              "tls"
+              "tls-roots"
+            ];
           }
           {
             name = "tonic-health";
@@ -14821,23 +18998,51 @@ rec {
           }
         ];
         features = {
-          "cloud" = [ "dep:bigtable_rs" "snix-castore/cloud" ];
-          "default" = [ "cloud" "fuse" "otlp" "tonic-reflection" ];
+          "cloud" = [
+            "dep:bigtable_rs"
+            "snix-castore/cloud"
+          ];
+          "default" = [
+            "cloud"
+            "fuse"
+            "otlp"
+            "tonic-reflection"
+          ];
           "fuse" = [ "snix-castore/fuse" ];
           "otlp" = [ "snix-tracing/otlp" ];
           "toml" = [ "dep:toml" ];
-          "tonic-reflection" = [ "dep:tonic-reflection" "snix-castore/tonic-reflection" ];
+          "tonic-reflection" = [
+            "dep:tonic-reflection"
+            "snix-castore/tonic-reflection"
+          ];
           "tracy" = [ "snix-tracing/tracy" ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
-          "xp-composition-cli" = [ "toml" "snix-castore/xp-composition-url-refs" ];
+          "xp-composition-cli" = [
+            "toml"
+            "snix-castore/xp-composition-url-refs"
+          ];
         };
-        resolvedDefaultFeatures = [ "cloud" "default" "fuse" "integration" "otlp" "toml" "tonic-reflection" "tracy" "virtiofs" "xp-composition-cli" ];
+        resolvedDefaultFeatures = [
+          "cloud"
+          "default"
+          "fuse"
+          "integration"
+          "otlp"
+          "toml"
+          "tonic-reflection"
+          "tracy"
+          "virtiofs"
+          "xp-composition-cli"
+        ];
       };
       "snix-tracing" = rec {
         crateName = "snix-tracing";
         version = "0.1.0";
         edition = "2024";
-        src = lib.cleanSourceWith { filter = sourceFilter; src = ./tracing; };
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./tracing;
+        };
         libName = "snix_tracing";
         dependencies = [
           {
@@ -14890,7 +19095,10 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "sync" "rt" ];
+            features = [
+              "sync"
+              "rt"
+            ];
           }
           {
             name = "tonic";
@@ -14900,7 +19108,10 @@ rec {
           {
             name = "tracing";
             packageId = "tracing";
-            features = [ "max_level_trace" "release_max_level_debug" ];
+            features = [
+              "max_level_trace"
+              "release_max_level_debug"
+            ];
           }
           {
             name = "tracing-indicatif";
@@ -14925,12 +19136,30 @@ rec {
         ];
         features = {
           "axum" = [ "dep:axum" ];
-          "otlp" = [ "dep:tracing-opentelemetry" "dep:opentelemetry" "dep:opentelemetry-otlp" "dep:opentelemetry_sdk" "dep:opentelemetry-http" "dep:opentelemetry-semantic-conventions" "reqwest-tracing?/opentelemetry_0_28" ];
+          "otlp" = [
+            "dep:tracing-opentelemetry"
+            "dep:opentelemetry"
+            "dep:opentelemetry-otlp"
+            "dep:opentelemetry_sdk"
+            "dep:opentelemetry-http"
+            "dep:opentelemetry-semantic-conventions"
+            "reqwest-tracing?/opentelemetry_0_28"
+          ];
           "reqwest" = [ "dep:reqwest-tracing" ];
-          "tonic" = [ "dep:tonic" "dep:http" ];
+          "tonic" = [
+            "dep:tonic"
+            "dep:http"
+          ];
           "tracy" = [ "dep:tracing-tracy" ];
         };
-        resolvedDefaultFeatures = [ "axum" "default" "otlp" "reqwest" "tonic" "tracy" ];
+        resolvedDefaultFeatures = [
+          "axum"
+          "default"
+          "otlp"
+          "reqwest"
+          "tonic"
+          "tracy"
+        ];
       };
       "socket2" = rec {
         crateName = "socket2";
@@ -14951,10 +19180,17 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_Networking_WinSock" "Win32_System_IO" "Win32_System_Threading" "Win32_System_WindowsProgramming" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Networking_WinSock"
+              "Win32_System_IO"
+              "Win32_System_Threading"
+              "Win32_System_WindowsProgramming"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "all" ];
       };
       "spin" = rec {
@@ -14969,7 +19205,15 @@ rec {
         ];
         features = {
           "barrier" = [ "mutex" ];
-          "default" = [ "lock_api" "mutex" "spin_mutex" "rwlock" "once" "lazy" "barrier" ];
+          "default" = [
+            "lock_api"
+            "mutex"
+            "spin_mutex"
+            "rwlock"
+            "once"
+            "lazy"
+            "barrier"
+          ];
           "fair_mutex" = [ "mutex" ];
           "lazy" = [ "once" ];
           "lock_api" = [ "lock_api_crate" ];
@@ -14978,9 +19222,15 @@ rec {
           "portable_atomic" = [ "portable-atomic" ];
           "spin_mutex" = [ "mutex" ];
           "ticket_mutex" = [ "mutex" ];
-          "use_ticket_mutex" = [ "mutex" "ticket_mutex" ];
+          "use_ticket_mutex" = [
+            "mutex"
+            "ticket_mutex"
+          ];
         };
-        resolvedDefaultFeatures = [ "mutex" "spin_mutex" ];
+        resolvedDefaultFeatures = [
+          "mutex"
+          "spin_mutex"
+        ];
       };
       "spki" = rec {
         crateName = "spki";
@@ -15004,15 +19254,31 @@ rec {
           }
         ];
         features = {
-          "alloc" = [ "base64ct?/alloc" "der/alloc" ];
-          "arbitrary" = [ "std" "dep:arbitrary" "der/arbitrary" ];
+          "alloc" = [
+            "base64ct?/alloc"
+            "der/alloc"
+          ];
+          "arbitrary" = [
+            "std"
+            "dep:arbitrary"
+            "der/arbitrary"
+          ];
           "base64" = [ "dep:base64ct" ];
           "fingerprint" = [ "sha2" ];
-          "pem" = [ "alloc" "der/pem" ];
+          "pem" = [
+            "alloc"
+            "der/pem"
+          ];
           "sha2" = [ "dep:sha2" ];
-          "std" = [ "der/std" "alloc" ];
+          "std" = [
+            "der/std"
+            "alloc"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "std"
+        ];
       };
       "stable_deref_trait" = rec {
         crateName = "stable_deref_trait";
@@ -15036,7 +19302,8 @@ rec {
         authors = [
           "Nikolai Vazquez"
         ];
-        features = { };
+        features = {
+        };
       };
       "str-buf" = rec {
         crateName = "str-buf";
@@ -15092,7 +19359,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 1.0.109";
-            features = [ "extra-traits" "full" ];
+            features = [
+              "extra-traits"
+              "full"
+            ];
           }
         ];
 
@@ -15144,7 +19414,10 @@ rec {
           "phf" = [ "dep:phf" ];
           "strum_macros" = [ "dep:strum_macros" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "strum_macros" = rec {
         crateName = "strum_macros";
@@ -15175,7 +19448,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "parsing" "extra-traits" ];
+            features = [
+              "parsing"
+              "extra-traits"
+            ];
           }
         ];
 
@@ -15190,7 +19466,10 @@ rec {
           "Henry de Valence <hdevalence@hdevalence.ca>"
         ];
         features = {
-          "default" = [ "std" "i128" ];
+          "default" = [
+            "std"
+            "i128"
+          ];
         };
       };
       "syn 1.0.109" = rec {
@@ -15219,13 +19498,34 @@ rec {
           }
         ];
         features = {
-          "default" = [ "derive" "parsing" "printing" "clone-impls" "proc-macro" ];
+          "default" = [
+            "derive"
+            "parsing"
+            "printing"
+            "clone-impls"
+            "proc-macro"
+          ];
           "printing" = [ "quote" ];
-          "proc-macro" = [ "proc-macro2/proc-macro" "quote/proc-macro" ];
+          "proc-macro" = [
+            "proc-macro2/proc-macro"
+            "quote/proc-macro"
+          ];
           "quote" = [ "dep:quote" ];
           "test" = [ "syn-test-suite/all-features" ];
         };
-        resolvedDefaultFeatures = [ "clone-impls" "default" "derive" "extra-traits" "full" "parsing" "printing" "proc-macro" "quote" "visit" "visit-mut" ];
+        resolvedDefaultFeatures = [
+          "clone-impls"
+          "default"
+          "derive"
+          "extra-traits"
+          "full"
+          "parsing"
+          "printing"
+          "proc-macro"
+          "quote"
+          "visit"
+          "visit-mut"
+        ];
       };
       "syn 2.0.93" = rec {
         crateName = "syn";
@@ -15253,12 +19553,33 @@ rec {
           }
         ];
         features = {
-          "default" = [ "derive" "parsing" "printing" "clone-impls" "proc-macro" ];
+          "default" = [
+            "derive"
+            "parsing"
+            "printing"
+            "clone-impls"
+            "proc-macro"
+          ];
           "printing" = [ "dep:quote" ];
-          "proc-macro" = [ "proc-macro2/proc-macro" "quote?/proc-macro" ];
+          "proc-macro" = [
+            "proc-macro2/proc-macro"
+            "quote?/proc-macro"
+          ];
           "test" = [ "syn-test-suite/all-features" ];
         };
-        resolvedDefaultFeatures = [ "clone-impls" "default" "derive" "extra-traits" "fold" "full" "parsing" "printing" "proc-macro" "visit" "visit-mut" ];
+        resolvedDefaultFeatures = [
+          "clone-impls"
+          "default"
+          "derive"
+          "extra-traits"
+          "fold"
+          "full"
+          "parsing"
+          "printing"
+          "proc-macro"
+          "visit"
+          "visit-mut"
+        ];
       };
       "sync_wrapper" = rec {
         crateName = "sync_wrapper";
@@ -15280,7 +19601,10 @@ rec {
           "futures" = [ "futures-core" ];
           "futures-core" = [ "dep:futures-core" ];
         };
-        resolvedDefaultFeatures = [ "futures" "futures-core" ];
+        resolvedDefaultFeatures = [
+          "futures"
+          "futures-core"
+        ];
       };
       "synstructure" = rec {
         crateName = "synstructure";
@@ -15305,14 +19629,28 @@ rec {
             name = "syn";
             packageId = "syn 2.0.93";
             usesDefaultFeatures = false;
-            features = [ "derive" "parsing" "printing" "clone-impls" "visit" "extra-traits" ];
+            features = [
+              "derive"
+              "parsing"
+              "printing"
+              "clone-impls"
+              "visit"
+              "extra-traits"
+            ];
           }
         ];
         features = {
           "default" = [ "proc-macro" ];
-          "proc-macro" = [ "proc-macro2/proc-macro" "syn/proc-macro" "quote/proc-macro" ];
+          "proc-macro" = [
+            "proc-macro2/proc-macro"
+            "syn/proc-macro"
+            "quote/proc-macro"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "proc-macro" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "proc-macro"
+        ];
       };
       "tabwriter" = rec {
         crateName = "tabwriter";
@@ -15328,7 +19666,8 @@ rec {
             packageId = "unicode-width 0.1.14";
           }
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "target-triple" = rec {
@@ -15378,10 +19717,14 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Storage_FileSystem" "Win32_Foundation" ];
+            features = [
+              "Win32_Storage_FileSystem"
+              "Win32_Foundation"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "termcolor" = rec {
         crateName = "termcolor";
@@ -15433,7 +19776,10 @@ rec {
           {
             name = "syn";
             packageId = "syn 1.0.109";
-            features = [ "visit" "full" ];
+            features = [
+              "visit"
+              "full"
+            ];
           }
         ];
 
@@ -15485,7 +19831,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "thiserror-impl 1.0.69" = rec {
         crateName = "thiserror-impl";
@@ -15557,7 +19906,8 @@ rec {
             packageId = "once_cell";
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "threadpool" = rec {
         crateName = "threadpool";
@@ -15642,20 +19992,58 @@ rec {
         features = {
           "alloc" = [ "serde?/alloc" ];
           "default" = [ "std" ];
-          "formatting" = [ "dep:itoa" "std" "time-macros?/formatting" ];
+          "formatting" = [
+            "dep:itoa"
+            "std"
+            "time-macros?/formatting"
+          ];
           "large-dates" = [ "time-macros?/large-dates" ];
-          "local-offset" = [ "std" "dep:libc" "dep:num_threads" ];
+          "local-offset" = [
+            "std"
+            "dep:libc"
+            "dep:num_threads"
+          ];
           "macros" = [ "dep:time-macros" ];
           "parsing" = [ "time-macros?/parsing" ];
-          "quickcheck" = [ "dep:quickcheck" "alloc" "deranged/quickcheck" ];
-          "rand" = [ "dep:rand" "deranged/rand" ];
-          "serde" = [ "dep:serde" "time-macros?/serde" "deranged/serde" ];
-          "serde-human-readable" = [ "serde" "formatting" "parsing" ];
-          "serde-well-known" = [ "serde" "formatting" "parsing" ];
-          "std" = [ "alloc" "deranged/std" ];
+          "quickcheck" = [
+            "dep:quickcheck"
+            "alloc"
+            "deranged/quickcheck"
+          ];
+          "rand" = [
+            "dep:rand"
+            "deranged/rand"
+          ];
+          "serde" = [
+            "dep:serde"
+            "time-macros?/serde"
+            "deranged/serde"
+          ];
+          "serde-human-readable" = [
+            "serde"
+            "formatting"
+            "parsing"
+          ];
+          "serde-well-known" = [
+            "serde"
+            "formatting"
+            "parsing"
+          ];
+          "std" = [
+            "alloc"
+            "deranged/std"
+          ];
           "wasm-bindgen" = [ "dep:js-sys" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "formatting" "macros" "parsing" "serde" "serde-well-known" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "formatting"
+          "macros"
+          "parsing"
+          "serde"
+          "serde-well-known"
+          "std"
+        ];
       };
       "time-core" = rec {
         crateName = "time-core";
@@ -15690,8 +20078,13 @@ rec {
             packageId = "time-core";
           }
         ];
-        features = { };
-        resolvedDefaultFeatures = [ "formatting" "parsing" "serde" ];
+        features = {
+        };
+        resolvedDefaultFeatures = [
+          "formatting"
+          "parsing"
+          "serde"
+        ];
       };
       "tinystr" = rec {
         crateName = "tinystr";
@@ -15720,7 +20113,10 @@ rec {
           "serde" = [ "dep:serde" ];
           "zerovec" = [ "dep:zerovec" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "zerovec" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "zerovec"
+        ];
       };
       "tinytemplate" = rec {
         crateName = "tinytemplate";
@@ -15768,7 +20164,11 @@ rec {
           "std" = [ "alloc" ];
           "tinyvec_macros" = [ "dep:tinyvec_macros" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "tinyvec_macros" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "tinyvec_macros"
+        ];
       };
       "tinyvec_macros" = rec {
         crateName = "tinyvec_macros";
@@ -15863,29 +20263,100 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_Security_Authorization" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Security_Authorization"
+            ];
           }
         ];
         features = {
           "bytes" = [ "dep:bytes" ];
-          "full" = [ "fs" "io-util" "io-std" "macros" "net" "parking_lot" "process" "rt" "rt-multi-thread" "signal" "sync" "time" ];
+          "full" = [
+            "fs"
+            "io-util"
+            "io-std"
+            "macros"
+            "net"
+            "parking_lot"
+            "process"
+            "rt"
+            "rt-multi-thread"
+            "signal"
+            "sync"
+            "time"
+          ];
           "io-util" = [ "bytes" ];
           "libc" = [ "dep:libc" ];
           "macros" = [ "tokio-macros" ];
           "mio" = [ "dep:mio" ];
-          "net" = [ "libc" "mio/os-poll" "mio/os-ext" "mio/net" "socket2" "windows-sys/Win32_Foundation" "windows-sys/Win32_Security" "windows-sys/Win32_Storage_FileSystem" "windows-sys/Win32_System_Pipes" "windows-sys/Win32_System_SystemServices" ];
+          "net" = [
+            "libc"
+            "mio/os-poll"
+            "mio/os-ext"
+            "mio/net"
+            "socket2"
+            "windows-sys/Win32_Foundation"
+            "windows-sys/Win32_Security"
+            "windows-sys/Win32_Storage_FileSystem"
+            "windows-sys/Win32_System_Pipes"
+            "windows-sys/Win32_System_SystemServices"
+          ];
           "parking_lot" = [ "dep:parking_lot" ];
-          "process" = [ "bytes" "libc" "mio/os-poll" "mio/os-ext" "mio/net" "signal-hook-registry" "windows-sys/Win32_Foundation" "windows-sys/Win32_System_Threading" "windows-sys/Win32_System_WindowsProgramming" ];
+          "process" = [
+            "bytes"
+            "libc"
+            "mio/os-poll"
+            "mio/os-ext"
+            "mio/net"
+            "signal-hook-registry"
+            "windows-sys/Win32_Foundation"
+            "windows-sys/Win32_System_Threading"
+            "windows-sys/Win32_System_WindowsProgramming"
+          ];
           "rt-multi-thread" = [ "rt" ];
-          "signal" = [ "libc" "mio/os-poll" "mio/net" "mio/os-ext" "signal-hook-registry" "windows-sys/Win32_Foundation" "windows-sys/Win32_System_Console" ];
+          "signal" = [
+            "libc"
+            "mio/os-poll"
+            "mio/net"
+            "mio/os-ext"
+            "signal-hook-registry"
+            "windows-sys/Win32_Foundation"
+            "windows-sys/Win32_System_Console"
+          ];
           "signal-hook-registry" = [ "dep:signal-hook-registry" ];
           "socket2" = [ "dep:socket2" ];
-          "test-util" = [ "rt" "sync" "time" ];
+          "test-util" = [
+            "rt"
+            "sync"
+            "time"
+          ];
           "tokio-macros" = [ "dep:tokio-macros" ];
           "tracing" = [ "dep:tracing" ];
           "windows-sys" = [ "dep:windows-sys" ];
         };
-        resolvedDefaultFeatures = [ "bytes" "default" "fs" "io-std" "io-util" "libc" "macros" "mio" "net" "process" "rt" "rt-multi-thread" "signal" "signal-hook-registry" "socket2" "sync" "test-util" "time" "tokio-macros" "tracing" "windows-sys" ];
+        resolvedDefaultFeatures = [
+          "bytes"
+          "default"
+          "fs"
+          "io-std"
+          "io-util"
+          "libc"
+          "macros"
+          "mio"
+          "net"
+          "process"
+          "rt"
+          "rt-multi-thread"
+          "signal"
+          "signal-hook-registry"
+          "socket2"
+          "sync"
+          "test-util"
+          "time"
+          "tokio-macros"
+          "tracing"
+          "windows-sys"
+        ];
       };
       "tokio-listener" = rec {
         crateName = "tokio-listener";
@@ -15905,7 +20376,10 @@ rec {
             packageId = "clap";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "derive" "std" ];
+            features = [
+              "derive"
+              "std"
+            ];
           }
           {
             name = "document-features";
@@ -15931,7 +20405,10 @@ rec {
             name = "hyper-util";
             packageId = "hyper-util";
             optional = true;
-            features = [ "server" "server-auto" ];
+            features = [
+              "server"
+              "server-auto"
+            ];
           }
           {
             name = "nix";
@@ -15939,7 +20416,10 @@ rec {
             optional = true;
             usesDefaultFeatures = false;
             target = { target, features }: (target."unix" or false);
-            features = [ "user" "fs" ];
+            features = [
+              "user"
+              "fs"
+            ];
           }
           {
             name = "pin-project";
@@ -15954,13 +20434,21 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "net" "io-std" "time" "sync" ];
+            features = [
+              "net"
+              "io-std"
+              "time"
+              "sync"
+            ];
           }
           {
             name = "tokio-util";
             packageId = "tokio-util";
             optional = true;
-            features = [ "net" "codec" ];
+            features = [
+              "net"
+              "codec"
+            ];
           }
           {
             name = "tonic";
@@ -15993,19 +20481,36 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "macros" "rt" "io-util" ];
+            features = [
+              "macros"
+              "rt"
+              "io-util"
+            ];
           }
         ];
         features = {
-          "axum07" = [ "dep:hyper1" "dep:hyper-util" "dep:futures-util" "dep:tower-service" "dep:tower" "dep:axum07" ];
+          "axum07" = [
+            "dep:hyper1"
+            "dep:hyper-util"
+            "dep:futures-util"
+            "dep:tower-service"
+            "dep:tower"
+            "dep:axum07"
+          ];
           "clap" = [ "dep:clap" ];
-          "default" = [ "user_facing_default" "tokio-util" ];
+          "default" = [
+            "user_facing_default"
+            "tokio-util"
+          ];
           "hyper014" = [ "dep:hyper014" ];
           "inetd" = [ "dep:futures-util" ];
           "multi-listener" = [ "dep:futures-util" ];
           "nix" = [ "dep:nix" ];
           "sd_listen" = [ "socket2" ];
-          "serde" = [ "dep:serde" "serde_with" ];
+          "serde" = [
+            "dep:serde"
+            "serde_with"
+          ];
           "serde_with" = [ "dep:serde_with" ];
           "socket2" = [ "dep:socket2" ];
           "socket_options" = [ "socket2" ];
@@ -16014,9 +20519,30 @@ rec {
           "tonic011" = [ "dep:tonic_011" ];
           "tonic012" = [ "dep:tonic_012" ];
           "unix_path_tools" = [ "nix" ];
-          "user_facing_default" = [ "inetd" "unix" "unix_path_tools" "sd_listen" "socket_options" ];
+          "user_facing_default" = [
+            "inetd"
+            "unix"
+            "unix_path_tools"
+            "sd_listen"
+            "socket_options"
+          ];
         };
-        resolvedDefaultFeatures = [ "axum07" "clap" "default" "inetd" "multi-listener" "nix" "sd_listen" "socket2" "socket_options" "tokio-util" "tonic012" "unix" "unix_path_tools" "user_facing_default" ];
+        resolvedDefaultFeatures = [
+          "axum07"
+          "clap"
+          "default"
+          "inetd"
+          "multi-listener"
+          "nix"
+          "sd_listen"
+          "socket2"
+          "socket_options"
+          "tokio-util"
+          "tonic012"
+          "unix"
+          "unix_path_tools"
+          "user_facing_default"
+        ];
       };
       "tokio-macros" = rec {
         crateName = "tokio-macros";
@@ -16106,13 +20632,21 @@ rec {
         features = {
           "aws-lc-rs" = [ "aws_lc_rs" ];
           "aws_lc_rs" = [ "rustls/aws_lc_rs" ];
-          "default" = [ "logging" "tls12" "aws_lc_rs" ];
+          "default" = [
+            "logging"
+            "tls12"
+            "aws_lc_rs"
+          ];
           "fips" = [ "rustls/fips" ];
           "logging" = [ "rustls/logging" ];
           "ring" = [ "rustls/ring" ];
           "tls12" = [ "rustls/tls12" ];
         };
-        resolvedDefaultFeatures = [ "logging" "ring" "tls12" ];
+        resolvedDefaultFeatures = [
+          "logging"
+          "ring"
+          "tls12"
+        ];
       };
       "tokio-stream" = rec {
         crateName = "tokio-stream";
@@ -16142,21 +20676,39 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "full" "test-util" ];
+            features = [
+              "full"
+              "test-util"
+            ];
           }
         ];
         features = {
           "default" = [ "time" ];
           "fs" = [ "tokio/fs" ];
-          "full" = [ "time" "net" "io-util" "fs" "sync" "signal" ];
+          "full" = [
+            "time"
+            "net"
+            "io-util"
+            "fs"
+            "sync"
+            "signal"
+          ];
           "io-util" = [ "tokio/io-util" ];
           "net" = [ "tokio/net" ];
           "signal" = [ "tokio/signal" ];
-          "sync" = [ "tokio/sync" "tokio-util" ];
+          "sync" = [
+            "tokio/sync"
+            "tokio-util"
+          ];
           "time" = [ "tokio/time" ];
           "tokio-util" = [ "dep:tokio-util" ];
         };
-        resolvedDefaultFeatures = [ "default" "fs" "net" "time" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "fs"
+          "net"
+          "time"
+        ];
       };
       "tokio-tar" = rec {
         crateName = "tokio-tar";
@@ -16192,7 +20744,11 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "fs" "io-util" "rt" ];
+            features = [
+              "fs"
+              "io-util"
+              "rt"
+            ];
           }
           {
             name = "tokio-stream";
@@ -16216,7 +20772,10 @@ rec {
           "default" = [ "xattr" ];
           "xattr" = [ "dep:xattr" ];
         };
-        resolvedDefaultFeatures = [ "default" "xattr" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "xattr"
+        ];
       };
       "tokio-test" = rec {
         crateName = "tokio-test";
@@ -16243,7 +20802,12 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "rt" "sync" "time" "test-util" ];
+            features = [
+              "rt"
+              "sync"
+              "time"
+              "test-util"
+            ];
           }
           {
             name = "tokio-stream";
@@ -16306,18 +20870,45 @@ rec {
         features = {
           "__docs_rs" = [ "futures-util" ];
           "compat" = [ "futures-io" ];
-          "full" = [ "codec" "compat" "io-util" "time" "net" "rt" ];
+          "full" = [
+            "codec"
+            "compat"
+            "io-util"
+            "time"
+            "net"
+            "rt"
+          ];
           "futures-io" = [ "dep:futures-io" ];
           "futures-util" = [ "dep:futures-util" ];
           "hashbrown" = [ "dep:hashbrown" ];
-          "io-util" = [ "io" "tokio/rt" "tokio/io-util" ];
+          "io-util" = [
+            "io"
+            "tokio/rt"
+            "tokio/io-util"
+          ];
           "net" = [ "tokio/net" ];
-          "rt" = [ "tokio/rt" "tokio/sync" "futures-util" "hashbrown" ];
+          "rt" = [
+            "tokio/rt"
+            "tokio/sync"
+            "futures-util"
+            "hashbrown"
+          ];
           "slab" = [ "dep:slab" ];
-          "time" = [ "tokio/time" "slab" ];
+          "time" = [
+            "tokio/time"
+            "slab"
+          ];
           "tracing" = [ "dep:tracing" ];
         };
-        resolvedDefaultFeatures = [ "codec" "compat" "default" "futures-io" "io" "io-util" "net" ];
+        resolvedDefaultFeatures = [
+          "codec"
+          "compat"
+          "default"
+          "futures-io"
+          "io"
+          "io-util"
+          "net"
+        ];
       };
       "toml 0.6.0" = rec {
         crateName = "toml";
@@ -16357,13 +20948,20 @@ rec {
           }
         ];
         features = {
-          "default" = [ "parse" "display" ];
+          "default" = [
+            "parse"
+            "display"
+          ];
           "display" = [ "dep:toml_edit" ];
           "indexmap" = [ "dep:indexmap" ];
           "parse" = [ "dep:toml_edit" ];
           "preserve_order" = [ "indexmap" ];
         };
-        resolvedDefaultFeatures = [ "default" "display" "parse" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "display"
+          "parse"
+        ];
       };
       "toml 0.8.19" = rec {
         crateName = "toml";
@@ -16404,13 +21002,26 @@ rec {
           }
         ];
         features = {
-          "default" = [ "parse" "display" ];
-          "display" = [ "dep:toml_edit" "toml_edit?/display" ];
+          "default" = [
+            "parse"
+            "display"
+          ];
+          "display" = [
+            "dep:toml_edit"
+            "toml_edit?/display"
+          ];
           "indexmap" = [ "dep:indexmap" ];
-          "parse" = [ "dep:toml_edit" "toml_edit?/parse" ];
+          "parse" = [
+            "dep:toml_edit"
+            "toml_edit?/parse"
+          ];
           "preserve_order" = [ "indexmap" ];
         };
-        resolvedDefaultFeatures = [ "default" "display" "parse" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "display"
+          "parse"
+        ];
       };
       "toml_datetime 0.5.1" = rec {
         crateName = "toml_datetime";
@@ -16489,9 +21100,16 @@ rec {
         features = {
           "easy" = [ "serde" ];
           "perf" = [ "dep:kstring" ];
-          "serde" = [ "dep:serde" "toml_datetime/serde" "dep:serde_spanned" ];
+          "serde" = [
+            "dep:serde"
+            "toml_datetime/serde"
+            "dep:serde_spanned"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "serde" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "serde"
+        ];
       };
       "toml_edit 0.22.22" = rec {
         crateName = "toml_edit";
@@ -16530,12 +21148,24 @@ rec {
           }
         ];
         features = {
-          "default" = [ "parse" "display" ];
+          "default" = [
+            "parse"
+            "display"
+          ];
           "parse" = [ "dep:winnow" ];
           "perf" = [ "dep:kstring" ];
-          "serde" = [ "dep:serde" "toml_datetime/serde" "dep:serde_spanned" ];
+          "serde" = [
+            "dep:serde"
+            "toml_datetime/serde"
+            "dep:serde_spanned"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "display" "parse" "serde" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "display"
+          "parse"
+          "serde"
+        ];
       };
       "tonic" = rec {
         crateName = "tonic";
@@ -16591,7 +21221,10 @@ rec {
             name = "hyper";
             packageId = "hyper";
             optional = true;
-            features = [ "http1" "http2" ];
+            features = [
+              "http1"
+              "http2"
+            ];
           }
           {
             name = "hyper-timeout";
@@ -16646,7 +21279,11 @@ rec {
             packageId = "tokio-rustls";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "logging" "tls12" "ring" ];
+            features = [
+              "logging"
+              "tls12"
+              "ring"
+            ];
           }
           {
             name = "tokio-stream";
@@ -16676,7 +21313,10 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "rt" "macros" ];
+            features = [
+              "rt"
+              "macros"
+            ];
           }
           {
             name = "tower";
@@ -16685,21 +21325,89 @@ rec {
           }
         ];
         features = {
-          "channel" = [ "dep:hyper" "hyper?/client" "dep:hyper-util" "hyper-util?/client-legacy" "dep:tower" "tower?/balance" "tower?/buffer" "tower?/discover" "tower?/limit" "tower?/util" "dep:tokio" "tokio?/time" "dep:hyper-timeout" ];
+          "channel" = [
+            "dep:hyper"
+            "hyper?/client"
+            "dep:hyper-util"
+            "hyper-util?/client-legacy"
+            "dep:tower"
+            "tower?/balance"
+            "tower?/buffer"
+            "tower?/discover"
+            "tower?/limit"
+            "tower?/util"
+            "dep:tokio"
+            "tokio?/time"
+            "dep:hyper-timeout"
+          ];
           "codegen" = [ "dep:async-trait" ];
-          "default" = [ "transport" "codegen" "prost" ];
+          "default" = [
+            "transport"
+            "codegen"
+            "prost"
+          ];
           "gzip" = [ "dep:flate2" ];
           "prost" = [ "dep:prost" ];
-          "router" = [ "dep:axum" "dep:tower" "tower?/util" ];
-          "server" = [ "router" "dep:async-stream" "dep:h2" "dep:hyper" "hyper?/server" "dep:hyper-util" "hyper-util?/service" "hyper-util?/server-auto" "dep:socket2" "dep:tokio" "tokio?/macros" "tokio?/net" "tokio?/time" "tokio-stream/net" "dep:tower" "tower?/util" "tower?/limit" ];
-          "tls" = [ "dep:rustls-pemfile" "dep:tokio-rustls" "dep:tokio" "tokio?/rt" "tokio?/macros" ];
-          "tls-native-roots" = [ "tls" "channel" "dep:rustls-native-certs" ];
+          "router" = [
+            "dep:axum"
+            "dep:tower"
+            "tower?/util"
+          ];
+          "server" = [
+            "router"
+            "dep:async-stream"
+            "dep:h2"
+            "dep:hyper"
+            "hyper?/server"
+            "dep:hyper-util"
+            "hyper-util?/service"
+            "hyper-util?/server-auto"
+            "dep:socket2"
+            "dep:tokio"
+            "tokio?/macros"
+            "tokio?/net"
+            "tokio?/time"
+            "tokio-stream/net"
+            "dep:tower"
+            "tower?/util"
+            "tower?/limit"
+          ];
+          "tls" = [
+            "dep:rustls-pemfile"
+            "dep:tokio-rustls"
+            "dep:tokio"
+            "tokio?/rt"
+            "tokio?/macros"
+          ];
+          "tls-native-roots" = [
+            "tls"
+            "channel"
+            "dep:rustls-native-certs"
+          ];
           "tls-roots" = [ "tls-native-roots" ];
-          "tls-webpki-roots" = [ "tls" "channel" "dep:webpki-roots" ];
-          "transport" = [ "server" "channel" ];
+          "tls-webpki-roots" = [
+            "tls"
+            "channel"
+            "dep:webpki-roots"
+          ];
+          "transport" = [
+            "server"
+            "channel"
+          ];
           "zstd" = [ "dep:zstd" ];
         };
-        resolvedDefaultFeatures = [ "channel" "codegen" "default" "prost" "router" "server" "tls" "tls-native-roots" "tls-roots" "transport" ];
+        resolvedDefaultFeatures = [
+          "channel"
+          "codegen"
+          "default"
+          "prost"
+          "router"
+          "server"
+          "tls"
+          "tls-native-roots"
+          "tls-roots"
+          "transport"
+        ];
       };
       "tonic-build" = rec {
         crateName = "tonic-build";
@@ -16739,12 +21447,27 @@ rec {
           }
         ];
         features = {
-          "cleanup-markdown" = [ "prost" "prost-build/cleanup-markdown" ];
-          "default" = [ "transport" "prost" ];
-          "prost" = [ "prost-build" "dep:prost-types" ];
+          "cleanup-markdown" = [
+            "prost"
+            "prost-build/cleanup-markdown"
+          ];
+          "default" = [
+            "transport"
+            "prost"
+          ];
+          "prost" = [
+            "prost-build"
+            "dep:prost-types"
+          ];
           "prost-build" = [ "dep:prost-build" ];
         };
-        resolvedDefaultFeatures = [ "cleanup-markdown" "default" "prost" "prost-build" "transport" ];
+        resolvedDefaultFeatures = [
+          "cleanup-markdown"
+          "default"
+          "prost"
+          "prost-build"
+          "transport"
+        ];
       };
       "tonic-health" = rec {
         crateName = "tonic-health";
@@ -16777,14 +21500,20 @@ rec {
             name = "tonic";
             packageId = "tonic";
             usesDefaultFeatures = false;
-            features = [ "codegen" "prost" ];
+            features = [
+              "codegen"
+              "prost"
+            ];
           }
         ];
         devDependencies = [
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "rt-multi-thread" "macros" ];
+            features = [
+              "rt-multi-thread"
+              "macros"
+            ];
           }
           {
             name = "tokio-stream";
@@ -16819,7 +21548,10 @@ rec {
             name = "tokio";
             packageId = "tokio";
             optional = true;
-            features = [ "sync" "rt" ];
+            features = [
+              "sync"
+              "rt"
+            ];
           }
           {
             name = "tokio-stream";
@@ -16831,7 +21563,10 @@ rec {
             name = "tonic";
             packageId = "tonic";
             usesDefaultFeatures = false;
-            features = [ "codegen" "prost" ];
+            features = [
+              "codegen"
+              "prost"
+            ];
           }
         ];
         devDependencies = [
@@ -16845,9 +21580,17 @@ rec {
         features = {
           "default" = [ "server" ];
           "prost-types" = [ "dep:prost-types" ];
-          "server" = [ "prost-types" "dep:tokio" "dep:tokio-stream" ];
+          "server" = [
+            "prost-types"
+            "dep:tokio"
+            "dep:tokio-stream"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "prost-types" "server" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "prost-types"
+          "server"
+        ];
       };
       "tower 0.4.13" = rec {
         crateName = "tower";
@@ -16932,43 +21675,155 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "macros" "sync" "test-util" "rt-multi-thread" ];
+            features = [
+              "macros"
+              "sync"
+              "test-util"
+              "rt-multi-thread"
+            ];
           }
         ];
         features = {
-          "__common" = [ "futures-core" "pin-project-lite" ];
-          "balance" = [ "discover" "load" "ready-cache" "make" "rand" "slab" ];
-          "buffer" = [ "__common" "tokio/sync" "tokio/rt" "tokio-util" "tracing" ];
+          "__common" = [
+            "futures-core"
+            "pin-project-lite"
+          ];
+          "balance" = [
+            "discover"
+            "load"
+            "ready-cache"
+            "make"
+            "rand"
+            "slab"
+          ];
+          "buffer" = [
+            "__common"
+            "tokio/sync"
+            "tokio/rt"
+            "tokio-util"
+            "tracing"
+          ];
           "default" = [ "log" ];
           "discover" = [ "__common" ];
-          "filter" = [ "__common" "futures-util" ];
-          "full" = [ "balance" "buffer" "discover" "filter" "hedge" "limit" "load" "load-shed" "make" "ready-cache" "reconnect" "retry" "spawn-ready" "steer" "timeout" "util" ];
+          "filter" = [
+            "__common"
+            "futures-util"
+          ];
+          "full" = [
+            "balance"
+            "buffer"
+            "discover"
+            "filter"
+            "hedge"
+            "limit"
+            "load"
+            "load-shed"
+            "make"
+            "ready-cache"
+            "reconnect"
+            "retry"
+            "spawn-ready"
+            "steer"
+            "timeout"
+            "util"
+          ];
           "futures-core" = [ "dep:futures-core" ];
           "futures-util" = [ "dep:futures-util" ];
           "hdrhistogram" = [ "dep:hdrhistogram" ];
-          "hedge" = [ "util" "filter" "futures-util" "hdrhistogram" "tokio/time" "tracing" ];
+          "hedge" = [
+            "util"
+            "filter"
+            "futures-util"
+            "hdrhistogram"
+            "tokio/time"
+            "tracing"
+          ];
           "indexmap" = [ "dep:indexmap" ];
-          "limit" = [ "__common" "tokio/time" "tokio/sync" "tokio-util" "tracing" ];
-          "load" = [ "__common" "tokio/time" "tracing" ];
+          "limit" = [
+            "__common"
+            "tokio/time"
+            "tokio/sync"
+            "tokio-util"
+            "tracing"
+          ];
+          "load" = [
+            "__common"
+            "tokio/time"
+            "tracing"
+          ];
           "load-shed" = [ "__common" ];
           "log" = [ "tracing/log" ];
-          "make" = [ "futures-util" "pin-project-lite" "tokio/io-std" ];
+          "make" = [
+            "futures-util"
+            "pin-project-lite"
+            "tokio/io-std"
+          ];
           "pin-project" = [ "dep:pin-project" ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
           "rand" = [ "dep:rand" ];
-          "ready-cache" = [ "futures-core" "futures-util" "indexmap" "tokio/sync" "tracing" "pin-project-lite" ];
-          "reconnect" = [ "make" "tokio/io-std" "tracing" ];
-          "retry" = [ "__common" "tokio/time" ];
+          "ready-cache" = [
+            "futures-core"
+            "futures-util"
+            "indexmap"
+            "tokio/sync"
+            "tracing"
+            "pin-project-lite"
+          ];
+          "reconnect" = [
+            "make"
+            "tokio/io-std"
+            "tracing"
+          ];
+          "retry" = [
+            "__common"
+            "tokio/time"
+          ];
           "slab" = [ "dep:slab" ];
-          "spawn-ready" = [ "__common" "futures-util" "tokio/sync" "tokio/rt" "util" "tracing" ];
-          "timeout" = [ "pin-project-lite" "tokio/time" ];
+          "spawn-ready" = [
+            "__common"
+            "futures-util"
+            "tokio/sync"
+            "tokio/rt"
+            "util"
+            "tracing"
+          ];
+          "timeout" = [
+            "pin-project-lite"
+            "tokio/time"
+          ];
           "tokio" = [ "dep:tokio" ];
           "tokio-stream" = [ "dep:tokio-stream" ];
           "tokio-util" = [ "dep:tokio-util" ];
           "tracing" = [ "dep:tracing" ];
-          "util" = [ "__common" "futures-util" "pin-project" ];
+          "util" = [
+            "__common"
+            "futures-util"
+            "pin-project"
+          ];
         };
-        resolvedDefaultFeatures = [ "__common" "balance" "buffer" "default" "discover" "futures-core" "futures-util" "indexmap" "limit" "load" "log" "make" "pin-project" "pin-project-lite" "rand" "ready-cache" "slab" "tokio" "tokio-util" "tracing" "util" ];
+        resolvedDefaultFeatures = [
+          "__common"
+          "balance"
+          "buffer"
+          "default"
+          "discover"
+          "futures-core"
+          "futures-util"
+          "indexmap"
+          "limit"
+          "load"
+          "log"
+          "make"
+          "pin-project"
+          "pin-project-lite"
+          "rand"
+          "ready-cache"
+          "slab"
+          "tokio"
+          "tokio-util"
+          "tracing"
+          "util"
+        ];
       };
       "tower 0.5.2" = rec {
         crateName = "tower";
@@ -17031,7 +21886,12 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "macros" "sync" "test-util" "rt-multi-thread" ];
+            features = [
+              "macros"
+              "sync"
+              "test-util"
+              "rt-multi-thread"
+            ];
           }
           {
             name = "tracing";
@@ -17041,37 +21901,136 @@ rec {
           }
         ];
         features = {
-          "__common" = [ "futures-core" "pin-project-lite" ];
-          "balance" = [ "discover" "load" "ready-cache" "make" "slab" "util" ];
-          "buffer" = [ "__common" "tokio/sync" "tokio/rt" "tokio-util" "tracing" ];
+          "__common" = [
+            "futures-core"
+            "pin-project-lite"
+          ];
+          "balance" = [
+            "discover"
+            "load"
+            "ready-cache"
+            "make"
+            "slab"
+            "util"
+          ];
+          "buffer" = [
+            "__common"
+            "tokio/sync"
+            "tokio/rt"
+            "tokio-util"
+            "tracing"
+          ];
           "discover" = [ "__common" ];
-          "filter" = [ "__common" "futures-util" ];
-          "full" = [ "balance" "buffer" "discover" "filter" "hedge" "limit" "load" "load-shed" "make" "ready-cache" "reconnect" "retry" "spawn-ready" "steer" "timeout" "util" ];
+          "filter" = [
+            "__common"
+            "futures-util"
+          ];
+          "full" = [
+            "balance"
+            "buffer"
+            "discover"
+            "filter"
+            "hedge"
+            "limit"
+            "load"
+            "load-shed"
+            "make"
+            "ready-cache"
+            "reconnect"
+            "retry"
+            "spawn-ready"
+            "steer"
+            "timeout"
+            "util"
+          ];
           "futures-core" = [ "dep:futures-core" ];
           "futures-util" = [ "dep:futures-util" ];
           "hdrhistogram" = [ "dep:hdrhistogram" ];
-          "hedge" = [ "util" "filter" "futures-util" "hdrhistogram" "tokio/time" "tracing" ];
+          "hedge" = [
+            "util"
+            "filter"
+            "futures-util"
+            "hdrhistogram"
+            "tokio/time"
+            "tracing"
+          ];
           "indexmap" = [ "dep:indexmap" ];
-          "limit" = [ "__common" "tokio/time" "tokio/sync" "tokio-util" "tracing" ];
-          "load" = [ "__common" "tokio/time" "tracing" ];
+          "limit" = [
+            "__common"
+            "tokio/time"
+            "tokio/sync"
+            "tokio-util"
+            "tracing"
+          ];
+          "load" = [
+            "__common"
+            "tokio/time"
+            "tracing"
+          ];
           "load-shed" = [ "__common" ];
           "log" = [ "tracing/log" ];
-          "make" = [ "futures-util" "pin-project-lite" "tokio/io-std" ];
+          "make" = [
+            "futures-util"
+            "pin-project-lite"
+            "tokio/io-std"
+          ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
-          "ready-cache" = [ "futures-core" "futures-util" "indexmap" "tokio/sync" "tracing" "pin-project-lite" ];
-          "reconnect" = [ "make" "tokio/io-std" "tracing" ];
-          "retry" = [ "__common" "tokio/time" "util" ];
+          "ready-cache" = [
+            "futures-core"
+            "futures-util"
+            "indexmap"
+            "tokio/sync"
+            "tracing"
+            "pin-project-lite"
+          ];
+          "reconnect" = [
+            "make"
+            "tokio/io-std"
+            "tracing"
+          ];
+          "retry" = [
+            "__common"
+            "tokio/time"
+            "util"
+          ];
           "slab" = [ "dep:slab" ];
-          "spawn-ready" = [ "__common" "futures-util" "tokio/sync" "tokio/rt" "util" "tracing" ];
+          "spawn-ready" = [
+            "__common"
+            "futures-util"
+            "tokio/sync"
+            "tokio/rt"
+            "util"
+            "tracing"
+          ];
           "sync_wrapper" = [ "dep:sync_wrapper" ];
-          "timeout" = [ "pin-project-lite" "tokio/time" ];
+          "timeout" = [
+            "pin-project-lite"
+            "tokio/time"
+          ];
           "tokio" = [ "dep:tokio" ];
           "tokio-stream" = [ "dep:tokio-stream" ];
           "tokio-util" = [ "dep:tokio-util" ];
           "tracing" = [ "dep:tracing" ];
-          "util" = [ "__common" "futures-util" "pin-project-lite" "sync_wrapper" ];
+          "util" = [
+            "__common"
+            "futures-util"
+            "pin-project-lite"
+            "sync_wrapper"
+          ];
         };
-        resolvedDefaultFeatures = [ "__common" "futures-core" "futures-util" "log" "make" "pin-project-lite" "sync_wrapper" "timeout" "tokio" "tracing" "util" ];
+        resolvedDefaultFeatures = [
+          "__common"
+          "futures-core"
+          "futures-util"
+          "log"
+          "make"
+          "pin-project-lite"
+          "sync_wrapper"
+          "timeout"
+          "tokio"
+          "tracing"
+          "util"
+        ];
       };
       "tower-http" = rec {
         crateName = "tower-http";
@@ -17161,43 +22120,178 @@ rec {
         ];
         features = {
           "async-compression" = [ "dep:async-compression" ];
-          "auth" = [ "base64" "validate-request" ];
+          "auth" = [
+            "base64"
+            "validate-request"
+          ];
           "base64" = [ "dep:base64" ];
-          "catch-panic" = [ "tracing" "futures-util/std" "dep:http-body" "dep:http-body-util" ];
-          "compression-br" = [ "async-compression/brotli" "futures-core" "dep:http-body" "tokio-util" "tokio" ];
-          "compression-deflate" = [ "async-compression/zlib" "futures-core" "dep:http-body" "tokio-util" "tokio" ];
-          "compression-full" = [ "compression-br" "compression-deflate" "compression-gzip" "compression-zstd" ];
-          "compression-gzip" = [ "async-compression/gzip" "futures-core" "dep:http-body" "tokio-util" "tokio" ];
-          "compression-zstd" = [ "async-compression/zstd" "futures-core" "dep:http-body" "tokio-util" "tokio" ];
-          "decompression-br" = [ "async-compression/brotli" "futures-core" "dep:http-body" "dep:http-body-util" "tokio-util" "tokio" ];
-          "decompression-deflate" = [ "async-compression/zlib" "futures-core" "dep:http-body" "dep:http-body-util" "tokio-util" "tokio" ];
-          "decompression-full" = [ "decompression-br" "decompression-deflate" "decompression-gzip" "decompression-zstd" ];
-          "decompression-gzip" = [ "async-compression/gzip" "futures-core" "dep:http-body" "dep:http-body-util" "tokio-util" "tokio" ];
-          "decompression-zstd" = [ "async-compression/zstd" "futures-core" "dep:http-body" "dep:http-body-util" "tokio-util" "tokio" ];
-          "follow-redirect" = [ "futures-util" "dep:http-body" "iri-string" "tower/util" ];
-          "fs" = [ "futures-util" "dep:http-body" "dep:http-body-util" "tokio/fs" "tokio-util/io" "tokio/io-util" "dep:http-range-header" "mime_guess" "mime" "percent-encoding" "httpdate" "set-status" "futures-util/alloc" "tracing" ];
-          "full" = [ "add-extension" "auth" "catch-panic" "compression-full" "cors" "decompression-full" "follow-redirect" "fs" "limit" "map-request-body" "map-response-body" "metrics" "normalize-path" "propagate-header" "redirect" "request-id" "sensitive-headers" "set-header" "set-status" "timeout" "trace" "util" "validate-request" ];
+          "catch-panic" = [
+            "tracing"
+            "futures-util/std"
+            "dep:http-body"
+            "dep:http-body-util"
+          ];
+          "compression-br" = [
+            "async-compression/brotli"
+            "futures-core"
+            "dep:http-body"
+            "tokio-util"
+            "tokio"
+          ];
+          "compression-deflate" = [
+            "async-compression/zlib"
+            "futures-core"
+            "dep:http-body"
+            "tokio-util"
+            "tokio"
+          ];
+          "compression-full" = [
+            "compression-br"
+            "compression-deflate"
+            "compression-gzip"
+            "compression-zstd"
+          ];
+          "compression-gzip" = [
+            "async-compression/gzip"
+            "futures-core"
+            "dep:http-body"
+            "tokio-util"
+            "tokio"
+          ];
+          "compression-zstd" = [
+            "async-compression/zstd"
+            "futures-core"
+            "dep:http-body"
+            "tokio-util"
+            "tokio"
+          ];
+          "decompression-br" = [
+            "async-compression/brotli"
+            "futures-core"
+            "dep:http-body"
+            "dep:http-body-util"
+            "tokio-util"
+            "tokio"
+          ];
+          "decompression-deflate" = [
+            "async-compression/zlib"
+            "futures-core"
+            "dep:http-body"
+            "dep:http-body-util"
+            "tokio-util"
+            "tokio"
+          ];
+          "decompression-full" = [
+            "decompression-br"
+            "decompression-deflate"
+            "decompression-gzip"
+            "decompression-zstd"
+          ];
+          "decompression-gzip" = [
+            "async-compression/gzip"
+            "futures-core"
+            "dep:http-body"
+            "dep:http-body-util"
+            "tokio-util"
+            "tokio"
+          ];
+          "decompression-zstd" = [
+            "async-compression/zstd"
+            "futures-core"
+            "dep:http-body"
+            "dep:http-body-util"
+            "tokio-util"
+            "tokio"
+          ];
+          "follow-redirect" = [
+            "futures-util"
+            "dep:http-body"
+            "iri-string"
+            "tower/util"
+          ];
+          "fs" = [
+            "futures-util"
+            "dep:http-body"
+            "dep:http-body-util"
+            "tokio/fs"
+            "tokio-util/io"
+            "tokio/io-util"
+            "dep:http-range-header"
+            "mime_guess"
+            "mime"
+            "percent-encoding"
+            "httpdate"
+            "set-status"
+            "futures-util/alloc"
+            "tracing"
+          ];
+          "full" = [
+            "add-extension"
+            "auth"
+            "catch-panic"
+            "compression-full"
+            "cors"
+            "decompression-full"
+            "follow-redirect"
+            "fs"
+            "limit"
+            "map-request-body"
+            "map-response-body"
+            "metrics"
+            "normalize-path"
+            "propagate-header"
+            "redirect"
+            "request-id"
+            "sensitive-headers"
+            "set-header"
+            "set-status"
+            "timeout"
+            "trace"
+            "util"
+            "validate-request"
+          ];
           "futures-core" = [ "dep:futures-core" ];
           "futures-util" = [ "dep:futures-util" ];
           "httpdate" = [ "dep:httpdate" ];
           "iri-string" = [ "dep:iri-string" ];
-          "limit" = [ "dep:http-body" "dep:http-body-util" ];
-          "metrics" = [ "dep:http-body" "tokio/time" ];
+          "limit" = [
+            "dep:http-body"
+            "dep:http-body-util"
+          ];
+          "metrics" = [
+            "dep:http-body"
+            "tokio/time"
+          ];
           "mime" = [ "dep:mime" ];
           "mime_guess" = [ "dep:mime_guess" ];
           "percent-encoding" = [ "dep:percent-encoding" ];
           "request-id" = [ "uuid" ];
-          "timeout" = [ "dep:http-body" "tokio/time" ];
+          "timeout" = [
+            "dep:http-body"
+            "tokio/time"
+          ];
           "tokio" = [ "dep:tokio" ];
           "tokio-util" = [ "dep:tokio-util" ];
           "tower" = [ "dep:tower" ];
-          "trace" = [ "dep:http-body" "tracing" ];
+          "trace" = [
+            "dep:http-body"
+            "tracing"
+          ];
           "tracing" = [ "dep:tracing" ];
           "util" = [ "tower" ];
           "uuid" = [ "dep:uuid" ];
           "validate-request" = [ "mime" ];
         };
-        resolvedDefaultFeatures = [ "async-compression" "compression-zstd" "default" "futures-core" "tokio" "tokio-util" "trace" "tracing" ];
+        resolvedDefaultFeatures = [
+          "async-compression"
+          "compression-zstd"
+          "default"
+          "futures-core"
+          "tokio"
+          "tokio-util"
+          "trace"
+          "tracing"
+        ];
       };
       "tower-layer" = rec {
         crateName = "tower-layer";
@@ -17222,7 +22316,10 @@ rec {
             packageId = "axum";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "matched-path" "macros" ];
+            features = [
+              "matched-path"
+              "macros"
+            ];
           }
           {
             name = "futures-util";
@@ -17265,7 +22362,10 @@ rec {
         features = {
           "axum" = [ "dep:axum" ];
         };
-        resolvedDefaultFeatures = [ "axum" "default" ];
+        resolvedDefaultFeatures = [
+          "axum"
+          "default"
+        ];
       };
       "tower-service" = rec {
         crateName = "tower-service";
@@ -17316,14 +22416,25 @@ rec {
         ];
         features = {
           "attributes" = [ "tracing-attributes" ];
-          "default" = [ "std" "attributes" ];
+          "default" = [
+            "std"
+            "attributes"
+          ];
           "log" = [ "dep:log" ];
           "log-always" = [ "log" ];
           "std" = [ "tracing-core/std" ];
           "tracing-attributes" = [ "dep:tracing-attributes" ];
           "valuable" = [ "tracing-core/valuable" ];
         };
-        resolvedDefaultFeatures = [ "attributes" "default" "log" "max_level_trace" "release_max_level_debug" "std" "tracing-attributes" ];
+        resolvedDefaultFeatures = [
+          "attributes"
+          "default"
+          "log"
+          "max_level_trace"
+          "release_max_level_debug"
+          "std"
+          "tracing-attributes"
+        ];
       };
       "tracing-attributes" = rec {
         crateName = "tracing-attributes";
@@ -17350,10 +22461,19 @@ rec {
             name = "syn";
             packageId = "syn 2.0.93";
             usesDefaultFeatures = false;
-            features = [ "full" "parsing" "printing" "visit-mut" "clone-impls" "extra-traits" "proc-macro" ];
+            features = [
+              "full"
+              "parsing"
+              "printing"
+              "visit-mut"
+              "clone-impls"
+              "extra-traits"
+              "proc-macro"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "tracing-core" = rec {
         crateName = "tracing-core";
@@ -17379,12 +22499,19 @@ rec {
           }
         ];
         features = {
-          "default" = [ "std" "valuable?/std" ];
+          "default" = [
+            "std"
+            "valuable?/std"
+          ];
           "once_cell" = [ "dep:once_cell" ];
           "std" = [ "once_cell" ];
           "valuable" = [ "dep:valuable" ];
         };
-        resolvedDefaultFeatures = [ "default" "once_cell" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "once_cell"
+          "std"
+        ];
       };
       "tracing-futures" = rec {
         crateName = "tracing-futures";
@@ -17409,10 +22536,21 @@ rec {
           }
         ];
         features = {
-          "default" = [ "std-future" "std" ];
+          "default" = [
+            "std-future"
+            "std"
+          ];
           "futures" = [ "dep:futures" ];
-          "futures-01" = [ "futures_01" "std" ];
-          "futures-03" = [ "std-future" "futures" "futures-task" "std" ];
+          "futures-01" = [
+            "futures_01"
+            "std"
+          ];
+          "futures-03" = [
+            "std-future"
+            "futures"
+            "futures-task"
+            "std"
+          ];
           "futures-task" = [ "dep:futures-task" ];
           "futures_01" = [ "dep:futures_01" ];
           "pin-project" = [ "dep:pin-project" ];
@@ -17421,7 +22559,12 @@ rec {
           "tokio" = [ "dep:tokio" ];
           "tokio-executor" = [ "dep:tokio-executor" ];
         };
-        resolvedDefaultFeatures = [ "default" "pin-project" "std" "std-future" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "pin-project"
+          "std"
+          "std-future"
+        ];
       };
       "tracing-indicatif" = rec {
         crateName = "tracing-indicatif";
@@ -17475,12 +22618,21 @@ rec {
         ];
         features = {
           "ahash" = [ "dep:ahash" ];
-          "default" = [ "log-tracer" "std" ];
-          "interest-cache" = [ "lru" "ahash" ];
+          "default" = [
+            "log-tracer"
+            "std"
+          ];
+          "interest-cache" = [
+            "lru"
+            "ahash"
+          ];
           "lru" = [ "dep:lru" ];
           "std" = [ "log/std" ];
         };
-        resolvedDefaultFeatures = [ "log-tracer" "std" ];
+        resolvedDefaultFeatures = [
+          "log-tracer"
+          "std"
+        ];
       };
       "tracing-opentelemetry" = rec {
         crateName = "tracing-opentelemetry";
@@ -17492,7 +22644,8 @@ rec {
           {
             name = "js-sys";
             packageId = "js-sys";
-            target = { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
           }
           {
             name = "once_cell";
@@ -17535,51 +22688,80 @@ rec {
             name = "tracing-subscriber";
             packageId = "tracing-subscriber";
             usesDefaultFeatures = false;
-            features = [ "registry" "std" ];
+            features = [
+              "registry"
+              "std"
+            ];
           }
           {
             name = "web-time";
             packageId = "web-time";
-            target = { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
           }
         ];
         devDependencies = [
           {
             name = "opentelemetry";
             packageId = "opentelemetry";
-            features = [ "trace" "metrics" ];
+            features = [
+              "trace"
+              "metrics"
+            ];
           }
           {
             name = "opentelemetry_sdk";
             packageId = "opentelemetry_sdk";
             usesDefaultFeatures = false;
-            features = [ "trace" "rt-tokio" ];
+            features = [
+              "trace"
+              "rt-tokio"
+            ];
           }
           {
             name = "tracing";
             packageId = "tracing";
             usesDefaultFeatures = false;
-            features = [ "std" "attributes" ];
+            features = [
+              "std"
+              "attributes"
+            ];
           }
           {
             name = "tracing-subscriber";
             packageId = "tracing-subscriber";
             usesDefaultFeatures = false;
-            features = [ "registry" "std" "fmt" ];
+            features = [
+              "registry"
+              "std"
+              "fmt"
+            ];
           }
         ];
         features = {
           "async-trait" = [ "dep:async-trait" ];
-          "default" = [ "tracing-log" "metrics" ];
+          "default" = [
+            "tracing-log"
+            "metrics"
+          ];
           "futures-util" = [ "dep:futures-util" ];
           "lazy_static" = [ "dep:lazy_static" ];
-          "metrics" = [ "opentelemetry/metrics" "opentelemetry_sdk/metrics" "smallvec" ];
+          "metrics" = [
+            "opentelemetry/metrics"
+            "opentelemetry_sdk/metrics"
+            "smallvec"
+          ];
           "smallvec" = [ "dep:smallvec" ];
           "thiserror" = [ "dep:thiserror" ];
           "thiserror-1" = [ "dep:thiserror-1" ];
           "tracing-log" = [ "dep:tracing-log" ];
         };
-        resolvedDefaultFeatures = [ "default" "metrics" "smallvec" "tracing-log" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "metrics"
+          "smallvec"
+          "tracing-log"
+        ];
       };
       "tracing-subscriber" = rec {
         crateName = "tracing-subscriber";
@@ -17613,7 +22795,11 @@ rec {
             packageId = "regex";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "std" "unicode-case" "unicode-perl" ];
+            features = [
+              "std"
+              "unicode-case"
+              "unicode-perl"
+            ];
           }
           {
             name = "sharded-slab";
@@ -17646,7 +22832,10 @@ rec {
             packageId = "tracing-log";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "log-tracer" "std" ];
+            features = [
+              "log-tracer"
+              "std"
+            ];
           }
         ];
         devDependencies = [
@@ -17666,34 +22855,86 @@ rec {
           }
         ];
         features = {
-          "ansi" = [ "fmt" "nu-ansi-term" ];
+          "ansi" = [
+            "fmt"
+            "nu-ansi-term"
+          ];
           "chrono" = [ "dep:chrono" ];
-          "default" = [ "smallvec" "fmt" "ansi" "tracing-log" "std" ];
-          "env-filter" = [ "matchers" "regex" "once_cell" "tracing" "std" "thread_local" ];
-          "fmt" = [ "registry" "std" ];
-          "json" = [ "tracing-serde" "serde" "serde_json" ];
+          "default" = [
+            "smallvec"
+            "fmt"
+            "ansi"
+            "tracing-log"
+            "std"
+          ];
+          "env-filter" = [
+            "matchers"
+            "regex"
+            "once_cell"
+            "tracing"
+            "std"
+            "thread_local"
+          ];
+          "fmt" = [
+            "registry"
+            "std"
+          ];
+          "json" = [
+            "tracing-serde"
+            "serde"
+            "serde_json"
+          ];
           "local-time" = [ "time/local-offset" ];
           "matchers" = [ "dep:matchers" ];
           "nu-ansi-term" = [ "dep:nu-ansi-term" ];
           "once_cell" = [ "dep:once_cell" ];
           "parking_lot" = [ "dep:parking_lot" ];
           "regex" = [ "dep:regex" ];
-          "registry" = [ "sharded-slab" "thread_local" "std" ];
+          "registry" = [
+            "sharded-slab"
+            "thread_local"
+            "std"
+          ];
           "serde" = [ "dep:serde" ];
           "serde_json" = [ "dep:serde_json" ];
           "sharded-slab" = [ "dep:sharded-slab" ];
           "smallvec" = [ "dep:smallvec" ];
-          "std" = [ "alloc" "tracing-core/std" ];
+          "std" = [
+            "alloc"
+            "tracing-core/std"
+          ];
           "thread_local" = [ "dep:thread_local" ];
           "time" = [ "dep:time" ];
           "tracing" = [ "dep:tracing" ];
           "tracing-log" = [ "dep:tracing-log" ];
           "tracing-serde" = [ "dep:tracing-serde" ];
-          "valuable" = [ "tracing-core/valuable" "valuable_crate" "valuable-serde" "tracing-serde/valuable" ];
+          "valuable" = [
+            "tracing-core/valuable"
+            "valuable_crate"
+            "valuable-serde"
+            "tracing-serde/valuable"
+          ];
           "valuable-serde" = [ "dep:valuable-serde" ];
           "valuable_crate" = [ "dep:valuable_crate" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "ansi" "default" "env-filter" "fmt" "matchers" "nu-ansi-term" "once_cell" "regex" "registry" "sharded-slab" "smallvec" "std" "thread_local" "tracing" "tracing-log" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "ansi"
+          "default"
+          "env-filter"
+          "fmt"
+          "matchers"
+          "nu-ansi-term"
+          "once_cell"
+          "regex"
+          "registry"
+          "sharded-slab"
+          "smallvec"
+          "std"
+          "thread_local"
+          "tracing"
+          "tracing-log"
+        ];
       };
       "tracing-test" = rec {
         crateName = "tracing-test";
@@ -17744,7 +22985,8 @@ rec {
             features = [ "full" ];
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "tracing-tracy" = rec {
         crateName = "tracing-tracy";
@@ -17766,7 +23008,10 @@ rec {
             name = "tracing-subscriber";
             packageId = "tracing-subscriber";
             usesDefaultFeatures = false;
-            features = [ "fmt" "registry" ];
+            features = [
+              "fmt"
+              "registry"
+            ];
           }
           {
             name = "tracy-client";
@@ -17781,7 +23026,15 @@ rec {
           "code-transfer" = [ "client/code-transfer" ];
           "context-switch-tracing" = [ "client/context-switch-tracing" ];
           "debuginfod" = [ "client/debuginfod" ];
-          "default" = [ "enable" "system-tracing" "context-switch-tracing" "sampling" "code-transfer" "broadcast" "callstack-inlines" ];
+          "default" = [
+            "enable"
+            "system-tracing"
+            "context-switch-tracing"
+            "sampling"
+            "code-transfer"
+            "broadcast"
+            "callstack-inlines"
+          ];
           "delayed-init" = [ "client/delayed-init" ];
           "demangle" = [ "client/demangle" ];
           "enable" = [ "client/enable" ];
@@ -17796,7 +23049,17 @@ rec {
           "timer-fallback" = [ "client/timer-fallback" ];
           "verify" = [ "client/verify" ];
         };
-        resolvedDefaultFeatures = [ "broadcast" "callstack-inlines" "code-transfer" "context-switch-tracing" "default" "enable" "flush-on-exit" "sampling" "system-tracing" ];
+        resolvedDefaultFeatures = [
+          "broadcast"
+          "callstack-inlines"
+          "code-transfer"
+          "context-switch-tracing"
+          "default"
+          "enable"
+          "flush-on-exit"
+          "sampling"
+          "system-tracing"
+        ];
       };
       "tracy-client" = rec {
         crateName = "tracy-client";
@@ -17830,9 +23093,20 @@ rec {
           "code-transfer" = [ "sys/code-transfer" ];
           "context-switch-tracing" = [ "sys/context-switch-tracing" ];
           "debuginfod" = [ "sys/debuginfod" ];
-          "default" = [ "enable" "system-tracing" "context-switch-tracing" "sampling" "code-transfer" "broadcast" "callstack-inlines" ];
+          "default" = [
+            "enable"
+            "system-tracing"
+            "context-switch-tracing"
+            "sampling"
+            "code-transfer"
+            "broadcast"
+            "callstack-inlines"
+          ];
           "delayed-init" = [ "sys/delayed-init" ];
-          "demangle" = [ "sys/demangle" "dep:rustc-demangle" ];
+          "demangle" = [
+            "sys/demangle"
+            "dep:rustc-demangle"
+          ];
           "enable" = [ "sys/enable" ];
           "fibers" = [ "sys/fibers" ];
           "flush-on-exit" = [ "sys/flush-on-exit" ];
@@ -17845,7 +23119,16 @@ rec {
           "timer-fallback" = [ "sys/timer-fallback" ];
           "verify" = [ "sys/verify" ];
         };
-        resolvedDefaultFeatures = [ "broadcast" "callstack-inlines" "code-transfer" "context-switch-tracing" "enable" "flush-on-exit" "sampling" "system-tracing" ];
+        resolvedDefaultFeatures = [
+          "broadcast"
+          "callstack-inlines"
+          "code-transfer"
+          "context-switch-tracing"
+          "enable"
+          "flush-on-exit"
+          "sampling"
+          "system-tracing"
+        ];
       };
       "tracy-client-sys" = rec {
         crateName = "tracy-client-sys";
@@ -17871,10 +23154,27 @@ rec {
           }
         ];
         features = {
-          "default" = [ "enable" "system-tracing" "context-switch-tracing" "sampling" "code-transfer" "broadcast" "callstack-inlines" ];
+          "default" = [
+            "enable"
+            "system-tracing"
+            "context-switch-tracing"
+            "sampling"
+            "code-transfer"
+            "broadcast"
+            "callstack-inlines"
+          ];
           "manual-lifetime" = [ "delayed-init" ];
         };
-        resolvedDefaultFeatures = [ "broadcast" "callstack-inlines" "code-transfer" "context-switch-tracing" "enable" "flush-on-exit" "sampling" "system-tracing" ];
+        resolvedDefaultFeatures = [
+          "broadcast"
+          "callstack-inlines"
+          "code-transfer"
+          "context-switch-tracing"
+          "enable"
+          "flush-on-exit"
+          "sampling"
+          "system-tracing"
+        ];
       };
       "try-lock" = rec {
         crateName = "try-lock";
@@ -17984,7 +23284,10 @@ rec {
             name = "serde";
             packageId = "serde";
             usesDefaultFeatures = false;
-            features = [ "alloc" "derive" ];
+            features = [
+              "alloc"
+              "derive"
+            ];
           }
           {
             name = "typetag-impl";
@@ -18035,7 +23338,8 @@ rec {
         authors = [
           "Sean McArthur <sean@seanmonstar.com>"
         ];
-        features = { };
+        features = {
+        };
       };
       "unicode-ident" = rec {
         crateName = "unicode-ident";
@@ -18058,7 +23362,8 @@ rec {
           "kwantam <kwantam@gmail.com>"
           "Manish Goregaokar <manishsmail@gmail.com>"
         ];
-        features = { };
+        features = {
+        };
       };
       "unicode-width 0.1.14" = rec {
         crateName = "unicode-width";
@@ -18074,10 +23379,17 @@ rec {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
           "default" = [ "cjk" ];
-          "rustc-dep-of-std" = [ "std" "core" "compiler_builtins" ];
+          "rustc-dep-of-std" = [
+            "std"
+            "core"
+            "compiler_builtins"
+          ];
           "std" = [ "dep:std" ];
         };
-        resolvedDefaultFeatures = [ "cjk" "default" ];
+        resolvedDefaultFeatures = [
+          "cjk"
+          "default"
+        ];
       };
       "unicode-width 0.2.0" = rec {
         crateName = "unicode-width";
@@ -18093,10 +23405,17 @@ rec {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
           "default" = [ "cjk" ];
-          "rustc-dep-of-std" = [ "std" "core" "compiler_builtins" ];
+          "rustc-dep-of-std" = [
+            "std"
+            "core"
+            "compiler_builtins"
+          ];
           "std" = [ "dep:std" ];
         };
-        resolvedDefaultFeatures = [ "cjk" "default" ];
+        resolvedDefaultFeatures = [
+          "cjk"
+          "default"
+        ];
       };
       "untrusted" = rec {
         crateName = "untrusted";
@@ -18127,7 +23446,10 @@ rec {
             name = "idna";
             packageId = "idna";
             usesDefaultFeatures = false;
-            features = [ "alloc" "compiled_data" ];
+            features = [
+              "alloc"
+              "compiled_data"
+            ];
           }
           {
             name = "percent-encoding";
@@ -18139,9 +23461,16 @@ rec {
         features = {
           "default" = [ "std" ];
           "serde" = [ "dep:serde" ];
-          "std" = [ "idna/std" "percent-encoding/std" "form_urlencoded/std" ];
+          "std" = [
+            "idna/std"
+            "percent-encoding/std"
+            "form_urlencoded/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "utf16_iter" = rec {
         crateName = "utf16_iter";
@@ -18172,7 +23501,8 @@ rec {
           "Joe Wilm <joe@jwilm.com>"
           "Christian Duerr <contact@christianduerr.com>"
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "uuid" = rec {
@@ -18195,11 +23525,20 @@ rec {
         features = {
           "arbitrary" = [ "dep:arbitrary" ];
           "atomic" = [ "dep:atomic" ];
-          "borsh" = [ "dep:borsh" "dep:borsh-derive" ];
+          "borsh" = [
+            "dep:borsh"
+            "dep:borsh-derive"
+          ];
           "bytemuck" = [ "dep:bytemuck" ];
           "default" = [ "std" ];
-          "fast-rng" = [ "rng" "dep:rand" ];
-          "js" = [ "dep:wasm-bindgen" "getrandom?/js" ];
+          "fast-rng" = [
+            "rng"
+            "dep:rand"
+          ];
+          "js" = [
+            "dep:wasm-bindgen"
+            "getrandom?/js"
+          ];
           "macro-diagnostics" = [ "dep:uuid-macro-internal" ];
           "md5" = [ "dep:md-5" ];
           "rng" = [ "dep:getrandom" ];
@@ -18214,7 +23553,12 @@ rec {
           "v7" = [ "rng" ];
           "zerocopy" = [ "dep:zerocopy" ];
         };
-        resolvedDefaultFeatures = [ "default" "rng" "std" "v4" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "rng"
+          "std"
+          "v4"
+        ];
       };
       "valuable" = rec {
         crateName = "valuable";
@@ -18227,7 +23571,10 @@ rec {
           "std" = [ "alloc" ];
           "valuable-derive" = [ "dep:valuable-derive" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "std"
+        ];
       };
       "vcpkg" = rec {
         crateName = "vcpkg";
@@ -18288,7 +23635,11 @@ rec {
           "vhost-user-slave" = [ "vhost-user" ];
           "vhost-vdpa" = [ "vhost-kern" ];
         };
-        resolvedDefaultFeatures = [ "default" "vhost-user" "vhost-user-slave" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "vhost-user"
+          "vhost-user-slave"
+        ];
       };
       "vhost-user-backend" = rec {
         crateName = "vhost-user-backend";
@@ -18324,7 +23675,10 @@ rec {
           {
             name = "vm-memory";
             packageId = "vm-memory";
-            features = [ "backend-mmap" "backend-atomic" ];
+            features = [
+              "backend-mmap"
+              "backend-atomic"
+            ];
           }
           {
             name = "vmm-sys-util";
@@ -18335,12 +23689,19 @@ rec {
           {
             name = "vhost";
             packageId = "vhost";
-            features = [ "vhost-user-master" "vhost-user-slave" ];
+            features = [
+              "vhost-user-master"
+              "vhost-user-slave"
+            ];
           }
           {
             name = "vm-memory";
             packageId = "vm-memory";
-            features = [ "backend-mmap" "backend-atomic" "backend-bitmap" ];
+            features = [
+              "backend-mmap"
+              "backend-atomic"
+              "backend-bitmap"
+            ];
           }
         ];
 
@@ -18354,7 +23715,8 @@ rec {
         authors = [
           "Sergio Lopez <slp@redhat.com>"
         ];
-        features = { };
+        features = {
+        };
       };
       "virtio-bindings 0.2.4" = rec {
         crateName = "virtio-bindings";
@@ -18365,7 +23727,8 @@ rec {
         authors = [
           "Sergio Lopez <slp@redhat.com>"
         ];
-        features = { };
+        features = {
+        };
       };
       "virtio-queue" = rec {
         crateName = "virtio-queue";
@@ -18398,10 +23761,14 @@ rec {
           {
             name = "vm-memory";
             packageId = "vm-memory";
-            features = [ "backend-mmap" "backend-atomic" ];
+            features = [
+              "backend-mmap"
+              "backend-atomic"
+            ];
           }
         ];
-        features = { };
+        features = {
+        };
       };
       "vm-memory" = rec {
         crateName = "vm-memory";
@@ -18426,14 +23793,22 @@ rec {
             name = "winapi";
             packageId = "winapi";
             target = { target, features }: (target."windows" or false);
-            features = [ "errhandlingapi" "sysinfoapi" ];
+            features = [
+              "errhandlingapi"
+              "sysinfoapi"
+            ];
           }
         ];
         features = {
           "arc-swap" = [ "dep:arc-swap" ];
           "backend-atomic" = [ "arc-swap" ];
         };
-        resolvedDefaultFeatures = [ "arc-swap" "backend-atomic" "backend-mmap" "default" ];
+        resolvedDefaultFeatures = [
+          "arc-swap"
+          "backend-atomic"
+          "backend-mmap"
+          "default"
+        ];
       };
       "vmm-sys-util" = rec {
         crateName = "vmm-sys-util";
@@ -18448,7 +23823,8 @@ rec {
           {
             name = "bitflags";
             packageId = "bitflags 1.3.2";
-            target = { target, features }: (("linux" == target."os" or null) || ("android" == target."os" or null));
+            target =
+              { target, features }: (("linux" == target."os" or null) || ("android" == target."os" or null));
           }
           {
             name = "libc";
@@ -18458,7 +23834,10 @@ rec {
         features = {
           "serde" = [ "dep:serde" ];
           "serde_derive" = [ "dep:serde_derive" ];
-          "with-serde" = [ "serde" "serde_derive" ];
+          "with-serde" = [
+            "serde"
+            "serde_derive"
+          ];
         };
       };
       "vt100" = rec {
@@ -18529,7 +23908,11 @@ rec {
           "no_std" = [ "arrayvec" ];
           "serde" = [ "dep:serde" ];
         };
-        resolvedDefaultFeatures = [ "arrayvec" "default" "no_std" ];
+        resolvedDefaultFeatures = [
+          "arrayvec"
+          "default"
+          "no_std"
+        ];
       };
       "vte_generate_state_changes" = rec {
         crateName = "vte_generate_state_changes";
@@ -18612,10 +23995,17 @@ rec {
           "compiler_builtins" = [ "dep:compiler_builtins" ];
           "core" = [ "dep:core" ];
           "default" = [ "std" ];
-          "rustc-dep-of-std" = [ "compiler_builtins" "core" "rustc-std-workspace-alloc" ];
+          "rustc-dep-of-std" = [
+            "compiler_builtins"
+            "core"
+            "rustc-std-workspace-alloc"
+          ];
           "rustc-std-workspace-alloc" = [ "dep:rustc-std-workspace-alloc" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "wasm-bindgen" = rec {
         crateName = "wasm-bindgen";
@@ -18643,17 +24033,33 @@ rec {
           }
         ];
         features = {
-          "default" = [ "spans" "std" ];
+          "default" = [
+            "spans"
+            "std"
+          ];
           "enable-interning" = [ "std" ];
           "serde" = [ "dep:serde" ];
-          "serde-serialize" = [ "serde" "serde_json" "std" ];
+          "serde-serialize" = [
+            "serde"
+            "serde_json"
+            "std"
+          ];
           "serde_json" = [ "dep:serde_json" ];
           "spans" = [ "wasm-bindgen-macro/spans" ];
-          "std" = [ "wasm-bindgen-macro/std" "once_cell/std" ];
+          "std" = [
+            "wasm-bindgen-macro/std"
+            "once_cell/std"
+          ];
           "strict-macro" = [ "wasm-bindgen-macro/strict-macro" ];
-          "xxx_debug_only_print_generated_code" = [ "wasm-bindgen-macro/xxx_debug_only_print_generated_code" ];
+          "xxx_debug_only_print_generated_code" = [
+            "wasm-bindgen-macro/xxx_debug_only_print_generated_code"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "spans" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "spans"
+          "std"
+        ];
       };
       "wasm-bindgen-backend" = rec {
         crateName = "wasm-bindgen-backend";
@@ -18695,7 +24101,10 @@ rec {
           "default" = [ "std" ];
           "extra-traits" = [ "syn/extra-traits" ];
         };
-        resolvedDefaultFeatures = [ "spans" "std" ];
+        resolvedDefaultFeatures = [
+          "spans"
+          "std"
+        ];
       };
       "wasm-bindgen-futures" = rec {
         crateName = "wasm-bindgen-futures";
@@ -18731,16 +24140,27 @@ rec {
             packageId = "web-sys";
             usesDefaultFeatures = false;
             target = { target, features }: (builtins.elem "atomics" targetFeatures);
-            features = [ "MessageEvent" "Worker" ];
+            features = [
+              "MessageEvent"
+              "Worker"
+            ];
           }
         ];
         features = {
           "default" = [ "std" ];
           "futures-core" = [ "dep:futures-core" ];
           "futures-core-03-stream" = [ "futures-core" ];
-          "std" = [ "wasm-bindgen/std" "js-sys/std" "web-sys/std" "once_cell/std" ];
+          "std" = [
+            "wasm-bindgen/std"
+            "js-sys/std"
+            "web-sys/std"
+            "once_cell/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "wasm-bindgen-macro" = rec {
         crateName = "wasm-bindgen-macro";
@@ -18769,7 +24189,10 @@ rec {
           "std" = [ "wasm-bindgen-macro-support/std" ];
           "strict-macro" = [ "wasm-bindgen-macro-support/strict-macro" ];
         };
-        resolvedDefaultFeatures = [ "spans" "std" ];
+        resolvedDefaultFeatures = [
+          "spans"
+          "std"
+        ];
       };
       "wasm-bindgen-macro-support" = rec {
         crateName = "wasm-bindgen-macro-support";
@@ -18792,7 +24215,11 @@ rec {
           {
             name = "syn";
             packageId = "syn 2.0.93";
-            features = [ "visit" "visit-mut" "full" ];
+            features = [
+              "visit"
+              "visit-mut"
+              "full"
+            ];
           }
           {
             name = "wasm-bindgen-backend";
@@ -18810,7 +24237,10 @@ rec {
           "spans" = [ "wasm-bindgen-backend/spans" ];
           "std" = [ "wasm-bindgen-backend/std" ];
         };
-        resolvedDefaultFeatures = [ "spans" "std" ];
+        resolvedDefaultFeatures = [
+          "spans"
+          "std"
+        ];
       };
       "wasm-bindgen-shared" = rec {
         crateName = "wasm-bindgen-shared";
@@ -18830,7 +24260,10 @@ rec {
         edition = "2021";
         sha256 = "0rddn007hp6k2cm91mm9y33n79b0jxv0c3znzszcvv67hn6ks18m";
         libName = "wasm_streams";
-        type = [ "cdylib" "rlib" ];
+        type = [
+          "cdylib"
+          "rlib"
+        ];
         authors = [
           "Mattias Buelens <mattias@buelens.com>"
         ];
@@ -18838,7 +24271,10 @@ rec {
           {
             name = "futures-util";
             packageId = "futures-util";
-            features = [ "io" "sink" ];
+            features = [
+              "io"
+              "sink"
+            ];
           }
           {
             name = "js-sys";
@@ -18855,14 +24291,45 @@ rec {
           {
             name = "web-sys";
             packageId = "web-sys";
-            features = [ "AbortSignal" "QueuingStrategy" "ReadableStream" "ReadableStreamType" "ReadableWritablePair" "ReadableStreamByobReader" "ReadableStreamReaderMode" "ReadableStreamReadResult" "ReadableStreamByobRequest" "ReadableStreamDefaultReader" "ReadableByteStreamController" "ReadableStreamGetReaderOptions" "ReadableStreamDefaultController" "StreamPipeOptions" "TransformStream" "TransformStreamDefaultController" "Transformer" "UnderlyingSink" "UnderlyingSource" "WritableStream" "WritableStreamDefaultController" "WritableStreamDefaultWriter" ];
+            features = [
+              "AbortSignal"
+              "QueuingStrategy"
+              "ReadableStream"
+              "ReadableStreamType"
+              "ReadableWritablePair"
+              "ReadableStreamByobReader"
+              "ReadableStreamReaderMode"
+              "ReadableStreamReadResult"
+              "ReadableStreamByobRequest"
+              "ReadableStreamDefaultReader"
+              "ReadableByteStreamController"
+              "ReadableStreamGetReaderOptions"
+              "ReadableStreamDefaultController"
+              "StreamPipeOptions"
+              "TransformStream"
+              "TransformStreamDefaultController"
+              "Transformer"
+              "UnderlyingSink"
+              "UnderlyingSource"
+              "WritableStream"
+              "WritableStreamDefaultController"
+              "WritableStreamDefaultWriter"
+            ];
           }
         ];
         devDependencies = [
           {
             name = "web-sys";
             packageId = "web-sys";
-            features = [ "console" "AbortSignal" "ErrorEvent" "PromiseRejectionEvent" "Response" "ReadableStream" "Window" ];
+            features = [
+              "console"
+              "AbortSignal"
+              "ErrorEvent"
+              "PromiseRejectionEvent"
+              "Response"
+              "ReadableStream"
+              "Window"
+            ];
           }
         ];
 
@@ -18890,52 +24357,126 @@ rec {
         ];
         features = {
           "AbortSignal" = [ "EventTarget" ];
-          "AnalyserNode" = [ "AudioNode" "EventTarget" ];
+          "AnalyserNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "Animation" = [ "EventTarget" ];
           "AnimationEvent" = [ "Event" ];
           "AnimationPlaybackEvent" = [ "Event" ];
-          "Attr" = [ "EventTarget" "Node" ];
-          "AudioBufferSourceNode" = [ "AudioNode" "AudioScheduledSourceNode" "EventTarget" ];
-          "AudioContext" = [ "BaseAudioContext" "EventTarget" ];
-          "AudioDestinationNode" = [ "AudioNode" "EventTarget" ];
+          "Attr" = [
+            "EventTarget"
+            "Node"
+          ];
+          "AudioBufferSourceNode" = [
+            "AudioNode"
+            "AudioScheduledSourceNode"
+            "EventTarget"
+          ];
+          "AudioContext" = [
+            "BaseAudioContext"
+            "EventTarget"
+          ];
+          "AudioDestinationNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "AudioNode" = [ "EventTarget" ];
           "AudioProcessingEvent" = [ "Event" ];
-          "AudioScheduledSourceNode" = [ "AudioNode" "EventTarget" ];
-          "AudioStreamTrack" = [ "EventTarget" "MediaStreamTrack" ];
+          "AudioScheduledSourceNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
+          "AudioStreamTrack" = [
+            "EventTarget"
+            "MediaStreamTrack"
+          ];
           "AudioTrackList" = [ "EventTarget" ];
           "AudioWorklet" = [ "Worklet" ];
           "AudioWorkletGlobalScope" = [ "WorkletGlobalScope" ];
-          "AudioWorkletNode" = [ "AudioNode" "EventTarget" ];
+          "AudioWorkletNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "AuthenticatorAssertionResponse" = [ "AuthenticatorResponse" ];
           "AuthenticatorAttestationResponse" = [ "AuthenticatorResponse" ];
           "BaseAudioContext" = [ "EventTarget" ];
           "BatteryManager" = [ "EventTarget" ];
           "BeforeUnloadEvent" = [ "Event" ];
-          "BiquadFilterNode" = [ "AudioNode" "EventTarget" ];
+          "BiquadFilterNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "BlobEvent" = [ "Event" ];
           "Bluetooth" = [ "EventTarget" ];
           "BluetoothAdvertisingEvent" = [ "Event" ];
           "BluetoothDevice" = [ "EventTarget" ];
-          "BluetoothPermissionResult" = [ "EventTarget" "PermissionStatus" ];
+          "BluetoothPermissionResult" = [
+            "EventTarget"
+            "PermissionStatus"
+          ];
           "BluetoothRemoteGattCharacteristic" = [ "EventTarget" ];
           "BluetoothRemoteGattService" = [ "EventTarget" ];
           "BroadcastChannel" = [ "EventTarget" ];
-          "CanvasCaptureMediaStream" = [ "EventTarget" "MediaStream" ];
-          "CanvasCaptureMediaStreamTrack" = [ "EventTarget" "MediaStreamTrack" ];
-          "CdataSection" = [ "CharacterData" "EventTarget" "Node" "Text" ];
-          "ChannelMergerNode" = [ "AudioNode" "EventTarget" ];
-          "ChannelSplitterNode" = [ "AudioNode" "EventTarget" ];
-          "CharacterData" = [ "EventTarget" "Node" ];
-          "ChromeWorker" = [ "EventTarget" "Worker" ];
+          "CanvasCaptureMediaStream" = [
+            "EventTarget"
+            "MediaStream"
+          ];
+          "CanvasCaptureMediaStreamTrack" = [
+            "EventTarget"
+            "MediaStreamTrack"
+          ];
+          "CdataSection" = [
+            "CharacterData"
+            "EventTarget"
+            "Node"
+            "Text"
+          ];
+          "ChannelMergerNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
+          "ChannelSplitterNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
+          "CharacterData" = [
+            "EventTarget"
+            "Node"
+          ];
+          "ChromeWorker" = [
+            "EventTarget"
+            "Worker"
+          ];
           "Clipboard" = [ "EventTarget" ];
           "ClipboardEvent" = [ "Event" ];
           "CloseEvent" = [ "Event" ];
-          "Comment" = [ "CharacterData" "EventTarget" "Node" ];
-          "CompositionEvent" = [ "Event" "UiEvent" ];
-          "ConstantSourceNode" = [ "AudioNode" "AudioScheduledSourceNode" "EventTarget" ];
-          "ConvolverNode" = [ "AudioNode" "EventTarget" ];
-          "CssAnimation" = [ "Animation" "EventTarget" ];
-          "CssConditionRule" = [ "CssGroupingRule" "CssRule" ];
+          "Comment" = [
+            "CharacterData"
+            "EventTarget"
+            "Node"
+          ];
+          "CompositionEvent" = [
+            "Event"
+            "UiEvent"
+          ];
+          "ConstantSourceNode" = [
+            "AudioNode"
+            "AudioScheduledSourceNode"
+            "EventTarget"
+          ];
+          "ConvolverNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
+          "CssAnimation" = [
+            "Animation"
+            "EventTarget"
+          ];
+          "CssConditionRule" = [
+            "CssGroupingRule"
+            "CssRule"
+          ];
           "CssCounterStyleRule" = [ "CssRule" ];
           "CssFontFaceRule" = [ "CssRule" ];
           "CssFontFeatureValuesRule" = [ "CssRule" ];
@@ -18943,36 +24484,78 @@ rec {
           "CssImportRule" = [ "CssRule" ];
           "CssKeyframeRule" = [ "CssRule" ];
           "CssKeyframesRule" = [ "CssRule" ];
-          "CssMediaRule" = [ "CssConditionRule" "CssGroupingRule" "CssRule" ];
+          "CssMediaRule" = [
+            "CssConditionRule"
+            "CssGroupingRule"
+            "CssRule"
+          ];
           "CssNamespaceRule" = [ "CssRule" ];
           "CssPageRule" = [ "CssRule" ];
           "CssStyleRule" = [ "CssRule" ];
           "CssStyleSheet" = [ "StyleSheet" ];
-          "CssSupportsRule" = [ "CssConditionRule" "CssGroupingRule" "CssRule" ];
-          "CssTransition" = [ "Animation" "EventTarget" ];
+          "CssSupportsRule" = [
+            "CssConditionRule"
+            "CssGroupingRule"
+            "CssRule"
+          ];
+          "CssTransition" = [
+            "Animation"
+            "EventTarget"
+          ];
           "CustomEvent" = [ "Event" ];
-          "DedicatedWorkerGlobalScope" = [ "EventTarget" "WorkerGlobalScope" ];
-          "DelayNode" = [ "AudioNode" "EventTarget" ];
+          "DedicatedWorkerGlobalScope" = [
+            "EventTarget"
+            "WorkerGlobalScope"
+          ];
+          "DelayNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "DeviceLightEvent" = [ "Event" ];
           "DeviceMotionEvent" = [ "Event" ];
           "DeviceOrientationEvent" = [ "Event" ];
           "DeviceProximityEvent" = [ "Event" ];
-          "Document" = [ "EventTarget" "Node" ];
-          "DocumentFragment" = [ "EventTarget" "Node" ];
+          "Document" = [
+            "EventTarget"
+            "Node"
+          ];
+          "DocumentFragment" = [
+            "EventTarget"
+            "Node"
+          ];
           "DocumentTimeline" = [ "AnimationTimeline" ];
-          "DocumentType" = [ "EventTarget" "Node" ];
+          "DocumentType" = [
+            "EventTarget"
+            "Node"
+          ];
           "DomMatrix" = [ "DomMatrixReadOnly" ];
           "DomPoint" = [ "DomPointReadOnly" ];
           "DomRect" = [ "DomRectReadOnly" ];
           "DomRequest" = [ "EventTarget" ];
-          "DragEvent" = [ "Event" "MouseEvent" "UiEvent" ];
-          "DynamicsCompressorNode" = [ "AudioNode" "EventTarget" ];
-          "Element" = [ "EventTarget" "Node" ];
+          "DragEvent" = [
+            "Event"
+            "MouseEvent"
+            "UiEvent"
+          ];
+          "DynamicsCompressorNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
+          "Element" = [
+            "EventTarget"
+            "Node"
+          ];
           "ErrorEvent" = [ "Event" ];
           "EventSource" = [ "EventTarget" ];
           "ExtendableEvent" = [ "Event" ];
-          "ExtendableMessageEvent" = [ "Event" "ExtendableEvent" ];
-          "FetchEvent" = [ "Event" "ExtendableEvent" ];
+          "ExtendableMessageEvent" = [
+            "Event"
+            "ExtendableEvent"
+          ];
+          "FetchEvent" = [
+            "Event"
+            "ExtendableEvent"
+          ];
           "FetchObserver" = [ "EventTarget" ];
           "File" = [ "Blob" ];
           "FileReader" = [ "EventTarget" ];
@@ -18981,10 +24564,16 @@ rec {
           "FileSystemFileEntry" = [ "FileSystemEntry" ];
           "FileSystemFileHandle" = [ "FileSystemHandle" ];
           "FileSystemWritableFileStream" = [ "WritableStream" ];
-          "FocusEvent" = [ "Event" "UiEvent" ];
+          "FocusEvent" = [
+            "Event"
+            "UiEvent"
+          ];
           "FontFaceSet" = [ "EventTarget" ];
           "FontFaceSetLoadEvent" = [ "Event" ];
-          "GainNode" = [ "AudioNode" "EventTarget" ];
+          "GainNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "GamepadEvent" = [ "Event" ];
           "GpuDevice" = [ "EventTarget" ];
           "GpuInternalError" = [ "GpuError" ];
@@ -18997,102 +24586,487 @@ rec {
           "HidConnectionEvent" = [ "Event" ];
           "HidDevice" = [ "EventTarget" ];
           "HidInputReportEvent" = [ "Event" ];
-          "HtmlAnchorElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlAreaElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlAudioElement" = [ "Element" "EventTarget" "HtmlElement" "HtmlMediaElement" "Node" ];
-          "HtmlBaseElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlBodyElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlBrElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlButtonElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlCanvasElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlDListElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlDataElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlDataListElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlDetailsElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlDialogElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlDirectoryElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlDivElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlDocument" = [ "Document" "EventTarget" "Node" ];
-          "HtmlElement" = [ "Element" "EventTarget" "Node" ];
-          "HtmlEmbedElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlFieldSetElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlFontElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
+          "HtmlAnchorElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlAreaElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlAudioElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "HtmlMediaElement"
+            "Node"
+          ];
+          "HtmlBaseElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlBodyElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlBrElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlButtonElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlCanvasElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlDListElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlDataElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlDataListElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlDetailsElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlDialogElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlDirectoryElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlDivElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlDocument" = [
+            "Document"
+            "EventTarget"
+            "Node"
+          ];
+          "HtmlElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+          ];
+          "HtmlEmbedElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlFieldSetElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlFontElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
           "HtmlFormControlsCollection" = [ "HtmlCollection" ];
-          "HtmlFormElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlFrameElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlFrameSetElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlHeadElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlHeadingElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlHrElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlHtmlElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlIFrameElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlImageElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlInputElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlLabelElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlLegendElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlLiElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlLinkElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlMapElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlMediaElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlMenuElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlMenuItemElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlMetaElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlMeterElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlModElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlOListElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlObjectElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlOptGroupElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlOptionElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
+          "HtmlFormElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlFrameElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlFrameSetElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlHeadElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlHeadingElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlHrElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlHtmlElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlIFrameElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlImageElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlInputElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlLabelElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlLegendElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlLiElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlLinkElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlMapElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlMediaElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlMenuElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlMenuItemElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlMetaElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlMeterElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlModElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlOListElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlObjectElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlOptGroupElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlOptionElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
           "HtmlOptionsCollection" = [ "HtmlCollection" ];
-          "HtmlOutputElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlParagraphElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlParamElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlPictureElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlPreElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlProgressElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlQuoteElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlScriptElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlSelectElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlSlotElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlSourceElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlSpanElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlStyleElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTableCaptionElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTableCellElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTableColElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTableElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTableRowElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTableSectionElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTemplateElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTextAreaElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTimeElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTitleElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlTrackElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlUListElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlUnknownElement" = [ "Element" "EventTarget" "HtmlElement" "Node" ];
-          "HtmlVideoElement" = [ "Element" "EventTarget" "HtmlElement" "HtmlMediaElement" "Node" ];
+          "HtmlOutputElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlParagraphElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlParamElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlPictureElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlPreElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlProgressElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlQuoteElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlScriptElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlSelectElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlSlotElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlSourceElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlSpanElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlStyleElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTableCaptionElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTableCellElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTableColElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTableElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTableRowElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTableSectionElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTemplateElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTextAreaElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTimeElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTitleElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlTrackElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlUListElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlUnknownElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "Node"
+          ];
+          "HtmlVideoElement" = [
+            "Element"
+            "EventTarget"
+            "HtmlElement"
+            "HtmlMediaElement"
+            "Node"
+          ];
           "IdbCursorWithValue" = [ "IdbCursor" ];
           "IdbDatabase" = [ "EventTarget" ];
           "IdbFileHandle" = [ "EventTarget" ];
-          "IdbFileRequest" = [ "DomRequest" "EventTarget" ];
+          "IdbFileRequest" = [
+            "DomRequest"
+            "EventTarget"
+          ];
           "IdbLocaleAwareKeyRange" = [ "IdbKeyRange" ];
           "IdbMutableFile" = [ "EventTarget" ];
-          "IdbOpenDbRequest" = [ "EventTarget" "IdbRequest" ];
+          "IdbOpenDbRequest" = [
+            "EventTarget"
+            "IdbRequest"
+          ];
           "IdbRequest" = [ "EventTarget" ];
           "IdbTransaction" = [ "EventTarget" ];
           "IdbVersionChangeEvent" = [ "Event" ];
-          "IirFilterNode" = [ "AudioNode" "EventTarget" ];
+          "IirFilterNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "ImageCaptureErrorEvent" = [ "Event" ];
           "ImageTrack" = [ "EventTarget" ];
           "InputDeviceInfo" = [ "MediaDeviceInfo" ];
-          "InputEvent" = [ "Event" "UiEvent" ];
+          "InputEvent" = [
+            "Event"
+            "UiEvent"
+          ];
           "KeyFrameRequestEvent" = [ "Event" ];
-          "KeyboardEvent" = [ "Event" "UiEvent" ];
+          "KeyboardEvent" = [
+            "Event"
+            "UiEvent"
+          ];
           "KeyframeEffect" = [ "AnimationEffect" ];
-          "LocalMediaStream" = [ "EventTarget" "MediaStream" ];
-          "MathMlElement" = [ "Element" "EventTarget" "Node" ];
+          "LocalMediaStream" = [
+            "EventTarget"
+            "MediaStream"
+          ];
+          "MathMlElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+          ];
           "MediaDevices" = [ "EventTarget" ];
-          "MediaElementAudioSourceNode" = [ "AudioNode" "EventTarget" ];
+          "MediaElementAudioSourceNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "MediaEncryptedEvent" = [ "Event" ];
           "MediaKeyError" = [ "Event" ];
           "MediaKeyMessageEvent" = [ "Event" ];
@@ -19103,44 +25077,89 @@ rec {
           "MediaRecorderErrorEvent" = [ "Event" ];
           "MediaSource" = [ "EventTarget" ];
           "MediaStream" = [ "EventTarget" ];
-          "MediaStreamAudioDestinationNode" = [ "AudioNode" "EventTarget" ];
-          "MediaStreamAudioSourceNode" = [ "AudioNode" "EventTarget" ];
+          "MediaStreamAudioDestinationNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
+          "MediaStreamAudioSourceNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "MediaStreamEvent" = [ "Event" ];
           "MediaStreamTrack" = [ "EventTarget" ];
           "MediaStreamTrackEvent" = [ "Event" ];
-          "MediaStreamTrackGenerator" = [ "EventTarget" "MediaStreamTrack" ];
+          "MediaStreamTrackGenerator" = [
+            "EventTarget"
+            "MediaStreamTrack"
+          ];
           "MessageEvent" = [ "Event" ];
           "MessagePort" = [ "EventTarget" ];
           "MidiAccess" = [ "EventTarget" ];
           "MidiConnectionEvent" = [ "Event" ];
-          "MidiInput" = [ "EventTarget" "MidiPort" ];
+          "MidiInput" = [
+            "EventTarget"
+            "MidiPort"
+          ];
           "MidiMessageEvent" = [ "Event" ];
-          "MidiOutput" = [ "EventTarget" "MidiPort" ];
+          "MidiOutput" = [
+            "EventTarget"
+            "MidiPort"
+          ];
           "MidiPort" = [ "EventTarget" ];
-          "MouseEvent" = [ "Event" "UiEvent" ];
-          "MouseScrollEvent" = [ "Event" "MouseEvent" "UiEvent" ];
+          "MouseEvent" = [
+            "Event"
+            "UiEvent"
+          ];
+          "MouseScrollEvent" = [
+            "Event"
+            "MouseEvent"
+            "UiEvent"
+          ];
           "MutationEvent" = [ "Event" ];
           "NetworkInformation" = [ "EventTarget" ];
           "Node" = [ "EventTarget" ];
           "Notification" = [ "EventTarget" ];
-          "NotificationEvent" = [ "Event" "ExtendableEvent" ];
+          "NotificationEvent" = [
+            "Event"
+            "ExtendableEvent"
+          ];
           "OfflineAudioCompletionEvent" = [ "Event" ];
-          "OfflineAudioContext" = [ "BaseAudioContext" "EventTarget" ];
+          "OfflineAudioContext" = [
+            "BaseAudioContext"
+            "EventTarget"
+          ];
           "OfflineResourceList" = [ "EventTarget" ];
           "OffscreenCanvas" = [ "EventTarget" ];
-          "OscillatorNode" = [ "AudioNode" "AudioScheduledSourceNode" "EventTarget" ];
+          "OscillatorNode" = [
+            "AudioNode"
+            "AudioScheduledSourceNode"
+            "EventTarget"
+          ];
           "PageTransitionEvent" = [ "Event" ];
           "PaintWorkletGlobalScope" = [ "WorkletGlobalScope" ];
-          "PannerNode" = [ "AudioNode" "EventTarget" ];
-          "PaymentMethodChangeEvent" = [ "Event" "PaymentRequestUpdateEvent" ];
+          "PannerNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
+          "PaymentMethodChangeEvent" = [
+            "Event"
+            "PaymentRequestUpdateEvent"
+          ];
           "PaymentRequestUpdateEvent" = [ "Event" ];
           "Performance" = [ "EventTarget" ];
           "PerformanceMark" = [ "PerformanceEntry" ];
           "PerformanceMeasure" = [ "PerformanceEntry" ];
-          "PerformanceNavigationTiming" = [ "PerformanceEntry" "PerformanceResourceTiming" ];
+          "PerformanceNavigationTiming" = [
+            "PerformanceEntry"
+            "PerformanceResourceTiming"
+          ];
           "PerformanceResourceTiming" = [ "PerformanceEntry" ];
           "PermissionStatus" = [ "EventTarget" ];
-          "PointerEvent" = [ "Event" "MouseEvent" "UiEvent" ];
+          "PointerEvent" = [
+            "Event"
+            "MouseEvent"
+            "UiEvent"
+          ];
           "PopStateEvent" = [ "Event" ];
           "PopupBlockedEvent" = [ "Event" ];
           "PresentationAvailability" = [ "EventTarget" ];
@@ -19149,11 +25168,18 @@ rec {
           "PresentationConnectionCloseEvent" = [ "Event" ];
           "PresentationConnectionList" = [ "EventTarget" ];
           "PresentationRequest" = [ "EventTarget" ];
-          "ProcessingInstruction" = [ "CharacterData" "EventTarget" "Node" ];
+          "ProcessingInstruction" = [
+            "CharacterData"
+            "EventTarget"
+            "Node"
+          ];
           "ProgressEvent" = [ "Event" ];
           "PromiseRejectionEvent" = [ "Event" ];
           "PublicKeyCredential" = [ "Credential" ];
-          "PushEvent" = [ "Event" "ExtendableEvent" ];
+          "PushEvent" = [
+            "Event"
+            "ExtendableEvent"
+          ];
           "RadioNodeList" = [ "NodeList" ];
           "RtcDataChannel" = [ "EventTarget" ];
           "RtcDataChannelEvent" = [ "Event" ];
@@ -19169,53 +25195,205 @@ rec {
           "SFrameTransformErrorEvent" = [ "Event" ];
           "Screen" = [ "EventTarget" ];
           "ScreenOrientation" = [ "EventTarget" ];
-          "ScriptProcessorNode" = [ "AudioNode" "EventTarget" ];
-          "ScrollAreaEvent" = [ "Event" "UiEvent" ];
+          "ScriptProcessorNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
+          "ScrollAreaEvent" = [
+            "Event"
+            "UiEvent"
+          ];
           "SecurityPolicyViolationEvent" = [ "Event" ];
           "Serial" = [ "EventTarget" ];
           "SerialPort" = [ "EventTarget" ];
           "ServiceWorker" = [ "EventTarget" ];
           "ServiceWorkerContainer" = [ "EventTarget" ];
-          "ServiceWorkerGlobalScope" = [ "EventTarget" "WorkerGlobalScope" ];
+          "ServiceWorkerGlobalScope" = [
+            "EventTarget"
+            "WorkerGlobalScope"
+          ];
           "ServiceWorkerRegistration" = [ "EventTarget" ];
-          "ShadowRoot" = [ "DocumentFragment" "EventTarget" "Node" ];
+          "ShadowRoot" = [
+            "DocumentFragment"
+            "EventTarget"
+            "Node"
+          ];
           "SharedWorker" = [ "EventTarget" ];
-          "SharedWorkerGlobalScope" = [ "EventTarget" "WorkerGlobalScope" ];
+          "SharedWorkerGlobalScope" = [
+            "EventTarget"
+            "WorkerGlobalScope"
+          ];
           "SourceBuffer" = [ "EventTarget" ];
           "SourceBufferList" = [ "EventTarget" ];
           "SpeechRecognition" = [ "EventTarget" ];
           "SpeechRecognitionError" = [ "Event" ];
           "SpeechRecognitionEvent" = [ "Event" ];
           "SpeechSynthesis" = [ "EventTarget" ];
-          "SpeechSynthesisErrorEvent" = [ "Event" "SpeechSynthesisEvent" ];
+          "SpeechSynthesisErrorEvent" = [
+            "Event"
+            "SpeechSynthesisEvent"
+          ];
           "SpeechSynthesisEvent" = [ "Event" ];
           "SpeechSynthesisUtterance" = [ "EventTarget" ];
-          "StereoPannerNode" = [ "AudioNode" "EventTarget" ];
+          "StereoPannerNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "StorageEvent" = [ "Event" ];
           "SubmitEvent" = [ "Event" ];
-          "SvgAnimateElement" = [ "Element" "EventTarget" "Node" "SvgAnimationElement" "SvgElement" ];
-          "SvgAnimateMotionElement" = [ "Element" "EventTarget" "Node" "SvgAnimationElement" "SvgElement" ];
-          "SvgAnimateTransformElement" = [ "Element" "EventTarget" "Node" "SvgAnimationElement" "SvgElement" ];
-          "SvgAnimationElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgCircleElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGeometryElement" "SvgGraphicsElement" ];
-          "SvgClipPathElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgComponentTransferFunctionElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgDefsElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgDescElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgElement" = [ "Element" "EventTarget" "Node" ];
-          "SvgEllipseElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGeometryElement" "SvgGraphicsElement" ];
-          "SvgFilterElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgForeignObjectElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgGeometryElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgGradientElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgGraphicsElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgImageElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgLineElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGeometryElement" "SvgGraphicsElement" ];
-          "SvgLinearGradientElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGradientElement" ];
-          "SvgMarkerElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgMaskElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgMetadataElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgPathElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGeometryElement" "SvgGraphicsElement" ];
+          "SvgAnimateElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgAnimationElement"
+            "SvgElement"
+          ];
+          "SvgAnimateMotionElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgAnimationElement"
+            "SvgElement"
+          ];
+          "SvgAnimateTransformElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgAnimationElement"
+            "SvgElement"
+          ];
+          "SvgAnimationElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgCircleElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGeometryElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgClipPathElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgComponentTransferFunctionElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgDefsElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgDescElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+          ];
+          "SvgEllipseElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGeometryElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgFilterElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgForeignObjectElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgGeometryElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgGradientElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgGraphicsElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgImageElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgLineElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGeometryElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgLinearGradientElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGradientElement"
+          ];
+          "SvgMarkerElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgMaskElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgMetadataElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgPathElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGeometryElement"
+            "SvgGraphicsElement"
+          ];
           "SvgPathSegArcAbs" = [ "SvgPathSeg" ];
           "SvgPathSegArcRel" = [ "SvgPathSeg" ];
           "SvgPathSegClosePath" = [ "SvgPathSeg" ];
@@ -19235,119 +25413,496 @@ rec {
           "SvgPathSegLinetoVerticalRel" = [ "SvgPathSeg" ];
           "SvgPathSegMovetoAbs" = [ "SvgPathSeg" ];
           "SvgPathSegMovetoRel" = [ "SvgPathSeg" ];
-          "SvgPatternElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgPolygonElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGeometryElement" "SvgGraphicsElement" ];
-          "SvgPolylineElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGeometryElement" "SvgGraphicsElement" ];
-          "SvgRadialGradientElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGradientElement" ];
-          "SvgRectElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGeometryElement" "SvgGraphicsElement" ];
-          "SvgScriptElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgSetElement" = [ "Element" "EventTarget" "Node" "SvgAnimationElement" "SvgElement" ];
-          "SvgStopElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgStyleElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgSwitchElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgSymbolElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgTextContentElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgTextElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" "SvgTextContentElement" "SvgTextPositioningElement" ];
-          "SvgTextPathElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" "SvgTextContentElement" ];
-          "SvgTextPositioningElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" "SvgTextContentElement" ];
-          "SvgTitleElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgUseElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgViewElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgaElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgfeBlendElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeColorMatrixElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeComponentTransferElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeCompositeElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeConvolveMatrixElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeDiffuseLightingElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeDisplacementMapElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeDistantLightElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeDropShadowElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeFloodElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeFuncAElement" = [ "Element" "EventTarget" "Node" "SvgComponentTransferFunctionElement" "SvgElement" ];
-          "SvgfeFuncBElement" = [ "Element" "EventTarget" "Node" "SvgComponentTransferFunctionElement" "SvgElement" ];
-          "SvgfeFuncGElement" = [ "Element" "EventTarget" "Node" "SvgComponentTransferFunctionElement" "SvgElement" ];
-          "SvgfeFuncRElement" = [ "Element" "EventTarget" "Node" "SvgComponentTransferFunctionElement" "SvgElement" ];
-          "SvgfeGaussianBlurElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeImageElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeMergeElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeMergeNodeElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeMorphologyElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeOffsetElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfePointLightElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeSpecularLightingElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeSpotLightElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeTileElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgfeTurbulenceElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvggElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgmPathElement" = [ "Element" "EventTarget" "Node" "SvgElement" ];
-          "SvgsvgElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" ];
-          "SvgtSpanElement" = [ "Element" "EventTarget" "Node" "SvgElement" "SvgGraphicsElement" "SvgTextContentElement" "SvgTextPositioningElement" ];
+          "SvgPatternElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgPolygonElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGeometryElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgPolylineElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGeometryElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgRadialGradientElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGradientElement"
+          ];
+          "SvgRectElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGeometryElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgScriptElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgSetElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgAnimationElement"
+            "SvgElement"
+          ];
+          "SvgStopElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgStyleElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgSwitchElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgSymbolElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgTextContentElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgTextElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+            "SvgTextContentElement"
+            "SvgTextPositioningElement"
+          ];
+          "SvgTextPathElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+            "SvgTextContentElement"
+          ];
+          "SvgTextPositioningElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+            "SvgTextContentElement"
+          ];
+          "SvgTitleElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgUseElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgViewElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgaElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgfeBlendElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeColorMatrixElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeComponentTransferElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeCompositeElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeConvolveMatrixElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeDiffuseLightingElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeDisplacementMapElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeDistantLightElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeDropShadowElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeFloodElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeFuncAElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgComponentTransferFunctionElement"
+            "SvgElement"
+          ];
+          "SvgfeFuncBElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgComponentTransferFunctionElement"
+            "SvgElement"
+          ];
+          "SvgfeFuncGElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgComponentTransferFunctionElement"
+            "SvgElement"
+          ];
+          "SvgfeFuncRElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgComponentTransferFunctionElement"
+            "SvgElement"
+          ];
+          "SvgfeGaussianBlurElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeImageElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeMergeElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeMergeNodeElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeMorphologyElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeOffsetElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfePointLightElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeSpecularLightingElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeSpotLightElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeTileElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgfeTurbulenceElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvggElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgmPathElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+          ];
+          "SvgsvgElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+          ];
+          "SvgtSpanElement" = [
+            "Element"
+            "EventTarget"
+            "Node"
+            "SvgElement"
+            "SvgGraphicsElement"
+            "SvgTextContentElement"
+            "SvgTextPositioningElement"
+          ];
           "TaskController" = [ "AbortController" ];
           "TaskPriorityChangeEvent" = [ "Event" ];
-          "TaskSignal" = [ "AbortSignal" "EventTarget" ];
+          "TaskSignal" = [
+            "AbortSignal"
+            "EventTarget"
+          ];
           "TcpServerSocket" = [ "EventTarget" ];
           "TcpServerSocketEvent" = [ "Event" ];
           "TcpSocket" = [ "EventTarget" ];
           "TcpSocketErrorEvent" = [ "Event" ];
           "TcpSocketEvent" = [ "Event" ];
-          "Text" = [ "CharacterData" "EventTarget" "Node" ];
+          "Text" = [
+            "CharacterData"
+            "EventTarget"
+            "Node"
+          ];
           "TextTrack" = [ "EventTarget" ];
           "TextTrackCue" = [ "EventTarget" ];
           "TextTrackList" = [ "EventTarget" ];
           "TimeEvent" = [ "Event" ];
           "ToggleEvent" = [ "Event" ];
-          "TouchEvent" = [ "Event" "UiEvent" ];
+          "TouchEvent" = [
+            "Event"
+            "UiEvent"
+          ];
           "TrackEvent" = [ "Event" ];
           "TransitionEvent" = [ "Event" ];
           "UiEvent" = [ "Event" ];
           "Usb" = [ "EventTarget" ];
           "UsbConnectionEvent" = [ "Event" ];
-          "UsbPermissionResult" = [ "EventTarget" "PermissionStatus" ];
+          "UsbPermissionResult" = [
+            "EventTarget"
+            "PermissionStatus"
+          ];
           "UserProximityEvent" = [ "Event" ];
           "ValueEvent" = [ "Event" ];
-          "VideoStreamTrack" = [ "EventTarget" "MediaStreamTrack" ];
+          "VideoStreamTrack" = [
+            "EventTarget"
+            "MediaStreamTrack"
+          ];
           "VideoTrackList" = [ "EventTarget" ];
           "VisualViewport" = [ "EventTarget" ];
           "VrDisplay" = [ "EventTarget" ];
-          "VttCue" = [ "EventTarget" "TextTrackCue" ];
+          "VttCue" = [
+            "EventTarget"
+            "TextTrackCue"
+          ];
           "WakeLockSentinel" = [ "EventTarget" ];
-          "WaveShaperNode" = [ "AudioNode" "EventTarget" ];
+          "WaveShaperNode" = [
+            "AudioNode"
+            "EventTarget"
+          ];
           "WebGlContextEvent" = [ "Event" ];
-          "WebKitCssMatrix" = [ "DomMatrix" "DomMatrixReadOnly" ];
+          "WebKitCssMatrix" = [
+            "DomMatrix"
+            "DomMatrixReadOnly"
+          ];
           "WebSocket" = [ "EventTarget" ];
           "WebTransportError" = [ "DomException" ];
           "WebTransportReceiveStream" = [ "ReadableStream" ];
           "WebTransportSendStream" = [ "WritableStream" ];
-          "WheelEvent" = [ "Event" "MouseEvent" "UiEvent" ];
+          "WheelEvent" = [
+            "Event"
+            "MouseEvent"
+            "UiEvent"
+          ];
           "Window" = [ "EventTarget" ];
           "WindowClient" = [ "Client" ];
           "Worker" = [ "EventTarget" ];
           "WorkerDebuggerGlobalScope" = [ "EventTarget" ];
           "WorkerGlobalScope" = [ "EventTarget" ];
-          "XmlDocument" = [ "Document" "EventTarget" "Node" ];
-          "XmlHttpRequest" = [ "EventTarget" "XmlHttpRequestEventTarget" ];
+          "XmlDocument" = [
+            "Document"
+            "EventTarget"
+            "Node"
+          ];
+          "XmlHttpRequest" = [
+            "EventTarget"
+            "XmlHttpRequestEventTarget"
+          ];
           "XmlHttpRequestEventTarget" = [ "EventTarget" ];
-          "XmlHttpRequestUpload" = [ "EventTarget" "XmlHttpRequestEventTarget" ];
-          "XrBoundedReferenceSpace" = [ "EventTarget" "XrReferenceSpace" "XrSpace" ];
+          "XmlHttpRequestUpload" = [
+            "EventTarget"
+            "XmlHttpRequestEventTarget"
+          ];
+          "XrBoundedReferenceSpace" = [
+            "EventTarget"
+            "XrReferenceSpace"
+            "XrSpace"
+          ];
           "XrInputSourceEvent" = [ "Event" ];
           "XrInputSourcesChangeEvent" = [ "Event" ];
           "XrJointPose" = [ "XrPose" ];
-          "XrJointSpace" = [ "EventTarget" "XrSpace" ];
+          "XrJointSpace" = [
+            "EventTarget"
+            "XrSpace"
+          ];
           "XrLayer" = [ "EventTarget" ];
-          "XrPermissionStatus" = [ "EventTarget" "PermissionStatus" ];
-          "XrReferenceSpace" = [ "EventTarget" "XrSpace" ];
+          "XrPermissionStatus" = [
+            "EventTarget"
+            "PermissionStatus"
+          ];
+          "XrReferenceSpace" = [
+            "EventTarget"
+            "XrSpace"
+          ];
           "XrReferenceSpaceEvent" = [ "Event" ];
           "XrSession" = [ "EventTarget" ];
           "XrSessionEvent" = [ "Event" ];
           "XrSpace" = [ "EventTarget" ];
           "XrSystem" = [ "EventTarget" ];
           "XrViewerPose" = [ "XrPose" ];
-          "XrWebGlLayer" = [ "EventTarget" "XrLayer" ];
+          "XrWebGlLayer" = [
+            "EventTarget"
+            "XrLayer"
+          ];
           "default" = [ "std" ];
-          "std" = [ "wasm-bindgen/std" "js-sys/std" ];
+          "std" = [
+            "wasm-bindgen/std"
+            "js-sys/std"
+          ];
         };
-        resolvedDefaultFeatures = [ "AbortController" "AbortSignal" "Blob" "BlobPropertyBag" "CanvasRenderingContext2d" "Document" "DomRect" "DomRectReadOnly" "Element" "Event" "EventTarget" "File" "FormData" "Headers" "HtmlCanvasElement" "HtmlElement" "MessageEvent" "Node" "QueuingStrategy" "ReadableByteStreamController" "ReadableStream" "ReadableStreamByobReader" "ReadableStreamByobRequest" "ReadableStreamDefaultController" "ReadableStreamDefaultReader" "ReadableStreamGetReaderOptions" "ReadableStreamReadResult" "ReadableStreamReaderMode" "ReadableStreamType" "ReadableWritablePair" "Request" "RequestCredentials" "RequestInit" "RequestMode" "Response" "ServiceWorkerGlobalScope" "StreamPipeOptions" "TransformStream" "TransformStreamDefaultController" "Transformer" "UnderlyingSink" "UnderlyingSource" "Window" "Worker" "WorkerGlobalScope" "WritableStream" "WritableStreamDefaultController" "WritableStreamDefaultWriter" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "AbortController"
+          "AbortSignal"
+          "Blob"
+          "BlobPropertyBag"
+          "CanvasRenderingContext2d"
+          "Document"
+          "DomRect"
+          "DomRectReadOnly"
+          "Element"
+          "Event"
+          "EventTarget"
+          "File"
+          "FormData"
+          "Headers"
+          "HtmlCanvasElement"
+          "HtmlElement"
+          "MessageEvent"
+          "Node"
+          "QueuingStrategy"
+          "ReadableByteStreamController"
+          "ReadableStream"
+          "ReadableStreamByobReader"
+          "ReadableStreamByobRequest"
+          "ReadableStreamDefaultController"
+          "ReadableStreamDefaultReader"
+          "ReadableStreamGetReaderOptions"
+          "ReadableStreamReadResult"
+          "ReadableStreamReaderMode"
+          "ReadableStreamType"
+          "ReadableWritablePair"
+          "Request"
+          "RequestCredentials"
+          "RequestInit"
+          "RequestMode"
+          "Response"
+          "ServiceWorkerGlobalScope"
+          "StreamPipeOptions"
+          "TransformStream"
+          "TransformStreamDefaultController"
+          "Transformer"
+          "UnderlyingSink"
+          "UnderlyingSource"
+          "Window"
+          "Worker"
+          "WorkerGlobalScope"
+          "WritableStream"
+          "WritableStreamDefaultController"
+          "WritableStreamDefaultWriter"
+          "default"
+          "std"
+        ];
       };
       "web-time" = rec {
         crateName = "web-time";
@@ -19359,13 +25914,17 @@ rec {
           {
             name = "js-sys";
             packageId = "js-sys";
-            target = { target, features }: ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
           }
           {
             name = "wasm-bindgen";
             packageId = "wasm-bindgen";
             usesDefaultFeatures = false;
-            target = { target, features }: ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
+            target =
+              { target, features }:
+              ((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null));
           }
         ];
         features = {
@@ -19395,7 +25954,27 @@ rec {
         features = {
           "debug" = [ "impl-debug" ];
         };
-        resolvedDefaultFeatures = [ "basetsd" "consoleapi" "errhandlingapi" "fileapi" "handleapi" "knownfolders" "minwindef" "objbase" "processenv" "shellapi" "shlobj" "std" "stringapiset" "synchapi" "sysinfoapi" "winbase" "wincon" "winerror" "winuser" ];
+        resolvedDefaultFeatures = [
+          "basetsd"
+          "consoleapi"
+          "errhandlingapi"
+          "fileapi"
+          "handleapi"
+          "knownfolders"
+          "minwindef"
+          "objbase"
+          "processenv"
+          "shellapi"
+          "shlobj"
+          "std"
+          "stringapiset"
+          "synchapi"
+          "sysinfoapi"
+          "winbase"
+          "wincon"
+          "winerror"
+          "winuser"
+        ];
       };
       "winapi-i686-pc-windows-gnu" = rec {
         crateName = "winapi-i686-pc-windows-gnu";
@@ -19422,7 +26001,12 @@ rec {
             name = "windows-sys";
             packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
-            features = [ "Win32_Foundation" "Win32_Storage_FileSystem" "Win32_System_Console" "Win32_System_SystemInformation" ];
+            features = [
+              "Win32_Foundation"
+              "Win32_Storage_FileSystem"
+              "Win32_System_Console"
+              "Win32_System_SystemInformation"
+            ];
           }
         ];
 
@@ -20145,7 +26729,18 @@ rec {
           "default" = [ "std" ];
           "std" = [ "windows-core/std" ];
         };
-        resolvedDefaultFeatures = [ "Win32" "Win32_Foundation" "Win32_System" "Win32_System_Diagnostics" "Win32_System_Diagnostics_Debug" "Win32_System_Kernel" "Win32_System_Memory" "Win32_System_SystemInformation" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "Win32"
+          "Win32_Foundation"
+          "Win32_System"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
+          "Win32_System_Kernel"
+          "Win32_System_Memory"
+          "Win32_System_SystemInformation"
+          "default"
+          "std"
+        ];
       };
       "windows-core 0.52.0" = rec {
         crateName = "windows-core";
@@ -20162,7 +26757,8 @@ rec {
             packageId = "windows-targets 0.52.6";
           }
         ];
-        features = { };
+        features = {
+        };
         resolvedDefaultFeatures = [ "default" ];
       };
       "windows-core 0.58.0" = rec {
@@ -20199,7 +26795,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "windows-implement" = rec {
         crateName = "windows-implement";
@@ -20224,7 +26823,13 @@ rec {
             name = "syn";
             packageId = "syn 2.0.93";
             usesDefaultFeatures = false;
-            features = [ "parsing" "proc-macro" "printing" "full" "derive" ];
+            features = [
+              "parsing"
+              "proc-macro"
+              "printing"
+              "full"
+              "derive"
+            ];
           }
         ];
 
@@ -20252,7 +26857,14 @@ rec {
             name = "syn";
             packageId = "syn 2.0.93";
             usesDefaultFeatures = false;
-            features = [ "parsing" "proc-macro" "printing" "full" "derive" "clone-impls" ];
+            features = [
+              "parsing"
+              "proc-macro"
+              "printing"
+              "full"
+              "derive"
+              "clone-impls"
+            ];
           }
         ];
 
@@ -20300,7 +26912,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "windows-strings" = rec {
         crateName = "windows-strings";
@@ -20325,7 +26940,10 @@ rec {
         features = {
           "default" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "default" "std" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "windows-sys 0.48.0" = rec {
         crateName = "windows-sys";
@@ -20619,7 +27237,20 @@ rec {
           "Win32_Web" = [ "Win32" ];
           "Win32_Web_InternetExplorer" = [ "Win32_Web" ];
         };
-        resolvedDefaultFeatures = [ "Win32" "Win32_Foundation" "Win32_Networking" "Win32_Networking_WinSock" "Win32_Security" "Win32_Storage" "Win32_Storage_FileSystem" "Win32_System" "Win32_System_IO" "Win32_System_Pipes" "Win32_System_WindowsProgramming" "default" ];
+        resolvedDefaultFeatures = [
+          "Win32"
+          "Win32_Foundation"
+          "Win32_Networking"
+          "Win32_Networking_WinSock"
+          "Win32_Security"
+          "Win32_Storage"
+          "Win32_Storage_FileSystem"
+          "Win32_System"
+          "Win32_System_IO"
+          "Win32_System_Pipes"
+          "Win32_System_WindowsProgramming"
+          "default"
+        ];
       };
       "windows-sys 0.52.0" = rec {
         crateName = "windows-sys";
@@ -20867,7 +27498,29 @@ rec {
           "Win32_Web" = [ "Win32" ];
           "Win32_Web_InternetExplorer" = [ "Win32_Web" ];
         };
-        resolvedDefaultFeatures = [ "Wdk" "Wdk_Foundation" "Wdk_Storage" "Wdk_Storage_FileSystem" "Wdk_System" "Wdk_System_IO" "Win32" "Win32_Foundation" "Win32_Networking" "Win32_Networking_WinSock" "Win32_Security" "Win32_Storage" "Win32_Storage_FileSystem" "Win32_System" "Win32_System_Console" "Win32_System_IO" "Win32_System_Pipes" "Win32_System_SystemServices" "Win32_System_Threading" "Win32_System_WindowsProgramming" "default" ];
+        resolvedDefaultFeatures = [
+          "Wdk"
+          "Wdk_Foundation"
+          "Wdk_Storage"
+          "Wdk_Storage_FileSystem"
+          "Wdk_System"
+          "Wdk_System_IO"
+          "Win32"
+          "Win32_Foundation"
+          "Win32_Networking"
+          "Win32_Networking_WinSock"
+          "Win32_Security"
+          "Win32_Storage"
+          "Win32_Storage_FileSystem"
+          "Win32_System"
+          "Win32_System_Console"
+          "Win32_System_IO"
+          "Win32_System_Pipes"
+          "Win32_System_SystemServices"
+          "Win32_System_Threading"
+          "Win32_System_WindowsProgramming"
+          "default"
+        ];
       };
       "windows-sys 0.59.0" = rec {
         crateName = "windows-sys";
@@ -21126,7 +27779,41 @@ rec {
           "Win32_Web" = [ "Win32" ];
           "Win32_Web_InternetExplorer" = [ "Win32_Web" ];
         };
-        resolvedDefaultFeatures = [ "Wdk" "Wdk_Foundation" "Wdk_Storage" "Wdk_Storage_FileSystem" "Win32" "Win32_Foundation" "Win32_NetworkManagement" "Win32_NetworkManagement_IpHelper" "Win32_Networking" "Win32_Networking_WinSock" "Win32_Security" "Win32_Security_Authentication" "Win32_Security_Authentication_Identity" "Win32_Security_Credentials" "Win32_Security_Cryptography" "Win32_Storage" "Win32_Storage_FileSystem" "Win32_System" "Win32_System_Com" "Win32_System_Console" "Win32_System_Diagnostics" "Win32_System_Diagnostics_Debug" "Win32_System_IO" "Win32_System_LibraryLoader" "Win32_System_Memory" "Win32_System_SystemInformation" "Win32_System_Threading" "Win32_System_WindowsProgramming" "Win32_UI" "Win32_UI_Input" "Win32_UI_Input_KeyboardAndMouse" "Win32_UI_Shell" "default" ];
+        resolvedDefaultFeatures = [
+          "Wdk"
+          "Wdk_Foundation"
+          "Wdk_Storage"
+          "Wdk_Storage_FileSystem"
+          "Win32"
+          "Win32_Foundation"
+          "Win32_NetworkManagement"
+          "Win32_NetworkManagement_IpHelper"
+          "Win32_Networking"
+          "Win32_Networking_WinSock"
+          "Win32_Security"
+          "Win32_Security_Authentication"
+          "Win32_Security_Authentication_Identity"
+          "Win32_Security_Credentials"
+          "Win32_Security_Cryptography"
+          "Win32_Storage"
+          "Win32_Storage_FileSystem"
+          "Win32_System"
+          "Win32_System_Com"
+          "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
+          "Win32_System_IO"
+          "Win32_System_LibraryLoader"
+          "Win32_System_Memory"
+          "Win32_System_SystemInformation"
+          "Win32_System_Threading"
+          "Win32_System_WindowsProgramming"
+          "Win32_UI"
+          "Win32_UI_Input"
+          "Win32_UI_Input_KeyboardAndMouse"
+          "Win32_UI_Shell"
+          "default"
+        ];
       };
       "windows-targets 0.48.5" = rec {
         crateName = "windows-targets";
@@ -21141,37 +27828,70 @@ rec {
           {
             name = "windows_aarch64_gnullvm";
             packageId = "windows_aarch64_gnullvm 0.48.5";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "aarch64-pc-windows-gnullvm");
+            target =
+              { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "aarch64-pc-windows-gnullvm");
           }
           {
             name = "windows_aarch64_msvc";
             packageId = "windows_aarch64_msvc 0.48.5";
-            target = { target, features }: (("aarch64" == target."arch" or null) && ("msvc" == target."env" or null) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("aarch64" == target."arch" or null)
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
           {
             name = "windows_i686_gnu";
             packageId = "windows_i686_gnu 0.48.5";
-            target = { target, features }: (("x86" == target."arch" or null) && ("gnu" == target."env" or null) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("x86" == target."arch" or null)
+                && ("gnu" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
           {
             name = "windows_i686_msvc";
             packageId = "windows_i686_msvc 0.48.5";
-            target = { target, features }: (("x86" == target."arch" or null) && ("msvc" == target."env" or null) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("x86" == target."arch" or null)
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
           {
             name = "windows_x86_64_gnu";
             packageId = "windows_x86_64_gnu 0.48.5";
-            target = { target, features }: (("x86_64" == target."arch" or null) && ("gnu" == target."env" or null) && (!("llvm" == target."abi" or null)) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("x86_64" == target."arch" or null)
+                && ("gnu" == target."env" or null)
+                && (!("llvm" == target."abi" or null))
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
           {
             name = "windows_x86_64_gnullvm";
             packageId = "windows_x86_64_gnullvm 0.48.5";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-pc-windows-gnullvm");
+            target =
+              { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-pc-windows-gnullvm");
           }
           {
             name = "windows_x86_64_msvc";
             packageId = "windows_x86_64_msvc 0.48.5";
-            target = { target, features }: (("x86_64" == target."arch" or null) && ("msvc" == target."env" or null) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("x86_64" == target."arch" or null)
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
         ];
 
@@ -21189,17 +27909,31 @@ rec {
           {
             name = "windows_aarch64_gnullvm";
             packageId = "windows_aarch64_gnullvm 0.52.6";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "aarch64-pc-windows-gnullvm");
+            target =
+              { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "aarch64-pc-windows-gnullvm");
           }
           {
             name = "windows_aarch64_msvc";
             packageId = "windows_aarch64_msvc 0.52.6";
-            target = { target, features }: (("aarch64" == target."arch" or null) && ("msvc" == target."env" or null) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("aarch64" == target."arch" or null)
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
           {
             name = "windows_i686_gnu";
             packageId = "windows_i686_gnu 0.52.6";
-            target = { target, features }: (("x86" == target."arch" or null) && ("gnu" == target."env" or null) && (!("llvm" == target."abi" or null)) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("x86" == target."arch" or null)
+                && ("gnu" == target."env" or null)
+                && (!("llvm" == target."abi" or null))
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
           {
             name = "windows_i686_gnullvm";
@@ -21209,22 +27943,42 @@ rec {
           {
             name = "windows_i686_msvc";
             packageId = "windows_i686_msvc 0.52.6";
-            target = { target, features }: (("x86" == target."arch" or null) && ("msvc" == target."env" or null) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("x86" == target."arch" or null)
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
           {
             name = "windows_x86_64_gnu";
             packageId = "windows_x86_64_gnu 0.52.6";
-            target = { target, features }: (("x86_64" == target."arch" or null) && ("gnu" == target."env" or null) && (!("llvm" == target."abi" or null)) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                ("x86_64" == target."arch" or null)
+                && ("gnu" == target."env" or null)
+                && (!("llvm" == target."abi" or null))
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
           {
             name = "windows_x86_64_gnullvm";
             packageId = "windows_x86_64_gnullvm 0.52.6";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-pc-windows-gnullvm");
+            target =
+              { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-pc-windows-gnullvm");
           }
           {
             name = "windows_x86_64_msvc";
             packageId = "windows_x86_64_msvc 0.52.6";
-            target = { target, features }: ((("x86_64" == target."arch" or null) || ("arm64ec" == target."arch" or null)) && ("msvc" == target."env" or null) && (!(target."windows_raw_dylib" or false)));
+            target =
+              { target, features }:
+              (
+                (("x86_64" == target."arch" or null) || ("arm64ec" == target."arch" or null))
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
           }
         ];
 
@@ -21393,13 +28147,31 @@ rec {
           }
         ];
         features = {
-          "debug" = [ "std" "dep:anstream" "dep:anstyle" "dep:is-terminal" "dep:terminal_size" ];
+          "debug" = [
+            "std"
+            "dep:anstream"
+            "dep:anstyle"
+            "dep:is-terminal"
+            "dep:terminal_size"
+          ];
           "default" = [ "std" ];
           "simd" = [ "dep:memchr" ];
-          "std" = [ "alloc" "memchr?/std" ];
-          "unstable-doc" = [ "alloc" "std" "simd" "unstable-recover" ];
+          "std" = [
+            "alloc"
+            "memchr?/std"
+          ];
+          "unstable-doc" = [
+            "alloc"
+            "std"
+            "simd"
+            "unstable-recover"
+          ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "write16" = rec {
         crateName = "write16";
@@ -21452,7 +28224,8 @@ rec {
           {
             name = "libc";
             packageId = "libc";
-            target = { target, features }: (("freebsd" == target."os" or null) || ("netbsd" == target."os" or null));
+            target =
+              { target, features }: (("freebsd" == target."os" or null) || ("netbsd" == target."os" or null));
           }
           {
             name = "linux-raw-sys";
@@ -21465,7 +28238,10 @@ rec {
             name = "rustix";
             packageId = "rustix";
             usesDefaultFeatures = false;
-            features = [ "fs" "std" ];
+            features = [
+              "fs"
+              "std"
+            ];
           }
         ];
         devDependencies = [
@@ -21479,7 +28255,10 @@ rec {
         features = {
           "default" = [ "unsupported" ];
         };
-        resolvedDefaultFeatures = [ "default" "unsupported" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "unsupported"
+        ];
       };
       "xz2" = rec {
         crateName = "xz2";
@@ -21498,7 +28277,10 @@ rec {
         features = {
           "futures" = [ "dep:futures" ];
           "static" = [ "lzma-sys/static" ];
-          "tokio" = [ "tokio-io" "futures" ];
+          "tokio" = [
+            "tokio-io"
+            "futures"
+          ];
           "tokio-io" = [ "dep:tokio-io" ];
         };
       };
@@ -21513,12 +28295,19 @@ rec {
         features = {
           "default" = [ "std" ];
           "detect-env" = [ "std" ];
-          "detect-tty" = [ "is-terminal" "std" ];
+          "detect-tty" = [
+            "is-terminal"
+            "std"
+          ];
           "hyperlink" = [ "std" ];
           "is-terminal" = [ "dep:is-terminal" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "yoke" = rec {
         crateName = "yoke";
@@ -21561,13 +28350,28 @@ rec {
           }
         ];
         features = {
-          "alloc" = [ "stable_deref_trait/alloc" "serde?/alloc" "zerofrom/alloc" ];
-          "default" = [ "alloc" "zerofrom" ];
-          "derive" = [ "dep:yoke-derive" "zerofrom/derive" ];
+          "alloc" = [
+            "stable_deref_trait/alloc"
+            "serde?/alloc"
+            "zerofrom/alloc"
+          ];
+          "default" = [
+            "alloc"
+            "zerofrom"
+          ];
+          "derive" = [
+            "dep:yoke-derive"
+            "zerofrom/derive"
+          ];
           "serde" = [ "dep:serde" ];
           "zerofrom" = [ "dep:zerofrom" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "derive" "zerofrom" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "derive"
+          "zerofrom"
+        ];
       };
       "yoke-derive" = rec {
         crateName = "yoke-derive";
@@ -21633,14 +28437,24 @@ rec {
           }
         ];
         features = {
-          "__internal_use_only_features_that_work_on_stable" = [ "alloc" "derive" "simd" ];
+          "__internal_use_only_features_that_work_on_stable" = [
+            "alloc"
+            "derive"
+            "simd"
+          ];
           "byteorder" = [ "dep:byteorder" ];
           "default" = [ "byteorder" ];
           "derive" = [ "zerocopy-derive" ];
           "simd-nightly" = [ "simd" ];
           "zerocopy-derive" = [ "dep:zerocopy-derive" ];
         };
-        resolvedDefaultFeatures = [ "byteorder" "default" "derive" "simd" "zerocopy-derive" ];
+        resolvedDefaultFeatures = [
+          "byteorder"
+          "default"
+          "derive"
+          "simd"
+          "zerocopy-derive"
+        ];
       };
       "zerocopy-derive" = rec {
         crateName = "zerocopy-derive";
@@ -21688,7 +28502,10 @@ rec {
           "default" = [ "alloc" ];
           "derive" = [ "dep:zerofrom-derive" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "derive" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "derive"
+        ];
       };
       "zerofrom-derive" = rec {
         crateName = "zerofrom-derive";
@@ -21736,7 +28553,10 @@ rec {
           "std" = [ "alloc" ];
           "zeroize_derive" = [ "dep:zeroize_derive" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+        ];
       };
       "zerovec" = rec {
         crateName = "zerovec";
@@ -21765,14 +28585,20 @@ rec {
           }
         ];
         features = {
-          "bench" = [ "serde" "databake" ];
+          "bench" = [
+            "serde"
+            "databake"
+          ];
           "databake" = [ "dep:databake" ];
           "derive" = [ "dep:zerovec-derive" ];
           "hashmap" = [ "dep:twox-hash" ];
           "serde" = [ "dep:serde" ];
           "yoke" = [ "dep:yoke" ];
         };
-        resolvedDefaultFeatures = [ "derive" "yoke" ];
+        resolvedDefaultFeatures = [
+          "derive"
+          "yoke"
+        ];
       };
       "zerovec-derive" = rec {
         crateName = "zerovec-derive";
@@ -21821,7 +28647,11 @@ rec {
           "arrays" = [ "zstd-safe/arrays" ];
           "bindgen" = [ "zstd-safe/bindgen" ];
           "debug" = [ "zstd-safe/debug" ];
-          "default" = [ "legacy" "arrays" "zdict_builder" ];
+          "default" = [
+            "legacy"
+            "arrays"
+            "zdict_builder"
+          ];
           "experimental" = [ "zstd-safe/experimental" ];
           "fat-lto" = [ "zstd-safe/fat-lto" ];
           "legacy" = [ "zstd-safe/legacy" ];
@@ -21832,7 +28662,12 @@ rec {
           "zdict_builder" = [ "zstd-safe/zdict_builder" ];
           "zstdmt" = [ "zstd-safe/zstdmt" ];
         };
-        resolvedDefaultFeatures = [ "arrays" "default" "legacy" "zdict_builder" ];
+        resolvedDefaultFeatures = [
+          "arrays"
+          "default"
+          "legacy"
+          "zdict_builder"
+        ];
       };
       "zstd-safe" = rec {
         crateName = "zstd-safe";
@@ -21853,7 +28688,11 @@ rec {
         features = {
           "bindgen" = [ "zstd-sys/bindgen" ];
           "debug" = [ "zstd-sys/debug" ];
-          "default" = [ "legacy" "arrays" "zdict_builder" ];
+          "default" = [
+            "legacy"
+            "arrays"
+            "zdict_builder"
+          ];
           "experimental" = [ "zstd-sys/experimental" ];
           "fat-lto" = [ "zstd-sys/fat-lto" ];
           "legacy" = [ "zstd-sys/legacy" ];
@@ -21865,7 +28704,12 @@ rec {
           "zdict_builder" = [ "zstd-sys/zdict_builder" ];
           "zstdmt" = [ "zstd-sys/zstdmt" ];
         };
-        resolvedDefaultFeatures = [ "arrays" "legacy" "std" "zdict_builder" ];
+        resolvedDefaultFeatures = [
+          "arrays"
+          "legacy"
+          "std"
+          "zdict_builder"
+        ];
       };
       "zstd-sys" = rec {
         crateName = "zstd-sys";
@@ -21890,9 +28734,16 @@ rec {
         ];
         features = {
           "bindgen" = [ "dep:bindgen" ];
-          "default" = [ "legacy" "zdict_builder" ];
+          "default" = [
+            "legacy"
+            "zdict_builder"
+          ];
         };
-        resolvedDefaultFeatures = [ "legacy" "std" "zdict_builder" ];
+        resolvedDefaultFeatures = [
+          "legacy"
+          "std"
+          "zdict_builder"
+        ];
       };
     };
 
@@ -21900,7 +28751,8 @@ rec {
     # crate2nix/default.nix (excerpt start)
     #
 
-    /* Target (platform) data for conditional dependencies.
+    /*
+      Target (platform) data for conditional dependencies.
       This corresponds roughly to what buildRustCrate is setting.
     */
     makeDefaultTarget = platform: {
@@ -21912,69 +28764,74 @@ rec {
       inherit (platform.rust.platform)
         arch
         os
-        vendor;
+        vendor
+        ;
       family = platform.rust.platform.target-family;
       env = "gnu";
-      endian =
-        if platform.parsed.cpu.significantByte.name == "littleEndian"
-        then "little" else "big";
+      endian = if platform.parsed.cpu.significantByte.name == "littleEndian" then "little" else "big";
       pointer_width = toString platform.parsed.cpu.bits;
       debug_assertions = false;
     };
 
-    /* Filters common temp files and build files. */
+    # Filters common temp files and build files.
     # TODO(pkolloch): Substitute with gitignore filter
-    sourceFilter = name: type:
+    sourceFilter =
+      name: type:
       let
         baseName = builtins.baseNameOf (builtins.toString name);
       in
-        ! (
-          # Filter out git
-          baseName == ".gitignore"
-          || (type == "directory" && baseName == ".git")
+      !(
+        # Filter out git
+        baseName == ".gitignore"
+        || (type == "directory" && baseName == ".git")
 
-          # Filter out build results
-          || (
-            type == "directory" && (
-              baseName == "target"
-              || baseName == "_site"
-              || baseName == ".sass-cache"
-              || baseName == ".jekyll-metadata"
-              || baseName == "build-artifacts"
-            )
+        # Filter out build results
+        || (
+          type == "directory"
+          && (
+            baseName == "target"
+            || baseName == "_site"
+            || baseName == ".sass-cache"
+            || baseName == ".jekyll-metadata"
+            || baseName == "build-artifacts"
           )
+        )
 
-          # Filter out nix-build result symlinks
-          || (
-            type == "symlink" && lib.hasPrefix "result" baseName
-          )
+        # Filter out nix-build result symlinks
+        || (type == "symlink" && lib.hasPrefix "result" baseName)
 
-          # Filter out IDE config
-          || (
-            type == "directory" && (
-              baseName == ".idea" || baseName == ".vscode"
-            )
-          ) || lib.hasSuffix ".iml" baseName
+        # Filter out IDE config
+        || (type == "directory" && (baseName == ".idea" || baseName == ".vscode"))
+        || lib.hasSuffix ".iml" baseName
 
-          # Filter out nix build files
-          || baseName == "Cargo.nix"
+        # Filter out nix build files
+        || baseName == "Cargo.nix"
 
-          # Filter out editor backup / swap files.
-          || lib.hasSuffix "~" baseName
-          || builtins.match "^\\.sw[a-z]$$" baseName != null
-          || builtins.match "^\\..*\\.sw[a-z]$$" baseName != null
-          || lib.hasSuffix ".tmp" baseName
-          || lib.hasSuffix ".bak" baseName
-          || baseName == "tests.nix"
-        );
+        # Filter out editor backup / swap files.
+        || lib.hasSuffix "~" baseName
+        || builtins.match "^\\.sw[a-z]$$" baseName != null
+        || builtins.match "^\\..*\\.sw[a-z]$$" baseName != null
+        || lib.hasSuffix ".tmp" baseName
+        || lib.hasSuffix ".bak" baseName
+        || baseName == "tests.nix"
+      );
 
-    /* Returns a crate which depends on successful test execution
+    /*
+      Returns a crate which depends on successful test execution
       of crate given as the second argument.
 
       testCrateFlags: list of flags to pass to the test exectuable
       testInputs: list of packages that should be available during test execution
     */
-    crateWithTest = { crate, testCrate, testCrateFlags, testInputs, testPreRun, testPostRun }:
+    crateWithTest =
+      {
+        crate,
+        testCrate,
+        testCrateFlags,
+        testInputs,
+        testPreRun,
+        testPostRun,
+      }:
       assert builtins.typeOf testCrateFlags == "list";
       assert builtins.typeOf testInputs == "list";
       assert builtins.typeOf testPreRun == "string";
@@ -21986,22 +28843,20 @@ rec {
         # their log and the test executables to $out for later inspection.
         test =
           let
-            drv = testCrate.override
-              (
-                _: {
-                  buildTests = true;
-                  release = false;
-                }
-              );
+            drv = testCrate.override (_: {
+              buildTests = true;
+              release = false;
+            });
             # If the user hasn't set any pre/post commands, we don't want to
             # insert empty lines. This means that any existing users of crate2nix
             # don't get a spurious rebuild unless they set these explicitly.
-            testCommand = pkgs.lib.concatStringsSep "\n"
-              (pkgs.lib.filter (s: s != "") [
+            testCommand = pkgs.lib.concatStringsSep "\n" (
+              pkgs.lib.filter (s: s != "") [
                 testPreRun
                 "$f $testCrateFlags 2>&1 | tee -a $out"
                 testPostRun
-              ]);
+              ]
+            );
           in
           pkgs.stdenvNoCC.mkDerivation {
             name = "run-tests-${testCrate.name}";
@@ -22046,46 +28901,52 @@ rec {
             inherit test;
           };
         }
-        (lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
-          echo tested by ${test}
-        '' + ''
-          ${lib.concatMapStringsSep "\n" (output: "ln -s ${crate.${output}} ${"$"}${output}") crate.outputs}
-        '');
+        (
+          lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+            echo tested by ${test}
+          ''
+          + ''
+            ${lib.concatMapStringsSep "\n" (output: "ln -s ${crate.${output}} ${"$"}${output}") crate.outputs}
+          ''
+        );
 
-    /* A restricted overridable version of builtRustCratesWithFeatures. */
+    # A restricted overridable version of builtRustCratesWithFeatures.
     buildRustCrateWithFeatures =
-      { packageId
-      , features ? rootFeatures
-      , crateOverrides ? defaultCrateOverrides
-      , buildRustCrateForPkgsFunc ? null
-      , runTests ? false
-      , testCrateFlags ? [ ]
-      , testInputs ? [ ]
+      {
+        packageId,
+        features ? rootFeatures,
+        crateOverrides ? defaultCrateOverrides,
+        buildRustCrateForPkgsFunc ? null,
+        runTests ? false,
+        testCrateFlags ? [ ],
+        testInputs ? [ ],
         # Any command to run immediatelly before a test is executed.
-      , testPreRun ? ""
+        testPreRun ? "",
         # Any command run immediatelly after a test is executed.
-      , testPostRun ? ""
+        testPostRun ? "",
       }:
       lib.makeOverridable
         (
-          { features
-          , crateOverrides
-          , runTests
-          , testCrateFlags
-          , testInputs
-          , testPreRun
-          , testPostRun
+          {
+            features,
+            crateOverrides,
+            runTests,
+            testCrateFlags,
+            testInputs,
+            testPreRun,
+            testPostRun,
           }:
           let
             buildRustCrateForPkgsFuncOverriden =
-              if buildRustCrateForPkgsFunc != null
-              then buildRustCrateForPkgsFunc
+              if buildRustCrateForPkgsFunc != null then
+                buildRustCrateForPkgsFunc
               else
                 (
-                  if crateOverrides == pkgs.defaultCrateOverrides
-                  then buildRustCrateForPkgs
+                  if crateOverrides == pkgs.defaultCrateOverrides then
+                    buildRustCrateForPkgs
                   else
-                    pkgs: (buildRustCrateForPkgs pkgs).override {
+                    pkgs:
+                    (buildRustCrateForPkgs pkgs).override {
                       defaultCrateOverrides = crateOverrides;
                     }
                 );
@@ -22103,174 +28964,211 @@ rec {
             testDrv = builtTestRustCrates.crates.${packageId};
             derivation =
               if runTests then
-                crateWithTest
-                  {
-                    crate = drv;
-                    testCrate = testDrv;
-                    inherit testCrateFlags testInputs testPreRun testPostRun;
-                  }
-              else drv;
+                crateWithTest {
+                  crate = drv;
+                  testCrate = testDrv;
+                  inherit
+                    testCrateFlags
+                    testInputs
+                    testPreRun
+                    testPostRun
+                    ;
+                }
+              else
+                drv;
           in
           derivation
         )
-        { inherit features crateOverrides runTests testCrateFlags testInputs testPreRun testPostRun; };
+        {
+          inherit
+            features
+            crateOverrides
+            runTests
+            testCrateFlags
+            testInputs
+            testPreRun
+            testPostRun
+            ;
+        };
 
-    /* Returns an attr set with packageId mapped to the result of buildRustCrateForPkgsFunc
+    /*
+      Returns an attr set with packageId mapped to the result of buildRustCrateForPkgsFunc
       for the corresponding crate.
     */
     builtRustCratesWithFeatures =
-      { packageId
-      , features
-      , crateConfigs ? crates
-      , buildRustCrateForPkgsFunc
-      , runTests
-      , makeTarget ? makeDefaultTarget
-      } @ args:
-        assert (builtins.isAttrs crateConfigs);
-        assert (builtins.isString packageId);
-        assert (builtins.isList features);
-        assert (builtins.isAttrs (makeTarget stdenv.hostPlatform));
-        assert (builtins.isBool runTests);
-        let
-          rootPackageId = packageId;
-          mergedFeatures = mergePackageFeatures
-            (
-              args // {
-                inherit rootPackageId;
-                target = makeTarget stdenv.hostPlatform // { test = runTests; };
-              }
+      {
+        packageId,
+        features,
+        crateConfigs ? crates,
+        buildRustCrateForPkgsFunc,
+        runTests,
+        makeTarget ? makeDefaultTarget,
+      }@args:
+      assert (builtins.isAttrs crateConfigs);
+      assert (builtins.isString packageId);
+      assert (builtins.isList features);
+      assert (builtins.isAttrs (makeTarget stdenv.hostPlatform));
+      assert (builtins.isBool runTests);
+      let
+        rootPackageId = packageId;
+        mergedFeatures = mergePackageFeatures (
+          args
+          // {
+            inherit rootPackageId;
+            target = makeTarget stdenv.hostPlatform // {
+              test = runTests;
+            };
+          }
+        );
+        # Memoize built packages so that reappearing packages are only built once.
+        builtByPackageIdByPkgs = mkBuiltByPackageIdByPkgs pkgs;
+        mkBuiltByPackageIdByPkgs =
+          pkgs:
+          let
+            self = {
+              crates = lib.mapAttrs (
+                packageId: value: buildByPackageIdForPkgsImpl self pkgs packageId
+              ) crateConfigs;
+              target = makeTarget stdenv.hostPlatform;
+              build = mkBuiltByPackageIdByPkgs pkgs.buildPackages;
+            };
+          in
+          self;
+        buildByPackageIdForPkgsImpl =
+          self: pkgs: packageId:
+          let
+            features = mergedFeatures."${packageId}" or [ ];
+            crateConfig' = crateConfigs."${packageId}";
+            crateConfig = builtins.removeAttrs crateConfig' [
+              "resolvedDefaultFeatures"
+              "devDependencies"
+            ];
+            devDependencies = lib.optionals (runTests && packageId == rootPackageId) (
+              crateConfig'.devDependencies or [ ]
             );
-          # Memoize built packages so that reappearing packages are only built once.
-          builtByPackageIdByPkgs = mkBuiltByPackageIdByPkgs pkgs;
-          mkBuiltByPackageIdByPkgs = pkgs:
-            let
-              self = {
-                crates = lib.mapAttrs (packageId: value: buildByPackageIdForPkgsImpl self pkgs packageId) crateConfigs;
-                target = makeTarget stdenv.hostPlatform;
-                build = mkBuiltByPackageIdByPkgs pkgs.buildPackages;
-              };
-            in
-            self;
-          buildByPackageIdForPkgsImpl = self: pkgs: packageId:
-            let
-              features = mergedFeatures."${packageId}" or [ ];
-              crateConfig' = crateConfigs."${packageId}";
-              crateConfig =
-                builtins.removeAttrs crateConfig' [ "resolvedDefaultFeatures" "devDependencies" ];
-              devDependencies =
-                lib.optionals
-                  (runTests && packageId == rootPackageId)
-                  (crateConfig'.devDependencies or [ ]);
-              dependencies =
-                dependencyDerivations {
+            dependencies = dependencyDerivations {
+              inherit features;
+              inherit (self) target;
+              buildByPackageId =
+                depPackageId:
+                # proc_macro crates must be compiled for the build architecture
+                if crateConfigs.${depPackageId}.procMacro or false then
+                  self.build.crates.${depPackageId}
+                else
+                  self.crates.${depPackageId};
+              dependencies = (crateConfig.dependencies or [ ]) ++ devDependencies;
+            };
+            buildDependencies = dependencyDerivations {
+              inherit features;
+              inherit (self.build) target;
+              buildByPackageId = depPackageId: self.build.crates.${depPackageId};
+              dependencies = crateConfig.buildDependencies or [ ];
+            };
+            dependenciesWithRenames =
+              let
+                buildDeps = filterEnabledDependencies {
                   inherit features;
                   inherit (self) target;
-                  buildByPackageId = depPackageId:
-                    # proc_macro crates must be compiled for the build architecture
-                    if crateConfigs.${depPackageId}.procMacro or false
-                    then self.build.crates.${depPackageId}
-                    else self.crates.${depPackageId};
-                  dependencies =
-                    (crateConfig.dependencies or [ ])
-                    ++ devDependencies;
+                  dependencies = crateConfig.dependencies or [ ] ++ devDependencies;
                 };
-              buildDependencies =
-                dependencyDerivations {
+                hostDeps = filterEnabledDependencies {
                   inherit features;
                   inherit (self.build) target;
-                  buildByPackageId = depPackageId:
-                    self.build.crates.${depPackageId};
                   dependencies = crateConfig.buildDependencies or [ ];
                 };
-              dependenciesWithRenames =
-                let
-                  buildDeps = filterEnabledDependencies {
-                    inherit features;
-                    inherit (self) target;
-                    dependencies = crateConfig.dependencies or [ ] ++ devDependencies;
+              in
+              lib.filter (d: d ? "rename") (hostDeps ++ buildDeps);
+            # Crate renames have the form:
+            #
+            # {
+            #    crate_name = [
+            #       { version = "1.2.3"; rename = "crate_name01"; }
+            #    ];
+            #    # ...
+            # }
+            crateRenames =
+              let
+                grouped = lib.groupBy (dependency: dependency.name) dependenciesWithRenames;
+                versionAndRename =
+                  dep:
+                  let
+                    package = crateConfigs."${dep.packageId}";
+                  in
+                  {
+                    inherit (dep) rename;
+                    inherit (package) version;
                   };
-                  hostDeps = filterEnabledDependencies {
-                    inherit features;
-                    inherit (self.build) target;
-                    dependencies = crateConfig.buildDependencies or [ ];
-                  };
-                in
-                lib.filter (d: d ? "rename") (hostDeps ++ buildDeps);
-              # Crate renames have the form:
-              #
-              # {
-              #    crate_name = [
-              #       { version = "1.2.3"; rename = "crate_name01"; }
-              #    ];
-              #    # ...
-              # }
-              crateRenames =
-                let
-                  grouped =
-                    lib.groupBy
-                      (dependency: dependency.name)
-                      dependenciesWithRenames;
-                  versionAndRename = dep:
-                    let
-                      package = crateConfigs."${dep.packageId}";
-                    in
-                    { inherit (dep) rename; inherit (package) version; };
-                in
-                lib.mapAttrs (name: builtins.map versionAndRename) grouped;
-            in
-            buildRustCrateForPkgsFunc pkgs
-              (
-                crateConfig // {
-                  src = crateConfig.src or (
-                    pkgs.fetchurl rec {
-                      name = "${crateConfig.crateName}-${crateConfig.version}.tar.gz";
-                      # https://www.pietroalbini.org/blog/downloading-crates-io/
-                      # Not rate-limited, CDN URL.
-                      url = "https://static.crates.io/crates/${crateConfig.crateName}/${crateConfig.crateName}-${crateConfig.version}.crate";
-                      sha256 =
-                        assert (lib.assertMsg (crateConfig ? sha256) "Missing sha256 for ${name}");
-                        crateConfig.sha256;
-                    }
-                  );
-                  extraRustcOpts = lib.lists.optional (targetFeatures != [ ]) "-C target-feature=${lib.concatMapStringsSep "," (x: "+${x}") targetFeatures}";
-                  inherit features dependencies buildDependencies crateRenames release;
-                }
-              );
-        in
-        builtByPackageIdByPkgs;
+              in
+              lib.mapAttrs (name: builtins.map versionAndRename) grouped;
+          in
+          buildRustCrateForPkgsFunc pkgs (
+            crateConfig
+            // {
+              src =
+                crateConfig.src or (pkgs.fetchurl rec {
+                  name = "${crateConfig.crateName}-${crateConfig.version}.tar.gz";
+                  # https://www.pietroalbini.org/blog/downloading-crates-io/
+                  # Not rate-limited, CDN URL.
+                  url = "https://static.crates.io/crates/${crateConfig.crateName}/${crateConfig.crateName}-${crateConfig.version}.crate";
+                  sha256 =
+                    assert (lib.assertMsg (crateConfig ? sha256) "Missing sha256 for ${name}");
+                    crateConfig.sha256;
+                });
+              extraRustcOpts =
+                lib.lists.optional (targetFeatures != [ ])
+                  "-C target-feature=${lib.concatMapStringsSep "," (x: "+${x}") targetFeatures}";
+              inherit
+                features
+                dependencies
+                buildDependencies
+                crateRenames
+                release
+                ;
+            }
+          );
+      in
+      builtByPackageIdByPkgs;
 
-    /* Returns the actual derivations for the given dependencies. */
+    # Returns the actual derivations for the given dependencies.
     dependencyDerivations =
-      { buildByPackageId
-      , features
-      , dependencies
-      , target
+      {
+        buildByPackageId,
+        features,
+        dependencies,
+        target,
       }:
-        assert (builtins.isList features);
-        assert (builtins.isList dependencies);
-        assert (builtins.isAttrs target);
-        let
-          enabledDependencies = filterEnabledDependencies {
-            inherit dependencies features target;
-          };
-          depDerivation = dependency: buildByPackageId dependency.packageId;
-        in
-        map depDerivation enabledDependencies;
+      assert (builtins.isList features);
+      assert (builtins.isList dependencies);
+      assert (builtins.isAttrs target);
+      let
+        enabledDependencies = filterEnabledDependencies {
+          inherit dependencies features target;
+        };
+        depDerivation = dependency: buildByPackageId dependency.packageId;
+      in
+      map depDerivation enabledDependencies;
 
-    /* Returns a sanitized version of val with all values substituted that cannot
+    /*
+      Returns a sanitized version of val with all values substituted that cannot
       be serialized as JSON.
     */
-    sanitizeForJson = val:
-      if builtins.isAttrs val
-      then lib.mapAttrs (n: sanitizeForJson) val
-      else if builtins.isList val
-      then builtins.map sanitizeForJson val
-      else if builtins.isFunction val
-      then "function"
-      else val;
+    sanitizeForJson =
+      val:
+      if builtins.isAttrs val then
+        lib.mapAttrs (n: sanitizeForJson) val
+      else if builtins.isList val then
+        builtins.map sanitizeForJson val
+      else if builtins.isFunction val then
+        "function"
+      else
+        val;
 
-    /* Returns various tools to debug a crate. */
-    debugCrate = { packageId, target ? makeDefaultTarget stdenv.hostPlatform }:
+    # Returns various tools to debug a crate.
+    debugCrate =
+      {
+        packageId,
+        target ? makeDefaultTarget stdenv.hostPlatform,
+      }:
       assert (builtins.isString packageId);
       let
         debug = rec {
@@ -22280,17 +29178,14 @@ rec {
             inherit packageId;
           };
           sanitizedBuildTree = sanitizeForJson buildTree;
-          dependencyTree = sanitizeForJson
-            (
-              buildRustCrateWithFeatures {
-                buildRustCrateForPkgsFunc = _: crate: {
-                  "01_crateName" = crate.crateName or false;
-                  "02_features" = crate.features or [ ];
-                  "03_dependencies" = crate.dependencies or [ ];
-                };
-                inherit packageId;
-              }
-            );
+          dependencyTree = sanitizeForJson (buildRustCrateWithFeatures {
+            buildRustCrateForPkgsFunc = _: crate: {
+              "01_crateName" = crate.crateName or false;
+              "02_features" = crate.features or [ ];
+              "03_dependencies" = crate.dependencies or [ ];
+            };
+            inherit packageId;
+          });
           mergedPackageFeatures = mergePackageFeatures {
             features = rootFeatures;
             inherit packageId target;
@@ -22300,153 +29195,167 @@ rec {
           };
         };
       in
-      { internal = debug; };
+      {
+        internal = debug;
+      };
 
-    /* Returns differences between cargo default features and crate2nix default
+    /*
+      Returns differences between cargo default features and crate2nix default
       features.
 
       This is useful for verifying the feature resolution in crate2nix.
     */
     diffDefaultPackageFeatures =
-      { crateConfigs ? crates
-      , packageId
-      , target
+      {
+        crateConfigs ? crates,
+        packageId,
+        target,
       }:
-        assert (builtins.isAttrs crateConfigs);
-        let
-          prefixValues = prefix: lib.mapAttrs (n: v: { "${prefix}" = v; });
-          mergedFeatures =
-            prefixValues
-              "crate2nix"
-              (mergePackageFeatures { inherit crateConfigs packageId target; features = [ "default" ]; });
-          configs = prefixValues "cargo" crateConfigs;
-          combined = lib.foldAttrs (a: b: a // b) { } [ mergedFeatures configs ];
-          onlyInCargo =
-            builtins.attrNames
-              (lib.filterAttrs (n: v: !(v ? "crate2nix") && (v ? "cargo")) combined);
-          onlyInCrate2Nix =
-            builtins.attrNames
-              (lib.filterAttrs (n: v: (v ? "crate2nix") && !(v ? "cargo")) combined);
-          differentFeatures = lib.filterAttrs
-            (
-              n: v:
-                (v ? "crate2nix")
-                && (v ? "cargo")
-                && (v.crate2nix.features or [ ]) != (v."cargo".resolved_default_features or [ ])
-            )
-            combined;
-        in
-        builtins.toJSON {
-          inherit onlyInCargo onlyInCrate2Nix differentFeatures;
-        };
+      assert (builtins.isAttrs crateConfigs);
+      let
+        prefixValues = prefix: lib.mapAttrs (n: v: { "${prefix}" = v; });
+        mergedFeatures = prefixValues "crate2nix" (mergePackageFeatures {
+          inherit crateConfigs packageId target;
+          features = [ "default" ];
+        });
+        configs = prefixValues "cargo" crateConfigs;
+        combined = lib.foldAttrs (a: b: a // b) { } [
+          mergedFeatures
+          configs
+        ];
+        onlyInCargo = builtins.attrNames (
+          lib.filterAttrs (n: v: !(v ? "crate2nix") && (v ? "cargo")) combined
+        );
+        onlyInCrate2Nix = builtins.attrNames (
+          lib.filterAttrs (n: v: (v ? "crate2nix") && !(v ? "cargo")) combined
+        );
+        differentFeatures = lib.filterAttrs (
+          n: v:
+          (v ? "crate2nix")
+          && (v ? "cargo")
+          && (v.crate2nix.features or [ ]) != (v."cargo".resolved_default_features or [ ])
+        ) combined;
+      in
+      builtins.toJSON {
+        inherit onlyInCargo onlyInCrate2Nix differentFeatures;
+      };
 
-    /* Returns an attrset mapping packageId to the list of enabled features.
+    /*
+      Returns an attrset mapping packageId to the list of enabled features.
 
       If multiple paths to a dependency enable different features, the
       corresponding feature sets are merged. Features in rust are additive.
     */
     mergePackageFeatures =
-      { crateConfigs ? crates
-      , packageId
-      , rootPackageId ? packageId
-      , features ? rootFeatures
-      , dependencyPath ? [ crates.${packageId}.crateName ]
-      , featuresByPackageId ? { }
-      , target
+      {
+        crateConfigs ? crates,
+        packageId,
+        rootPackageId ? packageId,
+        features ? rootFeatures,
+        dependencyPath ? [ crates.${packageId}.crateName ],
+        featuresByPackageId ? { },
+        target,
         # Adds devDependencies to the crate with rootPackageId.
-      , runTests ? false
-      , ...
-      } @ args:
-        assert (builtins.isAttrs crateConfigs);
-        assert (builtins.isString packageId);
-        assert (builtins.isString rootPackageId);
-        assert (builtins.isList features);
-        assert (builtins.isList dependencyPath);
-        assert (builtins.isAttrs featuresByPackageId);
-        assert (builtins.isAttrs target);
-        assert (builtins.isBool runTests);
-        let
-          crateConfig = crateConfigs."${packageId}" or (builtins.throw "Package not found: ${packageId}");
-          expandedFeatures = expandFeatures (crateConfig.features or { }) features;
-          enabledFeatures = enableFeatures (crateConfig.dependencies or [ ]) expandedFeatures;
-          depWithResolvedFeatures = dependency:
-            let
-              inherit (dependency) packageId;
-              features = dependencyFeatures enabledFeatures dependency;
-            in
-            { inherit packageId features; };
-          resolveDependencies = cache: path: dependencies:
-            assert (builtins.isAttrs cache);
-            assert (builtins.isList dependencies);
-            let
-              enabledDependencies = filterEnabledDependencies {
-                inherit dependencies target;
-                features = enabledFeatures;
-              };
-              directDependencies = map depWithResolvedFeatures enabledDependencies;
-              foldOverCache = op: lib.foldl op cache directDependencies;
-            in
-            foldOverCache
-              (
-                cache: { packageId, features }:
-                  let
-                    cacheFeatures = cache.${packageId} or [ ];
-                    combinedFeatures = sortedUnique (cacheFeatures ++ features);
-                  in
-                  if cache ? ${packageId} && cache.${packageId} == combinedFeatures
-                  then cache
-                  else
-                    mergePackageFeatures {
-                      features = combinedFeatures;
-                      featuresByPackageId = cache;
-                      inherit crateConfigs packageId target runTests rootPackageId;
-                    }
-              );
-          cacheWithSelf =
-            let
-              cacheFeatures = featuresByPackageId.${packageId} or [ ];
-              combinedFeatures = sortedUnique (cacheFeatures ++ enabledFeatures);
-            in
-            featuresByPackageId // {
-              "${packageId}" = combinedFeatures;
+        runTests ? false,
+        ...
+      }@args:
+      assert (builtins.isAttrs crateConfigs);
+      assert (builtins.isString packageId);
+      assert (builtins.isString rootPackageId);
+      assert (builtins.isList features);
+      assert (builtins.isList dependencyPath);
+      assert (builtins.isAttrs featuresByPackageId);
+      assert (builtins.isAttrs target);
+      assert (builtins.isBool runTests);
+      let
+        crateConfig = crateConfigs."${packageId}" or (builtins.throw "Package not found: ${packageId}");
+        expandedFeatures = expandFeatures (crateConfig.features or { }) features;
+        enabledFeatures = enableFeatures (crateConfig.dependencies or [ ]) expandedFeatures;
+        depWithResolvedFeatures =
+          dependency:
+          let
+            inherit (dependency) packageId;
+            features = dependencyFeatures enabledFeatures dependency;
+          in
+          {
+            inherit packageId features;
+          };
+        resolveDependencies =
+          cache: path: dependencies:
+          assert (builtins.isAttrs cache);
+          assert (builtins.isList dependencies);
+          let
+            enabledDependencies = filterEnabledDependencies {
+              inherit dependencies target;
+              features = enabledFeatures;
             };
-          cacheWithDependencies =
-            resolveDependencies cacheWithSelf "dep"
-              (
-                crateConfig.dependencies or [ ]
-                ++ lib.optionals
-                  (runTests && packageId == rootPackageId)
-                  (crateConfig.devDependencies or [ ])
-              );
-          cacheWithAll =
-            resolveDependencies
-              cacheWithDependencies "build"
-              (crateConfig.buildDependencies or [ ]);
-        in
-        cacheWithAll;
+            directDependencies = map depWithResolvedFeatures enabledDependencies;
+            foldOverCache = op: lib.foldl op cache directDependencies;
+          in
+          foldOverCache (
+            cache:
+            { packageId, features }:
+            let
+              cacheFeatures = cache.${packageId} or [ ];
+              combinedFeatures = sortedUnique (cacheFeatures ++ features);
+            in
+            if cache ? ${packageId} && cache.${packageId} == combinedFeatures then
+              cache
+            else
+              mergePackageFeatures {
+                features = combinedFeatures;
+                featuresByPackageId = cache;
+                inherit
+                  crateConfigs
+                  packageId
+                  target
+                  runTests
+                  rootPackageId
+                  ;
+              }
+          );
+        cacheWithSelf =
+          let
+            cacheFeatures = featuresByPackageId.${packageId} or [ ];
+            combinedFeatures = sortedUnique (cacheFeatures ++ enabledFeatures);
+          in
+          featuresByPackageId
+          // {
+            "${packageId}" = combinedFeatures;
+          };
+        cacheWithDependencies = resolveDependencies cacheWithSelf "dep" (
+          crateConfig.dependencies or [ ]
+          ++ lib.optionals (runTests && packageId == rootPackageId) (crateConfig.devDependencies or [ ])
+        );
+        cacheWithAll = resolveDependencies cacheWithDependencies "build" (
+          crateConfig.buildDependencies or [ ]
+        );
+      in
+      cacheWithAll;
 
-    /* Returns the enabled dependencies given the enabled features. */
-    filterEnabledDependencies = { dependencies, features, target }:
+    # Returns the enabled dependencies given the enabled features.
+    filterEnabledDependencies =
+      {
+        dependencies,
+        features,
+        target,
+      }:
       assert (builtins.isList dependencies);
       assert (builtins.isList features);
       assert (builtins.isAttrs target);
 
-      lib.filter
-        (
-          dep:
-          let
-            targetFunc = dep.target or (features: true);
-          in
-          targetFunc { inherit features target; }
-          && (
-            !(dep.optional or false)
-            || builtins.any (doesFeatureEnableDependency dep) features
-          )
-        )
-        dependencies;
+      lib.filter (
+        dep:
+        let
+          targetFunc = dep.target or (features: true);
+        in
+        targetFunc { inherit features target; }
+        && (!(dep.optional or false) || builtins.any (doesFeatureEnableDependency dep) features)
+      ) dependencies;
 
-    /* Returns whether the given feature should enable the given dependency. */
-    doesFeatureEnableDependency = dependency: feature:
+    # Returns whether the given feature should enable the given dependency.
+    doesFeatureEnableDependency =
+      dependency: feature:
       let
         name = dependency.rename or dependency.name;
         prefix = "${name}/";
@@ -22455,25 +29364,29 @@ rec {
       in
       feature == name || feature == "dep:" + name || startsWithPrefix;
 
-    /* Returns the expanded features for the given inputFeatures by applying the
+    /*
+      Returns the expanded features for the given inputFeatures by applying the
       rules in featureMap.
 
       featureMap is an attribute set which maps feature names to lists of further
       feature names to enable in case this feature is selected.
     */
-    expandFeatures = featureMap: inputFeatures:
+    expandFeatures =
+      featureMap: inputFeatures:
       assert (builtins.isAttrs featureMap);
       assert (builtins.isList inputFeatures);
       let
-        expandFeaturesNoCycle = oldSeen: inputFeatures:
-          if inputFeatures != [ ]
-          then
+        expandFeaturesNoCycle =
+          oldSeen: inputFeatures:
+          if inputFeatures != [ ] then
             let
               # The feature we're currently expanding.
               feature = builtins.head inputFeatures;
               # All the features we've seen/expanded so far, including the one
               # we're currently processing.
-              seen = oldSeen // { ${feature} = 1; };
+              seen = oldSeen // {
+                ${feature} = 1;
+              };
               # Expand the feature but be careful to not re-introduce a feature
               # that we've already seen: this can easily cause a cycle, see issue
               # #209.
@@ -22481,32 +29394,34 @@ rec {
             in
             [ feature ] ++ (expandFeaturesNoCycle seen (builtins.tail inputFeatures ++ enables))
           # No more features left, nothing to expand to.
-          else [ ];
+          else
+            [ ];
         outFeatures = expandFeaturesNoCycle { } inputFeatures;
       in
       sortedUnique outFeatures;
 
-    /* This function adds optional dependencies as features if they are enabled
+    /*
+      This function adds optional dependencies as features if they are enabled
       indirectly by dependency features. This function mimics Cargo's behavior
       described in a note at:
       https://doc.rust-lang.org/nightly/cargo/reference/features.html#dependency-features
     */
-    enableFeatures = dependencies: features:
+    enableFeatures =
+      dependencies: features:
       assert (builtins.isList features);
       assert (builtins.isList dependencies);
       let
-        additionalFeatures = lib.concatMap
-          (
-            dependency:
-              assert (builtins.isAttrs dependency);
-              let
-                enabled = builtins.any (doesFeatureEnableDependency dependency) features;
-              in
-              if (dependency.optional or false) && enabled
-              then [ (dependency.rename or dependency.name) ]
-              else [ ]
-          )
-          dependencies;
+        additionalFeatures = lib.concatMap (
+          dependency:
+          assert (builtins.isAttrs dependency);
+          let
+            enabled = builtins.any (doesFeatureEnableDependency dependency) features;
+          in
+          if (dependency.optional or false) && enabled then
+            [ (dependency.rename or dependency.name) ]
+          else
+            [ ]
+        ) dependencies;
       in
       sortedUnique (features ++ additionalFeatures);
 
@@ -22515,37 +29430,34 @@ rec {
 
       features: The features of the crate that refers this dependency.
     */
-    dependencyFeatures = features: dependency:
+    dependencyFeatures =
+      features: dependency:
       assert (builtins.isList features);
       assert (builtins.isAttrs dependency);
       let
-        defaultOrNil =
-          if dependency.usesDefaultFeatures or true
-          then [ "default" ]
-          else [ ];
+        defaultOrNil = if dependency.usesDefaultFeatures or true then [ "default" ] else [ ];
         explicitFeatures = dependency.features or [ ];
         additionalDependencyFeatures =
           let
             name = dependency.rename or dependency.name;
-            stripPrefixMatch = prefix: s:
-              if lib.hasPrefix prefix s
-              then lib.removePrefix prefix s
-              else null;
-            extractFeature = feature: lib.findFirst
-              (f: f != null)
-              null
-              (map (prefix: stripPrefixMatch prefix feature) [
-                (name + "/")
-                (name + "?/")
-              ]);
+            stripPrefixMatch = prefix: s: if lib.hasPrefix prefix s then lib.removePrefix prefix s else null;
+            extractFeature =
+              feature:
+              lib.findFirst (f: f != null) null (
+                map (prefix: stripPrefixMatch prefix feature) [
+                  (name + "/")
+                  (name + "?/")
+                ]
+              );
             dependencyFeatures = lib.filter (f: f != null) (map extractFeature features);
           in
           dependencyFeatures;
       in
       defaultOrNil ++ explicitFeatures ++ additionalDependencyFeatures;
 
-    /* Sorts and removes duplicates from a list of strings. */
-    sortedUnique = features:
+    # Sorts and removes duplicates from a list of strings.
+    sortedUnique =
+      features:
       assert (builtins.isList features);
       assert (builtins.all builtins.isString features);
       let
@@ -22554,14 +29466,15 @@ rec {
       in
       builtins.sort (a: b: a < b) outFeaturesUnique;
 
-    deprecationWarning = message: value:
-      if strictDeprecation
-      then builtins.throw "strictDeprecation enabled, aborting: ${message}"
-      else builtins.trace message value;
+    deprecationWarning =
+      message: value:
+      if strictDeprecation then
+        builtins.throw "strictDeprecation enabled, aborting: ${message}"
+      else
+        builtins.trace message value;
 
     #
     # crate2nix/default.nix (excerpt end)
     #
   };
 }
-

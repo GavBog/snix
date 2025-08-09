@@ -1,7 +1,7 @@
-{ lib
-, buildGoModule
-, fetchFromGitHub
-,
+{
+  lib,
+  buildGoModule,
+  fetchFromGitHub,
 }:
 
 buildGoModule rec {
@@ -17,7 +17,10 @@ buildGoModule rec {
 
   vendorHash = "sha256-KX+TR0n14+95lldF+0KUo5DbqOKpUDaZNuKMBf0KHFQ=";
 
-  ldflags = [ "-s" "-w" ];
+  ldflags = [
+    "-s"
+    "-w"
+  ];
 
   meta = {
     description = "Send Prometheus Alerts to IRC using Webhooks";

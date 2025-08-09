@@ -6,7 +6,8 @@
 
   services.nginx = {
     upstreams.tempo = {
-      servers."${config.services.tempo.settings.distributor.receivers.otlp.protocols.http.endpoint}" = { };
+      servers."${config.services.tempo.settings.distributor.receivers.otlp.protocols.http.endpoint}" =
+        { };
     };
 
     virtualHosts."tempo.snix.dev" = {

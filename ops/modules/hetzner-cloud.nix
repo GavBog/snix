@@ -1,11 +1,21 @@
-{ config, lib, pkgs, modulesPath, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  modulesPath,
+  ...
+}:
 let
   cfg = config.infra.hardware.hetzner-cloud;
-  inherit (lib) types mkOption mkEnableOption mkIf;
+  inherit (lib)
+    types
+    mkOption
+    mkEnableOption
+    mkIf
+    ;
 in
 {
-  imports =
-    [ (modulesPath + "/profiles/qemu-guest.nix") ];
+  imports = [ (modulesPath + "/profiles/qemu-guest.nix") ];
 
   options.infra.hardware.hetzner-cloud = {
     enable = mkEnableOption "the Hetzner Cloud hardware profile";
@@ -40,7 +50,10 @@ in
         }
       ];
 
-      dns = [ "2a01:4ff:ff00::add:1" "2a01:4ff:ff00::add:2" ];
+      dns = [
+        "2a01:4ff:ff00::add:1"
+        "2a01:4ff:ff00::add:2"
+      ];
     };
 
     boot.loader.systemd-boot.enable = true;

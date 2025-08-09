@@ -1,4 +1,9 @@
-{ depot, pkgs, lib, ... }:
+{
+  depot,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   # Seed a snix-store with the specified path, then start a VM with the
@@ -6,46 +11,48 @@ let
   # Allows customizing the cmdline, which can be used to list files,
   # or specify what init should be booted.
   mkBootTest =
-    { blobServiceAddr ? "memory://"
-    , directoryServiceAddr ? "memory://"
-    , pathInfoServiceAddr ? "memory://"
-
+    {
+      blobServiceAddr ? "memory://",
+      directoryServiceAddr ? "memory://",
+      pathInfoServiceAddr ? "memory://",
 
       # The path to import.
-    , path
+      path,
 
       # Whether the path should be imported as a closure.
       # If false, importPathName must be specified.
-    , isClosure ? false
+      isClosure ? false,
       # Whether to use nar-bridge to upload, rather than snix-store copy.
       # using nar-bridge currently is "slower", as the `pkgs.mkBinaryCache` build
       # takes quite some time.
-    , useNarBridge ? false
+      useNarBridge ? false,
 
-    , importPathName ? null
+      importPathName ? null,
 
       # Commands to run before starting the snix-daemon. Useful to provide
       # auxillary mock services.
-    , preStart ? ""
+      preStart ? "",
 
       # The cmdline to pass to the VM.
       # Defaults to snix.find, which lists all files in the store.
-    , vmCmdline ? "snix.find"
+      vmCmdline ? "snix.find",
       # The string we expect to find in the VM output.
       # Defaults the value of `path` (the store path we upload).
-    , assertVMOutput ? path
+      assertVMOutput ? path,
     }:
 
-      assert isClosure -> importPathName == null;
-      assert (!isClosure) -> importPathName != null;
+    assert isClosure -> importPathName == null;
+    assert (!isClosure) -> importPathName != null;
 
-      pkgs.stdenv.mkDerivation ({
+    pkgs.stdenv.mkDerivation (
+      {
         name = "run-vm";
 
         nativeBuildInputs = [
           depot.snix.store
           depot.snix.boot.runVM
-        ] ++ lib.optionals (isClosure && useNarBridge) [
+        ]
+        ++ lib.optionals (isClosure && useNarBridge) [
           depot.snix.nar-bridge
           pkgs.curl
           pkgs.rush-parallel
@@ -76,17 +83,20 @@ let
           export BLOB_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
           export DIRECTORY_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
           export PATH_INFO_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
-        '' + lib.optionalString (!isClosure) ''
+        ''
+        + lib.optionalString (!isClosure) ''
           echo "Importing ${path} into snix-store with name ${importPathName}…"
           cp -R ${path} ${importPathName}
           outpath=$(snix-store import ${importPathName})
 
           echo "imported to $outpath"
-        '' + lib.optionalString (isClosure && !useNarBridge) ''
+        ''
+        + lib.optionalString (isClosure && !useNarBridge) ''
           echo "Copying closure ${path}…"
           # This picks up the `closure` key in `$NIX_ATTRS_JSON_FILE` automatically.
           snix-store --otlp=false copy
-        '' + lib.optionalString (isClosure && useNarBridge) ''
+        ''
+        + lib.optionalString (isClosure && useNarBridge) ''
           echo "Starting nar-bridge…"
           nar-bridge \
             --otlp=false \
@@ -122,7 +132,8 @@ let
           # In the future, we might want to make this behaviour configurable,
           # and disable checking here, to keep the logic simple.
           ls -d $to_upload/*.narinfo | rush 'curl -s -T - --unix-socket $PWD/nar-bridge.sock http://localhost:9000/$(basename {}) < {}'
-        '' + ''
+        ''
+        + ''
           # Invoke a VM using snix as the backing store, ensure the outpath appears in its listing.
           echo "Starting VM…"
 
@@ -138,113 +149,130 @@ let
         meta.ci.buildkiteExtraStepArgs = {
           retry.automatic = true;
         };
-      } // lib.optionalAttrs (isClosure && !useNarBridge) {
+      }
+      // lib.optionalAttrs (isClosure && !useNarBridge) {
         __structuredAttrs = true;
         exportReferencesGraph.closure = [ path ];
-      });
+      }
+    );
 
-  testSystem = (pkgs.nixos {
-    # Set some options necessary to evaluate.
-    boot.loader.systemd-boot.enable = true;
-    # TODO: figure out how to disable this without causing eval to fail
-    fileSystems."/" = {
-      device = "/dev/root";
-      fsType = "tmpfs";
-    };
+  testSystem =
+    (pkgs.nixos {
+      # Set some options necessary to evaluate.
+      boot.loader.systemd-boot.enable = true;
+      # TODO: figure out how to disable this without causing eval to fail
+      fileSystems."/" = {
+        device = "/dev/root";
+        fsType = "tmpfs";
+      };
 
-    services.getty.helpLine = "Onwards and upwards.";
-    systemd.services.do-shutdown = {
-      after = [ "getty.target" ];
-      description = "Shut down again";
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.Type = "oneshot";
-      script = "/run/current-system/sw/bin/systemctl poweroff --when=+10s";
-    };
+      services.getty.helpLine = "Onwards and upwards.";
+      systemd.services.do-shutdown = {
+        after = [ "getty.target" ];
+        description = "Shut down again";
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig.Type = "oneshot";
+        script = "/run/current-system/sw/bin/systemctl poweroff --when=+10s";
+      };
 
-    # Don't warn about stateVersion.
-    system.stateVersion = "24.05";
+      # Don't warn about stateVersion.
+      system.stateVersion = "24.05";
 
-    # Speed-up evaluation and building.
-    documentation.enable = lib.mkForce false;
-  }).config.system.build.toplevel;
+      # Speed-up evaluation and building.
+      documentation.enable = lib.mkForce false;
+    }).config.system.build.toplevel;
 
 in
 depot.nix.readTree.drvTargets {
-  docs-memory = (mkBootTest {
-    path = ../../docs;
-    importPathName = "docs";
-  });
-  docs-persistent = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    directoryServiceAddr = "redb:///build/directories.redb";
-    pathInfoServiceAddr = "redb:///build/pathinfo.redb";
-    path = ../../docs;
-    importPathName = "docs";
-  });
+  docs-memory = (
+    mkBootTest {
+      path = ../../docs;
+      importPathName = "docs";
+    }
+  );
+  docs-persistent = (
+    mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      directoryServiceAddr = "redb:///build/directories.redb";
+      pathInfoServiceAddr = "redb:///build/pathinfo.redb";
+      path = ../../docs;
+      importPathName = "docs";
+    }
+  );
 
-  closure-snix = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    path = depot.snix.store;
-    isClosure = true;
-  });
+  closure-snix = (
+    mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      path = depot.snix.store;
+      isClosure = true;
+    }
+  );
 
-  closure-nixos = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    pathInfoServiceAddr = "redb:///build/pathinfo.redb";
-    directoryServiceAddr = "redb:///build/directories.redb";
-    path = testSystem;
-    isClosure = true;
-    vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
-    assertVMOutput = "Onwards and upwards.";
-  });
+  closure-nixos = (
+    mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      pathInfoServiceAddr = "redb:///build/pathinfo.redb";
+      directoryServiceAddr = "redb:///build/directories.redb";
+      path = testSystem;
+      isClosure = true;
+      vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
+      assertVMOutput = "Onwards and upwards.";
+    }
+  );
 
-  closure-nixos-bigtable = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    directoryServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=directories&family_name=cf1";
-    pathInfoServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=pathinfos&family_name=cf1";
-    path = testSystem;
-    useNarBridge = true;
-    preStart = ''
-      ${pkgs.cbtemulator}/bin/cbtemulator -address $PWD/cbtemulator.sock &
-      timeout 22 sh -c 'until [ -e $PWD/cbtemulator.sock ]; do sleep 1; done'
+  closure-nixos-bigtable = (
+    mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      directoryServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=directories&family_name=cf1";
+      pathInfoServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=pathinfos&family_name=cf1";
+      path = testSystem;
+      useNarBridge = true;
+      preStart = ''
+        ${pkgs.cbtemulator}/bin/cbtemulator -address $PWD/cbtemulator.sock &
+        timeout 22 sh -c 'until [ -e $PWD/cbtemulator.sock ]; do sleep 1; done'
 
-      export BIGTABLE_EMULATOR_HOST=unix://$PWD/cbtemulator.sock
-      ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createtable directories
-      ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createfamily directories cf1
-      ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createtable pathinfos
-      ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createfamily pathinfos cf1
-    '';
-    isClosure = true;
-    vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
-    assertVMOutput = "Onwards and upwards.";
-  });
+        export BIGTABLE_EMULATOR_HOST=unix://$PWD/cbtemulator.sock
+        ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createtable directories
+        ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createfamily directories cf1
+        ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createtable pathinfos
+        ${pkgs.google-cloud-bigtable-tool}/bin/cbt -instance instance-1 -project project-1 createfamily pathinfos cf1
+      '';
+      isClosure = true;
+      vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
+      assertVMOutput = "Onwards and upwards.";
+    }
+  );
 
-  closure-nixos-s3 = (mkBootTest {
-    blobServiceAddr = "objectstore+s3://mybucket/blobs?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&aws_endpoint_url=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
-    # we cannot use s3 here yet without any caching layer, as we don't allow "deeper" access to directories (non-root nodes)
-    # directoryServiceAddr = "objectstore+s3://mybucket/directories?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&endpoint=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
-    directoryServiceAddr = "memory://";
-    pathInfoServiceAddr = "memory://";
-    path = testSystem;
-    useNarBridge = true;
-    preStart = ''
-      MINIO_ACCESS_KEY=myaccesskey MINIO_SECRET_KEY=supersecret MINIO_ADDRESS=127.0.0.1:9000 ${pkgs.minio}/bin/minio server $(mktemp -d) &
-      timeout 22 sh -c 'until ${pkgs.netcat}/bin/nc -z $0 $1; do sleep 1; done' localhost 9000
-      mc_config_dir=$(mktemp -d)
-      ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir alias set 'myminio' 'http://127.0.0.1:9000' 'myaccesskey' 'supersecret'
-      ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir mb myminio/mybucket
-    '';
-    isClosure = true;
-    vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
-    assertVMOutput = "Onwards and upwards.";
-  });
+  closure-nixos-s3 = (
+    mkBootTest {
+      blobServiceAddr = "objectstore+s3://mybucket/blobs?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&aws_endpoint_url=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
+      # we cannot use s3 here yet without any caching layer, as we don't allow "deeper" access to directories (non-root nodes)
+      # directoryServiceAddr = "objectstore+s3://mybucket/directories?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&endpoint=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
+      directoryServiceAddr = "memory://";
+      pathInfoServiceAddr = "memory://";
+      path = testSystem;
+      useNarBridge = true;
+      preStart = ''
+        MINIO_ACCESS_KEY=myaccesskey MINIO_SECRET_KEY=supersecret MINIO_ADDRESS=127.0.0.1:9000 ${pkgs.minio}/bin/minio server $(mktemp -d) &
+        timeout 22 sh -c 'until ${pkgs.netcat}/bin/nc -z $0 $1; do sleep 1; done' localhost 9000
+        mc_config_dir=$(mktemp -d)
+        ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir alias set 'myminio' 'http://127.0.0.1:9000' 'myaccesskey' 'supersecret'
+        ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir mb myminio/mybucket
+      '';
+      isClosure = true;
+      vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
+      assertVMOutput = "Onwards and upwards.";
+    }
+  );
 
-  closure-nixos-nar-bridge = (mkBootTest {
-    blobServiceAddr = "objectstore+file:///build/blobs";
-    path = testSystem;
-    useNarBridge = true;
-    isClosure = true;
-    vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
-    assertVMOutput = "Onwards and upwards.";
-  });
+  closure-nixos-nar-bridge = (
+    mkBootTest {
+      blobServiceAddr = "objectstore+file:///build/blobs";
+      path = testSystem;
+      useNarBridge = true;
+      isClosure = true;
+      vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
+      assertVMOutput = "Onwards and upwards.";
+    }
+  );
 }

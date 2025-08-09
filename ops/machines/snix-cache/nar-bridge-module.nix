@@ -1,9 +1,10 @@
-{ config
-, lib
-, utils
-, pkgs
-, depot
-, ...
+{
+  config,
+  lib,
+  utils,
+  pkgs,
+  depot,
+  ...
 }:
 let
   cfg = config.services.nar-bridge;

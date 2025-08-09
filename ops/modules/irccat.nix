@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.services.irccat;
@@ -35,16 +40,18 @@ in
       wants = [ "network.target" ];
 
       serviceConfig = {
-        ExecStartPre = (pkgs.writeShellScript "merge-irccat-config" ''
-          if [ ! -f "$CREDENTIALS_DIRECTORY/secrets" ]; then
-            echo "irccat secrets file is missing"
-            exit 1
-          fi
+        ExecStartPre = (
+          pkgs.writeShellScript "merge-irccat-config" ''
+            if [ ! -f "$CREDENTIALS_DIRECTORY/secrets" ]; then
+              echo "irccat secrets file is missing"
+              exit 1
+            fi
 
-          # jq's * is the recursive merge operator
-          ${pkgs.jq}/bin/jq -s '.[0] * .[1]' ${configJson} "$CREDENTIALS_DIRECTORY/secrets" \
-            > /var/lib/irccat/irccat.json
-        '');
+            # jq's * is the recursive merge operator
+            ${pkgs.jq}/bin/jq -s '.[0] * .[1]' ${configJson} "$CREDENTIALS_DIRECTORY/secrets" \
+              > /var/lib/irccat/irccat.json
+          ''
+        );
 
         ExecStart = "${pkgs.irccat}/bin/irccat";
         DynamicUser = true;
@@ -57,4 +64,3 @@ in
     };
   };
 }
-

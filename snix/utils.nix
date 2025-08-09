@@ -1,55 +1,81 @@
-{ pkgs, lib, depot, ... }:
+{
+  pkgs,
+  lib,
+  depot,
+  ...
+}:
 
 let
   # Filters the given source, only keeping files related to the build, preventing unnecessary rebuilds.
   # Includes src in the root, all other .rs files and optionally Cargo specific files.
   # Additional files to be included can be specified in extraFileset.
   filterRustCrateSrc =
-    { root # The original src
-    , extraFileset ? null # Additional filesets to include (e.g. fileFilter for proto files)
-    , cargoSupport ? false
+    {
+      root, # The original src
+      extraFileset ? null, # Additional filesets to include (e.g. fileFilter for proto files)
+      cargoSupport ? false,
     }:
     lib.fileset.toSource {
       inherit root;
-      fileset = lib.fileset.intersection
-        (lib.fileset.fromSource root) # We build our final fileset from the original src
-        (lib.fileset.unions ([
-          (lib.fileset.maybeMissing (root + "/src")) # src may be missing if the crate just has tests for example
-          (lib.fileset.fileFilter (f: f.hasExt "rs") root)
-        ] ++ lib.optionals cargoSupport [
-          (lib.fileset.fileFilter (f: f.name == "Cargo.toml") root)
-          (lib.fileset.maybeMissing (root + "/Cargo.lock"))
-        ] ++ lib.optional (extraFileset != null) extraFileset));
+      fileset =
+        lib.fileset.intersection (lib.fileset.fromSource root) # We build our final fileset from the original src
+          (
+            lib.fileset.unions (
+              [
+                (lib.fileset.maybeMissing (root + "/src")) # src may be missing if the crate just has tests for example
+                (lib.fileset.fileFilter (f: f.hasExt "rs") root)
+              ]
+              ++ lib.optionals cargoSupport [
+                (lib.fileset.fileFilter (f: f.name == "Cargo.toml") root)
+                (lib.fileset.maybeMissing (root + "/Cargo.lock"))
+              ]
+              ++ lib.optional (extraFileset != null) extraFileset
+            )
+          );
     };
 
 in
 {
-  mkFeaturePowerset = { crateName, features, override ? { } }:
+  mkFeaturePowerset =
+    {
+      crateName,
+      features,
+      override ? { },
+    }:
     let
-      powerset = xs:
+      powerset =
+        xs:
         let
-          addElement = set: element:
-            set ++ map (e: [ element ] ++ e) set;
+          addElement = set: element: set ++ map (e: [ element ] ++ e) set;
         in
         lib.foldl' addElement [ [ ] ] xs;
     in
-    lib.listToAttrs (map
-      (featuresPowerset: {
-        name = if featuresPowerset != [ ] then "with-features-${lib.concatStringsSep "-" featuresPowerset}" else "no-features";
-        value = depot.snix.crates.workspaceMembers.${crateName}.build.override (old: {
-          runTests = true;
-          features = featuresPowerset;
-        } // (if lib.isFunction override then override old else override)
+    lib.listToAttrs (
+      map (featuresPowerset: {
+        name =
+          if featuresPowerset != [ ] then
+            "with-features-${lib.concatStringsSep "-" featuresPowerset}"
+          else
+            "no-features";
+        value = depot.snix.crates.workspaceMembers.${crateName}.build.override (
+          old:
+          {
+            runTests = true;
+            features = featuresPowerset;
+          }
+          // (if lib.isFunction override then override old else override)
         );
-      })
-      (powerset features));
+      }) (powerset features)
+    );
 
   inherit filterRustCrateSrc;
 
   # A function which takes a pkgs instance and returns an overriden defaultCrateOverrides with support for snix crates.
   # This can be used throughout the rest of the repo.
-  defaultCrateOverridesForPkgs = pkgs:
-    pkgs.defaultCrateOverrides // {
+  defaultCrateOverridesForPkgs =
+    pkgs:
+    pkgs.defaultCrateOverrides
+    // {
       nar-bridge = prev: {
         src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
@@ -80,7 +106,8 @@ in
         };
         PROTO_ROOT = depot.snix.build.protos.protos;
         nativeBuildInputs = [ pkgs.protobuf ];
-        SNIX_BUILD_SANDBOX_SHELL = if pkgs.stdenv.isLinux then pkgs.pkgsStatic.busybox + "/bin/sh" else "/bin/sh";
+        SNIX_BUILD_SANDBOX_SHELL =
+          if pkgs.stdenv.isLinux then pkgs.pkgsStatic.busybox + "/bin/sh" else "/bin/sh";
       };
 
       snix-castore = prev: {
@@ -142,13 +169,15 @@ in
   mkCrate2nixCheck =
     path: # The path to the Cargo.nix to be checked.
     let
-      relCrateRoot = lib.removePrefix "./" (builtins.dirOf (lib.path.removePrefix depot.path.origSrc path));
+      relCrateRoot = lib.removePrefix "./" (
+        builtins.dirOf (lib.path.removePrefix depot.path.origSrc path)
+      );
     in
     {
       label = "crate2nix check for ${relCrateRoot}";
       needsOutput = true;
       alwaysRun = true;
-      command = pkgs.writeShellScript "crate2nix-check-for-${lib.replaceStrings [ "/" ] ["-"] relCrateRoot}" ''
+      command = pkgs.writeShellScript "crate2nix-check-for-${lib.replaceStrings [ "/" ] [ "-" ] relCrateRoot}" ''
         (cd $(git rev-parse --show-toplevel)/${relCrateRoot} &&
           ${depot.tools.crate2nix-generate}/bin/crate2nix-generate &&
           if [[ -n "$(git status --porcelain -unormal Cargo.nix)" ]]; then

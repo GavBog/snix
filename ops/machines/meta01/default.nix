@@ -1,4 +1,9 @@
-{ depot, lib, pkgs, ... }: # readTree options
+{
+  depot,
+  lib,
+  pkgs,
+  ...
+}: # readTree options
 { config, ... }: # passed by module system
 
 let
@@ -130,7 +135,8 @@ in
   # Required for prometheus to be able to scrape stats
   services.nginx.statusPage = true;
 
-  users.users.root.openssh.authorizedKeys.keys = depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
+  users.users.root.openssh.authorizedKeys.keys =
+    depot.ops.users.edef ++ depot.ops.users.flokli ++ depot.ops.users.raito;
 
   boot.initrd.systemd.enable = true;
   zramSwap.enable = true;
