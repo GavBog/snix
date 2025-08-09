@@ -24,3 +24,6 @@ c758de9d22506eb279c5abe61f621e5c8f61af95
 
 # style: format entire depot with nixpkgs-fmt
 aa122cbae78ce97d60c0c98ba14df753d97e40b1
+
+# style: Switch to nixfmt from nixpkgs-fmt
+91d02d8c845d4ffbeefc7d99ef36b2234d87813b
