@@ -120,7 +120,7 @@ let
           }
 
           # Upload all NAR files (with some parallelism).
-          # As mkBinaryCache produces them xz-compressed, unpack them on the fly.
+          # As mkBinaryCache produces them zstd-compressed, unpack them on the fly.
           # nar-bridge doesn't care about the path we upload *to*, but a
           # subsequent .narinfo upload need to refer to its contents (by narhash).
           echo -e "Uploading NARs… "
