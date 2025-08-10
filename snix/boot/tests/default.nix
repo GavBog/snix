@@ -12,6 +12,9 @@ let
   # or specify what init should be booted.
   mkBootTest =
     {
+      # Test name.
+      name,
+
       blobServiceAddr ? "memory://",
       directoryServiceAddr ? "memory://",
       pathInfoServiceAddr ? "memory://",
@@ -46,7 +49,7 @@ let
 
     pkgs.stdenv.mkDerivation (
       {
-        name = "run-vm";
+        name = "test-boot-${name}";
 
         nativeBuildInputs = [
           depot.snix.store
@@ -186,12 +189,15 @@ in
 depot.nix.readTree.drvTargets {
   docs-memory = (
     mkBootTest {
+      name = "docs-memory";
       path = ../../docs;
       importPathName = "docs";
     }
   );
+
   docs-persistent = (
     mkBootTest {
+      name = "docs-persistent";
       blobServiceAddr = "objectstore+file:///build/blobs";
       directoryServiceAddr = "redb:///build/directories.redb";
       pathInfoServiceAddr = "redb:///build/pathinfo.redb";
@@ -202,6 +208,7 @@ depot.nix.readTree.drvTargets {
 
   closure-snix = (
     mkBootTest {
+      name = "closure-snix";
       blobServiceAddr = "objectstore+file:///build/blobs";
       path = depot.snix.store;
       isClosure = true;
@@ -210,6 +217,7 @@ depot.nix.readTree.drvTargets {
 
   closure-nixos = (
     mkBootTest {
+      name = "closure-nixos";
       blobServiceAddr = "objectstore+file:///build/blobs";
       pathInfoServiceAddr = "redb:///build/pathinfo.redb";
       directoryServiceAddr = "redb:///build/directories.redb";
@@ -222,6 +230,7 @@ depot.nix.readTree.drvTargets {
 
   closure-nixos-bigtable = (
     mkBootTest {
+      name = "closure-nixos-bigtable";
       blobServiceAddr = "objectstore+file:///build/blobs";
       directoryServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=directories&family_name=cf1";
       pathInfoServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=pathinfos&family_name=cf1";
@@ -245,6 +254,7 @@ depot.nix.readTree.drvTargets {
 
   closure-nixos-s3 = (
     mkBootTest {
+      name = "closure-nixos-s3";
       blobServiceAddr = "objectstore+s3://mybucket/blobs?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&aws_endpoint_url=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
       # we cannot use s3 here yet without any caching layer, as we don't allow "deeper" access to directories (non-root nodes)
       # directoryServiceAddr = "objectstore+s3://mybucket/directories?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&endpoint=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
@@ -267,6 +277,7 @@ depot.nix.readTree.drvTargets {
 
   closure-nixos-nar-bridge = (
     mkBootTest {
+      name = "closure-nixos-nar-bridge";
       blobServiceAddr = "objectstore+file:///build/blobs";
       path = testSystem;
       useNarBridge = true;
