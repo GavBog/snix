@@ -126,6 +126,33 @@ in
       "auth.anonymous".enabled = true;
       auth.disable_login_form = true;
       "auth.basic".enabled = false;
+      "auth.generic_oauth" = {
+        enabled = true;
+
+        name = "snix SSO";
+        client_id = "nb_grafana";
+        client_secret = "$__file{/run/credentials/grafana.service/keycloak_auth_client_secret}";
+
+        auth_url = "https://auth.snix.dev/realms/snix-project/protocol/openid-connect/auth";
+        token_url = "https://auth.snix.dev/realms/snix-project/protocol/openid-connect/token";
+        api_url = "https://auth.snix.dev/realms/snix-project/protocol/openid-connect/userinfo";
+
+        login_attribute_path = "username";
+        email_attribute_path = "email";
+        name_attribute_path = "full_name";
+
+        scopes = [
+          "openid"
+          "profile"
+          "email"
+        ];
+
+        allow_sign_up = true;
+        auto_login = true;
+
+        allow_assign_grafana_admin = true;
+        role_attribute_path = "contains(nb_grafana_roles[*], 'Admin') && 'Admin' || contains(nb_grafana_roles[*], 'Editor') && 'Editor' || 'Viewer'";
+      };
       "auth.github" = {
         enabled = true;
         client_id = "Ov23liAnuBwzWtJJ7gv4";
@@ -174,8 +201,11 @@ in
     };
   };
 
-  systemd.services.grafana.serviceConfig.LoadCredential =
-    "github_auth_client_secret:/etc/secrets/grafana_github_auth_client_secret";
+  # TODO: migrate to agenix
+  systemd.services.grafana.serviceConfig.LoadCredential = [
+    "github_auth_client_secret:/etc/secrets/grafana_github_auth_client_secret"
+    "keycloak_auth_client_secret:/etc/secrets/keycloak_auth_client_secret"
+  ];
   systemd.services.grafana.serviceConfig.RuntimeDirectory = "grafana";
   systemd.services.grafana.serviceConfig.SupplementaryGroups = "nginx";
 
