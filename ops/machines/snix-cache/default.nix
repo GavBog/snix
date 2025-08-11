@@ -49,6 +49,7 @@ in
 
     nixpkgs.hostPlatform = lib.mkForce "x86_64-linux";
 
+    # kept as-is because we don't want to relabel historical metrics
     networking.hostName = "tvix-cache";
 
     systemd.network.networks."10-uplink".networkConfig.Address = "2a01:4f9:3071:1091::2/64";
