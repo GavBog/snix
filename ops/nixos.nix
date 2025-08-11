@@ -54,18 +54,18 @@ rec {
 
   # Systems that should be built in CI
   archivistEC2System = (nixosFor depot.ops.machines.archivist-ec2).system;
-  gerrit01System = (nixosFor depot.ops.machines.gerrit01).system;
-  public01System = (nixosFor depot.ops.machines.public01).system;
   build01System = (nixosFor depot.ops.machines.build01).system;
+  gerrit01System = (nixosFor depot.ops.machines.gerrit01).system;
   meta01System = (nixosFor depot.ops.machines.meta01).system;
-  nixosSnixCacheSystem = (nixosFor depot.ops.machines.snix-cache).system;
+  public01System = (nixosFor depot.ops.machines.public01).system;
+  snixCacheSystem = (nixosFor depot.ops.machines.snix-cache).system;
 
   meta.ci.targets = [
     "archivistEC2System"
-    "gerrit01System"
-    "public01System"
     "build01System"
+    "gerrit01System"
     "meta01System"
-    "nixosSnixCacheSystem"
+    "public01System"
+    "snixCacheSystem"
   ];
 }
