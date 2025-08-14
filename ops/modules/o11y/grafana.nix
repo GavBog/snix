@@ -64,6 +64,7 @@ in
 
             allow_assign_grafana_admin = true;
             role_attribute_path = "contains(grafana_roles[*], 'Admin') && 'Admin' || contains(grafana_roles[*], 'Editor') && 'Editor' || 'Viewer'";
+            signout_redirect_url = "https://auth.snix.dev/realms/snix-project/protocol/openid-connect/logout?post_logout_redirect_uri=https%3A%2F%2Fstatus.snix.dev%2F&client_id=grafana";
           };
 
           dashboards.default_home_dashboard_path = "${depot.ops.dashboards.node_exporter}";

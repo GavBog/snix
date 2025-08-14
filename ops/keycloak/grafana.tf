@@ -13,6 +13,10 @@ resource "keycloak_openid_client" "grafana" {
   valid_redirect_uris = [
     "https://status.snix.dev/*",
   ]
+
+   valid_post_logout_redirect_uris = [
+    "https://status.snix.dev/",
+  ]
 }
 
 resource "keycloak_role" "grafana_editor" {

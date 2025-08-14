@@ -155,6 +155,7 @@ in
 
         allow_assign_grafana_admin = true;
         role_attribute_path = "contains(nb_grafana_roles[*], 'Admin') && 'Admin' || contains(nb_grafana_roles[*], 'Editor') && 'Editor' || 'Viewer'";
+        signout_redirect_url = "https://auth.snix.dev/realms/snix-project/protocol/openid-connect/logout?post_logout_redirect_uri=https%3A%2F%2Fnixos.snix.store%2Fgrafana%2F&client_id=nb_grafana";
       };
     };
 
