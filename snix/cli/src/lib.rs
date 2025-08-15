@@ -138,19 +138,22 @@ pub fn evaluate<E: std::io::Write + Clone + Send>(
 
     let eval = eval_builder.build();
 
-    let (result, globals) = info_span!("evaluate", indicatif.pb_show = tracing::field::Empty)
-        .in_scope(|| {
-            let span = Span::current();
+    let span = if !args.trace_runtime && !args.dump_bytecode {
+        info_span!("evaluate", indicatif.pb_show = tracing::field::Empty)
+    } else {
+        info_span!("evaluate", indicatif.pb_hide = tracing::field::Empty)
+    };
+    let (result, globals) = span.in_scope(|| {
+        let span = Span::current();
 
-            if !args.trace_runtime && !args.dump_bytecode {
-                span.pb_set_message("Evaluating…");
-                span.pb_start();
-            }
+        span.pb_set_message("Evaluating…");
+        span.pb_start();
 
-            let globals = eval.globals();
-            let result = eval.evaluate(code, path);
-            (result, globals)
-        });
+        let globals = eval.globals();
+        let result = eval.evaluate(code, path);
+        (result, globals)
+    });
+    drop(span);
 
     if allow_incomplete.allow()
         && result.errors.iter().any(|err| {
