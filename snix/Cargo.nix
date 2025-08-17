@@ -1093,47 +1093,6 @@ rec {
           "std"
         ];
       };
-      "async-tempfile" = rec {
-        crateName = "async-tempfile";
-        version = "0.4.0";
-        edition = "2021";
-        sha256 = "16zx4qcwzq94n13pp6xwa4589apm5y8j20jb7lk4yzn42fqlnzdk";
-        libName = "async_tempfile";
-        authors = [
-          "Markus Mayer"
-        ];
-        dependencies = [
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [ "fs" ];
-          }
-          {
-            name = "uuid";
-            packageId = "uuid";
-            optional = true;
-            features = [ "v4" ];
-          }
-        ];
-        devDependencies = [
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [
-              "rt-multi-thread"
-              "macros"
-            ];
-          }
-        ];
-        features = {
-          "default" = [ "uuid" ];
-          "uuid" = [ "dep:uuid" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "uuid"
-        ];
-      };
       "async-trait" = rec {
         crateName = "async-trait";
         version = "0.1.83";
@@ -4646,33 +4605,6 @@ rec {
         libName = "endian_type";
         authors = [
           "Lolirofle <lolipopple@hotmail.com>"
-        ];
-
-      };
-      "enum-primitive-derive" = rec {
-        crateName = "enum-primitive-derive";
-        version = "0.3.0";
-        edition = "2018";
-        sha256 = "0k6wcf58h5kh64yq5nfq71va53kaya0kzxwsjwbgwm2n2zd9axxs";
-        procMacro = true;
-        libName = "enum_primitive_derive";
-        authors = [
-          "Doug Goldstein <cardoe@cardoe.com>"
-        ];
-        dependencies = [
-          {
-            name = "num-traits";
-            packageId = "num-traits";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-          }
-          {
-            name = "syn";
-            packageId = "syn 2.0.93";
-          }
         ];
 
       };
@@ -9059,96 +8991,6 @@ rec {
         features = {
         };
       };
-      "magic" = rec {
-        crateName = "magic";
-        version = "0.16.2";
-        edition = "2018";
-        sha256 = "0g9py31aw19j5sr5lznb068byhgbiynflvizjrxcwgccvw1sw052";
-        authors = [
-          "Daniel Micay <danielmicay@gmail.com>"
-          "Petar Radošević <petar@wunki.org>"
-          "lilydjwg <lilydjwg@gmail.com>"
-          "Jeff Belgum <belgum@bastille.io>"
-          "Onur Aslan <onur@onur.im>"
-          "robo9k <robo9k@symlink.io>"
-        ];
-        dependencies = [
-          {
-            name = "bitflags";
-            packageId = "bitflags 2.6.0";
-          }
-          {
-            name = "libc";
-            packageId = "libc";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "magic-sys";
-            packageId = "magic-sys";
-          }
-          {
-            name = "thiserror";
-            packageId = "thiserror 1.0.69";
-          }
-        ];
-
-      };
-      "magic-sys" = rec {
-        crateName = "magic-sys";
-        version = "0.3.0";
-        edition = "2015";
-        links = "magic";
-        sha256 = "1g5k9d9igxv4h23nbhp8bqa5gdpkd3ahgm0rh5i0s54mi3h6my7g";
-        libName = "magic_sys";
-        authors = [
-          "robo9k <robo9k@symlink.io>"
-        ];
-        dependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-            usesDefaultFeatures = false;
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "vcpkg";
-            packageId = "vcpkg";
-          }
-        ];
-        features = {
-          "default" = [ "v5-38" ];
-          "v5-05" = [ "v5-04" ];
-          "v5-10" = [ "v5-05" ];
-          "v5-13" = [ "v5-10" ];
-          "v5-20" = [ "v5-13" ];
-          "v5-21" = [ "v5-20" ];
-          "v5-22" = [ "v5-21" ];
-          "v5-23" = [ "v5-22" ];
-          "v5-25" = [ "v5-23" ];
-          "v5-27" = [ "v5-25" ];
-          "v5-32" = [ "v5-27" ];
-          "v5-35" = [ "v5-32" ];
-          "v5-38" = [ "v5-35" ];
-          "v5-40" = [ "v5-38" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "v5-04"
-          "v5-05"
-          "v5-10"
-          "v5-13"
-          "v5-20"
-          "v5-21"
-          "v5-22"
-          "v5-23"
-          "v5-25"
-          "v5-27"
-          "v5-32"
-          "v5-35"
-          "v5-38"
-        ];
-      };
       "matchers" = rec {
         crateName = "matchers";
         version = "0.1.0";
@@ -9842,14 +9684,6 @@ rec {
             packageId = "axum-test";
           }
           {
-            name = "hex-literal";
-            packageId = "hex-literal";
-          }
-          {
-            name = "rstest";
-            packageId = "rstest";
-          }
-          {
             name = "sha2";
             packageId = "sha2";
           }
@@ -10325,17 +10159,9 @@ rec {
             packageId = "ed25519-dalek";
           }
           {
-            name = "enum-primitive-derive";
-            packageId = "enum-primitive-derive";
-          }
-          {
             name = "futures";
             packageId = "futures";
             optional = true;
-          }
-          {
-            name = "glob";
-            packageId = "glob";
           }
           {
             name = "mimalloc";
@@ -10349,10 +10175,6 @@ rec {
           {
             name = "nom";
             packageId = "nom";
-          }
-          {
-            name = "num-traits";
-            packageId = "num-traits";
           }
           {
             name = "num_enum";
@@ -17640,10 +17462,6 @@ rec {
             packageId = "async-stream";
           }
           {
-            name = "async-tempfile";
-            packageId = "async-tempfile";
-          }
-          {
             name = "auto_impl";
             packageId = "auto_impl";
           }
@@ -18499,10 +18317,6 @@ rec {
           {
             name = "futures";
             packageId = "futures";
-          }
-          {
-            name = "magic";
-            packageId = "magic";
           }
           {
             name = "md-5";
@@ -23552,16 +23366,6 @@ rec {
           "alloc"
           "std"
         ];
-      };
-      "vcpkg" = rec {
-        crateName = "vcpkg";
-        version = "0.2.15";
-        edition = "2015";
-        sha256 = "09i4nf5y8lig6xgj3f7fyrvzd3nlaw4znrihw8psidvv5yk4xkdc";
-        authors = [
-          "Jim McGrath <jimmc2@gmail.com>"
-        ];
-
       };
       "version_check" = rec {
         crateName = "version_check";
