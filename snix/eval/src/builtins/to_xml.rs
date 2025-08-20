@@ -3,10 +3,11 @@
 //! things in nixpkgs rely on.
 
 use bstr::ByteSlice;
+use rustc_hash::FxHashSet;
 use std::borrow::Cow;
 use std::{io::Write, rc::Rc};
 
-use crate::{ErrorKind, NixContext, NixContextElement, Value};
+use crate::{ErrorKind, NixAttrs, NixContext, NixContextElement, NixString, Value};
 
 /// Recursively serialise a value to XML. The value *must* have been
 /// deep-forced before being passed to this function.
@@ -31,6 +32,46 @@ fn write_typed_value<W: Write, V: ToString>(
     value: V,
 ) -> Result<(), ErrorKind> {
     w.write_self_closing_tag(name_unescaped, &[("value", &value.to_string())])?;
+    Ok(())
+}
+
+fn write_attrs_naked<W: Write>(w: &mut XmlEmitter<W>, attrs: &NixAttrs) -> Result<(), ErrorKind> {
+    for (k, v) in attrs.iter_sorted() {
+        w.write_open_tag("attr", &[("name", &k.to_str_lossy())])?;
+        value_variant_to_xml(w, v)?;
+        w.write_closing_tag("attr")?;
+    }
+
+    Ok(())
+}
+
+fn write_derivation<W: Write>(w: &mut XmlEmitter<W>, attrs: &NixAttrs) -> Result<(), ErrorKind> {
+    if let Some(drv_path) = attrs
+        .select("drvPath")
+        .and_then(|val| val.to_contextful_str().ok())
+    {
+        match attrs
+            .select("outPath")
+            .and_then(|val| val.to_contextful_str().ok())
+        {
+            Some(out_path) => w.write_open_tag(
+                "derivation",
+                &[
+                    ("drvPath", &drv_path.to_str_lossy()),
+                    ("outPath", &out_path.to_str_lossy()),
+                ],
+            )?,
+            None => w.write_open_tag("derivation", &[("drvPath", &drv_path.to_str_lossy())])?,
+        };
+        if !drv_path.is_empty() && w.drvs_seen.insert(drv_path.clone()) {
+            write_attrs_naked(w, attrs)?;
+        } else {
+            w.write_self_closing_tag("repeated", &[])?;
+        }
+        return w.write_closing_tag("derivation").map_err(Into::into);
+    };
+
+    w.write_self_closing_tag("repeated", &[])?;
     Ok(())
 }
 
@@ -65,15 +106,13 @@ fn value_variant_to_xml<W: Write>(w: &mut XmlEmitter<W>, value: &Value) -> Resul
         }
 
         Value::Attrs(attrs) => {
-            w.write_open_tag("attrs", &[])?;
-
-            for elem in attrs.iter_sorted() {
-                w.write_open_tag("attr", &[("name", &elem.0.to_str_lossy())])?;
-                value_variant_to_xml(w, elem.1)?;
-                w.write_closing_tag("attr")?;
+            if attrs.is_derivation() {
+                write_derivation(w, attrs)?;
+            } else {
+                w.write_open_tag("attrs", &[])?;
+                write_attrs_naked(w, attrs)?;
+                w.write_closing_tag("attrs")?;
             }
-
-            w.write_closing_tag("attrs")?;
         }
 
         Value::Closure(c) => {
@@ -135,6 +174,7 @@ struct XmlEmitter<W> {
     cur_indent: usize,
     writer: W,
     context: NixContext,
+    drvs_seen: FxHashSet<NixString>,
 }
 
 impl<W: Write> XmlEmitter<W> {
@@ -143,6 +183,7 @@ impl<W: Write> XmlEmitter<W> {
             cur_indent: 0,
             writer,
             context: Default::default(),
+            drvs_seen: Default::default(),
         }
     }
 
