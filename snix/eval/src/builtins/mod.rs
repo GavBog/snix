@@ -1516,6 +1516,47 @@ mod pure_builtins {
 
         Ok(Value::from(x.type_of()))
     }
+
+    #[builtin("zipAttrsWith")]
+    async fn builtin_zip_attrs_with(
+        co: GenCo,
+        #[lazy] f: Value,
+        list: Value,
+    ) -> Result<Value, ErrorKind> {
+        let mut merged: FxHashMap<NixString, Vec<Value>> = FxHashMap::default();
+
+        // For each key, merge values of the same key into one single attrset
+        for set in list.to_list()? {
+            let set = generators::request_force(&co, set).await;
+            let set = set.to_attrs()?;
+            for (key, val) in *set {
+                match merged.entry(key) {
+                    Entry::Occupied(mut occupied) => occupied.get_mut().push(val),
+                    Entry::Vacant(vacant) => {
+                        vacant.insert(vec![val]);
+                    }
+                }
+            }
+        }
+
+        let span = generators::request_span(&co).await;
+
+        // apply the function to each element
+        let attrs = merged.into_iter().map(|(key, vals)| {
+            let val = Value::Thunk(Thunk::new_suspended_call(
+                Value::Thunk(Thunk::new_suspended_call(
+                    f.clone(),
+                    key.clone().into(),
+                    span,
+                )),
+                Value::List(NixList::construct(vals.len(), vals)),
+                span,
+            ));
+            (key, val)
+        });
+
+        Ok(Value::attrs(NixAttrs::from_iter(attrs)))
+    }
 }
 
 /// Internal helper function for genericClosure, determining whether a

@@ -134,4 +134,4 @@ The `impl` column indicates implementation status in tvix:
 | floor         | false  | 1     | true  |       |
 | groupBy       | false  | 2     | true  |       |
 | traceVerbose  | false  | 2     |       | todo  |
-| zipAttrsWith  | false  | 2     | true  | todo  |
+| zipAttrsWith  | false  | 2     | true  |       |
