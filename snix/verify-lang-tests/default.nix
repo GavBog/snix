@@ -12,8 +12,6 @@
 }:
 
 let
-  testRoot = ../eval/src/tests;
-
   inherit (pkgs) nix_2_3;
   # The latest Nix version we've verified to work for our testing suite.
   _nix_latest_verified = pkgs.nixVersions.nix_2_30;
@@ -37,7 +35,8 @@ let
         fileName = "${dir}/${baseName}";
       };
 
-  allLangTests =
+  mkAllLangTests =
+    testRoot:
     lib.concatMap
       (
         dir:
@@ -56,7 +55,7 @@ let
         ]
       );
 
-  skippedLangTests = {
+  evalSkippedLangTests = {
     # TODO(sterni): set up NIX_PATH in sandbox
     "eval-okay-search-path.nix" = true;
     # Floating point precision differs between snix and Nix
@@ -112,8 +111,19 @@ let
     "eval-okay-dirof.nix" = [ nix_latest_verified ];
   };
 
+  glueSkippedLangTests = {
+    # TODO: no network in the sandbox, so fetcher won't work
+    "eval-okay-fetchtarball.nix" = true;
+    "eval-okay-fetchurl.nix" = true;
+    # builtins.parseFlakeRef was introduced in 2.18
+    "eval-okay-parseFlakeRef.nix" = [ nix_2_3 ];
+    # something changed in storePath behaviour between 2.3 and 2.30,
+    # and it makes the same test failing in 2.3
+    "eval-okay-storePath2.nix" = [ nix_2_3 ];
+  };
+
   runCppNixLangTests =
-    cpp-nix:
+    testRoot: skippedLangTests: cpp-nix:
     let
       testCommand =
         {
@@ -217,7 +227,6 @@ let
 
       buildPhase = ''
         # Make nix-instantiate happy in the sandbox
-        export NIX_STORE_DIR="$(realpath "$(mktemp -d store.XXXXXXXXXX)")"
         export NIX_STATE_DIR="$(realpath "$(mktemp -d state.XXXXXXXXXX)")"
         export HOME=/fake-home
 
@@ -241,7 +250,7 @@ let
 
       # Actually runs into the argv limit
       passAsFile = [ "testCommands" ];
-      testCommands = lib.concatMapStrings testCommand allLangTests;
+      testCommands = lib.concatMapStrings testCommand (mkAllLangTests testRoot);
 
       installPhase = ''
         if $passed; then
@@ -255,7 +264,12 @@ let
 
 in
 depot.nix.readTree.drvTargets {
-  "nix-${lib.versions.majorMinor nix_2_3.version}" = runCppNixLangTests nix_2_3;
-  "nix-${lib.versions.majorMinor nix_latest_verified.version}" =
-    runCppNixLangTests nix_latest_verified;
+  "eval-nix-2_3" = runCppNixLangTests ../eval/src/tests evalSkippedLangTests nix_2_3;
+  "eval-nix-latest_verified" =
+    runCppNixLangTests ../eval/src/tests evalSkippedLangTests
+      nix_latest_verified;
+  "glue-nix-2_3" = runCppNixLangTests ../glue/src/tests glueSkippedLangTests nix_2_3;
+  "glue-nix-latest_verified" =
+    runCppNixLangTests ../glue/src/tests glueSkippedLangTests
+      nix_latest_verified;
 }
