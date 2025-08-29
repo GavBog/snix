@@ -5624,24 +5624,6 @@ rec {
           "std"
         ];
       };
-      "futures-timer" = rec {
-        crateName = "futures-timer";
-        version = "3.0.3";
-        edition = "2018";
-        sha256 = "094vw8k37djpbwv74bwf2qb7n6v6ghif4myss6smd6hgyajb127j";
-        libName = "futures_timer";
-        authors = [
-          "Alex Crichton <alex@alexcrichton.com>"
-        ];
-        features = {
-          "gloo-timers" = [ "dep:gloo-timers" ];
-          "send_wrapper" = [ "dep:send_wrapper" ];
-          "wasm-bindgen" = [
-            "gloo-timers"
-            "send_wrapper"
-          ];
-        };
-      };
       "futures-util" = rec {
         crateName = "futures-util";
         version = "0.3.31";
@@ -10271,6 +10253,7 @@ rec {
           {
             name = "rstest";
             packageId = "rstest";
+            usesDefaultFeatures = false;
           }
           {
             name = "smol_str";
@@ -10394,6 +10377,7 @@ rec {
           {
             name = "rstest";
             packageId = "rstest";
+            usesDefaultFeatures = false;
           }
           {
             name = "tokio";
@@ -10442,6 +10426,7 @@ rec {
           {
             name = "rstest";
             packageId = "rstest";
+            usesDefaultFeatures = false;
           }
           {
             name = "tokio";
@@ -15265,53 +15250,37 @@ rec {
       };
       "rstest" = rec {
         crateName = "rstest";
-        version = "0.19.0";
+        version = "0.26.1";
         edition = "2021";
-        sha256 = "0c43nsxpm1b74jxc73xwg94is6bwqvfzkrr1xbqyx7j7l791clwx";
+        sha256 = "0jcxhg9mxlr2p9an14algbcq6ax7r0sk1w1kbals5aiv0qy1k8zm";
         authors = [
           "Michele d'Amico <michele.damico@gmail.com>"
         ];
         dependencies = [
-          {
-            name = "futures";
-            packageId = "futures";
-            optional = true;
-          }
-          {
-            name = "futures-timer";
-            packageId = "futures-timer";
-            optional = true;
-          }
           {
             name = "rstest_macros";
             packageId = "rstest_macros";
             usesDefaultFeatures = false;
           }
         ];
-        buildDependencies = [
-          {
-            name = "rustc_version";
-            packageId = "rustc_version";
-          }
-        ];
         features = {
           "async-timeout" = [
-            "dep:futures"
             "dep:futures-timer"
+            "dep:futures-util"
             "rstest_macros/async-timeout"
           ];
-          "default" = [ "async-timeout" ];
+          "crate-name" = [ "rstest_macros/crate-name" ];
+          "default" = [
+            "async-timeout"
+            "crate-name"
+          ];
         };
-        resolvedDefaultFeatures = [
-          "async-timeout"
-          "default"
-        ];
       };
       "rstest_macros" = rec {
         crateName = "rstest_macros";
-        version = "0.19.0";
+        version = "0.26.1";
         edition = "2021";
-        sha256 = "09ackagv8kc2v4xy0s7blyg4agij9bz9pbb31l5h4rqzrirdza84";
+        sha256 = "185v185wn2x3llp3nn1i7h44vi5ffnnsj8b1a32m2ygzy08m714w";
         procMacro = true;
         authors = [
           "Michele d'Amico <michele.damico@gmail.com>"
@@ -15364,15 +15333,18 @@ rec {
           }
         ];
         features = {
-          "default" = [ "async-timeout" ];
+          "crate-name" = [ "dep:proc-macro-crate" ];
+          "default" = [
+            "async-timeout"
+            "crate-name"
+          ];
         };
-        resolvedDefaultFeatures = [ "async-timeout" ];
       };
       "rstest_reuse" = rec {
         crateName = "rstest_reuse";
-        version = "0.6.0";
+        version = "0.7.0";
         edition = "2021";
-        sha256 = "191l5gfwx9rmkqd48s85fkh21b73f38838fc896r4rxy39l0nlw8";
+        sha256 = "057y4v1rh9br58n2m3xqvm8xyx8k96jpgibgls3sah78f93gpa5k";
         procMacro = true;
         authors = [
           "Michele d'Amico <michele.damico@gmail.com>"
@@ -15393,12 +15365,6 @@ rec {
               "full"
               "extra-traits"
             ];
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "rustc_version";
-            packageId = "rustc_version";
           }
         ];
 
@@ -17415,6 +17381,7 @@ rec {
           {
             name = "rstest";
             packageId = "rstest";
+            usesDefaultFeatures = false;
           }
           {
             name = "tempfile";
@@ -17745,6 +17712,7 @@ rec {
           {
             name = "rstest";
             packageId = "rstest";
+            usesDefaultFeatures = false;
           }
           {
             name = "rstest_reuse";
@@ -18202,6 +18170,7 @@ rec {
           {
             name = "rstest";
             packageId = "rstest";
+            usesDefaultFeatures = false;
           }
           {
             name = "tempfile";
@@ -18439,6 +18408,7 @@ rec {
           {
             name = "rstest";
             packageId = "rstest";
+            usesDefaultFeatures = false;
           }
           {
             name = "tempfile";
@@ -18774,6 +18744,7 @@ rec {
           {
             name = "rstest";
             packageId = "rstest";
+            usesDefaultFeatures = false;
           }
           {
             name = "rstest_reuse";
