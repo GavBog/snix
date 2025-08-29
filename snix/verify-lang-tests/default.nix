@@ -46,12 +46,14 @@ let
           (builtins.filter (t: t != null))
         ]
       )
-      [
-        "nix_tests"
-        "nix_tests/notyetpassing"
-        "snix_tests"
-        "snix_tests/notyetpassing"
-      ];
+      (
+        lib.filter (dir: lib.pathExists (testRoot + "/${dir}")) [
+          "nix_tests"
+          "nix_tests/notyetpassing"
+          "snix_tests"
+          "snix_tests/notyetpassing"
+        ]
+      );
 
   skippedLangTests = {
     # TODO(sterni): set up NIX_PATH in sandbox
