@@ -16,7 +16,11 @@ let
 
   inherit (pkgs.nixVersions) nix_2_3;
   # The latest Nix version we've verified to work for our testing suite.
-  nix_latest_verified = pkgs.nixVersions.nix_2_30;
+  _nix_latest_verified = pkgs.nixVersions.nix_2_30;
+  nix_latest_verified =
+    lib.warnIf (lib.versionOlder _nix_latest_verified.version pkgs.nixVersions.latest.version)
+      "The latest verified Nix version is out of date, consider updating the value of `nix_latest_verified` and verifying that the tests still pass."
+      _nix_latest_verified;
 
   parseTest =
     dir: baseName:
@@ -249,8 +253,5 @@ in
 depot.nix.readTree.drvTargets {
   "nix-${lib.versions.majorMinor nix_2_3.version}" = runCppNixLangTests nix_2_3;
   "nix-${lib.versions.majorMinor nix_latest_verified.version}" =
-    lib.warnIf (lib.versionOlder nix_latest_verified.version pkgs.nixVersions.latest.version)
-      "The latest verified Nix version is out of date, consider updating the value of `nix_latest_verified` and verifying that the tests still pass."
-      runCppNixLangTests
-      nix_latest_verified;
+    runCppNixLangTests nix_latest_verified;
 }
