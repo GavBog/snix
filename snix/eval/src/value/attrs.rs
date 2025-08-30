@@ -11,7 +11,7 @@ use std::iter::FromIterator;
 use std::rc::Rc;
 use std::sync::LazyLock;
 
-use bstr::BStr;
+use bstr::{BStr, ByteSlice};
 use itertools::Itertools as _;
 use rustc_hash::FxHashMap;
 use serde::Deserialize;
@@ -113,11 +113,15 @@ impl From<FxHashMap<NixString, Value>> for NixAttrs {
 impl TotalDisplay for NixAttrs {
     fn total_fmt(&self, f: &mut std::fmt::Formatter<'_>, set: &mut ThunkSet) -> std::fmt::Result {
         if self.is_derivation() {
-            write!(f, "«derivation ")?;
-            if let Some(p) = self.select("drvPath") {
-                p.total_fmt(f, set)?;
-            } else {
-                write!(f, "???")?;
+            write!(f, "«derivation")?;
+            // We cant use the default TotalDisplay implementation, because nix doesn't put quotes
+            // around the path here.
+            if let Some(Value::Thunk(p)) = self.select("drvPath") {
+                if p.is_forced()
+                    && let Ok(drv) = p.value().to_contextful_str()
+                {
+                    write!(f, " {}", drv.to_str_lossy())?;
+                };
             }
             return write!(f, "»");
         }
