@@ -11,6 +11,8 @@ use tracing::info;
 static GLOBAL: MiMalloc = MiMalloc;
 
 /// Expose the Nix HTTP Binary Cache protocol for a snix-store.
+/// Depending on the store backend(s) this is points at, it can also support
+/// uploads.
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
