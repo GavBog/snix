@@ -13,6 +13,12 @@ static GLOBAL: MiMalloc = MiMalloc;
 /// Expose the Nix HTTP Binary Cache protocol for a snix-store.
 /// Depending on the store backend(s) this is points at, it can also support
 /// uploads.
+/// While it doesn't support "Compression" as Nix understands it, it does use
+/// the HTTP Content-Encoding feature to zstd-compress over the wire, if the
+/// client negotiates it (which libcurl and by this Nix also does).
+/// This means uploads need to happen with compression=none,
+/// and NARInfo will say "Compression: none", but transfers are still
+/// compressed.
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
