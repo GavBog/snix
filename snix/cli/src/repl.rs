@@ -1,17 +1,23 @@
-use std::io::Write;
-use std::path::PathBuf;
-use std::rc::Rc;
-
-use rustc_hash::FxHashMap;
-use rustyline::{Editor, error::ReadlineError};
-use smol_str::SmolStr;
-use snix_eval::{GlobalsMap, SourceCode, Value};
-use snix_glue::snix_store_io::SnixStoreIO;
-
 use crate::{
     AllowIncomplete, Args, IncompleteInput, InterpretResult, assignment::Assignment, evaluate,
     interpret,
 };
+use rustc_hash::FxHashMap;
+use rustyline::EventHandler::Conditional;
+use rustyline::history::DefaultHistory;
+use rustyline::{
+    Cmd, ConditionalEventHandler, Editor, Event, EventContext, KeyEvent, Movement, RepeatCount,
+    error::ReadlineError,
+};
+use smol_str::SmolStr;
+use snix_eval::{GlobalsMap, SourceCode, Value};
+use snix_glue::snix_store_io::SnixStoreIO;
+use std::io::Write;
+use std::path::PathBuf;
+use std::process::Command;
+use std::rc::Rc;
+use std::{env, fs};
+use tracing::warn;
 
 fn state_dir() -> Option<PathBuf> {
     let mut path = dirs::data_dir();
@@ -88,7 +94,7 @@ impl CommandResult {
 pub struct Repl<'a> {
     /// In-progress multiline input, when the input so far doesn't parse as a complete expression
     multiline_input: Option<String>,
-    rl: Editor<()>,
+    rl: Editor<(), DefaultHistory>,
     /// Local variables defined at the top-level in the repl
     env: FxHashMap<SmolStr, Value>,
 
@@ -98,9 +104,59 @@ pub struct Repl<'a> {
     globals: Option<Rc<GlobalsMap>>,
 }
 
+struct BufferEditor;
+impl ConditionalEventHandler for BufferEditor {
+    fn handle(
+        &self,
+        _event: &Event,
+        _repeat_count: RepeatCount,
+        _positive: bool,
+        ctx: &EventContext<'_>,
+    ) -> Option<Cmd> {
+        let tempdir = tempfile::tempdir()
+            .inspect_err(|e| {
+                warn!(err=%e, "failed to create tempdir for editing");
+            })
+            .ok()?;
+
+        let editor_cmd = env::var("VISUAL")
+            .or_else(|_| env::var("EDITOR"))
+            .unwrap_or_else(|_| String::from("nano"));
+
+        let path = tempdir.path().join("expression.nix");
+
+        fs::write(&path, ctx.line())
+            .inspect_err(|e| {
+                warn!(err=%e, "failed to write buffer to file");
+            })
+            .ok()?;
+
+        Command::new(&editor_cmd)
+            .arg(&path)
+            .status()
+            .inspect_err(|e| {
+                warn!(err=%e, "editor returned with error");
+            })
+            .ok()?;
+
+        let new_content = fs::read_to_string(&path)
+            .inspect_err(|e| {
+                warn!(err=%e, "failed to read back in edited buffer");
+            })
+            .ok()?;
+
+        Some(Cmd::Replace(Movement::WholeBuffer, Some(new_content)))
+    }
+}
+
 impl<'a> Repl<'a> {
     pub fn new(io_handle: Rc<SnixStoreIO>, args: &'a Args) -> Self {
-        let rl = Editor::<()>::new().expect("should be able to launch rustyline");
+        let mut rl =
+            Editor::<(), DefaultHistory>::new().expect("should be able to launch rustyline");
+
+        // Registering keybind(s)
+        Self::binds(&mut rl);
+
         Self {
             multiline_input: None,
             rl,
@@ -110,6 +166,10 @@ impl<'a> Repl<'a> {
             source_map: Default::default(),
             globals: None,
         }
+    }
+
+    fn binds(rl: &mut Editor<(), DefaultHistory>) {
+        rl.bind_sequence(KeyEvent::ctrl('o'), Conditional(Box::new(BufferEditor)));
     }
 
     pub fn run<O: Write + Clone + Send, E: Write + Clone + Send>(
@@ -263,7 +323,7 @@ impl<'a> Repl<'a> {
                 globals,
                 success: _,
             }) => {
-                self.rl.add_history_entry(input);
+                let _ = self.rl.add_history_entry(input);
                 self.multiline_input = None;
                 if globals.is_some() {
                     self.globals = globals;

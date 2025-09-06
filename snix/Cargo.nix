@@ -867,7 +867,7 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.38.42";
             usesDefaultFeatures = false;
             features = [
               "fs"
@@ -986,7 +986,7 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.38.42";
             usesDefaultFeatures = false;
             target = { target, features }: ((target."unix" or false) && (!("linux" == target."os" or null)));
             features = [
@@ -997,7 +997,7 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.38.42";
             usesDefaultFeatures = false;
             target = { target, features }: (target."unix" or false);
             features = [
@@ -1053,7 +1053,7 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.38.42";
             usesDefaultFeatures = false;
             target = { target, features }: (target."unix" or false);
             features = [
@@ -3089,9 +3089,9 @@ rec {
       };
       "clipboard-win" = rec {
         crateName = "clipboard-win";
-        version = "4.5.0";
+        version = "5.4.1";
         edition = "2018";
-        sha256 = "0qh3rypkf1lazniq4nr04hxsck0d55rigb5sjvpvgnap4dyc54bi";
+        sha256 = "1m44gqy11rq1ww7jls86ppif98v6kv2wkwk8p17is86zsdq3gq5x";
         libName = "clipboard_win";
         authors = [
           "Douman <douman@gmx.se>"
@@ -3102,30 +3102,11 @@ rec {
             packageId = "error-code";
             target = { target, features }: (target."windows" or false);
           }
-          {
-            name = "str-buf";
-            packageId = "str-buf";
-            target = { target, features }: (target."windows" or false);
-          }
-          {
-            name = "winapi";
-            packageId = "winapi";
-            usesDefaultFeatures = false;
-            target = { target, features }: (target."windows" or false);
-            features = [
-              "basetsd"
-              "shellapi"
-              "winbase"
-              "winuser"
-              "winerror"
-              "stringapiset"
-              "errhandlingapi"
-              "synchapi"
-            ];
-          }
         ];
         features = {
+          "monitor" = [ "windows-win" ];
           "std" = [ "error-code/std" ];
+          "windows-win" = [ "dep:windows-win" ];
         };
       };
       "codemap" = rec {
@@ -4264,27 +4245,6 @@ rec {
         ];
 
       };
-      "dirs-next" = rec {
-        crateName = "dirs-next";
-        version = "2.0.0";
-        edition = "2018";
-        sha256 = "1q9kr151h9681wwp6is18750ssghz6j9j7qm7qi1ngcwy7mzi35r";
-        libName = "dirs_next";
-        authors = [
-          "The @xdg-rs members"
-        ];
-        dependencies = [
-          {
-            name = "cfg-if";
-            packageId = "cfg-if";
-          }
-          {
-            name = "dirs-sys-next";
-            packageId = "dirs-sys-next";
-          }
-        ];
-
-      };
       "dirs-sys" = rec {
         crateName = "dirs-sys";
         version = "0.3.7";
@@ -4293,42 +4253,6 @@ rec {
         libName = "dirs_sys";
         authors = [
           "Simon Ochsenreither <simon@ochsenreither.de>"
-        ];
-        dependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-            target = { target, features }: (target."unix" or false);
-          }
-          {
-            name = "redox_users";
-            packageId = "redox_users";
-            usesDefaultFeatures = false;
-            target = { target, features }: ("redox" == target."os" or null);
-          }
-          {
-            name = "winapi";
-            packageId = "winapi";
-            target = { target, features }: (target."windows" or false);
-            features = [
-              "knownfolders"
-              "objbase"
-              "shlobj"
-              "winbase"
-              "winerror"
-            ];
-          }
-        ];
-
-      };
-      "dirs-sys-next" = rec {
-        crateName = "dirs-sys-next";
-        version = "0.1.2";
-        edition = "2018";
-        sha256 = "0kavhavdxv4phzj4l0psvh55hszwnr0rcz8sxbvx20pyqi2a3gaf";
-        libName = "dirs_sys_next";
-        authors = [
-          "The @xdg-rs members"
         ];
         dependencies = [
           {
@@ -4764,23 +4688,12 @@ rec {
       };
       "error-code" = rec {
         crateName = "error-code";
-        version = "2.3.1";
+        version = "3.3.2";
         edition = "2018";
-        sha256 = "08baxlf8qz01lgjsdbfhs193r9y1nlc566s5xvzyf4dzwy8qkwb4";
+        sha256 = "0nacxm9xr3s1rwd6fabk3qm89fyglahmbi4m512y0hr8ym6dz8ny";
         libName = "error_code";
         authors = [
           "Douman <douman@gmx.se>"
-        ];
-        dependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "str-buf";
-            packageId = "str-buf";
-          }
         ];
         features = {
         };
@@ -4967,9 +4880,9 @@ rec {
       };
       "fd-lock" = rec {
         crateName = "fd-lock";
-        version = "3.0.13";
-        edition = "2018";
-        sha256 = "1df1jdncda67g65hrnmd2zsl7q5hdn8cm84chdalxndsx7akw0zg";
+        version = "4.0.4";
+        edition = "2021";
+        sha256 = "0y5a22zaqns06slndm64gjdx983i6b4l4ks895rxznnn4bv2zs8c";
         libName = "fd_lock";
         authors = [
           "Yoshua Wuyts <yoshuawuyts@gmail.com>"
@@ -4981,13 +4894,13 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 1.0.8";
             target = { target, features }: (target."unix" or false);
             features = [ "fs" ];
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.48.0";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -8792,7 +8705,7 @@ rec {
           "std"
         ];
       };
-      "linux-raw-sys" = rec {
+      "linux-raw-sys 0.4.14" = rec {
         crateName = "linux-raw-sys";
         version = "0.4.14";
         edition = "2021";
@@ -8827,6 +8740,37 @@ rec {
           "prctl"
           "std"
           "xdp"
+        ];
+      };
+      "linux-raw-sys 0.9.4" = rec {
+        crateName = "linux-raw-sys";
+        version = "0.9.4";
+        edition = "2021";
+        sha256 = "04kyjdrq79lz9ibrf7czk6cv9d3jl597pb9738vzbsbzy1j5i56d";
+        libName = "linux_raw_sys";
+        authors = [
+          "Dan Gohman <dev@sunfishcode.online>"
+        ];
+        features = {
+          "compiler_builtins" = [ "dep:compiler_builtins" ];
+          "core" = [ "dep:core" ];
+          "default" = [
+            "std"
+            "general"
+            "errno"
+          ];
+          "rustc-dep-of-std" = [
+            "core"
+            "compiler_builtins"
+            "no_std"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "elf"
+          "errno"
+          "general"
+          "ioctl"
+          "no_std"
         ];
       };
       "litemap" = rec {
@@ -9889,97 +9833,6 @@ rec {
           "zerocopy"
         ];
       };
-      "nix 0.25.1" = rec {
-        crateName = "nix";
-        version = "0.25.1";
-        edition = "2018";
-        sha256 = "1r4vyp5g1lxzpig31bkrhxdf2bggb4nvk405x5gngzfvwxqgyipk";
-        authors = [
-          "The nix-rust Project Developers"
-        ];
-        dependencies = [
-          {
-            name = "bitflags";
-            packageId = "bitflags 1.3.2";
-          }
-          {
-            name = "cfg-if";
-            packageId = "cfg-if";
-          }
-          {
-            name = "libc";
-            packageId = "libc";
-            features = [ "extra_traits" ];
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "autocfg";
-            packageId = "autocfg";
-          }
-        ];
-        features = {
-          "aio" = [ "pin-utils" ];
-          "default" = [
-            "acct"
-            "aio"
-            "dir"
-            "env"
-            "event"
-            "feature"
-            "fs"
-            "hostname"
-            "inotify"
-            "ioctl"
-            "kmod"
-            "mman"
-            "mount"
-            "mqueue"
-            "net"
-            "personality"
-            "poll"
-            "process"
-            "pthread"
-            "ptrace"
-            "quota"
-            "reboot"
-            "resource"
-            "sched"
-            "signal"
-            "socket"
-            "term"
-            "time"
-            "ucontext"
-            "uio"
-            "user"
-            "zerocopy"
-          ];
-          "dir" = [ "fs" ];
-          "memoffset" = [ "dep:memoffset" ];
-          "mount" = [ "uio" ];
-          "mqueue" = [ "fs" ];
-          "net" = [ "socket" ];
-          "pin-utils" = [ "dep:pin-utils" ];
-          "ptrace" = [ "process" ];
-          "sched" = [ "process" ];
-          "signal" = [ "process" ];
-          "socket" = [ "memoffset" ];
-          "ucontext" = [ "signal" ];
-          "user" = [ "feature" ];
-          "zerocopy" = [
-            "fs"
-            "uio"
-          ];
-        };
-        resolvedDefaultFeatures = [
-          "fs"
-          "ioctl"
-          "poll"
-          "process"
-          "signal"
-          "term"
-        ];
-      };
       "nix 0.26.4" = rec {
         crateName = "nix";
         version = "0.26.4";
@@ -10161,6 +10014,64 @@ rec {
           "default"
           "feature"
           "user"
+        ];
+      };
+      "nix 0.30.1" = rec {
+        crateName = "nix";
+        version = "0.30.1";
+        edition = "2021";
+        sha256 = "1dixahq9hk191g0c2ydc0h1ppxj0xw536y6rl63vlnp06lx3ylkl";
+        authors = [
+          "The nix-rust Project Developers"
+        ];
+        dependencies = [
+          {
+            name = "bitflags";
+            packageId = "bitflags 2.6.0";
+          }
+          {
+            name = "cfg-if";
+            packageId = "cfg-if";
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            features = [ "extra_traits" ];
+          }
+        ];
+        buildDependencies = [
+          {
+            name = "cfg_aliases";
+            packageId = "cfg_aliases";
+          }
+        ];
+        features = {
+          "aio" = [ "pin-utils" ];
+          "dir" = [ "fs" ];
+          "event" = [ "poll" ];
+          "memoffset" = [ "dep:memoffset" ];
+          "mount" = [ "uio" ];
+          "mqueue" = [ "fs" ];
+          "net" = [ "socket" ];
+          "pin-utils" = [ "dep:pin-utils" ];
+          "ptrace" = [ "process" ];
+          "sched" = [ "process" ];
+          "signal" = [ "process" ];
+          "socket" = [ "memoffset" ];
+          "ucontext" = [ "signal" ];
+          "user" = [ "feature" ];
+          "zerocopy" = [
+            "fs"
+            "uio"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "fs"
+          "ioctl"
+          "poll"
+          "process"
+          "signal"
+          "term"
         ];
       };
       "nix-compat" = rec {
@@ -12490,7 +12401,7 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.38.42";
             usesDefaultFeatures = false;
             target =
               { target, features }:
@@ -15530,7 +15441,7 @@ rec {
         ];
 
       };
-      "rustix" = rec {
+      "rustix 0.38.42" = rec {
         crateName = "rustix";
         version = "0.38.42";
         edition = "2021";
@@ -15676,7 +15587,7 @@ rec {
           }
           {
             name = "linux-raw-sys";
-            packageId = "linux-raw-sys";
+            packageId = "linux-raw-sys 0.4.14";
             usesDefaultFeatures = false;
             target =
               { target, features }:
@@ -15714,7 +15625,7 @@ rec {
           }
           {
             name = "linux-raw-sys";
-            packageId = "linux-raw-sys";
+            packageId = "linux-raw-sys 0.4.14";
             usesDefaultFeatures = false;
             target =
               { target, features }:
@@ -15864,6 +15775,339 @@ rec {
           "std"
           "time"
           "use-libc-auxv"
+        ];
+      };
+      "rustix 1.0.8" = rec {
+        crateName = "rustix";
+        version = "1.0.8";
+        edition = "2021";
+        sha256 = "1j6ajqi61agdnh1avr4bplrsgydjw1n4mycdxw3v8g94pyx1y60i";
+        authors = [
+          "Dan Gohman <dev@sunfishcode.online>"
+          "Jakub Konka <kubkon@jakubkonka.com>"
+        ];
+        dependencies = [
+          {
+            name = "bitflags";
+            packageId = "bitflags 2.6.0";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "errno";
+            packageId = "errno";
+            rename = "libc_errno";
+            optional = true;
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              (
+                (!(target."rustix_use_libc" or false))
+                && (!(target."miri" or false))
+                && ("linux" == target."os" or null)
+                && (
+                  ("little" == target."endian" or null)
+                  || (("s390x" == target."arch" or null) || ("powerpc" == target."arch" or null))
+                )
+                && (
+                  ("arm" == target."arch" or null)
+                  || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                  || ("riscv64" == target."arch" or null)
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                  || ("x86" == target."arch" or null)
+                  || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                )
+              );
+          }
+          {
+            name = "errno";
+            packageId = "errno";
+            rename = "libc_errno";
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              (
+                (!(target."windows" or false))
+                && (
+                  (target."rustix_use_libc" or false)
+                  || (target."miri" or false)
+                  || (
+                    !(
+                      ("linux" == target."os" or null)
+                      && (
+                        ("little" == target."endian" or null)
+                        || (("s390x" == target."arch" or null) || ("powerpc" == target."arch" or null))
+                      )
+                      && (
+                        ("arm" == target."arch" or null)
+                        || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                        || ("riscv64" == target."arch" or null)
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                        || ("x86" == target."arch" or null)
+                        || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                      )
+                    )
+                  )
+                )
+              );
+          }
+          {
+            name = "errno";
+            packageId = "errno";
+            rename = "libc_errno";
+            usesDefaultFeatures = false;
+            target = { target, features }: (target."windows" or false);
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            optional = true;
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              (
+                (!(target."rustix_use_libc" or false))
+                && (!(target."miri" or false))
+                && ("linux" == target."os" or null)
+                && (
+                  ("little" == target."endian" or null)
+                  || (("s390x" == target."arch" or null) || ("powerpc" == target."arch" or null))
+                )
+                && (
+                  ("arm" == target."arch" or null)
+                  || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                  || ("riscv64" == target."arch" or null)
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                  || ("x86" == target."arch" or null)
+                  || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                )
+              );
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              (
+                (!(target."windows" or false))
+                && (
+                  (target."rustix_use_libc" or false)
+                  || (target."miri" or false)
+                  || (
+                    !(
+                      ("linux" == target."os" or null)
+                      && (
+                        ("little" == target."endian" or null)
+                        || (("s390x" == target."arch" or null) || ("powerpc" == target."arch" or null))
+                      )
+                      && (
+                        ("arm" == target."arch" or null)
+                        || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                        || ("riscv64" == target."arch" or null)
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                        || ("x86" == target."arch" or null)
+                        || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                      )
+                    )
+                  )
+                )
+              );
+          }
+          {
+            name = "linux-raw-sys";
+            packageId = "linux-raw-sys 0.9.4";
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              (
+                (("android" == target."os" or null) || ("linux" == target."os" or null))
+                && (
+                  (target."rustix_use_libc" or false)
+                  || (target."miri" or false)
+                  || (
+                    !(
+                      ("linux" == target."os" or null)
+                      && (
+                        ("little" == target."endian" or null)
+                        || (("s390x" == target."arch" or null) || ("powerpc" == target."arch" or null))
+                      )
+                      && (
+                        ("arm" == target."arch" or null)
+                        || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                        || ("riscv64" == target."arch" or null)
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                        || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                        || ("x86" == target."arch" or null)
+                        || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                      )
+                    )
+                  )
+                )
+              );
+            features = [
+              "general"
+              "ioctl"
+              "no_std"
+            ];
+          }
+          {
+            name = "linux-raw-sys";
+            packageId = "linux-raw-sys 0.9.4";
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              (
+                (!(target."rustix_use_libc" or false))
+                && (!(target."miri" or false))
+                && ("linux" == target."os" or null)
+                && (
+                  ("little" == target."endian" or null)
+                  || (("s390x" == target."arch" or null) || ("powerpc" == target."arch" or null))
+                )
+                && (
+                  ("arm" == target."arch" or null)
+                  || (("aarch64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                  || ("riscv64" == target."arch" or null)
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("powerpc64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("s390x" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips32r6" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64" == target."arch" or null))
+                  || ((target."rustix_use_experimental_asm" or false) && ("mips64r6" == target."arch" or null))
+                  || ("x86" == target."arch" or null)
+                  || (("x86_64" == target."arch" or null) && ("64" == target."pointer_width" or null))
+                )
+              );
+            features = [
+              "general"
+              "errno"
+              "ioctl"
+              "no_std"
+              "elf"
+            ];
+          }
+          {
+            name = "windows-sys";
+            packageId = "windows-sys 0.59.0";
+            target = { target, features }: (target."windows" or false);
+            features = [
+              "Win32_Foundation"
+              "Win32_Networking_WinSock"
+            ];
+          }
+        ];
+        devDependencies = [
+          {
+            name = "errno";
+            packageId = "errno";
+            rename = "libc_errno";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+          }
+        ];
+        features = {
+          "all-apis" = [
+            "event"
+            "fs"
+            "io_uring"
+            "mm"
+            "mount"
+            "net"
+            "param"
+            "pipe"
+            "process"
+            "pty"
+            "rand"
+            "runtime"
+            "shm"
+            "stdio"
+            "system"
+            "termios"
+            "thread"
+            "time"
+          ];
+          "core" = [ "dep:core" ];
+          "default" = [ "std" ];
+          "io_uring" = [
+            "event"
+            "fs"
+            "net"
+            "thread"
+            "linux-raw-sys/io_uring"
+          ];
+          "libc" = [ "dep:libc" ];
+          "libc_errno" = [ "dep:libc_errno" ];
+          "linux_5_1" = [ "linux_4_11" ];
+          "linux_5_11" = [ "linux_5_1" ];
+          "linux_latest" = [ "linux_5_11" ];
+          "net" = [
+            "linux-raw-sys/net"
+            "linux-raw-sys/netlink"
+            "linux-raw-sys/if_ether"
+            "linux-raw-sys/xdp"
+          ];
+          "process" = [ "linux-raw-sys/prctl" ];
+          "pty" = [ "fs" ];
+          "runtime" = [ "linux-raw-sys/prctl" ];
+          "rustc-dep-of-std" = [
+            "core"
+            "rustc-std-workspace-alloc"
+            "linux-raw-sys/rustc-dep-of-std"
+            "bitflags/rustc-dep-of-std"
+          ];
+          "rustc-std-workspace-alloc" = [ "dep:rustc-std-workspace-alloc" ];
+          "shm" = [ "fs" ];
+          "std" = [
+            "bitflags/std"
+            "alloc"
+            "libc?/std"
+            "libc_errno?/std"
+          ];
+          "system" = [ "linux-raw-sys/system" ];
+          "thread" = [ "linux-raw-sys/prctl" ];
+          "use-libc" = [
+            "libc_errno"
+            "libc"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "fs"
+          "std"
         ];
       };
       "rustls" = rec {
@@ -16111,16 +16355,16 @@ rec {
       };
       "rustyline" = rec {
         crateName = "rustyline";
-        version = "10.1.1";
-        edition = "2018";
-        sha256 = "1vvsd68cch0lpcg6mcwfvfdd6r4cxbwis3bf9443phzkqcr3rs61";
+        version = "17.0.1";
+        edition = "2021";
+        sha256 = "14p4w6036f8ypw8w1szkk94wx4qpj8r56aay3l6v5kylnvq4sqd6";
         authors = [
           "Katsu Kawakami <kkawa1570@gmail.com>"
         ];
         dependencies = [
           {
             name = "bitflags";
-            packageId = "bitflags 1.3.2";
+            packageId = "bitflags 2.6.0";
           }
           {
             name = "cfg-if";
@@ -16132,13 +16376,14 @@ rec {
             target = { target, features }: (target."windows" or false);
           }
           {
-            name = "dirs-next";
-            packageId = "dirs-next";
+            name = "fd-lock";
+            packageId = "fd-lock";
             optional = true;
           }
           {
-            name = "fd-lock";
-            packageId = "fd-lock";
+            name = "home";
+            packageId = "home";
+            optional = true;
           }
           {
             name = "libc";
@@ -16154,7 +16399,7 @@ rec {
           }
           {
             name = "nix";
-            packageId = "nix 0.25.1";
+            packageId = "nix 0.30.1";
             usesDefaultFeatures = false;
             target = { target, features }: (target."unix" or false);
             features = [
@@ -16171,17 +16416,12 @@ rec {
             optional = true;
           }
           {
-            name = "scopeguard";
-            packageId = "scopeguard";
-            target = { target, features }: (target."windows" or false);
-          }
-          {
             name = "unicode-segmentation";
             packageId = "unicode-segmentation";
           }
           {
             name = "unicode-width";
-            packageId = "unicode-width 0.1.14";
+            packageId = "unicode-width 0.2.0";
           }
           {
             name = "utf8parse";
@@ -16189,43 +16429,50 @@ rec {
             target = { target, features }: (target."unix" or false);
           }
           {
-            name = "winapi";
-            packageId = "winapi";
+            name = "windows-sys";
+            packageId = "windows-sys 0.60.2";
             target = { target, features }: (target."windows" or false);
             features = [
-              "consoleapi"
-              "handleapi"
-              "synchapi"
-              "minwindef"
-              "processenv"
-              "std"
-              "winbase"
-              "wincon"
-              "winuser"
+              "Win32_Foundation"
+              "Win32_System_Console"
+              "Win32_Security"
+              "Win32_System_Threading"
+              "Win32_UI_Input_KeyboardAndMouse"
             ];
           }
         ];
         features = {
+          "buffer-redux" = [ "dep:buffer-redux" ];
           "case_insensitive_history_search" = [ "regex" ];
           "custom-bindings" = [ "radix_trie" ];
           "default" = [
             "custom-bindings"
             "with-dirs"
+            "with-file-history"
           ];
-          "dirs-next" = [ "dep:dirs-next" ];
+          "derive" = [ "rustyline-derive" ];
+          "fd-lock" = [ "dep:fd-lock" ];
+          "home" = [ "dep:home" ];
           "radix_trie" = [ "dep:radix_trie" ];
           "regex" = [ "dep:regex" ];
+          "rusqlite" = [ "dep:rusqlite" ];
+          "rustyline-derive" = [ "dep:rustyline-derive" ];
           "signal-hook" = [ "dep:signal-hook" ];
           "skim" = [ "dep:skim" ];
-          "with-dirs" = [ "dirs-next" ];
+          "termios" = [ "dep:termios" ];
+          "with-dirs" = [ "home" ];
+          "with-file-history" = [ "fd-lock" ];
           "with-fuzzy" = [ "skim" ];
+          "with-sqlite-history" = [ "rusqlite" ];
         };
         resolvedDefaultFeatures = [
           "custom-bindings"
           "default"
-          "dirs-next"
+          "fd-lock"
+          "home"
           "radix_trie"
           "with-dirs"
+          "with-file-history"
         ];
       };
       "ryu" = rec {
@@ -16316,10 +16563,6 @@ rec {
         features = {
           "default" = [ "use_std" ];
         };
-        resolvedDefaultFeatures = [
-          "default"
-          "use_std"
-        ];
       };
       "security-framework" = rec {
         crateName = "security-framework";
@@ -17961,6 +18204,10 @@ rec {
             packageId = "mimalloc";
           }
           {
+            name = "rand";
+            packageId = "rand";
+          }
+          {
             name = "rnix";
             packageId = "rnix";
           }
@@ -18000,6 +18247,10 @@ rec {
           {
             name = "snix-tracing";
             packageId = "snix-tracing";
+          }
+          {
+            name = "tempfile";
+            packageId = "tempfile";
           }
           {
             name = "thiserror";
@@ -19108,19 +19359,6 @@ rec {
         features = {
         };
       };
-      "str-buf" = rec {
-        crateName = "str-buf";
-        version = "1.0.6";
-        edition = "2018";
-        sha256 = "1l7q4nha7wpsr0970bfqm773vhmpwr9l6rr8r4gwgrh46wvdh24y";
-        libName = "str_buf";
-        authors = [
-          "Douman <douman@gmx.se>"
-        ];
-        features = {
-          "serde" = [ "dep:serde" ];
-        };
-      };
       "strsim" = rec {
         crateName = "strsim";
         version = "0.11.1";
@@ -19512,7 +19750,7 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.38.42";
             target = { target, features }: ((target."unix" or false) || ("wasi" == target."os" or null));
             features = [ "fs" ];
           }
@@ -25730,25 +25968,17 @@ rec {
           "debug" = [ "impl-debug" ];
         };
         resolvedDefaultFeatures = [
-          "basetsd"
           "consoleapi"
           "errhandlingapi"
           "fileapi"
           "handleapi"
           "knownfolders"
-          "minwindef"
           "objbase"
           "processenv"
-          "shellapi"
           "shlobj"
-          "std"
-          "stringapiset"
-          "synchapi"
           "sysinfoapi"
           "winbase"
-          "wincon"
           "winerror"
-          "winuser"
         ];
       };
       "winapi-i686-pc-windows-gnu" = rec {
@@ -26641,6 +26871,17 @@ rec {
               "clone-impls"
             ];
           }
+        ];
+
+      };
+      "windows-link" = rec {
+        crateName = "windows-link";
+        version = "0.1.3";
+        edition = "2021";
+        sha256 = "12kr1p46dbhpijr4zbwr2spfgq8i8c5x55mvvfmyl96m01cx4sjy";
+        libName = "windows_link";
+        authors = [
+          "Microsoft"
         ];
 
       };
@@ -27590,6 +27831,282 @@ rec {
           "default"
         ];
       };
+      "windows-sys 0.60.2" = rec {
+        crateName = "windows-sys";
+        version = "0.60.2";
+        edition = "2021";
+        sha256 = "1jrbc615ihqnhjhxplr2kw7rasrskv9wj3lr80hgfd42sbj01xgj";
+        libName = "windows_sys";
+        authors = [
+          "Microsoft"
+        ];
+        dependencies = [
+          {
+            name = "windows-targets";
+            packageId = "windows-targets 0.53.3";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "Wdk" = [ "Win32_Foundation" ];
+          "Wdk_Devices" = [ "Wdk" ];
+          "Wdk_Devices_Bluetooth" = [ "Wdk_Devices" ];
+          "Wdk_Devices_HumanInterfaceDevice" = [ "Wdk_Devices" ];
+          "Wdk_Foundation" = [ "Wdk" ];
+          "Wdk_Graphics" = [ "Wdk" ];
+          "Wdk_Graphics_Direct3D" = [ "Wdk_Graphics" ];
+          "Wdk_NetworkManagement" = [ "Wdk" ];
+          "Wdk_NetworkManagement_Ndis" = [ "Wdk_NetworkManagement" ];
+          "Wdk_NetworkManagement_WindowsFilteringPlatform" = [ "Wdk_NetworkManagement" ];
+          "Wdk_Storage" = [ "Wdk" ];
+          "Wdk_Storage_FileSystem" = [ "Wdk_Storage" ];
+          "Wdk_Storage_FileSystem_Minifilters" = [ "Wdk_Storage_FileSystem" ];
+          "Wdk_System" = [ "Wdk" ];
+          "Wdk_System_IO" = [ "Wdk_System" ];
+          "Wdk_System_Memory" = [ "Wdk_System" ];
+          "Wdk_System_OfflineRegistry" = [ "Wdk_System" ];
+          "Wdk_System_Registry" = [ "Wdk_System" ];
+          "Wdk_System_SystemInformation" = [ "Wdk_System" ];
+          "Wdk_System_SystemServices" = [ "Wdk_System" ];
+          "Wdk_System_Threading" = [ "Wdk_System" ];
+          "Win32" = [ "Win32_Foundation" ];
+          "Win32_Data" = [ "Win32" ];
+          "Win32_Data_HtmlHelp" = [ "Win32_Data" ];
+          "Win32_Data_RightsManagement" = [ "Win32_Data" ];
+          "Win32_Devices" = [ "Win32" ];
+          "Win32_Devices_AllJoyn" = [ "Win32_Devices" ];
+          "Win32_Devices_Beep" = [ "Win32_Devices" ];
+          "Win32_Devices_BiometricFramework" = [ "Win32_Devices" ];
+          "Win32_Devices_Bluetooth" = [ "Win32_Devices" ];
+          "Win32_Devices_Cdrom" = [ "Win32_Devices" ];
+          "Win32_Devices_Communication" = [ "Win32_Devices" ];
+          "Win32_Devices_DeviceAndDriverInstallation" = [ "Win32_Devices" ];
+          "Win32_Devices_DeviceQuery" = [ "Win32_Devices" ];
+          "Win32_Devices_Display" = [ "Win32_Devices" ];
+          "Win32_Devices_Dvd" = [ "Win32_Devices" ];
+          "Win32_Devices_Enumeration" = [ "Win32_Devices" ];
+          "Win32_Devices_Enumeration_Pnp" = [ "Win32_Devices_Enumeration" ];
+          "Win32_Devices_Fax" = [ "Win32_Devices" ];
+          "Win32_Devices_HumanInterfaceDevice" = [ "Win32_Devices" ];
+          "Win32_Devices_Nfc" = [ "Win32_Devices" ];
+          "Win32_Devices_Nfp" = [ "Win32_Devices" ];
+          "Win32_Devices_PortableDevices" = [ "Win32_Devices" ];
+          "Win32_Devices_Properties" = [ "Win32_Devices" ];
+          "Win32_Devices_Pwm" = [ "Win32_Devices" ];
+          "Win32_Devices_Sensors" = [ "Win32_Devices" ];
+          "Win32_Devices_SerialCommunication" = [ "Win32_Devices" ];
+          "Win32_Devices_Tapi" = [ "Win32_Devices" ];
+          "Win32_Devices_Usb" = [ "Win32_Devices" ];
+          "Win32_Devices_WebServicesOnDevices" = [ "Win32_Devices" ];
+          "Win32_Foundation" = [ "Win32" ];
+          "Win32_Gaming" = [ "Win32" ];
+          "Win32_Globalization" = [ "Win32" ];
+          "Win32_Graphics" = [ "Win32" ];
+          "Win32_Graphics_Dwm" = [ "Win32_Graphics" ];
+          "Win32_Graphics_Gdi" = [ "Win32_Graphics" ];
+          "Win32_Graphics_GdiPlus" = [ "Win32_Graphics" ];
+          "Win32_Graphics_Hlsl" = [ "Win32_Graphics" ];
+          "Win32_Graphics_OpenGL" = [ "Win32_Graphics" ];
+          "Win32_Graphics_Printing" = [ "Win32_Graphics" ];
+          "Win32_Graphics_Printing_PrintTicket" = [ "Win32_Graphics_Printing" ];
+          "Win32_Management" = [ "Win32" ];
+          "Win32_Management_MobileDeviceManagementRegistration" = [ "Win32_Management" ];
+          "Win32_Media" = [ "Win32" ];
+          "Win32_Media_Audio" = [ "Win32_Media" ];
+          "Win32_Media_DxMediaObjects" = [ "Win32_Media" ];
+          "Win32_Media_KernelStreaming" = [ "Win32_Media" ];
+          "Win32_Media_Multimedia" = [ "Win32_Media" ];
+          "Win32_Media_Streaming" = [ "Win32_Media" ];
+          "Win32_Media_WindowsMediaFormat" = [ "Win32_Media" ];
+          "Win32_NetworkManagement" = [ "Win32" ];
+          "Win32_NetworkManagement_Dhcp" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_Dns" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_InternetConnectionWizard" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_IpHelper" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_Multicast" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_Ndis" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_NetBios" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_NetManagement" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_NetShell" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_NetworkDiagnosticsFramework" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_P2P" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_QoS" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_Rras" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_Snmp" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_WNet" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_WebDav" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_WiFi" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_WindowsConnectionManager" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_WindowsFilteringPlatform" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_WindowsFirewall" = [ "Win32_NetworkManagement" ];
+          "Win32_NetworkManagement_WindowsNetworkVirtualization" = [ "Win32_NetworkManagement" ];
+          "Win32_Networking" = [ "Win32" ];
+          "Win32_Networking_ActiveDirectory" = [ "Win32_Networking" ];
+          "Win32_Networking_Clustering" = [ "Win32_Networking" ];
+          "Win32_Networking_HttpServer" = [ "Win32_Networking" ];
+          "Win32_Networking_Ldap" = [ "Win32_Networking" ];
+          "Win32_Networking_WebSocket" = [ "Win32_Networking" ];
+          "Win32_Networking_WinHttp" = [ "Win32_Networking" ];
+          "Win32_Networking_WinInet" = [ "Win32_Networking" ];
+          "Win32_Networking_WinSock" = [ "Win32_Networking" ];
+          "Win32_Networking_WindowsWebServices" = [ "Win32_Networking" ];
+          "Win32_Security" = [ "Win32" ];
+          "Win32_Security_AppLocker" = [ "Win32_Security" ];
+          "Win32_Security_Authentication" = [ "Win32_Security" ];
+          "Win32_Security_Authentication_Identity" = [ "Win32_Security_Authentication" ];
+          "Win32_Security_Authorization" = [ "Win32_Security" ];
+          "Win32_Security_Credentials" = [ "Win32_Security" ];
+          "Win32_Security_Cryptography" = [ "Win32_Security" ];
+          "Win32_Security_Cryptography_Catalog" = [ "Win32_Security_Cryptography" ];
+          "Win32_Security_Cryptography_Certificates" = [ "Win32_Security_Cryptography" ];
+          "Win32_Security_Cryptography_Sip" = [ "Win32_Security_Cryptography" ];
+          "Win32_Security_Cryptography_UI" = [ "Win32_Security_Cryptography" ];
+          "Win32_Security_DiagnosticDataQuery" = [ "Win32_Security" ];
+          "Win32_Security_DirectoryServices" = [ "Win32_Security" ];
+          "Win32_Security_EnterpriseData" = [ "Win32_Security" ];
+          "Win32_Security_ExtensibleAuthenticationProtocol" = [ "Win32_Security" ];
+          "Win32_Security_Isolation" = [ "Win32_Security" ];
+          "Win32_Security_LicenseProtection" = [ "Win32_Security" ];
+          "Win32_Security_NetworkAccessProtection" = [ "Win32_Security" ];
+          "Win32_Security_WinTrust" = [ "Win32_Security" ];
+          "Win32_Security_WinWlx" = [ "Win32_Security" ];
+          "Win32_Storage" = [ "Win32" ];
+          "Win32_Storage_Cabinets" = [ "Win32_Storage" ];
+          "Win32_Storage_CloudFilters" = [ "Win32_Storage" ];
+          "Win32_Storage_Compression" = [ "Win32_Storage" ];
+          "Win32_Storage_DistributedFileSystem" = [ "Win32_Storage" ];
+          "Win32_Storage_FileHistory" = [ "Win32_Storage" ];
+          "Win32_Storage_FileSystem" = [ "Win32_Storage" ];
+          "Win32_Storage_Imapi" = [ "Win32_Storage" ];
+          "Win32_Storage_IndexServer" = [ "Win32_Storage" ];
+          "Win32_Storage_InstallableFileSystems" = [ "Win32_Storage" ];
+          "Win32_Storage_IscsiDisc" = [ "Win32_Storage" ];
+          "Win32_Storage_Jet" = [ "Win32_Storage" ];
+          "Win32_Storage_Nvme" = [ "Win32_Storage" ];
+          "Win32_Storage_OfflineFiles" = [ "Win32_Storage" ];
+          "Win32_Storage_OperationRecorder" = [ "Win32_Storage" ];
+          "Win32_Storage_Packaging" = [ "Win32_Storage" ];
+          "Win32_Storage_Packaging_Appx" = [ "Win32_Storage_Packaging" ];
+          "Win32_Storage_ProjectedFileSystem" = [ "Win32_Storage" ];
+          "Win32_Storage_StructuredStorage" = [ "Win32_Storage" ];
+          "Win32_Storage_Vhd" = [ "Win32_Storage" ];
+          "Win32_Storage_Xps" = [ "Win32_Storage" ];
+          "Win32_System" = [ "Win32" ];
+          "Win32_System_AddressBook" = [ "Win32_System" ];
+          "Win32_System_Antimalware" = [ "Win32_System" ];
+          "Win32_System_ApplicationInstallationAndServicing" = [ "Win32_System" ];
+          "Win32_System_ApplicationVerifier" = [ "Win32_System" ];
+          "Win32_System_ClrHosting" = [ "Win32_System" ];
+          "Win32_System_Com" = [ "Win32_System" ];
+          "Win32_System_Com_Marshal" = [ "Win32_System_Com" ];
+          "Win32_System_Com_StructuredStorage" = [ "Win32_System_Com" ];
+          "Win32_System_Com_Urlmon" = [ "Win32_System_Com" ];
+          "Win32_System_ComponentServices" = [ "Win32_System" ];
+          "Win32_System_Console" = [ "Win32_System" ];
+          "Win32_System_CorrelationVector" = [ "Win32_System" ];
+          "Win32_System_DataExchange" = [ "Win32_System" ];
+          "Win32_System_DeploymentServices" = [ "Win32_System" ];
+          "Win32_System_DeveloperLicensing" = [ "Win32_System" ];
+          "Win32_System_Diagnostics" = [ "Win32_System" ];
+          "Win32_System_Diagnostics_Ceip" = [ "Win32_System_Diagnostics" ];
+          "Win32_System_Diagnostics_Debug" = [ "Win32_System_Diagnostics" ];
+          "Win32_System_Diagnostics_Debug_Extensions" = [ "Win32_System_Diagnostics_Debug" ];
+          "Win32_System_Diagnostics_Etw" = [ "Win32_System_Diagnostics" ];
+          "Win32_System_Diagnostics_ProcessSnapshotting" = [ "Win32_System_Diagnostics" ];
+          "Win32_System_Diagnostics_ToolHelp" = [ "Win32_System_Diagnostics" ];
+          "Win32_System_Diagnostics_TraceLogging" = [ "Win32_System_Diagnostics" ];
+          "Win32_System_DistributedTransactionCoordinator" = [ "Win32_System" ];
+          "Win32_System_Environment" = [ "Win32_System" ];
+          "Win32_System_ErrorReporting" = [ "Win32_System" ];
+          "Win32_System_EventCollector" = [ "Win32_System" ];
+          "Win32_System_EventLog" = [ "Win32_System" ];
+          "Win32_System_EventNotificationService" = [ "Win32_System" ];
+          "Win32_System_GroupPolicy" = [ "Win32_System" ];
+          "Win32_System_HostCompute" = [ "Win32_System" ];
+          "Win32_System_HostComputeNetwork" = [ "Win32_System" ];
+          "Win32_System_HostComputeSystem" = [ "Win32_System" ];
+          "Win32_System_Hypervisor" = [ "Win32_System" ];
+          "Win32_System_IO" = [ "Win32_System" ];
+          "Win32_System_Iis" = [ "Win32_System" ];
+          "Win32_System_Ioctl" = [ "Win32_System" ];
+          "Win32_System_JobObjects" = [ "Win32_System" ];
+          "Win32_System_Js" = [ "Win32_System" ];
+          "Win32_System_Kernel" = [ "Win32_System" ];
+          "Win32_System_LibraryLoader" = [ "Win32_System" ];
+          "Win32_System_Mailslots" = [ "Win32_System" ];
+          "Win32_System_Mapi" = [ "Win32_System" ];
+          "Win32_System_Memory" = [ "Win32_System" ];
+          "Win32_System_Memory_NonVolatile" = [ "Win32_System_Memory" ];
+          "Win32_System_MessageQueuing" = [ "Win32_System" ];
+          "Win32_System_MixedReality" = [ "Win32_System" ];
+          "Win32_System_Ole" = [ "Win32_System" ];
+          "Win32_System_PasswordManagement" = [ "Win32_System" ];
+          "Win32_System_Performance" = [ "Win32_System" ];
+          "Win32_System_Performance_HardwareCounterProfiling" = [ "Win32_System_Performance" ];
+          "Win32_System_Pipes" = [ "Win32_System" ];
+          "Win32_System_Power" = [ "Win32_System" ];
+          "Win32_System_ProcessStatus" = [ "Win32_System" ];
+          "Win32_System_Recovery" = [ "Win32_System" ];
+          "Win32_System_Registry" = [ "Win32_System" ];
+          "Win32_System_RemoteDesktop" = [ "Win32_System" ];
+          "Win32_System_RemoteManagement" = [ "Win32_System" ];
+          "Win32_System_RestartManager" = [ "Win32_System" ];
+          "Win32_System_Restore" = [ "Win32_System" ];
+          "Win32_System_Rpc" = [ "Win32_System" ];
+          "Win32_System_Search" = [ "Win32_System" ];
+          "Win32_System_Search_Common" = [ "Win32_System_Search" ];
+          "Win32_System_SecurityCenter" = [ "Win32_System" ];
+          "Win32_System_Services" = [ "Win32_System" ];
+          "Win32_System_SetupAndMigration" = [ "Win32_System" ];
+          "Win32_System_Shutdown" = [ "Win32_System" ];
+          "Win32_System_StationsAndDesktops" = [ "Win32_System" ];
+          "Win32_System_SubsystemForLinux" = [ "Win32_System" ];
+          "Win32_System_SystemInformation" = [ "Win32_System" ];
+          "Win32_System_SystemServices" = [ "Win32_System" ];
+          "Win32_System_Threading" = [ "Win32_System" ];
+          "Win32_System_Time" = [ "Win32_System" ];
+          "Win32_System_TpmBaseServices" = [ "Win32_System" ];
+          "Win32_System_UserAccessLogging" = [ "Win32_System" ];
+          "Win32_System_Variant" = [ "Win32_System" ];
+          "Win32_System_VirtualDosMachines" = [ "Win32_System" ];
+          "Win32_System_WindowsProgramming" = [ "Win32_System" ];
+          "Win32_System_Wmi" = [ "Win32_System" ];
+          "Win32_UI" = [ "Win32" ];
+          "Win32_UI_Accessibility" = [ "Win32_UI" ];
+          "Win32_UI_ColorSystem" = [ "Win32_UI" ];
+          "Win32_UI_Controls" = [ "Win32_UI" ];
+          "Win32_UI_Controls_Dialogs" = [ "Win32_UI_Controls" ];
+          "Win32_UI_HiDpi" = [ "Win32_UI" ];
+          "Win32_UI_Input" = [ "Win32_UI" ];
+          "Win32_UI_Input_Ime" = [ "Win32_UI_Input" ];
+          "Win32_UI_Input_KeyboardAndMouse" = [ "Win32_UI_Input" ];
+          "Win32_UI_Input_Pointer" = [ "Win32_UI_Input" ];
+          "Win32_UI_Input_Touch" = [ "Win32_UI_Input" ];
+          "Win32_UI_Input_XboxController" = [ "Win32_UI_Input" ];
+          "Win32_UI_InteractionContext" = [ "Win32_UI" ];
+          "Win32_UI_Magnification" = [ "Win32_UI" ];
+          "Win32_UI_Shell" = [ "Win32_UI" ];
+          "Win32_UI_Shell_Common" = [ "Win32_UI_Shell" ];
+          "Win32_UI_Shell_PropertiesSystem" = [ "Win32_UI_Shell" ];
+          "Win32_UI_TabletPC" = [ "Win32_UI" ];
+          "Win32_UI_TextServices" = [ "Win32_UI" ];
+          "Win32_UI_WindowsAndMessaging" = [ "Win32_UI" ];
+          "Win32_Web" = [ "Win32" ];
+          "Win32_Web_InternetExplorer" = [ "Win32_Web" ];
+        };
+        resolvedDefaultFeatures = [
+          "Win32"
+          "Win32_Foundation"
+          "Win32_Security"
+          "Win32_System"
+          "Win32_System_Console"
+          "Win32_System_Threading"
+          "Win32_UI"
+          "Win32_UI_Input"
+          "Win32_UI_Input_KeyboardAndMouse"
+          "default"
+        ];
+      };
       "windows-targets 0.48.5" = rec {
         crateName = "windows-targets";
         version = "0.48.5";
@@ -27712,7 +28229,7 @@ rec {
           }
           {
             name = "windows_i686_gnullvm";
-            packageId = "windows_i686_gnullvm";
+            packageId = "windows_i686_gnullvm 0.52.6";
             target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "i686-pc-windows-gnullvm");
           }
           {
@@ -27758,6 +28275,99 @@ rec {
         ];
 
       };
+      "windows-targets 0.53.3" = rec {
+        crateName = "windows-targets";
+        version = "0.53.3";
+        edition = "2021";
+        sha256 = "14fwwm136dhs3i1impqrrip7nvkra3bdxa4nqkblj604qhqn1znm";
+        libName = "windows_targets";
+        authors = [
+          "Microsoft"
+        ];
+        dependencies = [
+          {
+            name = "windows-link";
+            packageId = "windows-link";
+            usesDefaultFeatures = false;
+            target = { target, features }: (target."windows_raw_dylib" or false);
+          }
+          {
+            name = "windows_aarch64_gnullvm";
+            packageId = "windows_aarch64_gnullvm 0.53.0";
+            target =
+              { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "aarch64-pc-windows-gnullvm");
+          }
+          {
+            name = "windows_aarch64_msvc";
+            packageId = "windows_aarch64_msvc 0.53.0";
+            target =
+              { target, features }:
+              (
+                ("aarch64" == target."arch" or null)
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
+          }
+          {
+            name = "windows_i686_gnu";
+            packageId = "windows_i686_gnu 0.53.0";
+            target =
+              { target, features }:
+              (
+                ("x86" == target."arch" or null)
+                && ("gnu" == target."env" or null)
+                && (!("llvm" == target."abi" or null))
+                && (!(target."windows_raw_dylib" or false))
+              );
+          }
+          {
+            name = "windows_i686_gnullvm";
+            packageId = "windows_i686_gnullvm 0.53.0";
+            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "i686-pc-windows-gnullvm");
+          }
+          {
+            name = "windows_i686_msvc";
+            packageId = "windows_i686_msvc 0.53.0";
+            target =
+              { target, features }:
+              (
+                ("x86" == target."arch" or null)
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
+          }
+          {
+            name = "windows_x86_64_gnu";
+            packageId = "windows_x86_64_gnu 0.53.0";
+            target =
+              { target, features }:
+              (
+                ("x86_64" == target."arch" or null)
+                && ("gnu" == target."env" or null)
+                && (!("llvm" == target."abi" or null))
+                && (!(target."windows_raw_dylib" or false))
+              );
+          }
+          {
+            name = "windows_x86_64_gnullvm";
+            packageId = "windows_x86_64_gnullvm 0.53.0";
+            target =
+              { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-pc-windows-gnullvm");
+          }
+          {
+            name = "windows_x86_64_msvc";
+            packageId = "windows_x86_64_msvc 0.53.0";
+            target =
+              { target, features }:
+              (
+                (("x86_64" == target."arch" or null) || ("arm64ec" == target."arch" or null))
+                && ("msvc" == target."env" or null)
+                && (!(target."windows_raw_dylib" or false))
+              );
+          }
+        ];
+
+      };
       "windows_aarch64_gnullvm 0.48.5" = rec {
         crateName = "windows_aarch64_gnullvm";
         version = "0.48.5";
@@ -27773,6 +28383,16 @@ rec {
         version = "0.52.6";
         edition = "2021";
         sha256 = "1lrcq38cr2arvmz19v32qaggvj8bh1640mdm9c2fr877h0hn591j";
+        authors = [
+          "Microsoft"
+        ];
+
+      };
+      "windows_aarch64_gnullvm 0.53.0" = rec {
+        crateName = "windows_aarch64_gnullvm";
+        version = "0.53.0";
+        edition = "2021";
+        sha256 = "0r77pbpbcf8bq4yfwpz2hpq3vns8m0yacpvs2i5cn6fx1pwxbf46";
         authors = [
           "Microsoft"
         ];
@@ -27798,6 +28418,16 @@ rec {
         ];
 
       };
+      "windows_aarch64_msvc 0.53.0" = rec {
+        crateName = "windows_aarch64_msvc";
+        version = "0.53.0";
+        edition = "2021";
+        sha256 = "0v766yqw51pzxxwp203yqy39ijgjamp54hhdbsyqq6x1c8gilrf7";
+        authors = [
+          "Microsoft"
+        ];
+
+      };
       "windows_i686_gnu 0.48.5" = rec {
         crateName = "windows_i686_gnu";
         version = "0.48.5";
@@ -27818,11 +28448,31 @@ rec {
         ];
 
       };
-      "windows_i686_gnullvm" = rec {
+      "windows_i686_gnu 0.53.0" = rec {
+        crateName = "windows_i686_gnu";
+        version = "0.53.0";
+        edition = "2021";
+        sha256 = "1hvjc8nv95sx5vdd79fivn8bpm7i517dqyf4yvsqgwrmkmjngp61";
+        authors = [
+          "Microsoft"
+        ];
+
+      };
+      "windows_i686_gnullvm 0.52.6" = rec {
         crateName = "windows_i686_gnullvm";
         version = "0.52.6";
         edition = "2021";
         sha256 = "0rpdx1537mw6slcpqa0rm3qixmsb79nbhqy5fsm3q2q9ik9m5vhf";
+        authors = [
+          "Microsoft"
+        ];
+
+      };
+      "windows_i686_gnullvm 0.53.0" = rec {
+        crateName = "windows_i686_gnullvm";
+        version = "0.53.0";
+        edition = "2021";
+        sha256 = "04df1in2k91qyf1wzizvh560bvyzq20yf68k8xa66vdzxnywrrlw";
         authors = [
           "Microsoft"
         ];
@@ -27848,6 +28498,16 @@ rec {
         ];
 
       };
+      "windows_i686_msvc 0.53.0" = rec {
+        crateName = "windows_i686_msvc";
+        version = "0.53.0";
+        edition = "2021";
+        sha256 = "0pcvb25fkvqnp91z25qr5x61wyya12lx8p7nsa137cbb82ayw7sq";
+        authors = [
+          "Microsoft"
+        ];
+
+      };
       "windows_x86_64_gnu 0.48.5" = rec {
         crateName = "windows_x86_64_gnu";
         version = "0.48.5";
@@ -27863,6 +28523,16 @@ rec {
         version = "0.52.6";
         edition = "2021";
         sha256 = "0y0sifqcb56a56mvn7xjgs8g43p33mfqkd8wj1yhrgxzma05qyhl";
+        authors = [
+          "Microsoft"
+        ];
+
+      };
+      "windows_x86_64_gnu 0.53.0" = rec {
+        crateName = "windows_x86_64_gnu";
+        version = "0.53.0";
+        edition = "2021";
+        sha256 = "1flh84xkssn1n6m1riddipydcksp2pdl45vdf70jygx3ksnbam9f";
         authors = [
           "Microsoft"
         ];
@@ -27888,6 +28558,16 @@ rec {
         ];
 
       };
+      "windows_x86_64_gnullvm 0.53.0" = rec {
+        crateName = "windows_x86_64_gnullvm";
+        version = "0.53.0";
+        edition = "2021";
+        sha256 = "0mvc8119xpbi3q2m6mrjcdzl6afx4wffacp13v76g4jrs1fh6vha";
+        authors = [
+          "Microsoft"
+        ];
+
+      };
       "windows_x86_64_msvc 0.48.5" = rec {
         crateName = "windows_x86_64_msvc";
         version = "0.48.5";
@@ -27903,6 +28583,16 @@ rec {
         version = "0.52.6";
         edition = "2021";
         sha256 = "1v7rb5cibyzx8vak29pdrk8nx9hycsjs4w0jgms08qk49jl6v7sq";
+        authors = [
+          "Microsoft"
+        ];
+
+      };
+      "windows_x86_64_msvc 0.53.0" = rec {
+        crateName = "windows_x86_64_msvc";
+        version = "0.53.0";
+        edition = "2021";
+        sha256 = "11h4i28hq0zlnjcaqi2xdxr7ibnpa8djfggch9rki1zzb8qi8517";
         authors = [
           "Microsoft"
         ];
@@ -28004,14 +28694,14 @@ rec {
           }
           {
             name = "linux-raw-sys";
-            packageId = "linux-raw-sys";
+            packageId = "linux-raw-sys 0.4.14";
             usesDefaultFeatures = false;
             target = { target, features }: ("linux" == target."os" or null);
             features = [ "std" ];
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.38.42";
             usesDefaultFeatures = false;
             features = [
               "fs"
@@ -28022,7 +28712,7 @@ rec {
         devDependencies = [
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.38.42";
             usesDefaultFeatures = false;
             features = [ "net" ];
           }

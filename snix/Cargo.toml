@@ -113,7 +113,7 @@ rowan = "0.15"
 rstest = { version = "0.26.1", default-features = false }
 rstest_reuse = "0.7.0"
 rustc-hash = "2.0.0"
-rustyline = "10.1.1"
+rustyline = "17.0.1"
 serde = "1.0.209"
 serde_json = "1.0"
 serde_qs = "0.12.0"
