@@ -133,6 +133,9 @@ git push origin HEAD:refs/for/canon%r=alice,cc=bob,l=Autosubmit+1,publish-commen
 [Gerrit walkthrough]: https://gerrit-review.googlesource.com/Documentation/intro-gerrit-walkthrough.html
 [gerrit-for-github-users]: https://gerrit.wikimedia.org/r/Documentation/intro-gerrit-walkthrough-github.html
 [^1]: currently, `ssh-*-sk` keytypes are not supported, so use an `ssh-ed25519` key.
+      Due to [Gerrit Bugs](https://issues.gerritcodereview.com/issues/430338406),
+      make sure to explicitly deselect these keys in your `~/.ssh/config` file
+      if you still run into authentication issues.
 [^2]: abbreviation for "change list", and the review unit in Gerrit.
 
 ### Commit conventions
