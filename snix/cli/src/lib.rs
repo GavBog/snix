@@ -266,7 +266,7 @@ pub fn interpret<E: std::io::Write + Clone + Send>(
         if explain {
             writeln!(&mut output, "=> {}", value.explain()).unwrap();
         } else if args.raw {
-            writeln!(&mut output, "{}", value.to_contextful_str().unwrap()).unwrap();
+            writeln!(&mut output, "{value}").unwrap();
         } else {
             writeln!(&mut output, "=> {} :: {}", value, value.type_of()).unwrap();
         }
