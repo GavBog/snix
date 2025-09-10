@@ -50,6 +50,7 @@ pub fn add_fetcher_builtins<'co, 'ro, 'env, IO>(
 /// * `storePath`
 ///
 /// As they need to interact with the store implementation, we pass [`SnixStoreIO`].
+/// Due to #176, some IO still sidesteps `EvalIO` and accesses the filesystem directly.
 pub fn add_import_builtins<'co, 'ro, 'env, IO>(
     eval_builder: snix_eval::EvaluationBuilder<'co, 'ro, 'env, IO>,
     io: Rc<SnixStoreIO>,
