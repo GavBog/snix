@@ -28,26 +28,33 @@ struct EdgeWeight {
 /// constructed using the Default trait, or using `with_order` if the
 /// OrderValidator needs to be customized.
 ///
-/// If the user is receiving directories from canonical protobuf encoding in
-/// root-to-leaves order, and parsing them, she can call `digest_allowed`
-/// _before_ parsing the protobuf record and then add it with `add_unchecked`.
-/// All other users insert the directories via `add`, in their specified order.
+/// Users normally insert directories via `add` in the specified order.
+///
 /// During insertion, we validate as much as we can at that time:
 ///
-///  - individual validation of Directory messages
 ///  - validation of insertion order
 ///  - validation of size fields of referred Directories
 ///
-/// Internally it keeps all received Directories in a directed graph,
+/// Internally this keeps all received Directories in a directed graph,
 /// with node weights being the Directories and edges pointing to child/parent
 /// directories.
 ///
-/// Once all Directories have been inserted, a validate function can be
-/// called to perform a check for graph connectivity and ensure there's no
-/// disconnected components or missing nodes.
-/// Finally, the `drain_leaves_to_root` or `drain_root_to_leaves` can be
-/// _chained_ on validate to get an iterator over the (deduplicated and)
-/// validated list of directories in either order.
+/// Once all Directories have been inserted, a `validate` function can be called
+/// to perform a check for graph connectivity and ensure there's no disconnected
+/// components or missing nodes.
+///
+/// This returns a [ValidatedDirectoryGraph] type, with
+/// [ValidatedDirectoryGraph::drain_leaves_to_root] and
+/// [ValidatedDirectoryGraph::drain_root_to_leaves] methods, returning an
+/// iterator over the (deduplicated and) validated list of directories in either
+/// order.
+///
+/// Additionally, in the root to leaves case, there's `digest_allowed` and
+/// `add_ordered_unchecked` functions, allowing to query whether a potential
+/// Directory is expected, and only then insert it.
+/// This allows rejecting unexpected directories in serialized form before even
+/// parsing them.
+///
 #[derive(Default)]
 pub struct DirectoryGraph<O> {
     // A directed graph, using Directory as node weight.
@@ -88,16 +95,16 @@ impl DirectoryGraph<LeavesToRootValidator> {
                 "unknown directory was referenced".into(),
             ));
         }
-        self.add_order_unchecked(directory)
+        self.add_ordered_unchecked(directory)
     }
 }
 
 impl DirectoryGraph<RootToLeavesValidator> {
-    /// If the user is parsing directories from canonical protobuf encoding, she can
-    /// call `digest_allowed` _before_ parsing the protobuf record and then add it
-    /// with `add_unchecked`.
-    pub fn digest_allowed(&self, digest: B3Digest) -> bool {
-        self.order_validator.digest_allowed(&digest)
+    /// Allows checking a digest on whether it's expected at this time.
+    /// If used in combination with `add_ordered_unchecked`, avoids doing the
+    /// same lookup twice and parsing invalid, still serialized directories.
+    pub fn digest_allowed(&self, digest: &B3Digest) -> bool {
+        self.order_validator.digest_allowed(digest)
     }
 
     /// Insert a new Directory into the closure
@@ -108,7 +115,7 @@ impl DirectoryGraph<RootToLeavesValidator> {
             return Err(Error::ValidationError("unexpected digest".into()));
         }
         self.order_validator.add_directory_unchecked(&directory);
-        self.add_order_unchecked(directory)
+        self.add_ordered_unchecked(directory)
     }
 }
 
@@ -123,7 +130,7 @@ impl<O: OrderValidator> DirectoryGraph<O> {
     }
 
     /// Adds a directory which has already been confirmed to be in-order to the graph
-    pub fn add_order_unchecked(&mut self, directory: Directory) -> Result<(), Error> {
+    pub fn add_ordered_unchecked(&mut self, directory: Directory) -> Result<(), Error> {
         let digest = directory.digest();
 
         // Teach the graph about the existence of a node with this digest
