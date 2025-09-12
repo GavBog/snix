@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use petgraph::{
-    Direction, Incoming,
+    Direction,
     graph::{DiGraph, NodeIndex},
-    visit::{Bfs, DfsPostOrder, EdgeRef, IntoNodeIdentifiers, Walker},
+    visit::{Bfs, DfsPostOrder, EdgeRef, Walker},
 };
 use tracing::instrument;
 
@@ -53,7 +53,7 @@ pub struct DirectoryGraph<O> {
     // A directed graph, using Directory as node weight.
     // Edges point from parents to children.
     //
-    // Nodes with None weigths might exist when a digest has been referred to but the directory
+    // Nodes with None weights might exist when a digest has been referred to but the directory
     // with this digest has not yet been sent.
     //
     // The option in the edge weight tracks the pending validation state of the respective edge, for example if
@@ -64,12 +64,6 @@ pub struct DirectoryGraph<O> {
     digest_to_node_ix: HashMap<B3Digest, NodeIndex>,
 
     order_validator: O,
-}
-
-pub struct ValidatedDirectoryGraph {
-    graph: DiGraph<Option<Directory>, Option<EdgeWeight>>,
-
-    root: Option<NodeIndex>,
 }
 
 fn check_edge(edge: &EdgeWeight, child: &Directory) -> Result<(), Error> {
@@ -200,75 +194,77 @@ impl<O: OrderValidator> DirectoryGraph<O> {
     #[instrument(level = "trace", skip_all, err)]
     pub fn validate(self) -> Result<ValidatedDirectoryGraph, Error> {
         // find all initial nodes (nodes without incoming edges)
-        let mut roots = self
-            .graph
-            .node_identifiers()
-            .filter(|&a| self.graph.neighbors_directed(a, Incoming).next().is_none());
+        // there must exactly be one, which is the root.
+        let root_idx = {
+            let mut init_nodes = self.graph.externals(Direction::Incoming);
 
-        let root = roots.next();
-        if roots.next().is_some() {
-            return Err(Error::ValidationError(
-                "graph has disconnected roots".into(),
-            ));
-        }
+            match (init_nodes.next(), init_nodes.next()) {
+                (None, _) => return Err(Error::ValidationError("graph has no init nodes".into())),
+                (Some(root_idx), None) => root_idx,
+                (Some(_idx_1), Some(_idx_2)) => {
+                    return Err(Error::ValidationError("graph has no single root".into()));
+                }
+            }
+        };
 
-        // test that the graph is complete
+        // While doing so, ensure none of the node weights are still None (all
+        // digests introduced via digests were actually `add()`ed).
         if self.graph.raw_nodes().iter().any(|n| n.weight.is_none()) {
             return Err(Error::ValidationError("graph is incomplete".into()));
         }
 
         Ok(ValidatedDirectoryGraph {
             graph: self.graph,
-            root,
+            root_idx,
         })
     }
 }
 
+/// This represents a validated directory graph, meaning:
+/// - it's not empty
+/// - it has one root
+/// - it is connected
+///
+/// It can be drained in root-to-leaves, or leaves-to-root order.
+pub struct ValidatedDirectoryGraph {
+    // NOTE: we only use Option<_> here to avoid ownership problems while draining,
+    // and don't look at the edge weights anymore.
+    // We don't keep these graphs around for too long, and looping over them
+    // multiple times would be worse.
+    graph: DiGraph<Option<Directory>, Option<EdgeWeight>>,
+
+    root_idx: NodeIndex,
+}
+
 impl ValidatedDirectoryGraph {
     /// Return the list of directories in from-root-to-leaves order.
-    /// In case no elements have been inserted, returns an empty list.
-    ///
-    /// panics if the specified root is not in the graph
     #[instrument(level = "trace", skip_all)]
     pub fn drain_root_to_leaves(self) -> impl Iterator<Item = Directory> {
-        let order = match self.root {
-            Some(root) => {
-                // do a BFS traversal of the graph, starting with the root node
-                Bfs::new(&self.graph, root)
-                    .iter(&self.graph)
-                    .collect::<Vec<_>>()
-            }
-            None => vec![], // No nodes have been inserted, do not traverse
-        };
+        // do a BFS traversal of the graph, starting with the root node
+        let order = Bfs::new(&self.graph, self.root_idx)
+            .iter(&self.graph)
+            .collect::<Vec<_>>();
 
         let (mut nodes, _edges) = self.graph.into_nodes_edges();
 
         order
             .into_iter()
-            .filter_map(move |i| nodes[i.index()].weight.take())
+            .map(move |i| nodes[i.index()].weight.take().expect("node taken twice"))
     }
 
     /// Return the list of directories in from-leaves-to-root order.
-    /// In case no elements have been inserted, returns an empty list.
-    ///
-    /// panics when the specified root is not in the graph
     #[instrument(level = "trace", skip_all)]
     pub fn drain_leaves_to_root(self) -> impl Iterator<Item = Directory> {
-        let order = match self.root {
-            Some(root) => {
-                // do a DFS Post-Order traversal of the graph, starting with the root node
-                DfsPostOrder::new(&self.graph, root)
-                    .iter(&self.graph)
-                    .collect::<Vec<_>>()
-            }
-            None => vec![], // No nodes have been inserted, do not traverse
-        };
+        // do a DFS Post-Order traversal of the graph, starting with the root node
+        let order = DfsPostOrder::new(&self.graph, self.root_idx)
+            .iter(&self.graph)
+            .collect::<Vec<_>>();
 
         let (mut nodes, _edges) = self.graph.into_nodes_edges();
 
         order
             .into_iter()
-            .filter_map(move |i| nodes[i.index()].weight.take())
+            .map(move |i| nodes[i.index()].weight.take().expect("node taken twice"))
     }
 }
 
