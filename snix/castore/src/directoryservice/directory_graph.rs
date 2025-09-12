@@ -266,6 +266,17 @@ impl ValidatedDirectoryGraph {
             .into_iter()
             .map(move |i| nodes[i.index()].weight.take().expect("node taken twice"))
     }
+
+    /// Returns the root [Directory].
+    /// **Panics** if nothing has been inserted.
+    #[instrument(level = "trace", skip_all)]
+    pub fn root(&self) -> &Directory {
+        self.graph
+            .node_weight(self.root_idx)
+            .expect("no root found")
+            .as_ref()
+            .expect("weight may not be none")
+    }
 }
 
 #[cfg(test)]

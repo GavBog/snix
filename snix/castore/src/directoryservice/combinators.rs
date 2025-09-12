@@ -52,34 +52,44 @@ where
             None => {
                 trace!("not found in near, asking remote…");
 
-                let mut copy = DirectoryGraph::with_order(
-                    RootToLeavesValidator::new_with_root_digest(digest.clone()),
-                );
+                // Produce a graph of directories receving from far, or none, if the stream is empty.
+                match self
+                    .far
+                    .get_recursive(digest)
+                    .try_fold(None, async move |state, directory| {
+                        let mut received_dirs = state.unwrap_or_else(|| {
+                            DirectoryGraph::with_order(RootToLeavesValidator::new_with_root_digest(
+                                digest.clone(),
+                            ))
+                        });
 
-                let mut stream = self.far.get_recursive(digest);
-                let root = stream.try_next().await?;
+                        received_dirs
+                            .add(directory)
+                            .map_err(|e| Error::StorageError(e.to_string()))?;
 
-                if let Some(root) = root.clone() {
-                    copy.add(root)
-                        .map_err(|e| Error::StorageError(e.to_string()))?;
+                        Ok(Some(received_dirs))
+                    })
+                    .await?
+                {
+                    Some(recv_directories) => {
+                        let dirs = recv_directories
+                            .validate()
+                            .map_err(|e| Error::StorageError(e.to_string()))?;
+
+                        let root = dirs.root().to_owned();
+
+                        // drain the directory graph by putting into near.
+                        let mut put = self.near.put_multiple_start();
+                        for dir in dirs.drain_leaves_to_root() {
+                            put.put(dir).await?;
+                        }
+                        let put_root_digest = put.close().await?;
+                        debug_assert_eq!(digest, &put_root_digest);
+
+                        Ok(Some(root))
+                    }
+                    None => Ok(None),
                 }
-
-                while let Some(dir) = stream.try_next().await? {
-                    copy.add(dir)
-                        .map_err(|e| Error::StorageError(e.to_string()))?;
-                }
-
-                let copy = copy
-                    .validate()
-                    .map_err(|e| Error::StorageError(e.to_string()))?;
-
-                let mut put = self.near.put_multiple_start();
-                for dir in copy.drain_leaves_to_root() {
-                    put.put(dir).await?;
-                }
-                put.close().await?;
-
-                Ok(root)
             }
         }
     }
