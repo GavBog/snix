@@ -1,6 +1,6 @@
 # BlobStore: Chunking & Verified Streaming
 
-`tvix-castore`'s BlobStore is a content-addressed storage system, using [blake3]
+`snix-castore`'s BlobStore is a content-addressed storage system, using [blake3]
 as hash function.
 
 Returned data is fetched by using the digest as lookup key, and can be verified
@@ -56,8 +56,8 @@ how compact data is stored on-disk.
 This can be workarounded by agreeing on only a single way of chunking, but it's
 not pretty and misses a lot of deduplication potential.
 
-### Chunking in Tvix' Blobstore
-tvix-castore's BlobStore uses a hybrid approach to eliminate some of the
+### Chunking in Snix's Blobstore
+snix-castore's BlobStore uses a hybrid approach to eliminate some of the
 disadvantages, while still being content-addressed internally, with the
 highlighted benefits.
 
