@@ -39,17 +39,17 @@ pub struct CompositionConfigs {
 #[group(id = "StoreServiceUrls")]
 pub struct ServiceUrls {
     #[clap(flatten)]
-    castore_service_addrs: castore_utils::ServiceUrls,
+    pub castore_service_addrs: castore_utils::ServiceUrls,
 
     #[arg(long, env, default_value = "redb:///var/lib/snix-store/pathinfo.redb")]
-    path_info_service_addr: String,
+    pub path_info_service_addr: String,
 
     /// Path to a TOML file describing the way the services should be composed
     /// Experimental because the format is not final.
     /// If specified, the other service addrs are ignored.
     #[cfg(feature = "xp-composition-cli")]
     #[arg(long, env)]
-    experimental_store_composition: Option<String>,
+    pub experimental_store_composition: Option<String>,
 }
 
 /// Provides a set of clap arguments to configure snix-\[ca\]store services.
