@@ -1,16 +1,33 @@
 use super::NixHash;
 use crate::nixbase32;
 use serde::{Deserialize, Serialize};
+use std::fmt::Formatter;
 
 impl<'de> Deserialize<'de> for NixHash {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        let str: &'de str = Deserialize::deserialize(deserializer)?;
-        NixHash::from_str(str, None).map_err(|_| {
-            serde::de::Error::invalid_value(serde::de::Unexpected::Str(str), &"NixHash")
-        })
+        use serde::de::{Error, Visitor};
+
+        struct NixHashVisitor;
+
+        impl Visitor<'_> for NixHashVisitor {
+            type Value = NixHash;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("a string representing a Nix hash")
+            }
+
+            fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                NixHash::from_str(s, None).map_err(|err| Error::custom(format!("{err}: {s:?}")))
+            }
+        }
+
+        deserializer.deserialize_str(NixHashVisitor)
     }
 }
 
