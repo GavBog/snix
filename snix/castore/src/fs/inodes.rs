@@ -51,6 +51,7 @@ impl InodeData {
                 }
             },
             mode: self.as_fuse_type() | self.mode(),
+            mtime: 1, // Everything in /nix/store must have timestamp "1".
             ..Default::default()
         }
     }
