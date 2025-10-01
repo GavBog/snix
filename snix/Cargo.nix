@@ -17393,6 +17393,10 @@ rec {
             packageId = "tracing";
           }
           {
+            name = "typed-builder";
+            packageId = "typed-builder";
+          }
+          {
             name = "url";
             packageId = "url";
           }
@@ -22961,6 +22965,55 @@ rec {
           "diff" = [ "dissimilar" ];
           "dissimilar" = [ "dep:dissimilar" ];
         };
+      };
+      "typed-builder" = rec {
+        crateName = "typed-builder";
+        version = "0.22.0";
+        edition = "2021";
+        sha256 = "06mqav48j9x13lza7f1hh18d8jfmdj26w7n1gm9dx5lcj4y3m2ir";
+        libName = "typed_builder";
+        authors = [
+          "IdanArye <idanarye@gmail.com>"
+          "Chris Morgan <me@chrismorgan.info>"
+        ];
+        dependencies = [
+          {
+            name = "typed-builder-macro";
+            packageId = "typed-builder-macro";
+          }
+        ];
+
+      };
+      "typed-builder-macro" = rec {
+        crateName = "typed-builder-macro";
+        version = "0.22.0";
+        edition = "2021";
+        sha256 = "08djzyhiv4cwdx7j7rmpnpbd725vns0jh2dwny7gglb87yicwj0f";
+        procMacro = true;
+        libName = "typed_builder_macro";
+        authors = [
+          "IdanArye <idanarye@gmail.com>"
+          "Chris Morgan <me@chrismorgan.info>"
+        ];
+        dependencies = [
+          {
+            name = "proc-macro2";
+            packageId = "proc-macro2";
+          }
+          {
+            name = "quote";
+            packageId = "quote";
+          }
+          {
+            name = "syn";
+            packageId = "syn 2.0.93";
+            features = [
+              "full"
+              "extra-traits"
+            ];
+          }
+        ];
+
       };
       "typeid" = rec {
         crateName = "typeid";
