@@ -9,6 +9,8 @@ mod grpc;
 #[cfg(target_os = "linux")]
 mod oci;
 
+mod bwrap;
+
 pub use dummy::DummyBuildService;
 pub use from_addr::from_addr;
 

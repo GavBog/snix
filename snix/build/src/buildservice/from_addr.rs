@@ -1,3 +1,6 @@
+#[cfg(target_os = "linux")]
+use crate::buildservice::bwrap::BubblewrapBuildService;
+
 use super::{BuildService, DummyBuildService, grpc::GRPCBuildService};
 use snix_castore::{blobservice::BlobService, directoryservice::DirectoryService};
 use url::Url;
@@ -6,6 +9,8 @@ use url::Url;
 use super::oci::OCIBuildService;
 #[cfg(all(not(target_os = "linux"), doc))]
 struct OCIBuildService;
+#[cfg(all(not(target_os = "linux"), doc))]
+struct BubblewrapBuildService;
 
 /// Constructs a new instance of a [BuildService] from an URI.
 ///
@@ -13,6 +18,7 @@ struct OCIBuildService;
 /// - `dummy://` ([DummyBuildService])
 /// - `oci://` ([OCIBuildService])
 /// - `grpc+*://` ([GRPCBuildService])
+/// - `bwrap://` ([BubblewrapBuildService])
 ///
 /// As some of these [BuildService] need to talk to a [BlobService] and
 /// [DirectoryService], these also need to be passed in.
@@ -42,6 +48,19 @@ where
             // TODO: make sandbox shell and rootless_uid_gid
 
             Box::new(OCIBuildService::new(
+                url.path().into(),
+                blob_service,
+                directory_service,
+            ))
+        }
+        #[cfg(target_os = "linux")]
+        "bwrap" => {
+            // bwrap wants a path in which it creates bundles.
+            if url.path().is_empty() {
+                Err(std::io::Error::other("bwap needs a bundle dir as path"))?
+            }
+
+            Box::new(BubblewrapBuildService::new(
                 url.path().into(),
                 blob_service,
                 directory_service,
