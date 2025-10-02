@@ -30,6 +30,7 @@ pkgs.mkShell {
     pkgs.runc
     pkgs.cbtemulator
     pkgs.google-cloud-bigtable-tool
+    pkgs.bubblewrap
   ];
 
   # Set SNIX_BENCH_NIX_PATH to a somewhat pinned nixpkgs path.
