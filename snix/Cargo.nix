@@ -585,6 +585,76 @@ rec {
         ];
 
       };
+      "astral-tokio-tar" = rec {
+        crateName = "astral-tokio-tar";
+        version = "0.5.6";
+        edition = "2021";
+        sha256 = "1rdvgsxmpb7acg8591437hwddcydgm6fgjz2w511x6vnq439l5zc";
+        libName = "tokio_tar";
+        authors = [
+          "Alex Crichton <alex@alexcrichton.com>"
+          "dignifiedquire <me@dignifiequire.com>"
+          "Artem Vorotnikov <artem@vorotnikov.me>"
+          "Aiden McClelland <me@drbonez.dev>"
+        ];
+        dependencies = [
+          {
+            name = "filetime";
+            packageId = "filetime";
+          }
+          {
+            name = "futures-core";
+            packageId = "futures-core";
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: (target."unix" or false);
+          }
+          {
+            name = "portable-atomic";
+            packageId = "portable-atomic";
+          }
+          {
+            name = "rustc-hash";
+            packageId = "rustc-hash 2.1.0";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "fs"
+              "io-util"
+              "rt"
+            ];
+          }
+          {
+            name = "tokio-stream";
+            packageId = "tokio-stream";
+          }
+          {
+            name = "xattr";
+            packageId = "xattr";
+            optional = true;
+            target = { target, features }: (target."unix" or false);
+          }
+        ];
+        devDependencies = [
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [ "full" ];
+          }
+        ];
+        features = {
+          "default" = [ "xattr" ];
+          "xattr" = [ "dep:xattr" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "xattr"
+        ];
+      };
       "async-channel" = rec {
         crateName = "async-channel";
         version = "2.3.1";
@@ -8701,7 +8771,7 @@ rec {
           }
           {
             name = "redox_syscall";
-            packageId = "redox_syscall 0.5.8";
+            packageId = "redox_syscall";
             optional = true;
           }
         ];
@@ -11954,7 +12024,7 @@ rec {
           }
           {
             name = "redox_syscall";
-            packageId = "redox_syscall 0.5.8";
+            packageId = "redox_syscall";
             target = { target, features }: ("redox" == target."os" or null);
           }
           {
@@ -13913,30 +13983,7 @@ rec {
         };
         resolvedDefaultFeatures = [ "logging" ];
       };
-      "redox_syscall 0.3.5" = rec {
-        crateName = "redox_syscall";
-        version = "0.3.5";
-        edition = "2018";
-        sha256 = "0acgiy2lc1m2vr8cr33l5s7k9wzby8dybyab1a9p753hcbr68xjn";
-        libName = "syscall";
-        authors = [
-          "Jeremy Soller <jackpot51@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "bitflags";
-            packageId = "bitflags 1.3.2";
-          }
-        ];
-        features = {
-          "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [
-            "core"
-            "bitflags/rustc-dep-of-std"
-          ];
-        };
-      };
-      "redox_syscall 0.5.8" = rec {
+      "redox_syscall" = rec {
         crateName = "redox_syscall";
         version = "0.5.8";
         edition = "2021";
@@ -17417,6 +17464,11 @@ rec {
         libName = "snix_castore";
         dependencies = [
           {
+            name = "astral-tokio-tar";
+            packageId = "astral-tokio-tar";
+            rename = "tokio-tar";
+          }
+          {
             name = "async-compression";
             packageId = "async-compression";
             features = [
@@ -17593,10 +17645,6 @@ rec {
               "fs"
               "net"
             ];
-          }
-          {
-            name = "tokio-tar";
-            packageId = "tokio-tar";
           }
           {
             name = "tokio-util";
@@ -18254,6 +18302,11 @@ rec {
         libName = "snix_glue";
         dependencies = [
           {
+            name = "astral-tokio-tar";
+            packageId = "astral-tokio-tar";
+            rename = "tokio-tar";
+          }
+          {
             name = "async-compression";
             packageId = "async-compression";
             features = [
@@ -18351,10 +18404,6 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-          }
-          {
-            name = "tokio-tar";
-            packageId = "tokio-tar";
           }
           {
             name = "tokio-util";
@@ -20470,73 +20519,6 @@ rec {
           "fs"
           "net"
           "time"
-        ];
-      };
-      "tokio-tar" = rec {
-        crateName = "tokio-tar";
-        version = "0.3.1";
-        edition = "2018";
-        sha256 = "0xffvap4g7hlswk5daklk3jaqha6s6wxw72c24kmqgna23018mwx";
-        libName = "tokio_tar";
-        authors = [
-          "Alex Crichton <alex@alexcrichton.com>"
-          "dignifiedquire <me@dignifiequire.com>"
-          "Artem Vorotnikov <artem@vorotnikov.me>"
-          "Aiden McClelland <me@drbonez.dev>"
-        ];
-        dependencies = [
-          {
-            name = "filetime";
-            packageId = "filetime";
-          }
-          {
-            name = "futures-core";
-            packageId = "futures-core";
-          }
-          {
-            name = "libc";
-            packageId = "libc";
-            target = { target, features }: (target."unix" or false);
-          }
-          {
-            name = "redox_syscall";
-            packageId = "redox_syscall 0.3.5";
-            target = { target, features }: ("redox" == target."os" or null);
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [
-              "fs"
-              "io-util"
-              "rt"
-            ];
-          }
-          {
-            name = "tokio-stream";
-            packageId = "tokio-stream";
-          }
-          {
-            name = "xattr";
-            packageId = "xattr";
-            optional = true;
-            target = { target, features }: (target."unix" or false);
-          }
-        ];
-        devDependencies = [
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [ "full" ];
-          }
-        ];
-        features = {
-          "default" = [ "xattr" ];
-          "xattr" = [ "dep:xattr" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "xattr"
         ];
       };
       "tokio-test" = rec {
