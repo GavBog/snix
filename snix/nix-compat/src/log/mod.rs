@@ -118,7 +118,10 @@ where
 pub enum Field<'a> {
     Int(u64),
     String(
-        #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_bytes_as_string"))]
+        #[cfg_attr(
+            feature = "serde",
+            serde(serialize_with = "serialize_bytes_as_string", borrow)
+        )]
         std::borrow::Cow<'a, [u8]>,
     ),
 }
@@ -227,6 +230,8 @@ pub enum Error {
 // while it *is* compared.
 #[allow(unused_variables)]
 mod test {
+    use std::borrow::Cow;
+
     use super::VerbosityLevel;
     #[cfg(feature = "serde")]
     use super::{ActivityType, Field, LogMessage, ResultType};
@@ -337,5 +342,34 @@ mod test {
                 "Expected LogMessage to roundtrip to input_str"
             );
         }
+    }
+
+    #[cfg(feature = "serde")]
+    #[rstest]
+    #[case::numeric("0", Field::Int(0))]
+    #[case::string(r#""test!""#, Field::String(Cow::Borrowed(b"test!")))]
+    // This one is actually owned, but we check for Eq here and it doesn't care.
+    // See test_string_fields_cow below for checking CoW.
+    #[case::string_escaped(r#""test\\a""#, Field::String(Cow::Borrowed(b"test\\a")))]
+    fn test_fields(#[case] input_str: &str, #[case] expected_output: Field) {
+        assert_eq!(
+            expected_output,
+            serde_json::from_str::<Field>(input_str).expect("must deserialize")
+        );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_string_fields_cow() {
+        use pretty_assertions::assert_matches;
+
+        assert_matches!(
+            serde_json::from_str::<Field>(r#""test!""#).expect("must deserialize"),
+            Field::String(Cow::Borrowed(_))
+        );
+        assert_matches!(
+            serde_json::from_str::<Field>(r#""test\\a""#).expect("must deserialize"),
+            Field::String(Cow::Owned(_))
+        );
     }
 }
