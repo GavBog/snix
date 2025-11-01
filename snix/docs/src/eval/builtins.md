@@ -58,7 +58,7 @@ The `impl` column indicates implementation status in tvix:
 | fromTOML                      | true   |       |       |         |
 | functionArgs                  | false  |       |       |         |
 | genList                       | false  |       |       |         |
-| genericClosure                | false  |       |       | todo    |
+| genericClosure                | false  |       |       |         |
 | getAttr                       | false  |       |       |         |
 | getContext                    | false  |       |       |         |
 | getEnv                        | false  |       | false |         |
