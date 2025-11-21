@@ -5,7 +5,7 @@ use std::{
 };
 
 use pin_project_lite::pin_project;
-use tokio::io::{self, AsyncRead, ReadBuf};
+use tokio::io::{self, AsyncRead, AsyncReadExt, ReadBuf};
 
 /// State machine for [`NixFramedReader`].
 ///
@@ -43,11 +43,47 @@ impl<R> NixFramedReader<R> {
             },
         }
     }
+}
 
+impl<R: AsyncRead + Unpin> NixFramedReader<R> {
     /// Returns `true` if the Nix Framed reader has reached EOF.
-    #[must_use]
-    pub fn is_eof(&self) -> bool {
-        matches!(self.state, State::Eof)
+    pub async fn is_eof_unpin(&mut self) -> io::Result<bool> {
+        Pin::new(self).is_eof().await
+    }
+}
+
+impl<R: AsyncRead> NixFramedReader<R> {
+    /// Returns `true` if the Nix Framed reader has reached EOF.
+    pub async fn is_eof(self: Pin<&mut Self>) -> io::Result<bool> {
+        let mut this = self.project();
+        // we have have to ensure that we aren't just in [`State::Length`]
+        // with a pending terminating frame, since the NAR reader will not
+        // ever observe the EOF itself
+        loop {
+            match this.state {
+                State::Length { buf, filled: 8 } => {
+                    *this.state = match NonZeroU64::new(u64::from_le_bytes(*buf)) {
+                        None => State::Eof,
+                        Some(remaining) => State::Chunk { remaining },
+                    };
+                }
+                State::Length { buf, filled } => {
+                    let bytes_read = this.reader.read(&mut buf[*filled as usize..]).await? as u8;
+
+                    if bytes_read == 0 {
+                        return Err(io::ErrorKind::UnexpectedEof.into());
+                    }
+
+                    *filled += bytes_read;
+                }
+                State::Chunk { .. } => {
+                    return Ok(false);
+                }
+                State::Eof => {
+                    return Ok(true);
+                }
+            }
+        }
     }
 }
 
@@ -169,7 +205,8 @@ mod nix_framed_tests {
 
         let mut reader = NixFramedReader::new(&mut mock);
         let err = reader.read_to_string(&mut String::new()).await.unwrap_err();
-        assert!(!reader.is_eof());
+        assert_eq!(err.kind(), io::ErrorKind::UnexpectedEof);
+        let err = reader.is_eof_unpin().await.unwrap_err();
         assert_eq!(err.kind(), io::ErrorKind::UnexpectedEof);
     }
 
@@ -189,8 +226,12 @@ mod nix_framed_tests {
 
         let mut reader = NixFramedReader::new(&mut mock);
         let err = reader.read_to_string(&mut String::new()).await.unwrap_err();
-        assert!(!reader.is_eof());
         assert_eq!(err.kind(), io::ErrorKind::UnexpectedEof);
+        let is_eof = reader.is_eof_unpin().await.map_err(|e| e.kind());
+        assert!(matches!(
+            is_eof,
+            Ok(false) | Err(io::ErrorKind::UnexpectedEof)
+        ));
     }
 
     #[tokio::test]
@@ -207,7 +248,8 @@ mod nix_framed_tests {
 
         let mut reader = NixFramedReader::new(&mut mock);
         let err = reader.read_to_string(&mut String::new()).await.unwrap_err();
-        assert!(!reader.is_eof());
+        assert_eq!(err.kind(), io::ErrorKind::UnexpectedEof);
+        let err = reader.is_eof_unpin().await.unwrap_err();
         assert_eq!(err.kind(), io::ErrorKind::UnexpectedEof);
     }
 
@@ -232,7 +274,7 @@ mod nix_framed_tests {
             .await
             .expect("Could not read into result");
         assert_eq!("hello world", result);
-        assert!(reader.is_eof());
+        assert!(reader.is_eof_unpin().await.unwrap());
     }
 
     struct SplitMock<'a> {
@@ -300,7 +342,7 @@ mod nix_framed_tests {
 
                 assert_eq!(
                     end_point >= framed_end,
-                    dut.is_eof(),
+                    matches!(dut.state, super::State::Eof),
                     "end_point = {end_point}, state = {:?}",
                     dut.state
                 );

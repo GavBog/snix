@@ -204,7 +204,7 @@ where
 
                                 // framing desynchronisation
                                 // this MUST kill the connection
-                                if !framed.is_eof() {
+                                if !framed.is_eof_unpin().await? {
                                     return Err(std::io::Error::new(
                                         std::io::ErrorKind::InvalidData,
                                         "payload was not fully consumed",
