@@ -11,18 +11,6 @@
         "url": "https://github.com/ryantm/agenix/archive/531beac616433bac6f9e2a19feb8e99a22a66baf.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
-    "bqn-libs": {
-        "branch": "master",
-        "description": "Informal collection of BQN utilities",
-        "homepage": "",
-        "owner": "mlochbaum",
-        "repo": "bqn-libs",
-        "rev": "086b0bf882d46ce542b3f885d9a56be847c72d4a",
-        "sha256": "1w3wvx22rs54hm2pnh059ahmh5fi227a51vh6rcnl5nvm8jcbqxg",
-        "type": "tarball",
-        "url": "https://github.com/mlochbaum/bqn-libs/archive/086b0bf882d46ce542b3f885d9a56be847c72d4a.tar.gz",
-        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
-    },
     "disko": {
         "branch": "master",
         "description": "Declarative disk partitioning and formatting using nix [maintainers=@Lassulus @Enzime @iFreilicht]",
