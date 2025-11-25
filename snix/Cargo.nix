@@ -8704,9 +8704,9 @@ rec {
       };
       "libc" = rec {
         crateName = "libc";
-        version = "0.2.169";
+        version = "0.2.177";
         edition = "2021";
-        sha256 = "02m253hs8gw0m1n8iyrsc4n15yzbqwhddi7w1l0ds7i92kdsiaxm";
+        sha256 = "0xjrn69cywaii1iq2lib201bhlvan7czmrm604h5qcm28yps4x18";
         authors = [
           "The Rust Project Developers"
         ];
@@ -13946,13 +13946,9 @@ rec {
       };
       "redb" = rec {
         crateName = "redb";
-        version = "2.6.2";
+        version = "3.1.0";
         edition = "2024";
-        sha256 = "1xykri7izzgqw4fbcbxqc35mzhiya101csd4pq48yfcg082qpcsr";
-        type = [
-          "cdylib"
-          "rlib"
-        ];
+        sha256 = "01kaj29526w8pq6iww9lqn9mkffyjsxm7ix2v9lkg6jphsq3wcmf";
         authors = [
           "Christopher Berner <me@cberner.com>"
         ];
@@ -13960,7 +13956,7 @@ rec {
           {
             name = "libc";
             packageId = "libc";
-            target = { target, features }: (target."unix" or false);
+            target = { target, features }: ("wasi" == target."os" or null);
           }
           {
             name = "log";
@@ -13968,18 +13964,10 @@ rec {
             optional = true;
           }
         ];
-        devDependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-          }
-        ];
         features = {
+          "chrono_v0_4" = [ "dep:chrono_v0_4" ];
           "logging" = [ "dep:log" ];
-          "python" = [
-            "dep:pyo3"
-            "dep:pyo3-build-config"
-          ];
+          "uuid" = [ "dep:uuid" ];
         };
         resolvedDefaultFeatures = [ "logging" ];
       };

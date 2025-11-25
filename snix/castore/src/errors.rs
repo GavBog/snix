@@ -125,12 +125,6 @@ impl From<redb::CommitError> for Error {
     }
 }
 
-impl From<redb::UpgradeError> for Error {
-    fn from(value: redb::UpgradeError) -> Self {
-        Error::StorageError(value.to_string())
-    }
-}
-
 impl From<std::io::Error> for Error {
     fn from(value: std::io::Error) -> Self {
         if value.kind() == std::io::ErrorKind::InvalidInput {
