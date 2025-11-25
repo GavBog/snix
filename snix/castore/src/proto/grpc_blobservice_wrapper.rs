@@ -1,10 +1,7 @@
 use crate::{B3Digest, blobservice::BlobService};
 use core::pin::pin;
 use futures::{TryFutureExt, stream::BoxStream};
-use std::{
-    collections::VecDeque,
-    ops::{Deref, DerefMut},
-};
+use std::{collections::VecDeque, ops::Deref};
 use tokio_stream::StreamExt;
 use tokio_util::io::ReaderStream;
 use tonic::{Request, Response, Status, Streaming, async_trait};
@@ -17,66 +14,6 @@ pub struct GRPCBlobServiceWrapper<T> {
 impl<T> GRPCBlobServiceWrapper<T> {
     pub fn new(blob_service: T) -> Self {
         Self { blob_service }
-    }
-}
-
-// This is necessary because bytes::BytesMut comes up with
-// a default 64 bytes capacity that cannot be changed
-// easily if you assume a bytes::BufMut trait implementation
-// Therefore, we override the Default implementation here
-// TODO(raitobezarius?): upstream me properly
-struct BytesMutWithDefaultCapacity<const N: usize> {
-    inner: bytes::BytesMut,
-}
-
-impl<const N: usize> Deref for BytesMutWithDefaultCapacity<N> {
-    type Target = bytes::BytesMut;
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl<const N: usize> DerefMut for BytesMutWithDefaultCapacity<N> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
-    }
-}
-
-impl<const N: usize> Default for BytesMutWithDefaultCapacity<N> {
-    fn default() -> Self {
-        BytesMutWithDefaultCapacity {
-            inner: bytes::BytesMut::with_capacity(N),
-        }
-    }
-}
-
-impl<const N: usize> bytes::Buf for BytesMutWithDefaultCapacity<N> {
-    fn remaining(&self) -> usize {
-        self.inner.remaining()
-    }
-
-    fn chunk(&self) -> &[u8] {
-        self.inner.chunk()
-    }
-
-    fn advance(&mut self, cnt: usize) {
-        self.inner.advance(cnt);
-    }
-}
-
-unsafe impl<const N: usize> bytes::BufMut for BytesMutWithDefaultCapacity<N> {
-    fn remaining_mut(&self) -> usize {
-        self.inner.remaining_mut()
-    }
-
-    unsafe fn advance_mut(&mut self, cnt: usize) {
-        unsafe {
-            self.inner.advance_mut(cnt);
-        }
-    }
-
-    fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {
-        self.inner.chunk_mut()
     }
 }
 
