@@ -78,7 +78,7 @@ import nixpkgsSrc (
     ++ (
       if depotOverlays then
         [
-          depot.third_party.overlays.tvl
+          depot.third_party.overlays.snix
           (import depot.third_party.sources.rust-overlay)
         ]
       else
