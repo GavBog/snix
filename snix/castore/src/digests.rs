@@ -11,7 +11,6 @@ impl B3Digest {
     pub const LENGTH: usize = blake3::OUT_LEN;
 }
 
-// TODO: allow converting these errors to crate::Error
 #[derive(Error, Debug, PartialEq)]
 pub enum Error {
     #[error("invalid digest length: {0}")]
