@@ -1,6 +1,7 @@
 use bigtable_rs::{bigtable, google::bigtable::v2 as bigtable_v2};
 use bytes::Bytes;
 use data_encoding::HEXLOWER;
+use futures::StreamExt;
 use futures::stream::BoxStream;
 use prost::Message;
 use serde::{Deserialize, Serialize};
@@ -312,7 +313,7 @@ impl DirectoryService for BigtableDirectoryService {
         &self,
         root_directory_digest: &B3Digest,
     ) -> BoxStream<'static, Result<Directory, Error>> {
-        traverse_directory(self.clone(), root_directory_digest)
+        traverse_directory(self.clone(), root_directory_digest).boxed()
     }
 
     #[instrument(skip_all, fields(instance_name=%self.instance_name))]

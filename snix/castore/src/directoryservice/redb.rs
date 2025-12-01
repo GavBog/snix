@@ -1,4 +1,4 @@
-use futures::stream::BoxStream;
+use futures::{StreamExt, stream::BoxStream};
 use prost::Message;
 use redb::{Database, ReadableDatabase, TableDefinition};
 use std::{path::PathBuf, sync::Arc};
@@ -167,7 +167,7 @@ impl DirectoryService for RedbDirectoryService {
         // FUTUREWORK: Ideally we should have all of the directory traversing happen in a single
         // redb transaction to avoid constantly closing and opening new transactions for the
         // database.
-        traverse_directory(self.clone(), root_directory_digest)
+        traverse_directory(self.clone(), root_directory_digest).boxed()
     }
 
     #[instrument(skip_all)]

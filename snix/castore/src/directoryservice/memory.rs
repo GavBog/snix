@@ -1,4 +1,5 @@
 use crate::{B3Digest, Error};
+use futures::StreamExt;
 use futures::stream::BoxStream;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -61,7 +62,7 @@ impl DirectoryService for MemoryDirectoryService {
         &self,
         root_directory_digest: &B3Digest,
     ) -> BoxStream<'static, Result<Directory, Error>> {
-        traverse_directory(self.clone(), root_directory_digest)
+        traverse_directory(self.clone(), root_directory_digest).boxed()
     }
 
     #[instrument(skip_all, fields(instance_name=%self.instance_name))]

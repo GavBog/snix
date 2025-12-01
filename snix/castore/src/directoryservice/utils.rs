@@ -4,7 +4,6 @@ use crate::B3Digest;
 use crate::Error;
 use crate::Node;
 use async_stream::try_stream;
-use futures::stream::BoxStream;
 use std::collections::{HashSet, VecDeque};
 use tracing::instrument;
 use tracing::warn;
@@ -15,8 +14,8 @@ use tracing::warn;
 #[instrument(skip(directory_service))]
 pub fn traverse_directory<'a, DS: DirectoryService + 'static>(
     directory_service: DS,
-    root_directory_digest: &B3Digest,
-) -> BoxStream<'a, Result<Directory, Error>> {
+    root_directory_digest: &'a B3Digest,
+) -> impl futures::Stream<Item = Result<Directory, Error>> + use<DS> {
     // The list of all directories that still need to be traversed. The next
     // element is picked from the front, new elements are enqueued at the
     // back.
