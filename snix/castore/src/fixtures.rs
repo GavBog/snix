@@ -118,3 +118,14 @@ pub static DIRECTORY_D: LazyLock<Directory> = LazyLock::new(|| {
     ])
     .unwrap()
 });
+
+pub static DIRECTORY_E: LazyLock<Directory> = LazyLock::new(|| {
+    Directory::try_from_iter([(
+        "d".try_into().unwrap(),
+        Node::Directory {
+            digest: DIRECTORY_D.digest(),
+            size: DIRECTORY_D.size(),
+        },
+    )])
+    .unwrap()
+});

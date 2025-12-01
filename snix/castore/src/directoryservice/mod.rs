@@ -19,12 +19,12 @@ mod traverse;
 mod utils;
 
 pub use self::combinators::{Cache, CacheConfig};
-pub use self::directory_graph::{DirectoryGraph, ValidatedDirectoryGraph};
+pub use self::directory_graph::{DirectoryGraph, DirectoryGraphBuilder, DirectoryOrder};
 pub use self::from_addr::from_addr;
 pub use self::grpc::{GRPCDirectoryService, GRPCDirectoryServiceConfig};
 pub use self::memory::{MemoryDirectoryService, MemoryDirectoryServiceConfig};
 pub use self::object_store::{ObjectStoreDirectoryService, ObjectStoreDirectoryServiceConfig};
-pub use self::order_validator::{LeavesToRootValidator, OrderValidator, RootToLeavesValidator};
+pub use self::order_validator::{LeavesToRootValidator, OrderingError, RootToLeavesValidator};
 pub use self::redb::{RedbDirectoryService, RedbDirectoryServiceConfig};
 pub use self::simple_putter::SimplePutter;
 pub use self::traverse::descend_to;

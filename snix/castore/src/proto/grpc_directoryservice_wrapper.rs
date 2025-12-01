@@ -1,4 +1,4 @@
-use crate::directoryservice::{DirectoryGraph, DirectoryService, LeavesToRootValidator};
+use crate::directoryservice::{DirectoryService, LeavesToRootValidator};
 use crate::{B3Digest, DirectoryError, proto};
 use futures::TryStreamExt;
 use futures::stream::BoxStream;
@@ -80,34 +80,32 @@ where
     ) -> Result<Response<proto::PutDirectoryResponse>, Status> {
         let mut req_inner = request.into_inner();
 
-        // We put all Directory messages we receive into DirectoryGraph.
-        let mut validator = DirectoryGraph::<LeavesToRootValidator>::default();
-        while let Some(directory) = req_inner.message().await? {
-            validator
-                .add(directory.try_into().map_err(|e: DirectoryError| {
-                    tonic::Status::new(tonic::Code::Internal, e.to_string())
-                })?)
-                .map_err(|e| tonic::Status::new(tonic::Code::Internal, e.to_string()))?;
-        }
+        // Validate all received directories.
+        let mut validator = LeavesToRootValidator::new();
 
-        // drain, which validates connectivity too.
-        let directories = validator
-            .validate()
-            .map_err(|e| tonic::Status::new(tonic::Code::Internal, e.to_string()))?
-            .drain_leaves_to_root()
-            .collect::<Vec<_>>();
-
+        // Insert into the backing DirectoryService as we receive.
         let mut directory_putter = self.directory_service.put_multiple_start();
-        for directory in directories {
+
+        while let Some(directory) = req_inner.message().await? {
+            let directory: crate::Directory =
+                directory.try_into().map_err(|e: DirectoryError| {
+                    tonic::Status::new(tonic::Code::Internal, e.to_string())
+                })?;
+            validator
+                .try_accept(&directory)
+                .map_err(|e| tonic::Status::new(tonic::Code::Internal, e.to_string()))?;
+
             directory_putter.put(directory).await?;
         }
 
-        // Properly close the directory putter. Peek at last_directory_digest
-        // and return it, or propagate errors.
-        let last_directory_dgst = directory_putter.close().await?;
+        // Finalize validator, checks connectivity.
+        validator
+            .finalize()
+            .map_err(|e| tonic::Status::new(tonic::Code::Internal, e.to_string()))?;
 
         Ok(Response::new(proto::PutDirectoryResponse {
-            root_digest: last_directory_dgst.into(),
+            // Properly close the directory putter, returning any potential errors.
+            root_digest: directory_putter.close().await?.into(),
         }))
     }
 }

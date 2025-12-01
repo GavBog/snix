@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::collections::hash_map;
 use std::sync::Arc;
 
+use async_stream::try_stream;
 use data_encoding::HEXLOWER;
 use futures::SinkExt;
 use futures::StreamExt;
@@ -17,11 +18,10 @@ use tonic::async_trait;
 use tracing::{Level, instrument, trace, warn};
 use url::Url;
 
-use super::{
-    Directory, DirectoryGraph, DirectoryPutter, DirectoryService, LeavesToRootValidator,
-    RootToLeavesValidator,
-};
+use super::{Directory, DirectoryPutter, DirectoryService, RootToLeavesValidator};
 use crate::composition::{CompositionContext, ServiceBuilder};
+use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
+use crate::directoryservice::directory_graph::DirectoryOrder;
 use crate::{B3Digest, Error, Node, proto};
 
 /// Stores directory closures in an object store.
@@ -45,6 +45,33 @@ fn derive_dirs_path(base_path: &Path, digest: &B3Digest) -> Path {
         .child("b3")
         .child(HEXLOWER.encode(&digest.as_slice()[..2]))
         .child(HEXLOWER.encode(digest.as_slice()))
+}
+
+/// Helper function, parsing protobuf-encoded Directories into [crate::Directory],
+/// if the digest is allowed.
+fn parse_proto_directory<F>(
+    encoded_directory: &[u8],
+    digest_allowed: F,
+) -> Result<crate::Directory, Error>
+where
+    F: Fn(&B3Digest) -> bool,
+{
+    let actual_digest = B3Digest::from(blake3::hash(encoded_directory).as_bytes());
+    if !digest_allowed(&actual_digest) {
+        return Err(crate::Error::StorageError(
+            "unexpected directory digest".to_string(),
+        ));
+    }
+
+    let directory_proto = proto::Directory::decode(encoded_directory).map_err(|e| {
+        warn!("unable to parse directory {}: {}", actual_digest, e);
+        Error::StorageError(e.to_string())
+    })?;
+
+    Directory::try_from(directory_proto).map_err(|e| {
+        warn!("unable to convert directory {}: {}", actual_digest, e);
+        Error::StorageError(e.to_string())
+    })
 }
 
 #[allow(clippy::identity_op)]
@@ -117,12 +144,10 @@ impl DirectoryService for ObjectStoreDirectoryService {
         root_directory_digest: &B3Digest,
     ) -> BoxStream<'static, Result<Directory, Error>> {
         // Check that we are not passing on bogus from the object store to the client, and that the
-        // trust chain from the root digest to the leaves is intact
-        let mut order_validator =
-            RootToLeavesValidator::new_with_root_digest(root_directory_digest.clone());
-
+        // trust chain from the root digest to the leaves is intact.
         let dir_path = derive_dirs_path(&self.base_path, root_directory_digest);
         let object_store = self.object_store.clone();
+        let root_directory_digest = root_directory_digest.to_owned();
 
         Box::pin(
             (async move {
@@ -139,40 +164,38 @@ impl DirectoryService for ObjectStoreDirectoryService {
                 let decompressed_stream = async_compression::tokio::bufread::ZstdDecoder::new(r);
 
                 // the subdirectories are stored in a length delimited format
-                let delimited_stream = LengthDelimitedCodec::builder()
+                let mut encoded_directories = LengthDelimitedCodec::builder()
                     .max_frame_length(MAX_FRAME_LENGTH)
                     .length_field_type::<u32>()
-                    .new_read(decompressed_stream);
+                    .new_read(decompressed_stream)
+                    .err_into::<Error>();
 
-                let dirs_stream = delimited_stream.map_err(Error::from).and_then(move |buf| {
-                    futures::future::ready((|| {
-                        let mut hasher = blake3::Hasher::new();
-                        let digest: B3Digest = hasher.update(&buf).finalize().as_bytes().into();
-
-                        // Ensure to only decode the directory objects whose digests we trust
-                        if !order_validator.digest_allowed(&digest) {
-                            return Err(crate::Error::StorageError(format!(
-                                "received unexpected directory {digest}"
-                            )));
-                        }
-
-                        let directory = proto::Directory::decode(&*buf).map_err(|e| {
-                            warn!("unable to parse directory {}: {}", digest, e);
-                            Error::StorageError(e.to_string())
-                        })?;
-                        let directory = Directory::try_from(directory).map_err(|e| {
-                            warn!("unable to convert directory {}: {}", digest, e);
-                            Error::StorageError(e.to_string())
+                Ok(Either::Right(try_stream! {
+                    let mut order_validator = if let Some(encoded_directory) = encoded_directories.try_next().await? {
+                        let directory = parse_proto_directory(&encoded_directory, |digest| {
+                            digest == &root_directory_digest
                         })?;
 
-                        // Allow the children to appear next
-                        order_validator.add_directory_unchecked(&directory);
+                        let order_validator = RootToLeavesValidator::new_with_root(&directory);
+                        yield directory;
+                        order_validator
+                    } else {
+                        // no elements in stream
+                        Err(Error::StorageError("no directories stored".to_string()))?
+                    };
 
-                        Ok(directory)
-                    })())
-                });
+                    while let Some(encoded_directory) = encoded_directories.try_next().await? {
+                        let directory = parse_proto_directory(&encoded_directory, |digest| {
+                            order_validator.would_accept(digest)
+                        })?;
 
-                Ok(Either::Right(dirs_stream))
+                        order_validator.try_accept(&directory).map_err(|e| Error::StorageError(e.to_string()))?;
+
+                        yield directory;
+                    }
+
+                    order_validator.finalize().map_err(|e| Error::StorageError(e.to_string()))?;
+                }))
             })
             .try_flatten_stream(),
         )
@@ -262,7 +285,7 @@ struct ObjectStoreDirectoryPutter<'a> {
     object_store: Arc<dyn ObjectStore>,
     base_path: &'a Path,
 
-    directory_validator: Option<DirectoryGraph<LeavesToRootValidator>>,
+    builder: Option<DirectoryGraphBuilder>,
 }
 
 impl<'a> ObjectStoreDirectoryPutter<'a> {
@@ -270,7 +293,9 @@ impl<'a> ObjectStoreDirectoryPutter<'a> {
         Self {
             object_store,
             base_path,
-            directory_validator: Some(Default::default()),
+            builder: Some(DirectoryGraphBuilder::new_with_insertion_order(
+                DirectoryOrder::LeavesToRoot,
+            )),
         }
     }
 }
@@ -279,39 +304,26 @@ impl<'a> ObjectStoreDirectoryPutter<'a> {
 impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
     async fn put(&mut self, directory: Directory) -> Result<(), Error> {
-        match self.directory_validator {
-            None => return Err(Error::StorageError("already closed".to_string())),
-            Some(ref mut validator) => {
-                validator
-                    .add(directory)
-                    .map_err(|e| Error::StorageError(e.to_string()))?;
-            }
-        }
+        let builder = self
+            .builder
+            .as_mut()
+            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+
+        builder.try_insert(directory)?;
 
         Ok(())
     }
 
     #[instrument(level = "trace", skip_all, ret, err)]
     async fn close(&mut self) -> Result<B3Digest, Error> {
-        let validator = match self.directory_validator.take() {
-            None => return Err(Error::InvalidRequest("already closed".to_string())),
-            Some(validator) => validator,
-        };
+        let builder = self
+            .builder
+            .take()
+            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
 
-        // retrieve the validated directories.
-        // It is important that they are in topological order (root first),
-        // since that's how we want to retrieve them from the object store in the end.
-        let directories = validator
-            .validate()
-            .map_err(|e| Error::StorageError(e.to_string()))?
-            .drain_root_to_leaves()
-            .collect::<Vec<_>>();
-
-        // Get the root digest
-        let root_digest = directories
-            .first()
-            .ok_or_else(|| Error::InvalidRequest("got no directories".to_string()))?
-            .digest();
+        // Retrieve the validated directories.
+        let directory_graph = builder.build()?;
+        let root_digest = directory_graph.root().digest();
 
         let dir_path = derive_dirs_path(self.base_path, &root_digest);
 
@@ -334,7 +346,7 @@ impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
                     .length_field_type::<u32>()
                     .new_write(compressed_writer);
 
-                for directory in directories {
+                for directory in directory_graph.drain(DirectoryOrder::RootToLeaves) {
                     directories_sink
                         .send(proto::Directory::from(directory).encode_to_vec().into())
                         .await?;

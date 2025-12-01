@@ -7,11 +7,13 @@ use futures::stream::BoxStream;
 use tonic::async_trait;
 use tracing::{instrument, trace};
 
-use super::{Directory, DirectoryGraph, DirectoryService, RootToLeavesValidator, SimplePutter};
+use super::{Directory, DirectoryService, SimplePutter};
 use crate::B3Digest;
 use crate::Error;
 use crate::composition::{CompositionContext, ServiceBuilder};
 use crate::directoryservice::DirectoryPutter;
+use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
+use crate::directoryservice::directory_graph::DirectoryOrder;
 
 /// Asks near first, if not found, asks far.
 /// If found in there, returns it, and *inserts* it into
@@ -44,53 +46,49 @@ where
 {
     #[instrument(skip(self, digest), fields(directory.digest = %digest, instance_name = %self.instance_name))]
     async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, Error> {
-        match self.near.get(digest).await? {
-            Some(directory) => {
-                trace!("serving from cache");
-                Ok(Some(directory))
-            }
-            None => {
-                trace!("not found in near, asking remote…");
+        // check near
+        if let Some(directory) = self.near.get(digest).await? {
+            trace!("serving from cache");
+            return Ok(Some(directory));
+        }
 
-                // Produce a graph of directories receving from far, or none, if the stream is empty.
-                match self
-                    .far
-                    .get_recursive(digest)
-                    .try_fold(None, async move |state, directory| {
-                        let mut received_dirs = state.unwrap_or_else(|| {
-                            DirectoryGraph::with_order(RootToLeavesValidator::new_with_root_digest(
-                                digest.clone(),
-                            ))
-                        });
+        trace!("not found in near, asking remote…");
+        // We always ask recursive, and populate the children to support far not allowing non-root access
+        // We currently wait for all children to be received before returning
+        // the requested directory, so subsequent children requests don't fail when these
+        // stores are used.
+        // FUTUREWORK: make this configurable, allow firing off a background task populating the children.
+        let mut directories = self.far.get_recursive(digest);
+        if let Some(first_directory) = directories.try_next().await? {
+            let mut graph_builder =
+                DirectoryGraphBuilder::new_with_insertion_order(DirectoryOrder::RootToLeaves);
+            graph_builder
+                .try_insert(first_directory.clone())
+                .expect("Snix bug: inserting first directory for RTL should always work");
 
-                        received_dirs
-                            .add(directory)
-                            .map_err(|e| Error::StorageError(e.to_string()))?;
+            // populate children
+            {
+                let mut near_putter = self.near.put_multiple_start();
 
-                        Ok(Some(received_dirs))
-                    })
-                    .await?
-                {
-                    Some(recv_directories) => {
-                        let dirs = recv_directories
-                            .validate()
-                            .map_err(|e| Error::StorageError(e.to_string()))?;
-
-                        let root = dirs.root().to_owned();
-
-                        // drain the directory graph by putting into near.
-                        let mut put = self.near.put_multiple_start();
-                        for dir in dirs.drain_leaves_to_root() {
-                            put.put(dir).await?;
-                        }
-                        let put_root_digest = put.close().await?;
-                        debug_assert_eq!(digest, &put_root_digest);
-
-                        Ok(Some(root))
-                    }
-                    None => Ok(None),
+                // Consume the rest of the elements
+                while let Some(directory) = directories.try_next().await? {
+                    graph_builder.try_insert(directory)?;
                 }
+
+                let directory_graph = graph_builder.build()?;
+
+                // Drain into near
+                for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+                    near_putter.put(directory).await?;
+                }
+
+                let actual_digest = near_putter.close().await?;
+                debug_assert_eq!(digest, &actual_digest);
             }
+
+            Ok(Some(first_directory))
+        } else {
+            Ok(None)
         }
     }
 
@@ -107,48 +105,45 @@ where
         let near = self.near.clone();
         let far = self.far.clone();
         let digest = root_directory_digest.clone();
-        Box::pin(
-            (async move {
-                let mut stream = near.get_recursive(&digest);
-                match stream.try_next().await? {
-                    Some(first) => {
-                        trace!("serving from cache");
-                        Ok(futures::stream::once(async { Ok(first) })
-                            .chain(stream)
-                            .left_stream())
-                    }
-                    None => {
-                        trace!("not found in near, asking remote…");
+        async move {
+            let mut stream = near.get_recursive(&digest);
 
-                        let mut copy_for_near = DirectoryGraph::with_order(
-                            RootToLeavesValidator::new_with_root_digest(digest.clone()),
-                        );
-                        let mut copy_for_client = vec![];
+            if let Some(first) = stream.try_next().await? {
+                trace!("serving from cache");
+                return Ok(futures::stream::once(async { Ok(first) })
+                    .chain(stream)
+                    .left_stream());
+            }
 
-                        let mut stream = far.get_recursive(&digest);
-                        while let Some(dir) = stream.try_next().await? {
-                            copy_for_near
-                                .add(dir.clone())
-                                .map_err(|e| Error::StorageError(e.to_string()))?;
-                            copy_for_client.push(dir);
-                        }
+            trace!("not found in near, asking remote…");
 
-                        let copy_for_near = copy_for_near
-                            .validate()
-                            .map_err(|e| Error::StorageError(e.to_string()))?;
-                        let mut put = near.put_multiple_start();
-                        for dir in copy_for_near.drain_leaves_to_root() {
-                            put.put(dir).await?;
-                        }
-                        put.close().await?;
+            let mut directories = far.get_recursive(&digest);
+            let mut graph_builder =
+                DirectoryGraphBuilder::new_with_insertion_order(DirectoryOrder::RootToLeaves);
 
-                        Ok(futures::stream::iter(copy_for_client.into_iter().map(Ok))
-                            .right_stream())
-                    }
+            // Return to the client, while inserting to the graph builder.
+            Ok(async_stream::try_stream! {
+                // Return to the client, while inserting to the graph builder.
+                while let Some(directory) = directories.try_next().await? {
+                    graph_builder.try_insert(directory.clone())?;
+
+                    yield directory;
                 }
-            })
-            .try_flatten_stream(),
-        )
+
+                // Drain into near
+                let mut near_putter = near.put_multiple_start();
+                let directory_graph = graph_builder.build()?;
+                for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+                    near_putter.put(directory).await?;
+                }
+
+                let actual_digest = near_putter.close().await?;
+                debug_assert_eq!(digest, actual_digest);
+            }
+            .right_stream())
+        }
+        .try_flatten_stream()
+        .boxed()
     }
 
     #[instrument(skip_all)]

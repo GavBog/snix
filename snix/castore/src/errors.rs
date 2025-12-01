@@ -135,6 +135,12 @@ impl From<std::io::Error> for Error {
     }
 }
 
+impl From<crate::directoryservice::OrderingError> for Error {
+    fn from(value: crate::directoryservice::OrderingError) -> Self {
+        Error::StorageError(value.to_string())
+    }
+}
+
 // TODO: this should probably go somewhere else?
 impl From<Error> for std::io::Error {
     fn from(value: Error) -> Self {

@@ -1,5 +1,6 @@
 use std::{
     cmp::min,
+    collections::HashMap,
     io,
     pin::Pin,
     sync::Arc,
@@ -11,18 +12,20 @@ use super::RenderError;
 use bytes::{BufMut, Bytes};
 
 use nix_compat::nar::writer::sync as nar_writer;
-use snix_castore::Directory;
-use snix_castore::blobservice::{BlobReader, BlobService};
-use snix_castore::directoryservice::{
-    DirectoryGraph, DirectoryService, RootToLeavesValidator, ValidatedDirectoryGraph,
-};
+use snix_castore::directoryservice::{DirectoryGraph, DirectoryService};
 use snix_castore::{B3Digest, Node};
+use snix_castore::{Directory, directoryservice::DirectoryOrder};
+use snix_castore::{
+    blobservice::{BlobReader, BlobService},
+    directoryservice::DirectoryGraphBuilder,
+};
 
 use futures::FutureExt;
 use futures::TryStreamExt;
 use futures::future::{BoxFuture, FusedFuture, TryMaybeDone};
 
 use tokio::io::AsyncSeekExt;
+use tracing::instrument;
 
 #[derive(Debug)]
 struct BlobRef {
@@ -69,6 +72,7 @@ fn flush_segment(segments: &mut Vec<(u64, Data)>, offset: &mut u64, cur_segment:
 fn walk_node(
     segments: &mut Vec<(u64, Data)>,
     offset: &mut u64,
+    // FUTUREWORK: can we return only a &Directory?
     get_directory: &impl Fn(&B3Digest) -> Directory,
     node: Node,
     // Includes a reference to the current segment's buffer
@@ -138,6 +142,7 @@ impl<B: BlobService + 'static> Reader<B> {
     /// of a specific BLAKE3 digest and known size. The AsyncRead implementation will then switch
     /// between serving the precomputed literal segments, and the appropriate blob for the file
     /// contents.
+    #[instrument(skip(blob_service, directory_service), err)]
     pub async fn new(
         root_node: Node,
         blob_service: B,
@@ -146,24 +151,36 @@ impl<B: BlobService + 'static> Reader<B> {
         let maybe_directory_closure = match &root_node {
             // If this is a directory, resolve all subdirectories
             Node::Directory { digest, .. } => {
-                let mut closure = DirectoryGraph::with_order(
-                    RootToLeavesValidator::new_with_root_digest(digest.clone()),
-                );
-                let mut stream = directory_service.get_recursive(digest);
-                while let Some(dir) = stream
+                let mut builder =
+                    DirectoryGraphBuilder::new_with_insertion_order(DirectoryOrder::RootToLeaves);
+                let mut directories = directory_service.get_recursive(digest);
+                while let Some(dir) = directories
                     .try_next()
                     .await
                     .map_err(|e| RenderError::StoreError(e.into()))?
                 {
-                    closure.add(dir).map_err(|e| {
+                    builder.try_insert(dir).map_err(|e| {
                         RenderError::StoreError(
                             snix_castore::Error::StorageError(e.to_string()).into(),
                         )
                     })?;
                 }
-                Some(closure.validate().map_err(|e| {
+
+                let directory_closure = builder.build().map_err(|e| {
                     RenderError::StoreError(snix_castore::Error::StorageError(e.to_string()).into())
-                })?)
+                })?;
+
+                let actual_digest = directory_closure.root().digest();
+                if &actual_digest != digest {
+                    return Err(RenderError::StoreError(
+                        snix_castore::Error::StorageError(
+                            "DirectoryService returned wrong closure".into(),
+                        )
+                        .into(),
+                    ));
+                }
+
+                Some(directory_closure)
             }
             // If the top-level node is a file or a symlink, just pass it on
             Node::File { .. } => None,
@@ -181,21 +198,15 @@ impl<B: BlobService + 'static> Reader<B> {
     pub fn new_with_directory_closure(
         root_node: Node,
         blob_service: B,
-        directory_closure: Option<ValidatedDirectoryGraph>,
+        directory_closure: Option<DirectoryGraph>,
     ) -> Result<Self, RenderError> {
-        let directories = directory_closure
-            .map(|directory_closure| {
-                let mut directories: Vec<(B3Digest, Directory)> = vec![];
-                for dir in directory_closure.drain_root_to_leaves() {
-                    let digest = dir.digest();
-                    let pos = directories
-                        .binary_search_by_key(&digest.as_slice(), |(digest, _dir)| {
-                            digest.as_slice()
-                        })
-                        .expect_err("duplicate directory"); // DirectoryGraph checks this
-                    directories.insert(pos, (digest, dir));
-                }
-                directories
+        let directories: HashMap<B3Digest, Directory> = directory_closure
+            .map(|directory_graph| {
+                HashMap::from_iter(
+                    directory_graph
+                        .drain(DirectoryOrder::RootToLeaves)
+                        .map(|d| (d.digest(), d)),
+                )
             })
             .unwrap_or_default();
 
@@ -210,10 +221,9 @@ impl<B: BlobService + 'static> Reader<B> {
             &mut offset,
             &|digest| {
                 directories
-                    .binary_search_by_key(&digest.as_slice(), |(digest, _dir)| digest.as_slice())
-                    .map(|pos| directories[pos].clone())
-                    .expect("missing directory") // DirectoryGraph checks this
-                    .1
+                    .get(digest)
+                    .expect("Snix bug: directory not found")
+                    .to_owned()
             },
             root_node,
             nar_node,

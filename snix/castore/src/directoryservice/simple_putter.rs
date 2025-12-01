@@ -1,8 +1,10 @@
+use super::Directory;
 use super::DirectoryPutter;
 use super::DirectoryService;
-use super::{Directory, DirectoryGraph, LeavesToRootValidator};
+use super::directory_graph::DirectoryOrder;
 use crate::B3Digest;
 use crate::Error;
+use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
 use tonic::async_trait;
 use tracing::instrument;
 use tracing::warn;
@@ -13,7 +15,7 @@ use tracing::warn;
 pub struct SimplePutter<'a, DS> {
     directory_service: &'a DS,
 
-    directory_validator: Option<DirectoryGraph<LeavesToRootValidator>>,
+    builder: Option<DirectoryGraphBuilder>,
 }
 
 impl<'a, DS> SimplePutter<'a, DS>
@@ -23,7 +25,9 @@ where
     pub fn new(directory_service: &'a DS) -> Self {
         Self {
             directory_service,
-            directory_validator: Some(Default::default()),
+            builder: Some(DirectoryGraphBuilder::new_with_insertion_order(
+                DirectoryOrder::LeavesToRoot,
+            )),
         }
     }
 }
@@ -32,52 +36,40 @@ where
 impl<DS: DirectoryService + 'static> DirectoryPutter for SimplePutter<'_, DS> {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
     async fn put(&mut self, directory: Directory) -> Result<(), Error> {
-        match self.directory_validator {
-            None => return Err(Error::StorageError("already closed".to_string())),
-            Some(ref mut validator) => {
-                validator
-                    .add(directory)
-                    .map_err(|e| Error::StorageError(e.to_string()))?;
-            }
-        }
+        let builder = self
+            .builder
+            .as_mut()
+            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+
+        builder.try_insert(directory)?;
 
         Ok(())
     }
 
     #[instrument(level = "trace", skip_all, ret, err)]
     async fn close(&mut self) -> Result<B3Digest, Error> {
-        match self.directory_validator.take() {
-            None => Err(Error::InvalidRequest("already closed".to_string())),
-            Some(validator) => {
-                // retrieve the validated directories.
-                let directories = validator
-                    .validate()
-                    .map_err(|e| Error::StorageError(e.to_string()))?
-                    .drain_leaves_to_root()
-                    .collect::<Vec<_>>();
+        let builder = self
+            .builder
+            .take()
+            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
 
-                // Get the root digest, which is at the end (cf. insertion order)
-                let root_digest = directories
-                    .last()
-                    .ok_or_else(|| Error::InvalidRequest("got no directories".to_string()))?
-                    .digest();
+        // Retrieve the validated directories.
+        let directory_graph = builder.build()?;
+        let root_digest = directory_graph.root().digest();
 
-                // call an individual put for each directory and await the insertion.
-                for directory in directories {
-                    let exp_digest = directory.digest();
-                    let actual_digest = self.directory_service.put(directory).await?;
+        for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+            let exp_digest = directory.digest();
+            let actual_digest = self.directory_service.put(directory).await?;
 
-                    // ensure the digest the backend told us matches our expectations.
-                    if exp_digest != actual_digest {
-                        warn!(directory.digest_expected=%exp_digest, directory.digest_actual=%actual_digest, "unexpected digest");
-                        return Err(Error::StorageError(
-                            "got unexpected digest from backend during put".into(),
-                        ));
-                    }
-                }
-
-                Ok(root_digest)
+            // ensure the digest the backend told us matches our expectations.
+            if exp_digest != actual_digest {
+                warn!(directory.digest_expected=%exp_digest, directory.digest_actual=%actual_digest, "unexpected digest");
+                return Err(Error::StorageError(
+                    "got unexpected digest from backend during put".into(),
+                ));
             }
         }
+
+        Ok(root_digest)
     }
 }

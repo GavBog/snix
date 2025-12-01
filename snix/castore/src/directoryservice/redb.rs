@@ -5,13 +5,11 @@ use std::{path::PathBuf, sync::Arc};
 use tonic::async_trait;
 use tracing::{instrument, warn};
 
-use super::{
-    Directory, DirectoryGraph, DirectoryPutter, DirectoryService, LeavesToRootValidator,
-    traverse_directory,
-};
+use super::{Directory, DirectoryPutter, DirectoryService, traverse_directory};
 use crate::{
     B3Digest, Error,
     composition::{CompositionContext, ServiceBuilder},
+    directoryservice::directory_graph::{DirectoryGraphBuilder, DirectoryOrder},
     proto,
 };
 
@@ -174,7 +172,9 @@ impl DirectoryService for RedbDirectoryService {
     fn put_multiple_start(&self) -> Box<dyn DirectoryPutter + '_> {
         Box::new(RedbDirectoryPutter {
             db: &self.db,
-            directory_validator: Some(Default::default()),
+            builder: Some(DirectoryGraphBuilder::new_with_insertion_order(
+                DirectoryOrder::LeavesToRoot,
+            )),
         })
     }
 }
@@ -184,68 +184,55 @@ pub struct RedbDirectoryPutter<'a> {
 
     /// The directories (inside the directory validator) that we insert later,
     /// or None, if they were already inserted.
-    directory_validator: Option<DirectoryGraph<LeavesToRootValidator>>,
+    builder: Option<DirectoryGraphBuilder>,
 }
 
 #[async_trait]
 impl DirectoryPutter for RedbDirectoryPutter<'_> {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
     async fn put(&mut self, directory: Directory) -> Result<(), Error> {
-        match self.directory_validator {
-            None => return Err(Error::StorageError("already closed".to_string())),
-            Some(ref mut validator) => {
-                validator
-                    .add(directory)
-                    .map_err(|e| Error::StorageError(e.to_string()))?;
-            }
-        }
+        let builder = self
+            .builder
+            .as_mut()
+            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+
+        builder.try_insert(directory)?;
 
         Ok(())
     }
 
     #[instrument(level = "trace", skip_all, ret, err)]
     async fn close(&mut self) -> Result<B3Digest, Error> {
-        match self.directory_validator.take() {
-            None => Err(Error::StorageError("already closed".to_string())),
-            Some(validator) => {
-                // Insert all directories as a batch.
-                tokio::task::spawn_blocking({
-                    let txn = self.db.begin_write()?;
-                    move || {
-                        // Retrieve the validated directories.
-                        let directories = validator
-                            .validate()
-                            .map_err(|e| Error::StorageError(e.to_string()))?
-                            .drain_leaves_to_root()
-                            .collect::<Vec<_>>();
+        let builder = self
+            .builder
+            .take()
+            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
 
-                        // Get the root digest, which is at the end (cf. insertion order)
-                        let root_digest = directories
-                            .last()
-                            .ok_or_else(|| Error::StorageError("got no directories".to_string()))?
-                            .digest();
+        // Insert all directories as a batch.
+        tokio::task::spawn_blocking({
+            let txn = self.db.begin_write()?;
+            move || {
+                // Retrieve the validated directories.
+                let directory_graph = builder.build()?;
+                let root_digest = directory_graph.root().digest();
 
-                        {
-                            let mut table = txn.open_table(DIRECTORY_TABLE)?;
-
-                            // Looping over all the verified directories, queuing them up for a
-                            // batch insertion.
-                            for directory in directories {
-                                table.insert(
-                                    directory.digest().as_ref(),
-                                    proto::Directory::from(directory).encode_to_vec(),
-                                )?;
-                            }
-                        }
-
-                        txn.commit()?;
-
-                        Ok(root_digest)
+                // Looping over all the verified directories, queuing them up for a
+                // batch insertion.
+                {
+                    let mut table = txn.open_table(DIRECTORY_TABLE)?;
+                    for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+                        table.insert(
+                            directory.digest().as_ref(),
+                            proto::Directory::from(directory).encode_to_vec(),
+                        )?;
                     }
-                })
-                .await?
+                }
+                txn.commit()?;
+
+                Ok(root_digest)
             }
-        }
+        })
+        .await?
     }
 }
 
