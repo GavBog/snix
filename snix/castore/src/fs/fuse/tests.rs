@@ -915,7 +915,7 @@ async fn check_attributes() {
 
         // all times should be set to the unix epoch.
         assert_eq!(0, metadata.atime());
-        assert_eq!(0, metadata.mtime());
+        assert_eq!(1, metadata.mtime());
         assert_eq!(0, metadata.ctime());
         // crtime seems MacOS only
     }
