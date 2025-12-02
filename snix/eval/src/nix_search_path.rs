@@ -236,11 +236,16 @@ mod tests {
             assert_eq!(res.unwrap().to_path_buf(), Path::new("/etc"));
         }
 
+        // NOTE: vibm8ccl5d2x2r3mvx5m2s768w2w64s2 is a random string chosen for being unlikely to exist in /
+
         #[test]
         fn prefix() {
-            let nix_search_path = NixSearchPath::from_str("/:snix=.").unwrap();
+            let nix_search_path =
+                NixSearchPath::from_str("/:vibm8ccl5d2x2r3mvx5m2s768w2w64s2=.").unwrap();
             let io = Box::new(StdIO {}) as Box<dyn EvalIO>;
-            let res = nix_search_path.resolve(&io, "snix/src").unwrap();
+            let res = nix_search_path
+                .resolve(&io, "vibm8ccl5d2x2r3mvx5m2s768w2w64s2/src")
+                .unwrap();
             assert_eq!(
                 res.unwrap().to_path_buf(),
                 current_dir().unwrap().join("src").clean()
@@ -249,9 +254,12 @@ mod tests {
 
         #[test]
         fn matching_prefix() {
-            let nix_search_path = NixSearchPath::from_str("/:snix=.").unwrap();
+            let nix_search_path =
+                NixSearchPath::from_str("/:vibm8ccl5d2x2r3mvx5m2s768w2w64s2=.").unwrap();
             let io = Box::new(StdIO {}) as Box<dyn EvalIO>;
-            let res = nix_search_path.resolve(&io, "snix").unwrap();
+            let res = nix_search_path
+                .resolve(&io, "vibm8ccl5d2x2r3mvx5m2s768w2w64s2")
+                .unwrap();
             assert_eq!(res.unwrap().to_path_buf(), current_dir().unwrap().clean());
         }
     }
