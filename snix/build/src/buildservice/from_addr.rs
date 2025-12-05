@@ -71,10 +71,7 @@ where
 mod tests {
     use super::from_addr;
     use rstest::rstest;
-    use snix_castore::{
-        blobservice::{BlobService, MemoryBlobService},
-        directoryservice::{DirectoryService, MemoryDirectoryService},
-    };
+    use snix_castore::blobservice::{BlobService, MemoryBlobService};
     use std::sync::Arc;
     #[cfg(target_os = "linux")]
     use std::sync::LazyLock;
@@ -108,8 +105,7 @@ mod tests {
     #[tokio::test]
     async fn test_from_addr(#[case] uri_str: &str, #[case] exp_succeed: bool) {
         let blob_service: Arc<dyn BlobService> = Arc::from(MemoryBlobService::default());
-        let directory_service: Arc<dyn DirectoryService> =
-            Arc::from(MemoryDirectoryService::default());
+        let directory_service = snix_castore::utils::gen_test_directory_service();
 
         let resp = from_addr(uri_str, blob_service, directory_service).await;
 

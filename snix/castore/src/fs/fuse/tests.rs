@@ -14,7 +14,7 @@ use super::FuseDaemon;
 use crate::{
     Node,
     blobservice::{BlobService, MemoryBlobService},
-    directoryservice::{DirectoryService, MemoryDirectoryService},
+    directoryservice::DirectoryService,
     fixtures,
 };
 use crate::{
@@ -33,7 +33,7 @@ const DIRECTORY_COMPLICATED_NAME: &str = "33333333333333333333333333333333-test"
 fn gen_svcs() -> (Arc<dyn BlobService>, Arc<dyn DirectoryService>) {
     (
         Arc::new(MemoryBlobService::default()) as Arc<dyn BlobService>,
-        Arc::new(MemoryDirectoryService::default()) as Arc<dyn DirectoryService>,
+        Arc::new(crate::utils::gen_test_directory_service()) as Arc<dyn DirectoryService>,
     )
 }
 

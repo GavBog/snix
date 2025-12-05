@@ -168,7 +168,8 @@ mod tests {
     use nix_compat::nixbase32;
     use snix_castore::{
         blobservice::{BlobService, MemoryBlobService},
-        directoryservice::{DirectoryService, MemoryDirectoryService},
+        directoryservice::DirectoryService,
+        utils::gen_test_directory_service,
     };
     use snix_store::{
         fixtures::{DUMMY_PATH_DIGEST, NAR_CONTENTS_SYMLINK, PATH_INFO, PATH_INFO_SYMLINK},
@@ -189,7 +190,7 @@ mod tests {
         impl PathInfoService,
     ) {
         let blob_service = Arc::new(MemoryBlobService::default());
-        let directory_service = Arc::new(MemoryDirectoryService::default());
+        let directory_service = Arc::new(gen_test_directory_service());
         let path_info_service = Arc::new(MemoryPathInfoService::default());
 
         let app = router.with_state(AppState::new(

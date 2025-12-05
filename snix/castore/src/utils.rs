@@ -166,3 +166,8 @@ pub async fn construct_services_from_configs(
 
     Ok((blob_service, directory_service))
 }
+
+/// Returns a new [DirectoryService]. Should only be used for tests.
+pub fn gen_test_directory_service() -> impl DirectoryService + Clone {
+    crate::directoryservice::MemoryDirectoryService::default()
+}

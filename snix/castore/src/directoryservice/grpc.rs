@@ -324,9 +324,10 @@ mod tests {
     use tokio_stream::wrappers::UnixListenerStream;
 
     use crate::{
-        directoryservice::{DirectoryService, GRPCDirectoryService, MemoryDirectoryService},
+        directoryservice::{DirectoryService, GRPCDirectoryService},
         fixtures,
         proto::{GRPCDirectoryServiceWrapper, directory_service_client::DirectoryServiceClient},
+        utils::gen_test_directory_service,
     };
 
     /// This ensures connecting via gRPC works as expected.
@@ -347,7 +348,7 @@ mod tests {
             let router = server.add_service(
                 crate::proto::directory_service_server::DirectoryServiceServer::new(
                     GRPCDirectoryServiceWrapper::new(
-                        Box::<MemoryDirectoryService>::default() as Box<dyn DirectoryService>
+                        Box::new(gen_test_directory_service()) as Box<dyn DirectoryService>
                     ),
                 ),
             );

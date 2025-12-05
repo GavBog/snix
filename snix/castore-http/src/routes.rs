@@ -50,8 +50,9 @@ mod tests {
     use snix_castore::{
         B3Digest, Directory, Node,
         blobservice::{BlobService, MemoryBlobService},
-        directoryservice::{DirectoryService, MemoryDirectoryService},
+        directoryservice::DirectoryService,
         fixtures::{DIRECTORY_COMPLICATED, HELLOWORLD_BLOB_CONTENTS, HELLOWORLD_BLOB_DIGEST},
+        utils::gen_test_directory_service,
     };
 
     use axum::http::StatusCode;
@@ -70,7 +71,7 @@ mod tests {
         impl DirectoryService + use<S>,
     ) {
         let blob_service = Arc::new(MemoryBlobService::default());
-        let directory_service = Arc::new(MemoryDirectoryService::default());
+        let directory_service = Arc::new(gen_test_directory_service());
 
         let app = app(Arc::new(AppConfig {
             blob_service: blob_service.clone(),

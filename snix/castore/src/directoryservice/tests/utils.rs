@@ -1,24 +1,21 @@
 use crate::directoryservice::{DirectoryService, GRPCDirectoryService};
 use crate::proto::GRPCDirectoryServiceWrapper;
 use crate::proto::directory_service_client::DirectoryServiceClient;
-use crate::{
-    directoryservice::MemoryDirectoryService,
-    proto::directory_service_server::DirectoryServiceServer,
-};
+use crate::proto::directory_service_server::DirectoryServiceServer;
+use crate::utils::gen_test_directory_service;
 
 use hyper_util::rt::TokioIo;
 use tonic::transport::{Endpoint, Server, Uri};
 
 /// Constructs and returns a gRPC DirectoryService.
-/// The server part is a [MemoryDirectoryService], exposed via the
+/// The server part is a in-memory [DirectoryService], exposed via the
 /// [GRPCDirectoryServiceWrapper], and connected through a DuplexStream.
 pub async fn make_grpc_directory_service_client() -> Box<dyn DirectoryService> {
     let (left, right) = tokio::io::duplex(64);
 
     // spin up a server, which will only connect once, to the left side.
     tokio::spawn(async {
-        let directory_service =
-            Box::<MemoryDirectoryService>::default() as Box<dyn DirectoryService>;
+        let directory_service = Box::new(gen_test_directory_service()) as Box<dyn DirectoryService>;
 
         let mut server = Server::builder();
         let router = server.add_service(DirectoryServiceServer::new(

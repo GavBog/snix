@@ -231,8 +231,9 @@ mod tests {
     use sha2::Digest;
     use snix_castore::{
         blobservice::{BlobService, MemoryBlobService},
-        directoryservice::{DirectoryService, MemoryDirectoryService},
+        directoryservice::DirectoryService,
         fixtures::HELLOWORLD_BLOB_DIGEST,
+        utils::gen_test_directory_service,
     };
     use snix_store::{
         fixtures::{
@@ -266,7 +267,7 @@ mod tests {
         impl PathInfoService,
     ) {
         let blob_service = Arc::new(MemoryBlobService::default());
-        let directory_service = Arc::new(MemoryDirectoryService::default());
+        let directory_service = Arc::new(gen_test_directory_service());
         let path_info_service = Arc::new(MemoryPathInfoService::default());
 
         let app = router.with_state(AppState::new(

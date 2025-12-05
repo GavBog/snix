@@ -210,9 +210,10 @@ impl IngestionEntry {
 mod test {
     use rstest::rstest;
 
+    use crate::fixtures::DUMMY_DIGEST;
     use crate::fixtures::{DIRECTORY_COMPLICATED, DIRECTORY_WITH_KEEP, EMPTY_BLOB_DIGEST};
+    use crate::utils::gen_test_directory_service;
     use crate::{Directory, Node};
-    use crate::{directoryservice::MemoryDirectoryService, fixtures::DUMMY_DIGEST};
 
     use super::IngestionEntry;
     use super::ingest_entries;
@@ -280,10 +281,8 @@ mod test {
     )]
     #[tokio::test]
     async fn test_ingestion(#[case] entries: Vec<IngestionEntry>, #[case] exp_root_node: Node) {
-        let directory_service = MemoryDirectoryService::default();
-
         let root_node = ingest_entries(
-            directory_service.clone(),
+            gen_test_directory_service(),
             futures::stream::iter(entries.into_iter().map(Ok::<_, std::io::Error>)),
         )
         .await
@@ -306,10 +305,8 @@ mod test {
     async fn test_end_of_stream(#[case] entries: Vec<IngestionEntry>) {
         use crate::import::IngestionError;
 
-        let directory_service = MemoryDirectoryService::default();
-
         let result = ingest_entries(
-            directory_service.clone(),
+            gen_test_directory_service(),
             futures::stream::iter(entries.into_iter().map(Ok::<_, std::io::Error>)),
         )
         .await;
@@ -343,10 +340,8 @@ mod test {
     ])]
     #[tokio::test]
     async fn test_ingestion_fail(#[case] entries: Vec<IngestionEntry>) {
-        let directory_service = MemoryDirectoryService::default();
-
         let _ = ingest_entries(
-            directory_service.clone(),
+            gen_test_directory_service(),
             futures::stream::iter(entries.into_iter().map(Ok::<_, std::io::Error>)),
         )
         .await;

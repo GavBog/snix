@@ -1,8 +1,8 @@
 use crate::Node;
 use crate::blobservice::{self, BlobService};
-use crate::directoryservice;
 use crate::fixtures::*;
 use crate::import::fs::ingest_path;
+use crate::utils::gen_test_directory_service;
 
 use tempfile::TempDir;
 
@@ -10,7 +10,7 @@ use tempfile::TempDir;
 #[tokio::test]
 async fn symlink() {
     let blob_service = blobservice::from_addr("memory://").await.unwrap();
-    let directory_service = directoryservice::from_addr("memory://").await.unwrap();
+    let directory_service = gen_test_directory_service();
 
     let tmpdir = TempDir::new().unwrap();
 
@@ -41,7 +41,7 @@ async fn symlink() {
 #[tokio::test]
 async fn single_file() {
     let blob_service = blobservice::from_addr("memory://").await.unwrap();
-    let directory_service = directoryservice::from_addr("memory://").await.unwrap();
+    let directory_service = gen_test_directory_service();
 
     let tmpdir = TempDir::new().unwrap();
 
@@ -72,8 +72,10 @@ async fn single_file() {
 #[cfg(target_family = "unix")]
 #[tokio::test]
 async fn complicated() {
+    use crate::directoryservice::DirectoryService;
+
     let blob_service = blobservice::from_addr("memory://").await.unwrap();
-    let directory_service = directoryservice::from_addr("memory://").await.unwrap();
+    let directory_service = gen_test_directory_service();
 
     let tmpdir = TempDir::new().unwrap();
 

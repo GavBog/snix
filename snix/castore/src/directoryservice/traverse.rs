@@ -50,16 +50,17 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        Node, PathBuf, directoryservice,
-        fixtures::{DIRECTORY_COMPLICATED, DIRECTORY_WITH_KEEP, EMPTY_BLOB_DIGEST},
-    };
-
     use super::descend_to;
+    use crate::{
+        Node, PathBuf,
+        directoryservice::DirectoryService,
+        fixtures::{DIRECTORY_COMPLICATED, DIRECTORY_WITH_KEEP, EMPTY_BLOB_DIGEST},
+        utils::gen_test_directory_service,
+    };
 
     #[tokio::test]
     async fn test_descend_to() {
-        let directory_service = directoryservice::from_addr("memory://").await.unwrap();
+        let directory_service = gen_test_directory_service();
 
         let mut handle = directory_service.put_multiple_start();
         handle

@@ -4,7 +4,7 @@ use rstest::fixture;
 use rstest_reuse::template;
 use snix_castore::{
     blobservice::{BlobService, MemoryBlobService},
-    directoryservice::{DirectoryService, MemoryDirectoryService},
+    directoryservice::DirectoryService,
     fixtures::{
         DIRECTORY_COMPLICATED, DIRECTORY_WITH_KEEP, EMPTY_BLOB_CONTENTS, EMPTY_BLOB_DIGEST,
         HELLOWORLD_BLOB_CONTENTS, HELLOWORLD_BLOB_DIGEST,
@@ -36,16 +36,16 @@ pub(crate) async fn blob_service_with_contents() -> Arc<dyn BlobService> {
 
 #[fixture]
 pub(crate) fn directory_service() -> Arc<dyn DirectoryService> {
-    Arc::from(MemoryDirectoryService::default())
+    Arc::new(snix_castore::utils::gen_test_directory_service())
 }
 
 #[fixture]
 pub(crate) async fn directory_service_with_contents() -> Arc<dyn DirectoryService> {
-    let directory_service = Arc::from(MemoryDirectoryService::default());
+    let directory_service = snix_castore::utils::gen_test_directory_service();
     for directory in [&*DIRECTORY_WITH_KEEP, &*DIRECTORY_COMPLICATED] {
         directory_service.put(directory.clone()).await.unwrap();
     }
-    directory_service
+    Arc::new(directory_service)
 }
 
 #[template]
