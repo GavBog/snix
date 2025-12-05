@@ -55,14 +55,14 @@ impl RedbDirectoryService {
     }
 
     /// Constructs a new instance using the in-memory backend.
-    pub fn new_temporary() -> Result<Self, Error> {
+    pub fn new_temporary(instance_name: String) -> Result<Self, Error> {
         let db =
             redb::Database::builder().create_with_backend(redb::backends::InMemoryBackend::new())?;
 
         create_schema(&db)?;
 
         Ok(Self {
-            instance_name: "root".into(),
+            instance_name,
             db: Arc::new(db),
         })
     }
@@ -293,7 +293,9 @@ impl ServiceBuilder for RedbDirectoryServiceConfig {
             RedbDirectoryServiceConfig {
                 is_temporary: true,
                 path: None,
-            } => Ok(Arc::new(RedbDirectoryService::new_temporary()?)),
+            } => Ok(Arc::new(RedbDirectoryService::new_temporary(
+                instance_name.to_string(),
+            )?)),
             RedbDirectoryServiceConfig {
                 is_temporary: true,
                 path: Some(_),
