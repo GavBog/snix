@@ -274,13 +274,13 @@ in
         DISCOVERY_URL="https://auth.snix.dev/realms/snix-project/.well-known/openid-configuration"
 
         # Check if the OAuth2 source already exists
-        if gitea admin auth list | grep -q "$NAME"; then
+        if forgejo admin auth list | grep -q "$NAME"; then
           echo "OAuth2 source '$NAME' already exists. Skipping creation."
           exit 0
         fi
 
         # Add the OAuth2 source
-        gitea admin auth add-oauth \
+        forgejo admin auth add-oauth \
           --name "$NAME" \
           --provider "$PROVIDER" \
           --key "$CLIENT_ID" \
@@ -298,7 +298,7 @@ in
     # Create our user an group. This is necessary for any name that's
     # not "forgejo", due to the nix module config.
     users.users."${config.services.forgejo.group}" = {
-      description = "Gitea Service";
+      description = "Forgejo Service";
       useDefaultShell = true;
 
       home = config.services.forgejo.stateDir;
