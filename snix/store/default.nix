@@ -11,7 +11,7 @@ let
     needsOutput = true;
     command = pkgs.writeShellScript "snix-import-check" ''
       export BLOB_SERVICE_ADDR=memory://
-      export DIRECTORY_SERVICE_ADDR=memory://
+      export DIRECTORY_SERVICE_ADDR=redb+memory:
       export PATH_INFO_SERVICE_ADDR=memory://
       SNIX_STORE_OUTPUT=$(result/bin/snix-store import ${p})
       EXPECTED='${

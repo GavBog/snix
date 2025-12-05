@@ -78,7 +78,7 @@ pub struct ServiceUrlsMemory {
     #[arg(long, env, default_value = "memory://")]
     blob_service_addr: String,
 
-    #[arg(long, env, default_value = "memory://")]
+    #[arg(long, env, default_value = "redb+memory:")]
     directory_service_addr: String,
 
     #[cfg(feature = "xp-composition-cli")]
@@ -169,5 +169,6 @@ pub async fn construct_services_from_configs(
 
 /// Returns a new [DirectoryService]. Should only be used for tests.
 pub fn gen_test_directory_service() -> impl DirectoryService + Clone {
-    crate::directoryservice::MemoryDirectoryService::default()
+    crate::directoryservice::RedbDirectoryService::new_temporary("test".to_string())
+        .expect("creating directoryservice to succeed")
 }

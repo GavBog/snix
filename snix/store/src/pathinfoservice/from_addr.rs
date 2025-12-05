@@ -61,7 +61,7 @@ mod tests {
     use rstest::rstest;
     use snix_castore::blobservice::{BlobService, MemoryBlobServiceConfig};
     use snix_castore::composition::{Composition, DeserializeWithRegistry, ServiceBuilder};
-    use snix_castore::directoryservice::{DirectoryService, MemoryDirectoryServiceConfig};
+    use snix_castore::directoryservice::DirectoryService;
     use std::sync::LazyLock;
     use tempfile::TempDir;
 
@@ -134,6 +134,8 @@ mod tests {
     )]
     #[tokio::test]
     async fn test_from_addr_tokio(#[case] uri_str: &str, #[case] exp_succeed: bool) {
+        use snix_castore::directoryservice::RedbDirectoryServiceConfig;
+
         let mut comp = Composition::new(&REG);
         comp.extend(vec![(
             "root".into(),
@@ -142,7 +144,7 @@ mod tests {
         )]);
         comp.extend(vec![(
             "root".into(),
-            DeserializeWithRegistry(Box::new(MemoryDirectoryServiceConfig {})
+            DeserializeWithRegistry(Box::new(RedbDirectoryServiceConfig::default())
                 as Box<dyn ServiceBuilder<Output = dyn DirectoryService>>),
         )]);
 

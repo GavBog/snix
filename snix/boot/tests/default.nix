@@ -16,7 +16,7 @@ let
       name,
 
       blobServiceAddr ? "memory://",
-      directoryServiceAddr ? "memory://",
+      directoryServiceAddr ? "redb+memory:",
       pathInfoServiceAddr ? "memory://",
 
       # The path to import.
@@ -258,7 +258,7 @@ depot.nix.readTree.drvTargets {
       blobServiceAddr = "objectstore+s3://mybucket/blobs?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&aws_endpoint_url=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
       # we cannot use s3 here yet without any caching layer, as we don't allow "deeper" access to directories (non-root nodes)
       # directoryServiceAddr = "objectstore+s3://mybucket/directories?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&endpoint=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
-      directoryServiceAddr = "memory://";
+      directoryServiceAddr = "redb+memory:";
       pathInfoServiceAddr = "memory://";
       path = testSystem;
       useNarBridge = true;

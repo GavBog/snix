@@ -28,6 +28,10 @@ impl RedbDirectoryService {
     /// Constructs a new instance using the specified filesystem path for
     /// storage.
     pub async fn new(instance_name: String, path: PathBuf) -> Result<Self, Error> {
+        if &path == "" {
+            return Err(Error::StorageError("empty path is disallowed".to_string()));
+        }
+
         if &path == "/" {
             return Err(Error::StorageError(
                 "cowardly refusing to open / with redb".to_string(),
@@ -234,35 +238,39 @@ impl DirectoryPutter for RedbDirectoryPutter<'_> {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct RedbDirectoryServiceConfig {
-    is_temporary: bool,
-    #[serde(default)]
-    /// required when is_temporary = false
     path: Option<PathBuf>,
 }
 
 impl TryFrom<url::Url> for RedbDirectoryServiceConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
+
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
-        // redb doesn't support host, and a path can be provided (otherwise
-        // it'll live in memory only).
         if url.has_host() {
             return Err(Error::StorageError("no host allowed".to_string()).into());
         }
 
-        Ok(if url.path().is_empty() {
-            RedbDirectoryServiceConfig {
-                is_temporary: true,
-                path: None,
-            }
-        } else {
-            RedbDirectoryServiceConfig {
-                is_temporary: false,
-                path: Some(url.path().into()),
-            }
-        })
+        match (url.scheme(), url.has_authority(), url.path()) {
+            ("redb+memory", false, "") => Ok(RedbDirectoryServiceConfig { path: None }),
+            ("redb+memory", false, _) => Err(Box::new(Error::StorageError(
+                "redb+memory with path is disallowed".to_string(),
+            ))),
+            ("redb+memory", true, _) => Err(Box::new(Error::StorageError(
+                "redb+memory may not have authority".to_string(),
+            ))),
+            ("redb", _, "") => Err(Box::new(Error::StorageError(
+                "redb without path is disallowed, use redb+memory if you want in-memory"
+                    .to_string(),
+            ))),
+            ("redb", _, path) => Ok(RedbDirectoryServiceConfig {
+                path: Some(path.into()),
+            }),
+            (_scheme, _, _) => Err(Box::new(Error::StorageError(
+                "Unrecognized scheme".to_string(),
+            ))),
+        }
     }
 }
 
@@ -274,30 +282,12 @@ impl ServiceBuilder for RedbDirectoryServiceConfig {
         instance_name: &str,
         _context: &CompositionContext,
     ) -> Result<Arc<dyn DirectoryService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
-        match self {
-            RedbDirectoryServiceConfig {
-                is_temporary: true,
-                path: None,
-            } => Ok(Arc::new(RedbDirectoryService::new_temporary(
-                instance_name.to_string(),
-            )?)),
-            RedbDirectoryServiceConfig {
-                is_temporary: true,
-                path: Some(_),
-            } => Err(Error::StorageError(
-                "Temporary RedbDirectoryService can not have path".into(),
-            )
-            .into()),
-            RedbDirectoryServiceConfig {
-                is_temporary: false,
-                path: None,
-            } => Err(Error::StorageError("RedbDirectoryService is missing path".into()).into()),
-            RedbDirectoryServiceConfig {
-                is_temporary: false,
-                path: Some(path),
-            } => Ok(Arc::new(
-                RedbDirectoryService::new(instance_name.to_string(), path.into()).await?,
-            )),
-        }
+        let svc = if let Some(path) = &self.path {
+            RedbDirectoryService::new(instance_name.to_string(), path.to_owned()).await?
+        } else {
+            RedbDirectoryService::new_temporary(instance_name.to_string())?
+        };
+
+        Ok(Arc::new(svc))
     }
 }

@@ -8,7 +8,6 @@ mod combinators;
 mod directory_graph;
 mod from_addr;
 mod grpc;
-mod memory;
 mod object_store;
 mod order_validator;
 mod redb;
@@ -22,7 +21,6 @@ pub use self::combinators::{Cache, CacheConfig};
 pub use self::directory_graph::{DirectoryGraph, DirectoryGraphBuilder};
 pub use self::from_addr::from_addr;
 pub use self::grpc::{GRPCDirectoryService, GRPCDirectoryServiceConfig};
-pub use self::memory::{MemoryDirectoryService, MemoryDirectoryServiceConfig};
 pub use self::object_store::{ObjectStoreDirectoryService, ObjectStoreDirectoryServiceConfig};
 pub use self::order_validator::{LeavesToRootValidator, OrderingError, RootToLeavesValidator};
 pub use self::redb::{RedbDirectoryService, RedbDirectoryServiceConfig};
@@ -109,10 +107,9 @@ pub trait DirectoryPutter: Send {
 
 /// Registers the builtin DirectoryService implementations with the registry
 pub(crate) fn register_directory_services(reg: &mut Registry) {
-    reg.register::<Box<dyn ServiceBuilder<Output = dyn DirectoryService>>, super::directoryservice::ObjectStoreDirectoryServiceConfig>("objectstore");
-    reg.register::<Box<dyn ServiceBuilder<Output = dyn DirectoryService>>, super::directoryservice::MemoryDirectoryServiceConfig>("memory");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn DirectoryService>>, super::directoryservice::CacheConfig>("cache");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn DirectoryService>>, super::directoryservice::GRPCDirectoryServiceConfig>("grpc");
+    reg.register::<Box<dyn ServiceBuilder<Output = dyn DirectoryService>>, super::directoryservice::ObjectStoreDirectoryServiceConfig>("objectstore");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn DirectoryService>>, super::directoryservice::RedbDirectoryServiceConfig>("redb");
     #[cfg(feature = "cloud")]
     {

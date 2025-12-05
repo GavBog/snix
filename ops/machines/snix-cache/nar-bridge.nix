@@ -86,7 +86,6 @@
       directoryservices = {
         root = {
           type = "redb";
-          is_temporary = false;
           path = "/var/lib/nar-bridge/directories.redb";
         };
       };
