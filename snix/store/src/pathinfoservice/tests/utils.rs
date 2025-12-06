@@ -1,17 +1,16 @@
-use std::sync::Arc;
-
 use hyper_util::rt::TokioIo;
 use snix_castore::{blobservice::BlobService, directoryservice::DirectoryService};
 use tonic::transport::{Endpoint, Server, Uri};
 
 use crate::{
     nar::{NarCalculationService, SimpleRenderer},
-    pathinfoservice::{GRPCPathInfoService, MemoryPathInfoService, PathInfoService},
+    pathinfoservice::{GRPCPathInfoService, PathInfoService},
     proto::{
         GRPCPathInfoServiceWrapper, path_info_service_client::PathInfoServiceClient,
         path_info_service_server::PathInfoServiceServer,
     },
     tests::fixtures::{blob_service, directory_service},
+    utils::gen_test_pathinfo_service,
 };
 
 /// Constructs and returns a gRPC PathInfoService.
@@ -32,8 +31,8 @@ pub async fn make_grpc_path_info_service_client() -> (
         let blob_service = blob_service.clone();
         let directory_service = directory_service.clone();
         async move {
-            let path_info_service: Arc<dyn PathInfoService> =
-                Arc::from(MemoryPathInfoService::default());
+            let path_info_service =
+                Box::new(gen_test_pathinfo_service()) as Box<dyn PathInfoService>;
             let nar_calculation_service =
                 Box::new(SimpleRenderer::new(blob_service, directory_service))
                     as Box<dyn NarCalculationService>;

@@ -11,10 +11,8 @@ use url::Url;
 /// Constructs a new instance of a [PathInfoService] from an URI.
 ///
 /// The following URIs are supported:
-/// - `memory:`
+/// - `redb+memory:`
 ///   Uses a in-memory implementation.
-/// - `redb:`
-///   Uses a in-memory redb implementation.
 /// - `redb:///absolute/path/to/somewhere`
 ///   Uses redb, using a path on the disk for persistency. Can be only opened
 ///   from one process at the same time.
@@ -73,22 +71,24 @@ mod tests {
     #[rstest]
     /// This uses a unsupported scheme.
     #[case::unsupported_scheme("http://foo.example/test", false)]
-    /// This correctly sets the scheme, and doesn't set a path.
-    #[case::memory_valid("memory://", true)]
-    /// This sets a memory url host to `foo`
-    #[case::memory_invalid_host("memory://foo", false)]
-    /// This sets a memory url path to "/", which is invalid.
-    #[case::memory_invalid_root_path("memory:///", false)]
-    /// This sets a memory url path to "/foo", which is invalid.
-    #[case::memory_invalid_root_path_foo("memory:///foo", false)]
-    /// redb with a host, and a valid path path, which should fail.
-    #[case::redb_invalid_host_with_valid_path(&format!("redb://foo.example{}", &TMPDIR_REDB_1.path().join("bar").to_str().unwrap()), false)]
-    /// redb with / as path, which should fail.
+    /// This configures redb without a path, which should fail.
+    #[case::redb_invalid_missing_path("redb://", false)]
+    /// This configures redb with /, which should fail.
     #[case::redb_invalid_root("redb:///", false)]
+    /// This configures redb with a host, not path, which should fail.
+    #[case::redb_invalid_host("redb://foo.example", false)]
     /// This configures redb with a valid path, which should succeed.
-    #[case::redb_valid_path(&format!("redb://{}", &TMPDIR_REDB_2.path().join("foo").to_str().unwrap()), true)]
-    /// redb using the in-memory backend, which should succeed.
-    #[case::redb_valid_in_memory("redb://", true)]
+    #[case::redb_valid_path(&format!("redb://{}", &TMPDIR_REDB_1.path().join("foo").to_str().unwrap()), true)]
+    /// This configures redb with a host, and a valid path path, which should fail.
+    #[case::redb_invalid_host_with_valid_path(&format!("redb://foo.example{}", &TMPDIR_REDB_2.path().join("bar").to_str().unwrap()), false)]
+    /// This configures redb in-memory.
+    #[case::redb_memory_valid("redb+memory:", true)]
+    /// This configures redb in-memory, but wrongly adds a path.
+    #[case::redb_memory_invalid_path("redb+memory:/foo/bar", false)]
+    /// This configures redb in-memory, but wrongly adds authority.
+    #[case::redb_memory_invalid_authority("redb+memory://", false)]
+    /// This configures redb in-memory, but wrongly adds a path (with authority).
+    #[case::redb_memory_invalid_authority_path("redb+memory:///foo/bar", false)]
     /// Correct Scheme for the cache.nixos.org binary cache.
     #[case::correct_nix_https("nix+https://cache.nixos.org", true)]
     /// Correct Scheme for the cache.nixos.org binary cache (HTTP URL).

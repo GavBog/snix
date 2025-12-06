@@ -174,7 +174,8 @@ mod tests {
     use snix_store::{
         fixtures::{DUMMY_PATH_DIGEST, NAR_CONTENTS_SYMLINK, PATH_INFO, PATH_INFO_SYMLINK},
         path_info::PathInfo,
-        pathinfoservice::{MemoryPathInfoService, PathInfoService},
+        pathinfoservice::PathInfoService,
+        utils::gen_test_pathinfo_service,
     };
     use tracing_test::traced_test;
 
@@ -191,7 +192,7 @@ mod tests {
     ) {
         let blob_service = Arc::new(MemoryBlobService::default());
         let directory_service = Arc::new(gen_test_directory_service());
-        let path_info_service = Arc::new(MemoryPathInfoService::default());
+        let path_info_service = Arc::new(gen_test_pathinfo_service());
 
         let app = router.with_state(AppState::new(
             blob_service.clone(),

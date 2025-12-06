@@ -3,7 +3,7 @@ use crate::proto;
 use data_encoding::BASE64;
 use futures::{StreamExt, stream::BoxStream};
 use prost::Message;
-use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
+use redb::{ReadableDatabase, ReadableTable, TableDefinition};
 use snix_castore::{
     Error,
     composition::{CompositionContext, ServiceBuilder},
@@ -15,55 +15,125 @@ use tracing::{instrument, warn};
 
 const PATHINFO_TABLE: TableDefinition<[u8; 20], Vec<u8>> = TableDefinition::new("pathinfo");
 
+enum Db {
+    ReadOnly(redb::ReadOnlyDatabase),
+    ReadWrite(redb::Database),
+}
+
+impl Db {
+    fn begin_read(&self) -> Result<redb::ReadTransaction, redb::TransactionError> {
+        match self {
+            Db::ReadOnly(db) => db.begin_read(),
+            Db::ReadWrite(db) => db.begin_read(),
+        }
+    }
+
+    fn begin_write(&self) -> Result<redb::WriteTransaction, Error> {
+        match self {
+            Db::ReadOnly(_) => Err(Error::StorageError(
+                "unable to open write txn, database is opened read-only".to_string(),
+            )),
+            Db::ReadWrite(db) => Ok(db.begin_write()?),
+        }
+    }
+}
+
 /// PathInfoService implementation using redb under the hood.
 /// redb stores all of its data in a single file with a K/V pointing from a path's output hash to
 /// its corresponding protobuf-encoded PathInfo.
+#[derive(Clone)]
 pub struct RedbPathInfoService {
     instance_name: String,
-    // We wrap db in an Arc to be able to move it into spawn_blocking,
-    // as discussed in https://github.com/cberner/redb/issues/789
-    db: Arc<Database>,
+
+    /// An Arc'ed Database, read-only or writeable.
+    db: Arc<Db>,
 }
 
 impl RedbPathInfoService {
-    /// Constructs a new instance using the specified file system path for
-    /// storage.
-    pub async fn new(instance_name: String, path: PathBuf) -> Result<Self, Error> {
-        if &path == "/" {
-            return Err(Error::StorageError(
-                "cowardly refusing to open / with redb".to_string(),
-            ));
+    /// Constructs a new instance using the specified config.
+    pub async fn new(
+        instance_name: String,
+        config: RedbPathInfoServiceConfig,
+    ) -> Result<Self, Error> {
+        if let Some(path) = config.path.clone() {
+            if &path == "" {
+                return Err(Error::StorageError("empty path is disallowed".to_string()));
+            }
+            if &path == "/" {
+                return Err(Error::StorageError(
+                    "cowardly refusing to open / with redb".to_string(),
+                ));
+            }
+
+            if config.read_only {
+                let db =
+                    tokio::task::spawn_blocking(|| redb::Database::builder().open_read_only(path))
+                        .await??;
+
+                return Ok(Self {
+                    instance_name,
+                    db: Arc::new(Db::ReadOnly(db)),
+                });
+            }
+
+            if let Some(parent) = path.parent() {
+                tokio::fs::create_dir_all(parent).await?;
+            }
+
+            let db = tokio::task::spawn_blocking(move || {
+                let mut builder = redb::Database::builder();
+                configure_builder(&mut builder, &config);
+
+                let db = builder.create(path)?;
+                create_schema(&db)?;
+                Ok::<_, redb::Error>(db)
+            })
+            .await??;
+
+            Ok(Self {
+                instance_name,
+                db: Arc::new(Db::ReadWrite(db)),
+            })
+        } else {
+            Self::new_temporary(instance_name, config)
         }
-
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        let db = tokio::task::spawn_blocking(|| -> Result<_, redb::Error> {
-            let db = redb::Database::builder().create(path)?;
-
-            create_schema(&db)?;
-            Ok(db)
-        })
-        .await??;
-
-        Ok(Self {
-            instance_name,
-            db: Arc::new(db),
-        })
     }
 
     /// Constructs a new instance using the in-memory backend.
-    pub fn new_temporary(instance_name: String) -> Result<Self, Error> {
-        let db =
-            redb::Database::builder().create_with_backend(redb::backends::InMemoryBackend::new())?;
+    /// Sync, as there's no real IO happening.
+    pub fn new_temporary(
+        instance_name: String,
+        config: RedbPathInfoServiceConfig,
+    ) -> Result<Self, Error> {
+        debug_assert!(
+            config.path.is_none(),
+            "Snix bug: config.path is not None, but new_temporary requested"
+        );
+
+        if config.read_only {
+            return Err(Error::StorageError(
+                "in-memory database cannot be read-only".to_string(),
+            ));
+        }
+
+        let mut builder = redb::Database::builder();
+        configure_builder(&mut builder, &config);
+
+        let db = builder.create_with_backend(redb::backends::InMemoryBackend::new())?;
 
         create_schema(&db)?;
 
-        Ok(Self {
+        Ok(RedbPathInfoService {
             instance_name,
-            db: Arc::new(db),
+            db: Arc::new(Db::ReadWrite(db)),
         })
+    }
+}
+
+/// Applies options from [RedbPathInfoServiceConfig] to a [redb::Builder].
+fn configure_builder(builder: &mut redb::Builder, config: &RedbPathInfoServiceConfig) {
+    if let Some(cache_size) = config.cache_size {
+        builder.set_cache_size(cache_size);
     }
 }
 
@@ -188,34 +258,51 @@ impl PathInfoService for RedbPathInfoService {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Clone, Default, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RedbPathInfoServiceConfig {
-    is_temporary: bool,
-    #[serde(default)]
-    /// required when is_temporary = false
     path: Option<PathBuf>,
+
+    /// The amount of memory (in bytes) used for caching data
+    cache_size: Option<usize>,
+
+    /// Whether to open read-only.
+    #[serde(default)]
+    read_only: bool,
 }
 
 impl TryFrom<url::Url> for RedbPathInfoServiceConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
-        // redb doesn't support host, and a path can be provided (otherwise it'll live in memory only)
         if url.has_host() {
             return Err(Error::StorageError("no host allowed".to_string()).into());
         }
 
-        Ok(if url.path().is_empty() {
-            RedbPathInfoServiceConfig {
-                is_temporary: true,
-                path: None,
-            }
-        } else {
-            RedbPathInfoServiceConfig {
-                is_temporary: false,
-                path: Some(url.path().into()),
-            }
-        })
+        let path: Option<PathBuf> = match (url.scheme(), url.has_authority(), url.path()) {
+            ("redb+memory", false, "") => None,
+            ("redb+memory", false, _) => Err(Box::new(Error::StorageError(
+                "redb+memory with path is disallowed".to_string(),
+            )))?,
+            ("redb+memory", true, _) => Err(Box::new(Error::StorageError(
+                "redb+memory may not have authority".to_string(),
+            )))?,
+            ("redb", _, "") => Err(Box::new(Error::StorageError(
+                "redb without path is disallowed, use redb+memory if you want in-memory"
+                    .to_string(),
+            )))?,
+            ("redb", _, path) => Some(path.into()),
+            (_scheme, _, _) => Err(Box::new(Error::StorageError(
+                "Unrecognized scheme".to_string(),
+            )))?,
+        };
+
+        let mut config: RedbPathInfoServiceConfig =
+            serde_qs::from_str(url.query().unwrap_or_default())
+                .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?;
+
+        config.path = path;
+
+        Ok(config)
     }
 }
 
@@ -227,30 +314,8 @@ impl ServiceBuilder for RedbPathInfoServiceConfig {
         instance_name: &str,
         _context: &CompositionContext,
     ) -> Result<Arc<dyn PathInfoService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
-        match self {
-            RedbPathInfoServiceConfig {
-                is_temporary: true,
-                path: None,
-            } => Ok(Arc::new(RedbPathInfoService::new_temporary(
-                instance_name.to_string(),
-            )?)),
-            RedbPathInfoServiceConfig {
-                is_temporary: true,
-                path: Some(_),
-            } => Err(
-                Error::StorageError("Temporary RedbPathInfoService can not have path".into())
-                    .into(),
-            ),
-            RedbPathInfoServiceConfig {
-                is_temporary: false,
-                path: None,
-            } => Err(Error::StorageError("RedbPathInfoService is missing path".into()).into()),
-            RedbPathInfoServiceConfig {
-                is_temporary: false,
-                path: Some(path),
-            } => Ok(Arc::new(
-                RedbPathInfoService::new(instance_name.to_string(), path.to_owned()).await?,
-            )),
-        }
+        Ok(Arc::new(
+            RedbPathInfoService::new(instance_name.to_string(), self.to_owned()).await?,
+        ))
     }
 }

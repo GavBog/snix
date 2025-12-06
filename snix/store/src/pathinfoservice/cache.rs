@@ -110,20 +110,20 @@ mod test {
 
     use crate::{
         fixtures::PATH_INFO,
-        pathinfoservice::{LruPathInfoService, MemoryPathInfoService, PathInfoService},
+        pathinfoservice::{LruPathInfoService, PathInfoService},
+        utils::gen_test_pathinfo_service,
     };
 
-    /// Helper function setting up an instance of a "far" and "near"
-    /// PathInfoService.
-    async fn create_pathinfoservice() -> super::Cache<LruPathInfoService, MemoryPathInfoService> {
+    /// Helper function setting up an instance of a Cache PathInfoService.
+    async fn create_pathinfoservice() -> super::Cache<LruPathInfoService, impl PathInfoService> {
         // Create an instance of a "far" PathInfoService.
-        let far = MemoryPathInfoService::default();
+        let far = gen_test_pathinfo_service();
 
         // … and an instance of a "near" PathInfoService.
-        let near = LruPathInfoService::with_capacity("test".into(), NonZeroUsize::new(1).unwrap());
+        let near = LruPathInfoService::with_capacity("near".into(), NonZeroUsize::new(1).unwrap());
 
         // create a Pathinfoservice combining the two and return it.
-        super::Cache::new("test".into(), near, far)
+        super::Cache::new("root".into(), near, far)
     }
 
     /// Getting from the far backend is gonna insert it into the near one.

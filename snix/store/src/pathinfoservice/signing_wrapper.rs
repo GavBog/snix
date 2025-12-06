@@ -14,9 +14,6 @@ use nix_compat::narinfo::{Signature, SigningKey, parse_keypair};
 use nix_compat::nixbase32;
 use tracing::instrument;
 
-#[cfg(test)]
-use super::MemoryPathInfoService;
-
 /// PathInfoService that wraps around an inner [PathInfoService] and when put is called it extracts
 /// the underlying narinfo and signs it using a [SigningKey]. For the moment only the
 /// [ed25519::signature::Signer<ed25519::Signature>] is available using a keyfile (see
@@ -123,10 +120,11 @@ impl ServiceBuilder for KeyFileSigningPathInfoServiceConfig {
 
 #[cfg(test)]
 pub(crate) fn test_signing_service() -> Arc<dyn PathInfoService> {
-    let memory_svc: Arc<dyn PathInfoService> = Arc::new(MemoryPathInfoService::default());
+    use crate::utils::gen_test_pathinfo_service;
+
     Arc::new(SigningPathInfoService::new(
         "test".into(),
-        memory_svc,
+        gen_test_pathinfo_service(),
         parse_keypair(DUMMY_KEYPAIR)
             .expect("DUMMY_KEYPAIR to be valid")
             .0,

@@ -83,7 +83,7 @@ pub struct ServiceUrlsMemory {
     #[clap(flatten)]
     castore_service_addrs: castore_utils::ServiceUrlsMemory,
 
-    #[arg(long, env, default_value = "memory://")]
+    #[arg(long, env, default_value = "redb+memory:")]
     path_info_service_addr: String,
 
     #[cfg(feature = "xp-composition-cli")]
@@ -231,4 +231,13 @@ impl<W: std::io::Write + Unpin> AsyncWrite for AsyncIoBridge<W> {
     ) -> Poll<Result<(), io::Error>> {
         Poll::Ready(Ok(()))
     }
+}
+
+/// Returns a new [PathInfoService]. Should only be used for tests.
+pub fn gen_test_pathinfo_service() -> impl PathInfoService + Clone {
+    crate::pathinfoservice::RedbPathInfoService::new_temporary(
+        "test".to_string(),
+        crate::pathinfoservice::RedbPathInfoServiceConfig::default(),
+    )
+    .expect("creating pathinfoservice to succeed")
 }

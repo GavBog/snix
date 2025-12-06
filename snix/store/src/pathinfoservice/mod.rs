@@ -2,7 +2,6 @@ mod cache;
 mod from_addr;
 mod grpc;
 mod lru;
-mod memory;
 mod nix_http;
 mod redb;
 mod signing_wrapper;
@@ -26,7 +25,6 @@ pub use self::cache::{Cache as CachePathInfoService, CacheConfig as CachePathInf
 pub use self::from_addr::from_addr;
 pub use self::grpc::{GRPCPathInfoService, GRPCPathInfoServiceConfig};
 pub use self::lru::{LruPathInfoService, LruPathInfoServiceConfig};
-pub use self::memory::{MemoryPathInfoService, MemoryPathInfoServiceConfig};
 pub use self::nix_http::{NixHTTPPathInfoService, NixHTTPPathInfoServiceConfig};
 pub use self::redb::{RedbPathInfoService, RedbPathInfoServiceConfig};
 pub use self::signing_wrapper::{KeyFileSigningPathInfoServiceConfig, SigningPathInfoService};
@@ -73,11 +71,10 @@ pub trait PathInfoService: Send + Sync {
 pub(crate) fn register_pathinfo_services(reg: &mut Registry) {
     reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, CachePathInfoServiceConfig>("cache");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, GRPCPathInfoServiceConfig>("grpc");
+    reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, KeyFileSigningPathInfoServiceConfig>("keyfile-signing");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, LruPathInfoServiceConfig>("lru");
-    reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, MemoryPathInfoServiceConfig>("memory");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, NixHTTPPathInfoServiceConfig>("nix");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, RedbPathInfoServiceConfig>("redb");
-    reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, KeyFileSigningPathInfoServiceConfig>("keyfile-signing");
     #[cfg(feature = "cloud")]
     {
         reg.register::<Box<dyn ServiceBuilder<Output = dyn PathInfoService>>, BigtableParameters>(

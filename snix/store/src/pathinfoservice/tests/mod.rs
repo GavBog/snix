@@ -8,8 +8,7 @@ use rstest_reuse::{self, *};
 
 use super::{PathInfo, PathInfoService};
 use crate::fixtures::{DUMMY_PATH_DIGEST, PATH_INFO};
-use crate::pathinfoservice::MemoryPathInfoService;
-use crate::pathinfoservice::redb::RedbPathInfoService;
+use crate::pathinfoservice::redb::{RedbPathInfoService, RedbPathInfoServiceConfig};
 use crate::pathinfoservice::test_signing_service;
 
 mod utils;
@@ -20,12 +19,11 @@ use self::utils::make_bigtable_path_info_service;
 
 #[template]
 #[rstest]
-#[case::memory(MemoryPathInfoService::default())]
 #[case::grpc({
     let (_, _, svc) = make_grpc_path_info_service_client().await;
     svc
 })]
-#[case::redb(RedbPathInfoService::new_temporary("test".into()).unwrap())]
+#[case::redb(RedbPathInfoService::new_temporary("test".to_string(), RedbPathInfoServiceConfig::default()).unwrap())]
 #[case::signing(test_signing_service())]
 #[cfg_attr(all(feature = "cloud",feature="integration"), case::bigtable(make_bigtable_path_info_service().await))]
 pub fn path_info_services(#[case] svc: impl PathInfoService) {}

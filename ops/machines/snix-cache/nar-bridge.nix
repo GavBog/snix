@@ -99,7 +99,6 @@
 
         redb = {
           type = "redb";
-          is_temporary = false;
           path = "/var/lib/nar-bridge/pathinfo.redb";
         };
 
