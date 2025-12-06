@@ -125,7 +125,7 @@ in
       # variety of backends.
       auth.type = "OAUTH";
       plugin.gerrit-oauth-provider-keycloak-oauth = {
-        root-url = "https://auth.snix.dev/";
+        root-url = "https://auth.snix.dev";
         realm = "snix-project";
         client-id = "gerrit";
         # client-secret is set in /var/lib/gerrit/etc/secure.config.
