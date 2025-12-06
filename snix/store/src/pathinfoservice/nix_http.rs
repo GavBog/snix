@@ -302,13 +302,13 @@ impl TryFrom<Url> for NixHTTPPathInfoServiceConfig {
             .into_iter()
             .find(|(k, _)| k == "blob_service")
             .map(|(_, v)| v.to_string())
-            .unwrap_or("root".to_string());
+            .unwrap_or("&root".to_string());
         let directory_service = url
             .query_pairs()
             .into_iter()
             .find(|(k, _)| k == "directory_service")
             .map(|(_, v)| v.to_string())
-            .unwrap_or("root".to_string());
+            .unwrap_or("&root".to_string());
 
         Ok(NixHTTPPathInfoServiceConfig {
             // Stringify the URL and remove the nix+ prefix.
@@ -331,8 +331,8 @@ impl ServiceBuilder for NixHTTPPathInfoServiceConfig {
         context: &CompositionContext,
     ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let (blob_service, directory_service) = futures::join!(
-            context.resolve::<dyn BlobService>(self.blob_service.clone()),
-            context.resolve::<dyn DirectoryService>(self.directory_service.clone())
+            context.resolve::<dyn BlobService>(&self.blob_service),
+            context.resolve::<dyn DirectoryService>(&self.directory_service)
         );
         let mut svc = NixHTTPPathInfoService::new(
             instance_name.to_string(),

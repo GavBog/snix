@@ -106,8 +106,8 @@ store, to make subsequent lookups not query the remote again.
 ```toml
 [blobservices.root]
 type = "combined"
-near = "near"
-far = "far"
+near = "&near"
+far = "&far"
 
 [blobservices.near]
 type = "objectstore"
@@ -126,8 +126,8 @@ This keeps the last 1000 requested `PathInfo`s around in a local cache.
 ```toml
 [pathinfoservices.root]
 type = "cache"
-near = "near"
-far = "far"
+near = "&near"
+far = "&far"
 
 [pathinfoservices.near]
 type = "lru"
@@ -167,8 +167,8 @@ path = "/var/lib/snix-castore/directories.redb"
 
 [pathinfoservices.root]
 type = "cache"
-near = "redb"
-far = "cache-nixos-org"
+near = "&redb"
+far = "&cache-nixos-org"
 
 [pathinfoservices.redb]
 type = "redb"
@@ -179,8 +179,8 @@ path = "/var/lib/snix-store/pathinfo.redb"
 type = "nix"
 base_url = "https://cache.nixos.org"
 public_keys = ["cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="]
-blob_service = "root"
-directory_service = "root"
+blob_service = "&root"
+directory_service = "&root"
 ```
 
 [rustdoc-castore-composition]: https://snix.dev/rustdoc/snix_castore/composition/index.html

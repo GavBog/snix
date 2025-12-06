@@ -118,10 +118,8 @@ impl ServiceBuilder for CombinedBlobServiceConfig {
         instance_name: &str,
         context: &CompositionContext,
     ) -> Result<Arc<dyn BlobService>, Box<dyn std::error::Error + Send + Sync>> {
-        let (local, remote) = futures::join!(
-            context.resolve(self.near.clone()),
-            context.resolve(self.far.clone())
-        );
+        let (local, remote) =
+            futures::join!(context.resolve(&self.near), context.resolve(&self.far));
         Ok(Arc::new(CombinedBlobService {
             instance_name: instance_name.to_string(),
             near: local?,

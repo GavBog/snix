@@ -64,8 +64,8 @@
 //!   },
 //!   "root": {
 //!     "type": "combined",
-//!     "near": "blobstore1",
-//!     "far": "blobstore2"
+//!     "near": "&blobstore1",
+//!     "far": "&blobstore2"
 //!   }
 //! });
 //!
@@ -298,30 +298,51 @@ impl CompositionContext<'_> {
         }
     }
 
+    /// Resolves an instance ref (instance name prefixed with "&") or an
+    /// anonymous store URL to an instantiated service.
+    /// The latter is only allowed if xp-composition-url-refs is enabled.
     pub async fn resolve<T: ?Sized + Send + Sync + 'static>(
         &self,
-        entrypoint: String,
+        s: &str,
     ) -> Result<Arc<T>, Box<dyn std::error::Error + Send + Sync + 'static>> {
-        // disallow recursion
-        if self
-            .stack
-            .contains(&(TypeId::of::<T>(), entrypoint.clone()))
-        {
-            return Err(CompositionError::Recursion(
-                self.stack.iter().map(|(_, n)| n.clone()).collect(),
-            )
-            .into());
-        }
+        // The string is expected to start with a `&`...
+        if let Some(instance_name) = s.strip_prefix("&") {
+            // disallow recursion
+            if self
+                .stack
+                .contains(&(TypeId::of::<T>(), instance_name.to_owned()))
+            {
+                return Err(CompositionError::Recursion(
+                    self.stack.iter().map(|(_, n)| n.clone()).collect(),
+                )
+                .into());
+            }
 
-        Ok(self.build_internal(entrypoint).await?)
+            Ok(self.build_internal(instance_name.to_owned()).await?)
+        } else {
+            // ... or it's an anonymous store with xp-composition-url-refs
+            #[cfg(feature = "xp-composition-url-refs")]
+            {
+                // This might be a URL, we are building an anonymous store
+                Ok(self
+                    .build_anonymous(s)
+                    .await
+                    .map_err(|e| CompositionError::Failed(s.to_string(), Arc::from(e)))?)
+            }
+
+            #[cfg(not(feature = "xp-composition-url-refs"))]
+            {
+                return Err(CompositionError::InvalidReference(s.to_owned()).into());
+            }
+        }
     }
 
     #[cfg(feature = "xp-composition-url-refs")]
     async fn build_anonymous<T: ?Sized + Send + Sync + 'static>(
         &self,
-        entrypoint: String,
+        url_str: &str,
     ) -> Result<Arc<T>, Box<dyn std::error::Error + Send + Sync>> {
-        let url = url::Url::parse(&entrypoint)?;
+        let url = url::Url::parse(url_str)?;
         let config: DeserializeWithRegistry<Box<dyn ServiceBuilder<Output = T>>> =
             with_registry(self.registry, || url.try_into())?;
         config.0.build("anonymous", self).await
@@ -329,25 +350,28 @@ impl CompositionContext<'_> {
 
     fn build_internal<T: ?Sized + Send + Sync + 'static>(
         &self,
-        entrypoint: String,
+        instance_name: String,
     ) -> BoxFuture<'_, Result<Arc<T>, CompositionError>> {
-        #[cfg(feature = "xp-composition-url-refs")]
-        if entrypoint.contains("://") {
-            // There is a chance this is a url. we are building an anonymous store
-            return Box::pin(async move {
-                self.build_anonymous(entrypoint.clone())
-                    .await
-                    .map_err(|e| CompositionError::Failed(entrypoint, Arc::from(e)))
-            });
-        }
+        debug_assert!(
+            !instance_name.starts_with("&"),
+            "build_internal should never be called with &"
+        );
 
         let mut stores = match self.composition {
             Some(comp) => comp.stores.lock().unwrap(),
-            None => return Box::pin(futures::future::err(CompositionError::NotFound(entrypoint))),
+            None => {
+                return Box::pin(futures::future::err(CompositionError::NotFound(
+                    instance_name,
+                )));
+            }
         };
-        let entry = match stores.get_mut(&(TypeId::of::<T>(), entrypoint.clone())) {
+        let entry = match stores.get_mut(&(TypeId::of::<T>(), instance_name.to_owned())) {
             Some(v) => v,
-            None => return Box::pin(futures::future::err(CompositionError::NotFound(entrypoint))),
+            None => {
+                return Box::pin(futures::future::err(CompositionError::NotFound(
+                    instance_name,
+                )));
+            }
         };
         // for lifetime reasons, we put a placeholder value in the hashmap while we figure out what
         // the new value should be. the Mutex stays locked the entire time, so nobody will ever see
@@ -355,7 +379,7 @@ impl CompositionContext<'_> {
         let prev_val = std::mem::replace(
             entry,
             Box::new(InstantiationState::<T>::Done(Err(
-                CompositionError::Poisoned(entrypoint.clone()),
+                CompositionError::Poisoned(instance_name.to_owned()),
             ))),
         );
         let (new_val, ret) = match *prev_val.downcast::<InstantiationState<T>>().unwrap() {
@@ -376,13 +400,13 @@ impl CompositionContext<'_> {
                         };
                         new_context
                             .stack
-                            .push((TypeId::of::<T>(), entrypoint.clone()));
-                        let res =
-                            config.build(&entrypoint, &new_context).await.map_err(|e| {
-                                match e.downcast() {
-                                    Ok(e) => *e,
-                                    Err(e) => CompositionError::Failed(entrypoint, e.into()),
-                                }
+                            .push((TypeId::of::<T>(), instance_name.to_owned()));
+                        let res = config
+                            .build(&instance_name, &new_context)
+                            .await
+                            .map_err(|e| match e.downcast() {
+                                Ok(e) => *e,
+                                Err(e) => CompositionError::Failed(instance_name, e.into()),
                             });
                         tx.send(Some(res.clone())).unwrap();
                         res
@@ -452,6 +476,8 @@ pub enum CompositionError {
     Recursion(Vec<String>),
     #[error("store construction panicked {0}")]
     Poisoned(String),
+    #[error("invalid reference, must start with @")]
+    InvalidReference(String),
     #[error("instantiation of service {0} failed: {1}")]
     Failed(String, Arc<dyn std::error::Error + Send + Sync>),
 }
@@ -501,12 +527,14 @@ impl Composition {
         self.extend(configs);
     }
 
-    /// Looks up the entrypoint name in the composition and returns an instantiated service.
+    /// Looks up the instance name in the composition and returns an instantiated service.
     pub async fn build<T: ?Sized + Send + Sync + 'static>(
         &self,
-        entrypoint: &str,
+        instance_name: &str,
     ) -> Result<Arc<T>, CompositionError> {
-        self.context().build_internal(entrypoint.to_string()).await
+        self.context()
+            .build_internal(instance_name.to_string())
+            .await
     }
 
     pub fn context(&self) -> CompositionContext<'_> {
@@ -555,13 +583,13 @@ mod test {
         let blob_services_configs_json = serde_json::json!({
             "root": {
                 "type": "combined",
-                "near": "other",
-                "far": "other"
+                "near": "&other",
+                "far": "&other"
             },
             "other": {
                 "type": "combined",
-                "near": "root",
-                "far": "root"
+                "near": "&root",
+                "far": "&root"
             }
         });
 

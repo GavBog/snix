@@ -94,8 +94,8 @@
       pathinfoservices = {
         root = {
           type = "cache";
-          near = "redb";
-          far = "cache-nixos-org";
+          near = "&redb";
+          far = "&cache-nixos-org";
         };
 
         redb = {
@@ -107,8 +107,8 @@
         "cache-nixos-org" = {
           type = "nix";
           base_url = "https://cache.nixos.org";
-          blob_service = "root";
-          directory_service = "root";
+          blob_service = "&root";
+          directory_service = "&root";
           public_keys = [
             "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
           ];
