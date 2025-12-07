@@ -304,7 +304,7 @@ impl CompositionContext<'_> {
     pub async fn resolve<T: ?Sized + Send + Sync + 'static>(
         &self,
         s: &str,
-    ) -> Result<Arc<T>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<T>, CompositionError> {
         // The string is expected to start with a `&`...
         if let Some(instance_name) = s.strip_prefix("&") {
             // disallow recursion
@@ -314,11 +314,10 @@ impl CompositionContext<'_> {
             {
                 return Err(CompositionError::Recursion(
                     self.stack.iter().map(|(_, n)| n.clone()).collect(),
-                )
-                .into());
+                ));
             }
 
-            Ok(self.build_internal(instance_name.to_owned()).await?)
+            self.build_internal(instance_name.to_owned()).await
         } else {
             // ... or it's an anonymous store with xp-composition-url-refs
             #[cfg(feature = "xp-composition-url-refs")]
