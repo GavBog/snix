@@ -16,7 +16,6 @@
 //! how store paths are opened and so on.
 
 use std::{
-    env,
     ffi::{OsStr, OsString},
     io,
     path::{Path, PathBuf},
@@ -185,7 +184,7 @@ impl EvalIO for StdIO {
     }
 
     fn get_env(&self, key: &OsStr) -> Option<OsString> {
-        env::var_os(key)
+        std::env::var_os(key)
     }
 }
 
