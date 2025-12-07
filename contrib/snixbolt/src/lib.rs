@@ -61,14 +61,6 @@ fn snixbolt_overview() -> Html {
     }
 }
 
-fn footer_link(location: &'static str, name: &str) -> Html {
-    html! {
-        <>
-            <a class="uncoloured-link" href={location}>{name}</a>{" | "}
-        </>
-    }
-}
-
 fn footer() -> Html {
     html! {
         <>
