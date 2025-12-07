@@ -98,7 +98,7 @@
 
 use erased_serde::deserialize;
 use futures::FutureExt;
-use futures::future::BoxFuture;
+use futures::future::{BoxFuture, err};
 use serde::de::DeserializeOwned;
 use serde_tagged::de::{BoxFnSeed, SeedFactory};
 use serde_tagged::util::TagString;
@@ -359,19 +359,11 @@ impl CompositionContext<'_> {
 
         let mut stores = match self.composition {
             Some(comp) => comp.stores.lock().unwrap(),
-            None => {
-                return Box::pin(futures::future::err(CompositionError::NotFound(
-                    instance_name,
-                )));
-            }
+            None => return Box::pin(err(CompositionError::NotFound(instance_name))),
         };
         let entry = match stores.get_mut(&(TypeId::of::<T>(), instance_name.to_owned())) {
             Some(v) => v,
-            None => {
-                return Box::pin(futures::future::err(CompositionError::NotFound(
-                    instance_name,
-                )));
-            }
+            None => return Box::pin(err(CompositionError::NotFound(instance_name))),
         };
         // for lifetime reasons, we put a placeholder value in the hashmap while we figure out what
         // the new value should be. the Mutex stays locked the entire time, so nobody will ever see
@@ -393,14 +385,16 @@ impl CompositionContext<'_> {
                 (
                     InstantiationState::InProgress(rx),
                     (async move {
-                        let mut new_context = CompositionContext {
+                        let new_context = CompositionContext {
                             composition: self.composition,
                             registry: self.registry,
-                            stack: self.stack.clone(),
+                            stack: {
+                                let mut stack = self.stack.clone();
+                                stack.push((TypeId::of::<T>(), instance_name.to_owned()));
+                                stack
+                            },
                         };
-                        new_context
-                            .stack
-                            .push((TypeId::of::<T>(), instance_name.to_owned()));
+
                         let res = config
                             .build(&instance_name, &new_context)
                             .await
