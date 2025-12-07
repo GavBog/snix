@@ -2664,33 +2664,6 @@ rec {
           "std"
         ];
       };
-      "enum-primitive-derive" = rec {
-        crateName = "enum-primitive-derive";
-        version = "0.3.0";
-        edition = "2018";
-        sha256 = "0k6wcf58h5kh64yq5nfq71va53kaya0kzxwsjwbgwm2n2zd9axxs";
-        procMacro = true;
-        libName = "enum_primitive_derive";
-        authors = [
-          "Doug Goldstein <cardoe@cardoe.com>"
-        ];
-        dependencies = [
-          {
-            name = "num-traits";
-            packageId = "num-traits";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-          }
-          {
-            name = "syn";
-            packageId = "syn 2.0.87";
-          }
-        ];
-
-      };
       "enum_dispatch" = rec {
         crateName = "enum_dispatch";
         version = "0.3.13";
@@ -5089,17 +5062,9 @@ rec {
             packageId = "ed25519-dalek";
           }
           {
-            name = "enum-primitive-derive";
-            packageId = "enum-primitive-derive";
-          }
-          {
             name = "futures";
             packageId = "futures";
             optional = true;
-          }
-          {
-            name = "glob";
-            packageId = "glob";
           }
           {
             name = "mimalloc";
@@ -5113,10 +5078,6 @@ rec {
           {
             name = "nom";
             packageId = "nom";
-          }
-          {
-            name = "num-traits";
-            packageId = "num-traits";
           }
           {
             name = "num_enum";

@@ -14,7 +14,7 @@ use tracing::{debug, instrument};
 /// Produce an OCI bundle in a given path.
 /// Check [super::spec::make_spec] for a description about the paths produced.
 #[instrument(err)]
-pub(crate) fn make_bundle<'a>(
+pub(crate) fn make_bundle(
     request: &BuildRequest,
     runtime_spec: &oci_spec::runtime::Spec,
     path: &Path,

@@ -40,15 +40,13 @@ pub(crate) fn fetchurl_derivation_to_fetch(drv: &Derivation) -> Result<(String, 
         .map_err(|_| Error::URLInvalid)?;
 
     match ca_hash {
-        CAHash::Flat(hash) => {
-            return Ok((
-                name,
-                Fetch::URL {
-                    url,
-                    exp_hash: Some(hash),
-                },
-            ));
-        }
+        CAHash::Flat(hash) => Ok((
+            name,
+            Fetch::URL {
+                url,
+                exp_hash: Some(hash),
+            },
+        )),
         CAHash::Nar(hash) => {
             if drv.environment.get("executable").map(|v| v.as_slice()) == Some(b"1") {
                 Ok((name, Fetch::Executable { url, hash }))

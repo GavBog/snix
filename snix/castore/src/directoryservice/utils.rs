@@ -12,9 +12,9 @@ use tracing::warn;
 ///
 /// This is mostly BFS, but directories are only returned once.
 #[instrument(skip(directory_service))]
-pub fn traverse_directory<'a, DS: DirectoryService + 'static>(
+pub fn traverse_directory<DS: DirectoryService + 'static>(
     directory_service: DS,
-    root_directory_digest: &'a B3Digest,
+    root_directory_digest: &B3Digest,
 ) -> impl futures::Stream<Item = Result<Directory, Error>> + use<DS> {
     // The list of all directories that still need to be traversed. The next
     // element is picked from the front, new elements are enqueued at the
