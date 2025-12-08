@@ -66,7 +66,8 @@ impl DirectoryGraph {
 }
 
 /// This allows constructing a [DirectoryGraph].
-/// After deciding on the insertion order (via [Self::new_with_insertion_order]),
+/// After deciding on the insertion order ([Self::new_leaves_to_root] or
+/// [Self::new_root_to_leaves] with the expected root digest passed),
 /// different [Directory] can be passed to [Self::try_insert].
 /// A [Self::build] consumes the builder, returning a validated [DirectoryGraph],
 /// or an error.
@@ -94,16 +95,39 @@ pub struct DirectoryGraphBuilder {
     /// Points to the first node index.
     /// Populated in the RTL case only.
     first_idx: Option<NodeIndex>,
+
+    /// Holds the expected root digest.
+    /// Populated in the RTL case only.
+    exp_root_digest: Option<B3Digest>,
 }
 
 impl DirectoryGraphBuilder {
-    pub fn new_with_insertion_order(insertion_order: DirectoryOrder) -> Self {
+    /// Constructs a new [DirectoryGraphBuilder] accepting directories in
+    /// Leaves-To-Root order.
+    pub fn new_leaves_to_root() -> Self {
         Self {
-            insertion_order,
+            insertion_order: DirectoryOrder::LeavesToRoot,
             graph: Default::default(),
             digest_to_node_idx_size: Default::default(),
             rtl_edges_todo: Default::default(),
             first_idx: None,
+            exp_root_digest: None,
+        }
+    }
+
+    /// Constructs a new [DirectoryGraphBuilder] accepting directories in
+    /// Root-To-Leaves order.
+    /// The expected root Directory needs to be passed as an argument,
+    /// and is validated to match the one inserted on the first call to
+    /// [Self::try_insert].
+    pub fn new_root_to_leaves(root_digest: B3Digest) -> Self {
+        Self {
+            insertion_order: DirectoryOrder::RootToLeaves,
+            graph: Default::default(),
+            digest_to_node_idx_size: Default::default(),
+            rtl_edges_todo: Default::default(),
+            first_idx: None,
+            exp_root_digest: Some(root_digest),
         }
     }
 
@@ -129,6 +153,20 @@ impl DirectoryGraphBuilder {
             // as we're the first element.
             if self.graph.node_count() == 1 {
                 self.first_idx = Some(node_idx);
+
+                let directory = self
+                    .graph
+                    .node_weight(node_idx)
+                    .expect("Snix bug: node not found")
+                    .to_owned();
+                if directory_digest
+                    != self
+                        .exp_root_digest
+                        .take()
+                        .expect("exp_root_digest to be some")
+                {
+                    Err(OrderingError::Unexpected { directory })?
+                }
             } else if let Some((digest, (size, src_idxs))) =
                 // Check for our own digest in [self.rtl_edges_todo], pop and add edges to graph
                 self.rtl_edges_todo.remove_entry(&directory_digest)
@@ -254,26 +292,25 @@ impl DirectoryGraphBuilder {
     pub fn build(self) -> Result<DirectoryGraph, OrderingError> {
         match self.insertion_order {
             // We must have received the root, and there may not be any rtl_edges_todo.
-            DirectoryOrder::RootToLeaves => match self.first_idx {
-                None => Err(OrderingError::EmptySet),
-                Some(root_idx) => {
-                    if !self.rtl_edges_todo.is_empty() {
-                        return Err(OrderingError::DirectoriesMissing(HashSet::from_iter(
-                            self.rtl_edges_todo.into_keys(),
-                        )));
-                    }
+            DirectoryOrder::RootToLeaves => {
+                let root_idx = self.first_idx.ok_or_else(|| OrderingError::EmptySet)?;
 
-                    debug_assert_eq!(
-                        self.graph.externals(petgraph::Incoming).count(),
-                        1,
-                        "one incoming"
-                    );
-                    Ok(DirectoryGraph {
-                        graph: self.graph,
-                        root_idx,
-                    })
+                if !self.rtl_edges_todo.is_empty() {
+                    return Err(OrderingError::DirectoriesMissing(HashSet::from_iter(
+                        self.rtl_edges_todo.into_keys(),
+                    )));
                 }
-            },
+
+                debug_assert_eq!(
+                    self.graph.externals(petgraph::Incoming).count(),
+                    1,
+                    "one incoming"
+                );
+                Ok(DirectoryGraph {
+                    graph: self.graph,
+                    root_idx,
+                })
+            }
             DirectoryOrder::LeavesToRoot => {
                 let incomings = self.graph.externals(petgraph::Incoming).collect::<Vec<_>>();
 
@@ -339,6 +376,7 @@ mod tests {
     #[case::ltr_dangling_pointer(DirectoryOrder::LeavesToRoot, &[&*DIRECTORY_B], true, None)]
     /// Uploading a directory which refers to another Directory with a wrong size should fail.
     #[case::ltr_wrong_size_in_parent(DirectoryOrder::LeavesToRoot, &[&*DIRECTORY_A, &*BROKEN_PARENT_DIRECTORY], true, None)]
+
     /// Downloading an empty directory should succeed.
     #[case::rtl_empty_directory(DirectoryOrder::RootToLeaves, &[&*DIRECTORY_A], false, Some(vec![&*DIRECTORY_A]))]
     /// Downlading B, then A (referenced by B) should succeed.
@@ -355,8 +393,17 @@ mod tests {
         #[case] exp_fail_upload_last: bool,
         #[case] exp_build: Option<Vec<&Directory>>, // Some(_) if finalize successful, None if not.
     ) {
-        let mut builder = DirectoryGraphBuilder::new_with_insertion_order(insertion_order);
         let mut it = directories_to_upload.iter().peekable();
+
+        let mut builder = match insertion_order {
+            // in the RTL case, pull the first element from directories_to_upload and initialize with it
+            DirectoryOrder::RootToLeaves => DirectoryGraphBuilder::new_root_to_leaves(
+                it.peek()
+                    .expect("directories_to_upload to not be empty")
+                    .digest(),
+            ),
+            DirectoryOrder::LeavesToRoot => DirectoryGraphBuilder::new_leaves_to_root(),
+        };
 
         while let Some(d) = it.next() {
             if it.peek().is_none() /* is last */ && exp_fail_upload_last {
@@ -392,5 +439,15 @@ mod tests {
         } else {
             assert!(builder.build().is_err(), "expected build to fail");
         }
+    }
+
+    #[test]
+    /// Inserting a firt directory into [DirectoryGraphBuilder] that has a
+    /// different digest than what was specified in `new_root_to_leaves` should fail.
+    fn rtl_wrong_digest() {
+        let mut builder = DirectoryGraphBuilder::new_root_to_leaves(DIRECTORY_B.digest());
+        builder
+            .try_insert(DIRECTORY_A.clone())
+            .expect_err("expect insert of root with wrong digest to fail");
     }
 }

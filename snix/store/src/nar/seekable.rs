@@ -148,54 +148,42 @@ impl<B: BlobService + 'static> Reader<B> {
         blob_service: B,
         directory_service: impl DirectoryService,
     ) -> Result<Self, RenderError> {
-        let maybe_directory_closure = match &root_node {
-            // If this is a directory, resolve all subdirectories
-            Node::Directory { digest, .. } => {
-                let mut builder =
-                    DirectoryGraphBuilder::new_with_insertion_order(DirectoryOrder::RootToLeaves);
-                let mut directories = directory_service.get_recursive(digest);
-                while let Some(dir) = directories
-                    .try_next()
-                    .await
-                    .map_err(|e| RenderError::StoreError(e.into()))?
-                {
-                    builder.try_insert(dir).map_err(|e| {
-                        RenderError::StoreError(
-                            snix_castore::Error::StorageError(e.to_string()).into(),
-                        )
-                    })?;
-                }
+        // If this is a directory, resolve all subdirectories
+        let maybe_directory_graph = if let Node::Directory { digest, .. } = &root_node {
+            let mut directories = directory_service.get_recursive(digest);
+            let mut builder = DirectoryGraphBuilder::new_root_to_leaves(digest.to_owned());
 
-                let directory_closure = builder.build().map_err(|e| {
+            while let Some(directory) = directories
+                .try_next()
+                .await
+                .map_err(|e| RenderError::StoreError(e.into()))?
+            {
+                builder.try_insert(directory).map_err(|e| {
                     RenderError::StoreError(snix_castore::Error::StorageError(e.to_string()).into())
                 })?;
-
-                let actual_digest = directory_closure.root().digest();
-                if &actual_digest != digest {
-                    return Err(RenderError::StoreError(
-                        snix_castore::Error::StorageError(
-                            "DirectoryService returned wrong closure".into(),
-                        )
-                        .into(),
-                    ));
-                }
-
-                Some(directory_closure)
             }
+
+            match builder.build() {
+                Ok(directory_graph) => Some(directory_graph),
+                Err(snix_castore::directoryservice::OrderingError::EmptySet) => None,
+                Err(e) => Err(RenderError::StoreError(
+                    snix_castore::Error::StorageError(e.to_string()).into(),
+                ))?,
+            }
+        } else {
             // If the top-level node is a file or a symlink, just pass it on
-            Node::File { .. } => None,
-            Node::Symlink { .. } => None,
+            None
         };
 
-        Self::new_with_directory_closure(root_node, blob_service, maybe_directory_closure)
+        Self::new_with_directory_graph(root_node, blob_service, maybe_directory_graph)
     }
 
     /// Creates a new seekable NAR renderer for the given castore root node.
     /// This version of the instantiation does not perform any I/O and as such is not async.
-    /// However it requires all directories to be passed as a ValidatedDirectoryGraph.
+    /// However it requires all directories to be passed as a [DirectoryGraph].
     ///
     /// panics if the directory closure is not the closure of the root node
-    pub fn new_with_directory_closure(
+    pub fn new_with_directory_graph(
         root_node: Node,
         blob_service: B,
         directory_closure: Option<DirectoryGraph>,

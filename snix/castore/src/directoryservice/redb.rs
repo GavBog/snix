@@ -172,9 +172,7 @@ impl DirectoryService for RedbDirectoryService {
     fn put_multiple_start(&self) -> Box<dyn DirectoryPutter + '_> {
         Box::new(RedbDirectoryPutter {
             db: &self.db,
-            builder: Some(DirectoryGraphBuilder::new_with_insertion_order(
-                DirectoryOrder::LeavesToRoot,
-            )),
+            builder: Some(DirectoryGraphBuilder::new_leaves_to_root()),
         })
     }
 }

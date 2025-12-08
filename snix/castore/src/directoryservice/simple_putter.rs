@@ -25,9 +25,7 @@ where
     pub fn new(directory_service: &'a DS) -> Self {
         Self {
             directory_service,
-            builder: Some(DirectoryGraphBuilder::new_with_insertion_order(
-                DirectoryOrder::LeavesToRoot,
-            )),
+            builder: Some(DirectoryGraphBuilder::new_leaves_to_root()),
         }
     }
 }

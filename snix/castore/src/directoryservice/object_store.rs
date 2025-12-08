@@ -293,9 +293,7 @@ impl<'a> ObjectStoreDirectoryPutter<'a> {
         Self {
             object_store,
             base_path,
-            builder: Some(DirectoryGraphBuilder::new_with_insertion_order(
-                DirectoryOrder::LeavesToRoot,
-            )),
+            builder: Some(DirectoryGraphBuilder::new_leaves_to_root()),
         }
     }
 }

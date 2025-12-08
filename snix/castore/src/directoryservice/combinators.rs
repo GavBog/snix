@@ -59,34 +59,28 @@ where
         // stores are used.
         // FUTUREWORK: make this configurable, allow firing off a background task populating the children.
         let mut directories = self.far.get_recursive(digest);
-        if let Some(first_directory) = directories.try_next().await? {
-            let mut graph_builder =
-                DirectoryGraphBuilder::new_with_insertion_order(DirectoryOrder::RootToLeaves);
-            graph_builder
-                .try_insert(first_directory.clone())
-                .expect("Snix bug: inserting first directory for RTL should always work");
+        let mut graph_builder = DirectoryGraphBuilder::new_root_to_leaves(digest.to_owned());
 
-            // populate children
-            {
-                let mut near_putter = self.near.put_multiple_start();
+        let mut resp_directory = None;
+        while let Some(directory) = directories.try_next().await? {
+            graph_builder.try_insert(directory.clone())?;
+            if resp_directory.is_none() {
+                resp_directory = Some(directory);
+            }
+        }
 
-                // Consume the rest of the elements
-                while let Some(directory) = directories.try_next().await? {
-                    graph_builder.try_insert(directory)?;
-                }
-
-                let directory_graph = graph_builder.build()?;
-
-                // Drain into near
-                for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
-                    near_putter.put(directory).await?;
-                }
-
-                let actual_digest = near_putter.close().await?;
-                debug_assert_eq!(digest, &actual_digest);
+        // If far had the directory, put into near.
+        if let Some(resp_directory) = resp_directory {
+            let directory_graph = graph_builder.build()?;
+            // Drain into near
+            let mut near_putter = self.near.put_multiple_start();
+            for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+                near_putter.put(directory).await?;
             }
 
-            Ok(Some(first_directory))
+            let actual_digest = near_putter.close().await?;
+            debug_assert_eq!(digest, &actual_digest);
+            Ok(Some(resp_directory))
         } else {
             Ok(None)
         }
@@ -105,40 +99,42 @@ where
         let near = self.near.clone();
         let far = self.far.clone();
         let digest = root_directory_digest.clone();
-        async move {
-            let mut stream = near.get_recursive(&digest);
 
-            if let Some(first) = stream.try_next().await? {
+        async move {
+            let mut directories = near.get_recursive(&digest);
+
+            if let Some(first) = directories.try_next().await? {
                 trace!("serving from cache");
                 return Ok(futures::stream::once(async { Ok(first) })
-                    .chain(stream)
+                    .chain(directories)
                     .left_stream());
             }
 
             trace!("not found in near, asking remote…");
 
             let mut directories = far.get_recursive(&digest);
-            let mut graph_builder =
-                DirectoryGraphBuilder::new_with_insertion_order(DirectoryOrder::RootToLeaves);
+            let mut builder = DirectoryGraphBuilder::new_root_to_leaves(digest.to_owned());
 
             // Return to the client, while inserting to the graph builder.
             Ok(async_stream::try_stream! {
-                // Return to the client, while inserting to the graph builder.
                 while let Some(directory) = directories.try_next().await? {
-                    graph_builder.try_insert(directory.clone())?;
-
+                    builder.try_insert(directory.clone())?;
                     yield directory;
                 }
 
-                // Drain into near
-                let mut near_putter = near.put_multiple_start();
-                let directory_graph = graph_builder.build()?;
-                for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
-                    near_putter.put(directory).await?;
+                match builder.build() {
+                    Ok(directory_graph) => {
+                        // Drain into near
+                        let mut near_putter = near.put_multiple_start();
+                        for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+                            near_putter.put(directory).await?;
+                        }
+                        let actual_digest = near_putter.close().await?;
+                        debug_assert_eq!(digest, actual_digest);
+                    }
+                    Err(crate::directoryservice::OrderingError::EmptySet) => return,
+                    Err(e) => Err(e)?
                 }
-
-                let actual_digest = near_putter.close().await?;
-                debug_assert_eq!(digest, actual_digest);
             }
             .right_stream())
         }
