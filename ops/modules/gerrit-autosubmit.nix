@@ -42,6 +42,7 @@ in
         ExecStart = "${depot.ops.gerrit-autosubmit}/bin/gerrit-autosubmit";
         DynamicUser = true;
         Restart = "always";
+        RestartSec = "10";
         EnvironmentFile = cfg.secretsFile;
       };
 
