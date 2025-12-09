@@ -88,7 +88,7 @@ mod tests {
 
         // construct the node for the .keep file
         let node_file_keep = Node::File {
-            digest: EMPTY_BLOB_DIGEST.clone(),
+            digest: *EMPTY_BLOB_DIGEST,
             size: 0,
             executable: false,
         };

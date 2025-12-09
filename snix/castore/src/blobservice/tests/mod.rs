@@ -74,10 +74,7 @@ async fn not_found_read(blob_service: impl BlobService) {
 #[tokio::test]
 async fn put_has_get(blob_service: impl BlobService) {
     // TODO: figure out how to instantiate this with BLOB_A and BLOB_B, as two separate cases
-    for (blob_contents, blob_digest) in &[
-        (&*BLOB_A, BLOB_A_DIGEST.clone()),
-        (&*BLOB_B, BLOB_B_DIGEST.clone()),
-    ] {
+    for (blob_contents, blob_digest) in &[(&*BLOB_A, *BLOB_A_DIGEST), (&*BLOB_B, *BLOB_B_DIGEST)] {
         let mut w = blob_service.open_write().await;
 
         let l = tokio::io::copy(&mut io::Cursor::new(blob_contents), &mut w)

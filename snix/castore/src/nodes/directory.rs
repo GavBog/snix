@@ -133,7 +133,7 @@ mod test {
         Directory::try_from_iter([(
             PathComponent::try_from("b").unwrap(),
             Node::Directory {
-                digest: DUMMY_DIGEST.clone(),
+                digest: *DUMMY_DIGEST,
                 size: 1,
             },
         )])
@@ -146,28 +146,28 @@ mod test {
             (
                 "b".try_into().unwrap(),
                 Node::Directory {
-                    digest: DUMMY_DIGEST.clone(),
+                    digest: *DUMMY_DIGEST,
                     size: 1,
                 },
             ),
             (
                 "a".try_into().unwrap(),
                 Node::Directory {
-                    digest: DUMMY_DIGEST.clone(),
+                    digest: *DUMMY_DIGEST,
                     size: 1,
                 },
             ),
             (
                 "z".try_into().unwrap(),
                 Node::Directory {
-                    digest: DUMMY_DIGEST.clone(),
+                    digest: *DUMMY_DIGEST,
                     size: 1,
                 },
             ),
             (
                 "f".try_into().unwrap(),
                 Node::File {
-                    digest: DUMMY_DIGEST.clone(),
+                    digest: *DUMMY_DIGEST,
                     size: 1,
                     executable: true,
                 },
@@ -175,7 +175,7 @@ mod test {
             (
                 "c".try_into().unwrap(),
                 Node::File {
-                    digest: DUMMY_DIGEST.clone(),
+                    digest: *DUMMY_DIGEST,
                     size: 1,
                     executable: true,
                 },
@@ -183,7 +183,7 @@ mod test {
             (
                 "g".try_into().unwrap(),
                 Node::File {
-                    digest: DUMMY_DIGEST.clone(),
+                    digest: *DUMMY_DIGEST,
                     size: 1,
                     executable: true,
                 },
@@ -221,7 +221,7 @@ mod test {
         d.add(
             "b".try_into().unwrap(),
             Node::Directory {
-                digest: DUMMY_DIGEST.clone(),
+                digest: *DUMMY_DIGEST,
                 size: 1,
             },
         )
@@ -229,7 +229,7 @@ mod test {
         d.add(
             "a".try_into().unwrap(),
             Node::Directory {
-                digest: DUMMY_DIGEST.clone(),
+                digest: *DUMMY_DIGEST,
                 size: 1,
             },
         )
@@ -248,7 +248,7 @@ mod test {
             d.add(
                 "foo".try_into().unwrap(),
                 Node::Directory {
-                    digest: DUMMY_DIGEST.clone(),
+                    digest: *DUMMY_DIGEST,
                     size: u64::MAX
                 }
             ),
@@ -263,7 +263,7 @@ mod test {
         d.add(
             "a".try_into().unwrap(),
             Node::Directory {
-                digest: DUMMY_DIGEST.clone(),
+                digest: *DUMMY_DIGEST,
                 size: 1,
             },
         )
@@ -274,7 +274,7 @@ mod test {
                 d.add(
                     "a".try_into().unwrap(),
                     Node::File {
-                        digest: DUMMY_DIGEST.clone(),
+                        digest: *DUMMY_DIGEST,
                         size: 1,
                         executable: true
                     }

@@ -284,11 +284,11 @@ mod test {
         LazyLock::new(|| blake3::hash(&CHUNK_5).as_bytes().into());
     pub static BLOB_1_LIST: LazyLock<[(B3Digest, u64); 5]> = LazyLock::new(|| {
         [
-            (CHUNK_1_DIGEST.clone(), 2),
-            (CHUNK_2_DIGEST.clone(), 4),
-            (CHUNK_3_DIGEST.clone(), 1),
-            (CHUNK_4_DIGEST.clone(), 2),
-            (CHUNK_5_DIGEST.clone(), 7),
+            (*CHUNK_1_DIGEST, 2),
+            (*CHUNK_2_DIGEST, 4),
+            (*CHUNK_3_DIGEST, 1),
+            (*CHUNK_4_DIGEST, 2),
+            (*CHUNK_5_DIGEST, 7),
         ]
     });
 
@@ -298,18 +298,18 @@ mod test {
     #[test]
     fn from_iter() {
         let cb = ChunkedBlob::from_iter(
-            BLOB_1_LIST.clone().into_iter(),
+            (*BLOB_1_LIST).into_iter(),
             Arc::new(MemoryBlobService::default()) as Arc<dyn BlobService>,
         );
 
         assert_eq!(
             cb.chunks,
             Vec::from_iter([
-                (0, 2, CHUNK_1_DIGEST.clone()),
-                (2, 4, CHUNK_2_DIGEST.clone()),
-                (6, 1, CHUNK_3_DIGEST.clone()),
-                (7, 2, CHUNK_4_DIGEST.clone()),
-                (9, 7, CHUNK_5_DIGEST.clone()),
+                (0, 2, *CHUNK_1_DIGEST),
+                (2, 4, *CHUNK_2_DIGEST),
+                (6, 1, *CHUNK_3_DIGEST),
+                (7, 2, *CHUNK_4_DIGEST),
+                (9, 7, *CHUNK_5_DIGEST),
             ])
         );
     }
@@ -328,7 +328,7 @@ mod test {
     #[test]
     fn chunk_idx_for_position() {
         let cb = ChunkedBlob::from_iter(
-            BLOB_1_LIST.clone().into_iter(),
+            (*BLOB_1_LIST).into_iter(),
             Arc::new(MemoryBlobService::default()) as Arc<dyn BlobService>,
         );
 
@@ -388,7 +388,7 @@ mod test {
     async fn test_read() {
         let blob_service = gen_blobservice_blob1().await;
         let mut chunked_reader =
-            ChunkedReader::from_chunks(BLOB_1_LIST.clone().into_iter(), blob_service);
+            ChunkedReader::from_chunks((*BLOB_1_LIST).into_iter(), blob_service);
 
         // read all data
         let mut buf = Vec::new();
@@ -407,7 +407,7 @@ mod test {
     async fn test_seek() {
         let blob_service = gen_blobservice_blob1().await;
         let mut chunked_reader =
-            ChunkedReader::from_chunks(BLOB_1_LIST.clone().into_iter(), blob_service);
+            ChunkedReader::from_chunks((*BLOB_1_LIST).into_iter(), blob_service);
 
         // seek to the end
         // expect to read 0 bytes
@@ -474,7 +474,7 @@ mod test {
         }
 
         let mut chunked_reader =
-            ChunkedReader::from_chunks(BLOB_1_LIST.clone().into_iter(), blob_service);
+            ChunkedReader::from_chunks((*BLOB_1_LIST).into_iter(), blob_service);
 
         // read a bit from the front (5 bytes out of 6 available)
         let mut buf = [0b0; 5];

@@ -59,7 +59,7 @@ where
         // stores are used.
         // FUTUREWORK: make this configurable, allow firing off a background task populating the children.
         let mut directories = self.far.get_recursive(digest);
-        let mut graph_builder = DirectoryGraphBuilder::new_root_to_leaves(digest.to_owned());
+        let mut graph_builder = DirectoryGraphBuilder::new_root_to_leaves(*digest);
 
         let mut resp_directory = None;
         while let Some(directory) = directories.try_next().await? {
@@ -98,7 +98,7 @@ where
     ) -> BoxStream<'static, Result<Directory, Error>> {
         let near = self.near.clone();
         let far = self.far.clone();
-        let digest = root_directory_digest.clone();
+        let digest = *root_directory_digest;
 
         async move {
             let mut directories = near.get_recursive(&digest);
@@ -113,7 +113,7 @@ where
             trace!("not found in near, asking remote…");
 
             let mut directories = far.get_recursive(&digest);
-            let mut builder = DirectoryGraphBuilder::new_root_to_leaves(digest.to_owned());
+            let mut builder = DirectoryGraphBuilder::new_root_to_leaves(digest);
 
             // Return to the client, while inserting to the graph builder.
             Ok(async_stream::try_stream! {

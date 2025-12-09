@@ -26,13 +26,13 @@ impl InodeData {
     pub fn from_node(node: &Node) -> Self {
         match node {
             Node::Directory { digest, size } => {
-                Self::Directory(DirectoryInodeData::Sparse(digest.clone(), *size))
+                Self::Directory(DirectoryInodeData::Sparse(*digest, *size))
             }
             Node::File {
                 digest,
                 size,
                 executable,
-            } => Self::Regular(digest.clone(), *size, *executable),
+            } => Self::Regular(*digest, *size, *executable),
             Node::Symlink { target } => Self::Symlink(target.clone().into()),
         }
     }

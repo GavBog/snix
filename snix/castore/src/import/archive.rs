@@ -315,19 +315,19 @@ mod test {
         path: "a".parse().unwrap(),
         size: 0,
         executable: false,
-        digest: EMPTY_DIGEST.clone(),
+        digest: *EMPTY_DIGEST,
     });
     pub static FILE_A_B: LazyLock<IngestionEntry> = LazyLock::new(|| IngestionEntry::Regular {
         path: "a/b".parse().unwrap(),
         size: 0,
         executable: false,
-        digest: EMPTY_DIGEST.clone(),
+        digest: *EMPTY_DIGEST,
     });
     pub static FILE_A_B_C: LazyLock<IngestionEntry> = LazyLock::new(|| IngestionEntry::Regular {
         path: "a/b/c".parse().unwrap(),
         size: 0,
         executable: false,
-        digest: EMPTY_DIGEST.clone(),
+        digest: *EMPTY_DIGEST,
     });
 
     #[rstest]

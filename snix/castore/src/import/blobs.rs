@@ -118,13 +118,12 @@ where
 
             self.upload_tasks.spawn({
                 let blob_service = self.blob_service.clone();
-                let expected_digest = digest.clone();
                 let path = path.to_owned();
                 let r = Cursor::new(buffer);
                 async move {
                     // We know the blob digest already, check it exists before sending it.
                     if blob_service
-                        .has(&expected_digest)
+                        .has(&digest)
                         .await
                         .map_err(|e| Error::BlobCheck(path.clone(), e))?
                     {
@@ -132,9 +131,10 @@ where
                         return Ok(());
                     }
 
-                    let digest = upload_blob(&blob_service, &path, expected_size, r).await?;
+                    let uploaded_digest =
+                        upload_blob(&blob_service, &path, expected_size, r).await?;
 
-                    assert_eq!(digest, expected_digest, "Snix bug: blob digest mismatch");
+                    assert_eq!(uploaded_digest, digest, "Snix bug: blob digest mismatch");
 
                     // Make sure we hold the permit until we finish writing the blob
                     // to the [BlobService].

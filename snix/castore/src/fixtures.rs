@@ -36,7 +36,7 @@ pub static DIRECTORY_WITH_KEEP: LazyLock<Directory> = LazyLock::new(|| {
     Directory::try_from_iter([(
         ".keep".try_into().unwrap(),
         Node::File {
-            digest: EMPTY_BLOB_DIGEST.clone(),
+            digest: *EMPTY_BLOB_DIGEST,
             size: 0,
             executable: false,
         },
@@ -55,7 +55,7 @@ pub static DIRECTORY_COMPLICATED: LazyLock<Directory> = LazyLock::new(|| {
         (
             ".keep".try_into().unwrap(),
             Node::File {
-                digest: EMPTY_BLOB_DIGEST.clone(),
+                digest: *EMPTY_BLOB_DIGEST,
                 size: 0,
                 executable: false,
             },

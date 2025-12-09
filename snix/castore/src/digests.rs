@@ -3,7 +3,7 @@ use data_encoding::BASE64;
 use std::str::FromStr;
 use thiserror::Error;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct B3Digest([u8; Self::LENGTH]);
 
@@ -89,12 +89,6 @@ impl From<&[u8; B3Digest::LENGTH]> for B3Digest {
 impl From<B3Digest> for [u8; B3Digest::LENGTH] {
     fn from(value: B3Digest) -> Self {
         value.0
-    }
-}
-
-impl Clone for B3Digest {
-    fn clone(&self) -> Self {
-        Self(self.0.to_owned())
     }
 }
 

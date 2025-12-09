@@ -289,7 +289,7 @@ mod test {
 
         assert_eq!(
             Node::File {
-                digest: HELLOWORLD_BLOB_DIGEST.clone(),
+                digest: *HELLOWORLD_BLOB_DIGEST,
                 size: HELLOWORLD_BLOB_CONTENTS.len() as u64,
                 executable: false,
             },

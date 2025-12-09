@@ -58,7 +58,7 @@ async fn single_file() {
 
     assert_eq!(
         Node::File {
-            digest: HELLOWORLD_BLOB_DIGEST.clone(),
+            digest: *HELLOWORLD_BLOB_DIGEST,
             size: HELLOWORLD_BLOB_CONTENTS.len() as u64,
             executable: false,
         },
@@ -100,7 +100,7 @@ async fn complicated() {
     // ensure root_node matched expectations
     assert_eq!(
         Node::Directory {
-            digest: DIRECTORY_COMPLICATED.digest().clone(),
+            digest: DIRECTORY_COMPLICATED.digest(),
             size: DIRECTORY_COMPLICATED.size(),
         },
         root_node,

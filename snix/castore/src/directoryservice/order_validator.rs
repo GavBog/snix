@@ -241,7 +241,7 @@ impl LeavesToRootValidator {
         // All elements were checked to only refer to directories previously seen,
         // we can accept the directory, and add it to pending.
         let directory_digest = directory.digest();
-        match self.accepted_directories.entry(directory_digest.clone()) {
+        match self.accepted_directories.entry(directory_digest) {
             hash_map::Entry::Occupied(_) => {
                 warn!("directory received multiple times");
             }
@@ -249,7 +249,7 @@ impl LeavesToRootValidator {
                 entry.insert(directory.size());
                 #[cfg(debug_assertions)]
                 {
-                    self.last_inserted_digest = Some(directory_digest.clone())
+                    self.last_inserted_digest = Some(directory_digest)
                 }
                 self.pending_directories.insert(directory_digest);
             }
@@ -279,7 +279,6 @@ impl LeavesToRootValidator {
         {
             let last_inserted_digest = self
                 .last_inserted_digest
-                .clone()
                 .expect("Snix bug: have dangling_directories, but no last_inserted_digest");
             self.pending_directories
                 .get(&last_inserted_digest)

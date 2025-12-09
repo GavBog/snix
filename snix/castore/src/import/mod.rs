@@ -111,7 +111,7 @@ where
             } => (
                 path,
                 Node::File {
-                    digest: digest.clone(),
+                    digest,
                     size,
                     executable,
                 },
@@ -223,9 +223,9 @@ mod test {
         path: "foo".parse().unwrap(),
         size: 42,
         executable: true,
-        digest: DUMMY_DIGEST.clone(),
+        digest: *DUMMY_DIGEST,
     }],
-        Node::File{digest: DUMMY_DIGEST.clone(), size: 42, executable: true}
+        Node::File{digest: *DUMMY_DIGEST, size: 42, executable: true}
     )]
     #[case::single_symlink(vec![IngestionEntry::Symlink {
         path: "foo".parse().unwrap(),
@@ -243,7 +243,7 @@ mod test {
             path: "foo/.keep".parse().unwrap(),
             size: 0,
             executable: false,
-            digest: EMPTY_BLOB_DIGEST.clone(),
+            digest: *EMPTY_BLOB_DIGEST,
         },
         IngestionEntry::Dir {
             path: "foo".parse().unwrap(),
@@ -258,13 +258,13 @@ mod test {
             path: "blub/.keep".parse().unwrap(),
             size: 0,
             executable: false,
-            digest: EMPTY_BLOB_DIGEST.clone(),
+            digest: *EMPTY_BLOB_DIGEST,
         },
         IngestionEntry::Regular {
             path: "blub/keep/.keep".parse().unwrap(),
             size: 0,
             executable: false,
-            digest: EMPTY_BLOB_DIGEST.clone(),
+            digest: *EMPTY_BLOB_DIGEST,
         },
         IngestionEntry::Dir {
             path: "blub/keep".parse().unwrap(),
@@ -298,7 +298,7 @@ mod test {
             path: "blub/.keep".parse().unwrap(),
             size: 0,
             executable: false,
-            digest: EMPTY_BLOB_DIGEST.clone(),
+            digest: *EMPTY_BLOB_DIGEST,
         },
     ])]
     #[tokio::test]
@@ -323,7 +323,7 @@ mod test {
             path: "blub/.keep".parse().unwrap(),
             size: 0,
             executable: false,
-            digest: EMPTY_BLOB_DIGEST.clone(),
+            digest: *EMPTY_BLOB_DIGEST,
         },
     ])]
     #[should_panic]
@@ -332,7 +332,7 @@ mod test {
             path: ".keep".parse().unwrap(),
             size: 0,
             executable: false,
-            digest: EMPTY_BLOB_DIGEST.clone(),
+            digest: *EMPTY_BLOB_DIGEST,
         },
         IngestionEntry::Dir {
             path: "".parse().unwrap(),

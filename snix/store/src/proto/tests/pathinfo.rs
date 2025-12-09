@@ -18,7 +18,7 @@ static PROTO_PATH_INFO: LazyLock<proto::PathInfo> = LazyLock::new(|| proto::Path
         entry: Some(castorepb::entry::Entry::Directory(
             castorepb::DirectoryEntry {
                 name: DUMMY_PATH_STR.into(),
-                digest: DUMMY_DIGEST.clone().into(),
+                digest: (*DUMMY_DIGEST).into(),
                 size: 0,
             },
         )),
@@ -26,13 +26,13 @@ static PROTO_PATH_INFO: LazyLock<proto::PathInfo> = LazyLock::new(|| proto::Path
     references: vec![DUMMY_PATH_DIGEST.as_slice().into()],
     narinfo: Some(proto::NarInfo {
         nar_size: 0,
-        nar_sha256: DUMMY_DIGEST.clone().into(),
+        nar_sha256: (*DUMMY_DIGEST).into(),
         signatures: vec![],
         reference_names: vec![DUMMY_PATH_STR.to_string()],
         deriver: None,
         ca: Some(proto::nar_info::Ca {
             r#type: proto::nar_info::ca::Hash::NarSha256.into(),
-            digest: DUMMY_DIGEST.clone().into(),
+            digest: (*DUMMY_DIGEST).into(),
         }),
     }),
 });
@@ -90,7 +90,7 @@ fn convert_pathinfo_wrong_entries(
 #[case::directory_invalid_entry_name_no_storepath(
     castorepb::entry::Entry::Directory(castorepb::DirectoryEntry {
         name: "invalid".into(),
-        digest: DUMMY_DIGEST.clone().into(),
+        digest: (*DUMMY_DIGEST).into(),
         size: 0,
     }),
     ValidatePathInfoError::InvalidNodeName("invalid".into(), store_path::Error::InvalidLength)
@@ -106,7 +106,7 @@ fn convert_pathinfo_wrong_entries(
 #[case::file_invalid_entry_name(
     castorepb::entry::Entry::File(castorepb::FileEntry {
         name: "invalid".into(),
-        digest: DUMMY_DIGEST.clone().into(),
+        digest: (*DUMMY_DIGEST).into(),
         ..Default::default()
     }),
     ValidatePathInfoError::InvalidNodeName(

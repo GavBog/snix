@@ -33,7 +33,7 @@ pub const NAR_CONTENTS_SYMLINK: [u8; 136] = [
 ];
 
 pub static CASTORE_NODE_HELLOWORLD: LazyLock<Node> = LazyLock::new(|| Node::File {
-    digest: HELLOWORLD_BLOB_DIGEST.clone(),
+    digest: *HELLOWORLD_BLOB_DIGEST,
     size: HELLOWORLD_BLOB_CONTENTS.len() as u64,
     executable: false,
 });
@@ -52,12 +52,12 @@ pub const NAR_CONTENTS_HELLOWORLD: [u8; 128] = [
 ];
 
 pub static CASTORE_NODE_TOO_BIG: LazyLock<Node> = LazyLock::new(|| Node::File {
-    digest: HELLOWORLD_BLOB_DIGEST.clone(),
+    digest: *HELLOWORLD_BLOB_DIGEST,
     size: 42, // <- note the wrong size here!
     executable: false,
 });
 pub static CASTORE_NODE_TOO_SMALL: LazyLock<Node> = LazyLock::new(|| Node::File {
-    digest: HELLOWORLD_BLOB_DIGEST.clone(),
+    digest: *HELLOWORLD_BLOB_DIGEST,
     size: 2, // <- note the wrong size here!
     executable: false,
 });
@@ -131,7 +131,7 @@ pub const NAR_CONTENTS_COMPLICATED: [u8; 840] = [
 pub static PATH_INFO: LazyLock<PathInfo> = LazyLock::new(|| PathInfo {
     store_path: DUMMY_PATH.clone(),
     node: snix_castore::Node::Directory {
-        digest: DUMMY_DIGEST.clone(),
+        digest: *DUMMY_DIGEST,
         size: 0,
     },
     references: vec![DUMMY_PATH.clone()],

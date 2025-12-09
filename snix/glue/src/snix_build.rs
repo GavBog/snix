@@ -321,7 +321,7 @@ mod test {
         LazyLock::new(|| "mp57d33657rf34lzvlbpfa1gjfv5gmpg-bar".into());
 
     static INPUT_NODE_FOO: LazyLock<Node> = LazyLock::new(|| Node::Directory {
-        digest: DUMMY_DIGEST.clone(),
+        digest: *DUMMY_DIGEST,
         size: 42,
     });
 

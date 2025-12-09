@@ -57,7 +57,7 @@ where
             .grpc_client
             .clone()
             .stat(proto::StatBlobRequest {
-                digest: digest.clone().into(),
+                digest: (*digest).into(),
                 ..Default::default()
             })
             .await
@@ -86,7 +86,7 @@ where
                         .grpc_client
                         .clone()
                         .read(proto::ReadBlobRequest {
-                            digest: digest.clone().into(),
+                            digest: (*digest).into(),
                         })
                         .await
                     {
@@ -167,7 +167,7 @@ where
             .grpc_client
             .clone()
             .stat(proto::StatBlobRequest {
-                digest: digest.clone().into(),
+                digest: (*digest).into(),
                 send_chunks: true,
                 ..Default::default()
             })
@@ -243,7 +243,7 @@ impl<W: tokio::io::AsyncWrite + Send + Sync + Unpin + 'static> BlobWriter for GR
             // if we're already closed, return the b3 digest, which must exist.
             // If it doesn't, we already closed and failed once, and didn't handle the error.
             match &self.digest {
-                Some(digest) => Ok(digest.clone()),
+                Some(digest) => Ok(*digest),
                 None => Err(io::Error::new(io::ErrorKind::BrokenPipe, "already closed")),
             }
         } else {
@@ -266,7 +266,7 @@ impl<W: tokio::io::AsyncWrite + Send + Sync + Unpin + 'static> BlobWriter for GR
                             "invalid root digest length {digest_len} in response"
                         ))
                     })?;
-                    self.digest = Some(digest.clone());
+                    self.digest = Some(digest);
                     Ok(digest)
                 }
                 Err(e) => Err(io::Error::other(e.to_string())),

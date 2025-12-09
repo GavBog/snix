@@ -553,7 +553,7 @@ where
                     // In the case of an Ok value, we store it in self.fut_output,
                     // so future calls to close can return that.
                     Ok(b3_digest) => {
-                        self.fut_output = Some(Ok(b3_digest.clone()));
+                        self.fut_output = Some(Ok(*b3_digest));
                     }
                     Err(e) => {
                         // for the error type, we need to cheat a bit, as
@@ -567,7 +567,7 @@ where
             None => {
                 // called a second time, return self.fut_output.
                 match self.fut_output.as_ref().unwrap() {
-                    Ok(b3_digest) => Ok(b3_digest.clone()),
+                    Ok(b3_digest) => Ok(*b3_digest),
                     Err(e) => Err(std::io::Error::new(e.kind(), e.to_string())),
                 }
             }

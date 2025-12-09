@@ -86,11 +86,11 @@ impl DirectoryService for RedbDirectoryService {
 
         // Retrieves the protobuf-encoded Directory for the corresponding digest.
         let db_get_resp = tokio::task::spawn_blocking({
-            let digest = *digest.as_ref();
+            let digest = *digest;
             move || -> Result<_, redb::Error> {
                 let txn = db.begin_read()?;
                 let table = txn.open_table(DIRECTORY_TABLE)?;
-                Ok(table.get(digest)?)
+                Ok(table.get(*digest)?)
             }
         })
         .await?
@@ -165,7 +165,7 @@ impl DirectoryService for RedbDirectoryService {
         // FUTUREWORK: Ideally we should have all of the directory traversing happen in a single
         // redb transaction to avoid constantly closing and opening new transactions for the
         // database.
-        traverse_directory(self.clone(), root_directory_digest).boxed()
+        traverse_directory(self.clone(), *root_directory_digest).boxed()
     }
 
     #[instrument(skip_all)]

@@ -14,18 +14,16 @@ use tracing::warn;
 #[instrument(skip(directory_service))]
 pub fn traverse_directory<DS: DirectoryService + 'static>(
     directory_service: DS,
-    root_directory_digest: &B3Digest,
+    root_directory_digest: B3Digest,
 ) -> impl futures::Stream<Item = Result<Directory, Error>> + use<DS> {
     // The list of all directories that still need to be traversed. The next
     // element is picked from the front, new elements are enqueued at the
     // back.
     let mut worklist_directory_digests: VecDeque<B3Digest> =
-        VecDeque::from([root_directory_digest.clone()]);
+        VecDeque::from([root_directory_digest]);
     // The list of directory digests already sent to the consumer.
     // We omit sending the same directories multiple times.
     let mut sent_directory_digests: HashSet<B3Digest> = HashSet::new();
-
-    let root_directory_digest = root_directory_digest.clone();
 
     Box::pin(try_stream! {
         while let Some(current_directory_digest) = worklist_directory_digests.pop_front() {
@@ -62,7 +60,7 @@ pub fn traverse_directory<DS: DirectoryService + 'static>(
                     {
                         continue;
                     }
-                    worklist_directory_digests.push_back(child_digest.clone());
+                    worklist_directory_digests.push_back(*child_digest);
                 }
             }
 

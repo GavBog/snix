@@ -103,13 +103,13 @@ impl InodeTracker {
         // insert into lookup tables
         match data {
             InodeData::Regular(ref digest, _, _) => {
-                self.blob_digest_to_inode.insert(digest.clone(), ino);
+                self.blob_digest_to_inode.insert(*digest, ino);
             }
             InodeData::Symlink(ref target) => {
                 self.symlink_target_to_inode.insert(target.clone(), ino);
             }
             InodeData::Directory(DirectoryInodeData::Sparse(ref digest, _size)) => {
-                self.directory_digest_to_inode.insert(digest.clone(), ino);
+                self.directory_digest_to_inode.insert(*digest, ino);
             }
             // This is currently not used outside test fixtures.
             // Usually a [DirectoryInodeData::Sparse] is inserted and later
@@ -118,7 +118,7 @@ impl InodeTracker {
             // [DirectoryService::get_recursive()] request that "forks into
             // background" and prepopulates all Directories in a closure.
             InodeData::Directory(DirectoryInodeData::Populated(ref digest, _)) => {
-                self.directory_digest_to_inode.insert(digest.clone(), ino);
+                self.directory_digest_to_inode.insert(*digest, ino);
             }
         }
         // Insert data
@@ -149,7 +149,7 @@ mod tests {
     fn put_regular() {
         let mut inode_tracker = InodeTracker::default();
         let f = InodeData::Regular(
-            fixtures::BLOB_A_DIGEST.clone(),
+            *fixtures::BLOB_A_DIGEST,
             fixtures::BLOB_A.len() as u64,
             false,
         );
@@ -173,7 +173,7 @@ mod tests {
         assert_ne!(
             ino,
             inode_tracker.put(InodeData::Regular(
-                fixtures::BLOB_B_DIGEST.clone(),
+                *fixtures::BLOB_B_DIGEST,
                 fixtures::BLOB_B.len() as u64,
                 false,
             ))

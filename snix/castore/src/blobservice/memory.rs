@@ -133,7 +133,7 @@ impl BlobWriter for MemoryBlobWriter {
     async fn close(&mut self) -> io::Result<B3Digest> {
         if self.writers.is_none() {
             match &self.digest {
-                Some(digest) => Ok(digest.clone()),
+                Some(digest) => Ok(*digest),
                 None => Err(io::Error::new(io::ErrorKind::BrokenPipe, "already closed")),
             }
         } else {
@@ -147,11 +147,11 @@ impl BlobWriter for MemoryBlobWriter {
                 // open the database for writing.
                 db.with_upgraded(|db| {
                     // and put buf in there. This will move buf out.
-                    db.insert(digest.clone(), buf);
+                    db.insert(digest, buf);
                 });
             }
 
-            self.digest = Some(digest.clone());
+            self.digest = Some(digest);
 
             Ok(digest)
         }

@@ -72,7 +72,7 @@ async fn populate_blob_a(
     root_nodes.insert(
         BLOB_A_NAME.try_into().unwrap(),
         Node::File {
-            digest: fixtures::BLOB_A_DIGEST.clone(),
+            digest: *fixtures::BLOB_A_DIGEST,
             size: fixtures::BLOB_A.len() as u64,
             executable: false,
         },
@@ -92,7 +92,7 @@ async fn populate_blob_b(
     root_nodes.insert(
         BLOB_B_NAME.try_into().unwrap(),
         Node::File {
-            digest: fixtures::BLOB_B_DIGEST.clone(),
+            digest: *fixtures::BLOB_B_DIGEST,
             size: fixtures::BLOB_B.len() as u64,
             executable: false,
         },
@@ -116,7 +116,7 @@ async fn populate_blob_helloworld(
     root_nodes.insert(
         HELLOWORLD_BLOB_NAME.try_into().unwrap(),
         Node::File {
-            digest: fixtures::HELLOWORLD_BLOB_DIGEST.clone(),
+            digest: *fixtures::HELLOWORLD_BLOB_DIGEST,
             size: fixtures::HELLOWORLD_BLOB_CONTENTS.len() as u64,
             executable: true,
         },
@@ -187,7 +187,7 @@ async fn populate_filenode_without_blob(root_nodes: &mut BTreeMap<PathComponent,
     root_nodes.insert(
         BLOB_A_NAME.try_into().unwrap(),
         Node::File {
-            digest: fixtures::BLOB_A_DIGEST.clone(),
+            digest: *fixtures::BLOB_A_DIGEST,
             size: fixtures::BLOB_A.len() as u64,
             executable: false,
         },

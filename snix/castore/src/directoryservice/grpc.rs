@@ -49,12 +49,11 @@ where
     async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
         // Get a new handle to the gRPC client, and copy the digest.
         let mut grpc_client = self.grpc_client.clone();
-        let digest_cpy = digest.clone();
         let message = async move {
             let mut s = grpc_client
                 .get(proto::GetDirectoryRequest {
                     recursive: false,
-                    by_what: Some(ByWhat::Digest(digest_cpy.into())),
+                    by_what: Some(ByWhat::Digest((*digest).into())),
                 })
                 .await?
                 .into_inner();
@@ -63,13 +62,12 @@ where
             s.message().await
         };
 
-        let digest = digest.clone();
         match message.await {
             Ok(Some(directory)) => {
                 // Validate the retrieved Directory indeed has the
                 // digest we expect it to have, to detect corruptions.
                 let actual_digest = directory.digest();
-                if actual_digest != digest {
+                if &actual_digest != digest {
                     Err(crate::Error::StorageError(format!(
                         "requested directory with digest {digest}, but got {actual_digest}"
                     )))
@@ -111,13 +109,13 @@ where
         root_directory_digest: &B3Digest,
     ) -> BoxStream<'static, Result<Directory, Error>> {
         let mut grpc_client = self.grpc_client.clone();
-        let root_directory_digest = root_directory_digest.clone();
+        let root_directory_digest = *root_directory_digest;
 
         let stream = try_stream! {
             let mut stream = grpc_client
                 .get(proto::GetDirectoryRequest {
                     recursive: true,
-                    by_what: Some(ByWhat::Digest(root_directory_digest.clone().into())),
+                    by_what: Some(ByWhat::Digest((root_directory_digest).into())),
                 })
                 .await
                 .map_err(|e| crate::Error::StorageError(e.to_string()))?
@@ -126,7 +124,7 @@ where
             // The Directory digests we received so far
             let mut received_directory_digests: HashSet<B3Digest> = HashSet::new();
             // The Directory digests we're still expecting to get sent.
-            let mut expected_directory_digests: HashSet<B3Digest> = HashSet::from([root_directory_digest.clone()]);
+            let mut expected_directory_digests: HashSet<B3Digest> = HashSet::from([root_directory_digest]);
 
             loop {
                 match stream.message().await {

@@ -265,7 +265,7 @@ impl DirectoryGraphBuilder {
                             .expect("Snix bug: node not found");
 
                         Err(OrderingError::UnknownLTR {
-                            digest: out_digest.clone(),
+                            digest: out_digest,
                             parent_digest: directory_digest.to_owned(),
                             path_component: directory
                                 .nodes()

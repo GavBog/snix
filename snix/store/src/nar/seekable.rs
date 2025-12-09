@@ -99,7 +99,7 @@ fn walk_node(
             segments.push((
                 *offset,
                 Data::Blob(BlobRef {
-                    digest: digest.clone(),
+                    digest: *digest,
                     size: *size,
                 }),
             ));
@@ -293,7 +293,7 @@ impl<B: BlobService + 'static> tokio::io::AsyncSeek for Reader<B> {
         } else {
             // seek to a different segment
             let blob_service = this.blob_service.clone();
-            let digest = digest.clone();
+            let digest = *digest;
             this.current_blob = futures::future::try_maybe_done(
                 (async move {
                     let mut reader =
@@ -302,7 +302,7 @@ impl<B: BlobService + 'static> tokio::io::AsyncSeek for Reader<B> {
                             .await?
                             .ok_or(io::Error::new(
                                 io::ErrorKind::NotFound,
-                                RenderError::BlobNotFound(digest.clone(), Default::default()),
+                                RenderError::BlobNotFound(digest, Default::default()),
                             ))?;
                     if offset_in_segment != 0 {
                         reader.seek(io::SeekFrom::Start(offset_in_segment)).await?;
@@ -401,7 +401,7 @@ impl<B: BlobService + 'static> tokio::io::AsyncRead for Reader<B> {
 
             // The next segment is a blob, open the BlobReader
             let blob_service = this.blob_service.clone();
-            let digest = digest.clone();
+            let digest = *digest;
             this.current_blob = futures::future::try_maybe_done(
                 (async move {
                     let reader = blob_service
@@ -409,7 +409,7 @@ impl<B: BlobService + 'static> tokio::io::AsyncRead for Reader<B> {
                         .await?
                         .ok_or(io::Error::new(
                             io::ErrorKind::NotFound,
-                            RenderError::BlobNotFound(digest.clone(), Default::default()),
+                            RenderError::BlobNotFound(digest, Default::default()),
                         ))?;
                     Ok(reader)
                 })

@@ -108,7 +108,7 @@ mod tests {
             (
                 "index.htm".try_into().unwrap(),
                 Node::File {
-                    digest: INDEX_HTML_BLOB_DIGEST.clone(),
+                    digest: *INDEX_HTML_BLOB_DIGEST,
                     size: INDEX_HTML_BLOB_CONTENTS.len() as u64,
                     executable: false,
                 },
@@ -128,7 +128,7 @@ mod tests {
             (
                 "index.html".try_into().unwrap(),
                 Node::File {
-                    digest: INDEX_HTML_BLOB_DIGEST.clone(),
+                    digest: *INDEX_HTML_BLOB_DIGEST,
                     size: INDEX_HTML_BLOB_CONTENTS.len() as u64,
                     executable: false,
                 },
@@ -457,7 +457,7 @@ mod tests {
     #[tokio::test]
     async fn test_returns_bad_request_if_root_node_is_file_and_path_requested() {
         let root_node = Node::File {
-            digest: HELLOWORLD_BLOB_DIGEST.clone(),
+            digest: *HELLOWORLD_BLOB_DIGEST,
             size: HELLOWORLD_BLOB_CONTENTS.len() as u64,
             executable: false,
         };

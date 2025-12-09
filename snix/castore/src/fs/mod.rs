@@ -174,16 +174,15 @@ where
         let data = self.inode_tracker.read().get(ino).unwrap();
         match *data {
             // if it's populated already, return children.
-            InodeData::Directory(DirectoryInodeData::Populated(
-                ref parent_digest,
-                ref children,
-            )) => Ok((parent_digest.clone(), children.clone())),
+            InodeData::Directory(DirectoryInodeData::Populated(parent_digest, ref children)) => {
+                Ok((parent_digest, children.clone()))
+            }
             // if it's sparse, fetch data using directory_service, populate child nodes
             // and update it in [self.inode_tracker].
-            InodeData::Directory(DirectoryInodeData::Sparse(ref parent_digest, _)) => {
+            InodeData::Directory(DirectoryInodeData::Sparse(parent_digest, _)) => {
                 let directory = self
                     .tokio_handle
-                    .block_on(async { self.directory_service.get(parent_digest).await })?
+                    .block_on(async { self.directory_service.get(&parent_digest).await })?
                     .ok_or_else(|| {
                         warn!(directory.digest=%parent_digest, "directory not found");
                         // If the Directory can't be found, this is a hole, bail out.
@@ -210,7 +209,7 @@ where
                     inode_tracker.replace(
                         ino,
                         Arc::new(InodeData::Directory(DirectoryInodeData::Populated(
-                            parent_digest.clone(),
+                            parent_digest,
                             children.clone(),
                         ))),
                     );
@@ -218,7 +217,7 @@ where
                     children
                 };
 
-                Ok((parent_digest.clone(), children))
+                Ok((parent_digest, children))
             }
             // if the parent inode was not a directory, this doesn't make sense
             InodeData::Regular(..) | InodeData::Symlink(_) => {

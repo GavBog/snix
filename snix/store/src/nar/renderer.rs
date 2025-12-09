@@ -154,7 +154,7 @@ where
             {
                 // if it's None, that's an error!
                 None => Err(RenderError::DirectoryNotFound(
-                    digest.clone(),
+                    *digest,
                     bytes::Bytes::copy_from_slice(name),
                 ))?,
                 Some(directory) => {

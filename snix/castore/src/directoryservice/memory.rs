@@ -33,7 +33,7 @@ impl DirectoryService for MemoryDirectoryService {
                 // Validate the retrieved Directory indeed has the
                 // digest we expect it to have, to detect corruptions.
                 let actual_digest = directory.digest();
-                if actual_digest != *digest {
+                if &actual_digest != digest {
                     return Err(Error::StorageError(format!(
                         "requested directory with digest {digest}, but got {actual_digest}"
                     )));
@@ -52,7 +52,7 @@ impl DirectoryService for MemoryDirectoryService {
 
         // store it
         let mut db = self.db.write().await;
-        db.insert(digest.clone(), directory.into());
+        db.insert(digest, directory.into());
 
         Ok(digest)
     }
@@ -62,7 +62,7 @@ impl DirectoryService for MemoryDirectoryService {
         &self,
         root_directory_digest: &B3Digest,
     ) -> BoxStream<'static, Result<Directory, Error>> {
-        traverse_directory(self.clone(), root_directory_digest).boxed()
+        traverse_directory(self.clone(), *root_directory_digest).boxed()
     }
 
     #[instrument(skip_all, fields(instance_name=%self.instance_name))]
