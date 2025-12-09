@@ -73,7 +73,7 @@ fn walk_node(
     segments: &mut Vec<(u64, Data)>,
     offset: &mut u64,
     directories: &HashMap<B3Digest, Directory>,
-    node: Node,
+    node: &Node,
     // Includes a reference to the current segment's buffer
     nar_node: nar_writer::Node<'_, Vec<u8>>,
 ) -> Result<(), RenderError> {
@@ -89,14 +89,20 @@ fn walk_node(
             executable,
         } => {
             let (cur_segment, skip) = nar_node
-                .file_manual_write(executable, size)
+                .file_manual_write(*executable, *size)
                 .map_err(RenderError::NARWriterError)?;
 
             // Flush the segment up until the beginning of the blob
             flush_segment(segments, offset, std::mem::take(cur_segment));
 
             // Insert the blob segment
-            segments.push((*offset, Data::Blob(BlobRef { digest, size })));
+            segments.push((
+                *offset,
+                Data::Blob(BlobRef {
+                    digest: digest.clone(),
+                    size: *size,
+                }),
+            ));
             *offset += size;
 
             // Close the file node
@@ -109,7 +115,7 @@ fn walk_node(
         }
         snix_castore::Node::Directory { digest, .. } => {
             let directory = directories
-                .get(&digest)
+                .get(digest)
                 .expect("Snix bug: directory not found");
 
             // start a directory node
@@ -123,7 +129,7 @@ fn walk_node(
                     .entry(name.as_ref())
                     .map_err(RenderError::NARWriterError)?;
 
-                walk_node(segments, offset, directories, node.clone(), child_node)?;
+                walk_node(segments, offset, directories, node, child_node)?;
             }
 
             // close the directory
@@ -209,7 +215,7 @@ impl<B: BlobService + 'static> Reader<B> {
             &mut segments,
             &mut offset,
             &directories,
-            root_node,
+            &root_node,
             nar_node,
         )?;
         // Flush the final segment
