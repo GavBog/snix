@@ -250,11 +250,14 @@ impl<B: BlobService + 'static> tokio::io::AsyncSeek for Reader<B> {
         }
         this.seeking = true;
 
-        // TODO(edef): be sane about overflows
-        let pos = match pos {
-            io::SeekFrom::Start(n) => n,
-            io::SeekFrom::End(n) => (stream_len as i64 + n) as u64,
-            io::SeekFrom::Current(n) => (this.position_bytes as i64 + n) as u64,
+        let pos = {
+            let (base, offset) = match pos {
+                io::SeekFrom::Start(n) => (n, 0),
+                io::SeekFrom::End(n) => (stream_len, n),
+                io::SeekFrom::Current(n) => (this.position_bytes, n),
+            };
+
+            base.saturating_add_signed(offset)
         };
 
         let prev_position_bytes = this.position_bytes;
