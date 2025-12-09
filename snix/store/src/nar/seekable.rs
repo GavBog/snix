@@ -72,8 +72,7 @@ fn flush_segment(segments: &mut Vec<(u64, Data)>, offset: &mut u64, cur_segment:
 fn walk_node(
     segments: &mut Vec<(u64, Data)>,
     offset: &mut u64,
-    // FUTUREWORK: can we return only a &Directory?
-    get_directory: &impl Fn(&B3Digest) -> Directory,
+    directories: &HashMap<B3Digest, Directory>,
     node: Node,
     // Includes a reference to the current segment's buffer
     nar_node: nar_writer::Node<'_, Vec<u8>>,
@@ -109,7 +108,9 @@ fn walk_node(
                 .map_err(RenderError::NARWriterError)?;
         }
         snix_castore::Node::Directory { digest, .. } => {
-            let directory = get_directory(&digest);
+            let directory = directories
+                .get(&digest)
+                .expect("Snix bug: directory not found");
 
             // start a directory node
             let mut nar_node_directory =
@@ -122,7 +123,7 @@ fn walk_node(
                     .entry(name.as_ref())
                     .map_err(RenderError::NARWriterError)?;
 
-                walk_node(segments, offset, get_directory, node.clone(), child_node)?;
+                walk_node(segments, offset, directories, node.clone(), child_node)?;
             }
 
             // close the directory
@@ -207,12 +208,7 @@ impl<B: BlobService + 'static> Reader<B> {
         walk_node(
             &mut segments,
             &mut offset,
-            &|digest| {
-                directories
-                    .get(digest)
-                    .expect("Snix bug: directory not found")
-                    .to_owned()
-            },
+            &directories,
             root_node,
             nar_node,
         )?;
