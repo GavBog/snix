@@ -105,10 +105,6 @@ pub struct DirectoryGraphBuilder {
     /// Used in the RTL case for all unfinished edges.
     rtl_edges_todo: HashMap<B3Digest, (u64, Vec<NodeIndex>)>,
 
-    /// Points to the first node index.
-    /// Populated in the RTL case only.
-    first_idx: Option<NodeIndex>,
-
     /// Holds the expected root digest.
     /// Populated in the RTL case only.
     exp_root_digest: Option<B3Digest>,
@@ -123,7 +119,6 @@ impl DirectoryGraphBuilder {
             graph: Default::default(),
             digest_to_node_idx_size: Default::default(),
             rtl_edges_todo: Default::default(),
-            first_idx: None,
             exp_root_digest: None,
         }
     }
@@ -139,7 +134,6 @@ impl DirectoryGraphBuilder {
             graph: Default::default(),
             digest_to_node_idx_size: Default::default(),
             rtl_edges_todo: Default::default(),
-            first_idx: None,
             exp_root_digest: Some(root_digest),
         }
     }
@@ -165,8 +159,6 @@ impl DirectoryGraphBuilder {
             // We also obviously won't find ourselves in [self.rtl_edges_todo],
             // as we're the first element.
             if self.graph.node_count() == 1 {
-                self.first_idx = Some(node_idx);
-
                 let directory = self
                     .graph
                     .node_weight(node_idx)
@@ -306,7 +298,9 @@ impl DirectoryGraphBuilder {
         match self.insertion_order {
             // We must have received the root, and there may not be any rtl_edges_todo.
             DirectoryOrder::RootToLeaves => {
-                let root_idx = self.first_idx.ok_or_else(|| OrderingError::EmptySet)?;
+                if self.graph.node_count() == 0 {
+                    return Err(OrderingError::EmptySet);
+                }
 
                 if !self.rtl_edges_todo.is_empty() {
                     return Err(OrderingError::DirectoriesMissing(HashSet::from_iter(
@@ -321,7 +315,12 @@ impl DirectoryGraphBuilder {
                 );
                 Ok(DirectoryGraph {
                     graph: self.graph,
-                    root_idx,
+                    // 1. petgraph invariant: adding nodes or edges does not alter indices
+                    // 2. DirectoryGraph RTL invariant: we only add nodes and edges
+                    // 3. petgraph invariant: nodes are compactly numbered [0, n)
+                    // 4. DirectoryGraph RTL invariant: the root is inserted first
+                    // ∴ the root node is always index 0
+                    root_idx: NodeIndex::new(0),
                 })
             }
             DirectoryOrder::LeavesToRoot => {
