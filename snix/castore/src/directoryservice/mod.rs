@@ -19,7 +19,7 @@ mod traverse;
 mod utils;
 
 pub use self::combinators::{Cache, CacheConfig};
-pub use self::directory_graph::{DirectoryGraph, DirectoryGraphBuilder, DirectoryOrder};
+pub use self::directory_graph::{DirectoryGraph, DirectoryGraphBuilder};
 pub use self::from_addr::from_addr;
 pub use self::grpc::{GRPCDirectoryService, GRPCDirectoryServiceConfig};
 pub use self::memory::{MemoryDirectoryService, MemoryDirectoryServiceConfig};

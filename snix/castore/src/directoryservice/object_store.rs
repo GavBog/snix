@@ -21,7 +21,6 @@ use url::Url;
 use super::{Directory, DirectoryPutter, DirectoryService, RootToLeavesValidator};
 use crate::composition::{CompositionContext, ServiceBuilder};
 use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
-use crate::directoryservice::directory_graph::DirectoryOrder;
 use crate::{B3Digest, Error, Node, proto};
 
 /// Stores directory closures in an object store.
@@ -344,7 +343,8 @@ impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
                     .length_field_type::<u32>()
                     .new_write(compressed_writer);
 
-                for directory in directory_graph.drain(DirectoryOrder::RootToLeaves) {
+                // Drain the graph in *Root-To-Leaves*, order, as that's how we write it to storage.
+                for directory in directory_graph.drain_root_to_leaves() {
                     directories_sink
                         .send(proto::Directory::from(directory).encode_to_vec().into())
                         .await?;

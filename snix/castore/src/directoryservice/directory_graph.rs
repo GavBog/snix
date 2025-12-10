@@ -8,19 +8,10 @@ use tracing::{instrument, warn};
 use crate::directoryservice::order_validator::OrderingError;
 use crate::{B3Digest, Directory, Node};
 
-#[derive(PartialEq, Eq, Debug)]
-pub enum DirectoryOrder {
-    /// Start with the root.
-    /// Validates that newly received directories are already referenced from
-    /// the root via existing directories.
-    RootToLeaves,
-    /// Each directory may only refer to directories already sent previously.
-    LeavesToRoot,
-}
-
 /// This represents a full (and validated) graph of [Directory] nodes.
 /// It can be constructed using [DirectoryGraphBuilder], and is normally used to
-/// convert from one order to the other.
+/// receive in one or the other insertion order, validate, and then drain in
+/// Leaves-To-Root order.
 /// If you just want to validate an order without keeping the results,
 /// `RootToLeavesValidator` or `LeavesToRootValidator` can be used.
 #[derive(Default)]
@@ -33,10 +24,19 @@ pub struct DirectoryGraph {
     root_idx: NodeIndex,
 }
 
+#[derive(PartialEq, Eq, Debug)]
+enum DirectoryOrder {
+    /// Start with the root.
+    /// Validates that newly received directories are already referenced from
+    /// the root via existing directories.
+    RootToLeaves,
+    /// Each directory may only refer to directories already sent previously.
+    LeavesToRoot,
+}
+
 impl DirectoryGraph {
     /// Drains the graph, returning node weights in the chosen [DirectoryOrder].
-    #[instrument(level = "trace", skip_all)]
-    pub fn drain(self, order: DirectoryOrder) -> impl Iterator<Item = Directory> {
+    fn drain(self, order: DirectoryOrder) -> impl Iterator<Item = Directory> {
         let order = match order {
             DirectoryOrder::RootToLeaves => {
                 // do a BFS traversal of the graph, starting with the root node
@@ -58,6 +58,18 @@ impl DirectoryGraph {
             .map(move |i| std::mem::take(&mut nodes[i.index()].weight))
     }
 
+    /// Drains the graph in Leaves-To-Root Order.
+    #[instrument(level = "trace", skip_all)]
+    pub fn drain_leaves_to_root(self) -> impl Iterator<Item = Directory> {
+        self.drain(DirectoryOrder::LeavesToRoot)
+    }
+
+    /// Drains the graph in Root-To-Leaves Order.
+    #[instrument(level = "trace", skip_all)]
+    pub fn drain_root_to_leaves(self) -> impl Iterator<Item = Directory> {
+        self.drain(DirectoryOrder::RootToLeaves)
+    }
+
     pub fn root(&self) -> &Directory {
         self.graph
             .node_weight(self.root_idx)
@@ -71,7 +83,8 @@ impl DirectoryGraph {
 /// different [Directory] can be passed to [Self::try_insert].
 /// A [Self::build] consumes the builder, returning a validated [DirectoryGraph],
 /// or an error.
-/// The resulting [DirectoryGraph] can be used to drain the graph in either order.
+/// The resulting [DirectoryGraph] can be used to drain the graph in
+/// Leaves-To-Root or Root-To-Leaves order.
 ///
 /// It does do the same checks as `RootToLeavesValidator` and `LeavesToRootValidator`
 /// (insertion order, completeness, connectivity, correct sizes referenced).
@@ -339,7 +352,7 @@ impl DirectoryGraphBuilder {
 
 #[cfg(test)]
 mod tests {
-    use crate::directoryservice::DirectoryOrder;
+    use super::DirectoryOrder;
     use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
     use crate::fixtures::{DIRECTORY_A, DIRECTORY_B, DIRECTORY_C};
     use crate::{Directory, Node};
@@ -425,9 +438,7 @@ mod tests {
             let directory_graph = builder.build().expect("build to succeed");
 
             // drain
-            let drained_ltr = directory_graph
-                .drain(super::DirectoryOrder::LeavesToRoot)
-                .collect::<Vec<_>>();
+            let drained_ltr = directory_graph.drain_leaves_to_root().collect::<Vec<_>>();
 
             assert_eq!(
                 exp_drain_ltr

@@ -9,7 +9,7 @@ use super::{Directory, DirectoryPutter, DirectoryService, traverse_directory};
 use crate::{
     B3Digest, Error,
     composition::{CompositionContext, ServiceBuilder},
-    directoryservice::directory_graph::{DirectoryGraphBuilder, DirectoryOrder},
+    directoryservice::directory_graph::DirectoryGraphBuilder,
     proto,
 };
 
@@ -218,7 +218,7 @@ impl DirectoryPutter for RedbDirectoryPutter<'_> {
                 // batch insertion.
                 {
                     let mut table = txn.open_table(DIRECTORY_TABLE)?;
-                    for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+                    for directory in directory_graph.drain_leaves_to_root() {
                         table.insert(
                             directory.digest().as_ref(),
                             proto::Directory::from(directory).encode_to_vec(),

@@ -1,7 +1,6 @@
 use super::Directory;
 use super::DirectoryPutter;
 use super::DirectoryService;
-use super::directory_graph::DirectoryOrder;
 use crate::B3Digest;
 use crate::Error;
 use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
@@ -55,7 +54,7 @@ impl<DS: DirectoryService + 'static> DirectoryPutter for SimplePutter<'_, DS> {
         let directory_graph = builder.build()?;
         let root_digest = directory_graph.root().digest();
 
-        for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+        for directory in directory_graph.drain_leaves_to_root() {
             let exp_digest = directory.digest();
             let actual_digest = self.directory_service.put(directory).await?;
 

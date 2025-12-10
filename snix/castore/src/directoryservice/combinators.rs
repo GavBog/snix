@@ -13,7 +13,6 @@ use crate::Error;
 use crate::composition::{CompositionContext, ServiceBuilder};
 use crate::directoryservice::DirectoryPutter;
 use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
-use crate::directoryservice::directory_graph::DirectoryOrder;
 
 /// Asks near first, if not found, asks far.
 /// If found in there, returns it, and *inserts* it into
@@ -74,7 +73,7 @@ where
             let directory_graph = graph_builder.build()?;
             // Drain into near
             let mut near_putter = self.near.put_multiple_start();
-            for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+            for directory in directory_graph.drain_leaves_to_root() {
                 near_putter.put(directory).await?;
             }
 
@@ -126,7 +125,7 @@ where
                     Ok(directory_graph) => {
                         // Drain into near
                         let mut near_putter = near.put_multiple_start();
-                        for directory in directory_graph.drain(DirectoryOrder::LeavesToRoot) {
+                        for directory in directory_graph.drain_leaves_to_root() {
                             near_putter.put(directory).await?;
                         }
                         let actual_digest = near_putter.close().await?;

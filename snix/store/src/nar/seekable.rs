@@ -14,8 +14,8 @@ use bytes::{BufMut, Bytes};
 use nix_compat::nar::writer::sync as nar_writer;
 use snix_castore::directoryservice::{DirectoryGraph, DirectoryService};
 use snix_castore::{B3Digest, Node};
-use snix_castore::{Directory, directoryservice::DirectoryOrder};
 use snix_castore::{
+    Directory,
     blobservice::{BlobReader, BlobService},
     directoryservice::DirectoryGraphBuilder,
 };
@@ -197,9 +197,10 @@ impl<B: BlobService + 'static> Reader<B> {
     ) -> Result<Self, RenderError> {
         let directories: HashMap<B3Digest, Directory> = directory_closure
             .map(|directory_graph| {
+                // We don't really care about the drain order
                 HashMap::from_iter(
                     directory_graph
-                        .drain(DirectoryOrder::RootToLeaves)
+                        .drain_leaves_to_root()
                         .map(|d| (d.digest(), d)),
                 )
             })
