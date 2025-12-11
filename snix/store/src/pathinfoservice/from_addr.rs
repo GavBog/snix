@@ -16,10 +16,10 @@ use url::Url;
 /// - `redb:///absolute/path/to/somewhere`
 ///   Uses redb, using a path on the disk for persistency. Can be only opened
 ///   from one process at the same time.
-/// - `nix+https://cache.nixos.org?trusted-public-keys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=`
+/// - `nix+https://cache.nixos.org?trusted_public_keys[0]=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=`
 ///   Exposes the Nix binary cache as a PathInfoService, ingesting NARs into the
 ///   {Blob,Directory}Service. You almost certainly want to use this with some cache.
-///   The `trusted-public-keys` URL parameter can be provided, which will then
+///   The `trusted_public_keys` URL parameter can be provided, which will then
 ///   enable signature verification.
 /// - `grpc+unix:///absolute/path/to/somewhere`
 ///   Connects to a local snix-store gRPC service via Unix socket.
@@ -89,22 +89,8 @@ mod tests {
     #[case::redb_memory_invalid_authority("redb+memory://", false)]
     /// This configures redb in-memory, but wrongly adds a path (with authority).
     #[case::redb_memory_invalid_authority_path("redb+memory:///foo/bar", false)]
-    /// Correct Scheme for the cache.nixos.org binary cache.
-    #[case::correct_nix_https("nix+https://cache.nixos.org", true)]
-    /// Correct Scheme for the cache.nixos.org binary cache (HTTP URL).
-    #[case::correct_nix_http("nix+http://cache.nixos.org", true)]
-    /// Correct Scheme for Nix HTTP Binary cache, with a subpath.
-    #[case::correct_nix_http_with_subpath("nix+http://192.0.2.1/foo", true)]
-    /// Correct Scheme for Nix HTTP Binary cache, with a subpath and port.
-    #[case::correct_nix_http_with_subpath_and_port("nix+http://[::1]:8080/foo", true)]
-    /// Correct Scheme for the cache.nixos.org binary cache, and correct trusted public key set
-    #[case::correct_nix_https_with_trusted_public_key(
-        "nix+https://cache.nixos.org?trusted-public-keys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=",
-        true
-    )]
-    /// Correct Scheme for the cache.nixos.org binary cache, and two correct trusted public keys set
-    #[case::correct_nix_https_with_two_trusted_public_keys(
-        "nix+https://cache.nixos.org?trusted-public-keys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=%20foo:jp4fCEx9tBEId/L0ZsVJ26k0wC0fu7vJqLjjIGFkup8=",
+    #[case::nix_http(
+        "nix+https://cache.nixos.org?trusted_public_keys[0]=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=",
         true
     )]
     /// Correct scheme to connect to a unix socket.

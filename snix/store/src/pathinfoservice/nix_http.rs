@@ -40,20 +40,29 @@ pub struct NixHTTPPathInfoService<BS, DS> {
     directory_service: DS,
 
     /// An optional list of [narinfo::VerifyingKey].
-    /// If set, the .narinfo files received need to have correct signature by at least one of these.
-    public_keys: Option<Vec<narinfo::VerifyingKey>>,
+    /// If the list is not empty, the .narinfo files received need to have
+    /// correct signature by at least one of these.
+    trusted_public_keys: Vec<narinfo::VerifyingKey>,
 }
 
 impl<BS, DS> NixHTTPPathInfoService<BS, DS> {
-    pub fn new(
+    pub fn try_build(
         instance_name: String,
-        base_url: url::Url,
+        config: NixHTTPPathInfoServiceConfig,
         blob_service: BS,
         directory_service: DS,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, Error> {
+        let mut trusted_public_keys = Vec::new();
+        for s in config.params.trusted_public_keys {
+            trusted_public_keys.push(
+                narinfo::VerifyingKey::parse(&s)
+                    .map_err(|e| Error::StorageError(format!("invalid public key: {e}")))?,
+            )
+        }
+
+        Ok(Self {
             instance_name,
-            base_url,
+            base_url: config.base_url,
             http_client: reqwest_middleware::ClientBuilder::new(
                 reqwest::Client::builder()
                     .user_agent(crate::USER_AGENT)
@@ -65,13 +74,8 @@ impl<BS, DS> NixHTTPPathInfoService<BS, DS> {
             blob_service,
             directory_service,
 
-            public_keys: None,
-        }
-    }
-
-    /// Configures [Self] to validate NARInfo fingerprints with the public keys passed.
-    pub fn set_public_keys(&mut self, public_keys: Vec<narinfo::VerifyingKey>) {
-        self.public_keys = Some(public_keys);
+            trusted_public_keys,
+        })
     }
 }
 
@@ -130,11 +134,11 @@ where
             )
         })?;
 
-        // if [self.public_keys] is set, ensure there's at least one valid signature.
-        if let Some(public_keys) = &self.public_keys {
+        // if [self.trusted_public_keys] is set, ensure there's at least one valid signature.
+        if !self.trusted_public_keys.is_empty() {
             let fingerprint = narinfo.fingerprint();
 
-            if !public_keys.iter().any(|pubkey| {
+            if !self.trusted_public_keys.iter().any(|pubkey| {
                 narinfo
                     .signatures
                     .iter()
@@ -207,7 +211,7 @@ where
 
         let (root_node, nar_hash, nar_size) = ingest_nar_and_hash(
             self.blob_service.clone(),
-            self.directory_service.clone(),
+            &self.directory_service,
             &mut r,
             &narinfo.ca,
         )
@@ -270,54 +274,75 @@ where
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct NixHTTPPathInfoServiceConfig {
-    base_url: String,
+    base_url: Url,
+
+    #[serde(flatten)]
+    params: NixHTTPPathInfoServiceParams,
+}
+
+#[derive(serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+struct NixHTTPPathInfoServiceParams {
+    #[serde(default = "default_blob_service")]
     blob_service: String,
+    #[serde(default = "default_directory_service")]
     directory_service: String,
     #[serde(default)]
     /// An optional list of [narinfo::VerifyingKey].
-    /// If set, the .narinfo files received need to have correct signature by at least one of these.
-    public_keys: Option<Vec<String>>,
+    /// If not empty, the .narinfo files received need to have correct signature by at least one of these.
+    trusted_public_keys: Vec<String>,
+}
+
+fn default_blob_service() -> String {
+    "&root".to_string()
+}
+fn default_directory_service() -> String {
+    "&root".to_string()
 }
 
 impl TryFrom<Url> for NixHTTPPathInfoServiceConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(url: Url) -> Result<Self, Self::Error> {
-        // Be careful about the distinction between `None` and `Some(vec![])`!
-        let mut public_keys: Option<Vec<String>> = None;
-        for (_, v) in url
-            .query_pairs()
-            .into_iter()
-            .filter(|(k, _)| k == "trusted-public-keys")
-        {
-            public_keys
-                .get_or_insert(Default::default())
-                .extend(v.split_ascii_whitespace().map(ToString::to_string));
-        }
+        let scheme = url
+            .scheme()
+            .strip_prefix("nix+")
+            .ok_or_else(|| Error::StorageError("scheme must start with nix+".to_string()))?;
 
-        // FUTUREWORK: move url deserialization to serde?
-        let blob_service = url
-            .query_pairs()
-            .into_iter()
-            .find(|(k, _)| k == "blob_service")
-            .map(|(_, v)| v.to_string())
-            .unwrap_or("&root".to_string());
-        let directory_service = url
-            .query_pairs()
-            .into_iter()
-            .find(|(k, _)| k == "directory_service")
-            .map(|(_, v)| v.to_string())
-            .unwrap_or("&root".to_string());
+        if !url.has_authority() {
+            Err(Error::StorageError(
+                "url must have authority component".to_string(),
+            ))?
+        }
+        if !url.has_host() {
+            Err(Error::StorageError(
+                "url must have host component".to_string(),
+            ))?
+        }
+        if !["http", "https"].contains(&scheme) {
+            Err(Error::StorageError("unknown scheme".to_string()))?
+        }
 
         Ok(NixHTTPPathInfoServiceConfig {
             // Stringify the URL and remove the nix+ prefix.
             // We can't use `url.set_scheme(rest)`, as it disallows
             // setting something http(s) that previously wasn't.
-            base_url: url.to_string().strip_prefix("nix+").unwrap().to_string(),
-            blob_service,
-            directory_service,
-            public_keys,
+            // Also make sure to drop the query, we don't want to leak our
+            // config to the remote HTTP endpoint we query.
+            base_url: {
+                let mut url: Url = url
+                    .to_string()
+                    .strip_prefix("nix+")
+                    .unwrap()
+                    .parse()
+                    .expect("stripped URL to parse again");
+                url.set_query(None);
+                url
+            },
+            params: serde_qs::from_str(url.query().unwrap_or_default())
+                .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?,
         })
     }
 }
@@ -331,26 +356,121 @@ impl ServiceBuilder for NixHTTPPathInfoServiceConfig {
         context: &CompositionContext,
     ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let (blob_service, directory_service) = futures::join!(
-            context.resolve::<dyn BlobService>(&self.blob_service),
-            context.resolve::<dyn DirectoryService>(&self.directory_service)
+            context.resolve::<dyn BlobService>(&self.params.blob_service),
+            context.resolve::<dyn DirectoryService>(&self.params.directory_service)
         );
-        let mut svc = NixHTTPPathInfoService::new(
+        let svc = NixHTTPPathInfoService::try_build(
             instance_name.to_string(),
-            Url::parse(&self.base_url)?,
+            self.to_owned(),
             blob_service?,
             directory_service?,
-        );
-        if let Some(public_keys) = &self.public_keys {
-            svc.set_public_keys(
-                public_keys
-                    .iter()
-                    .map(|pubkey_str| {
-                        narinfo::VerifyingKey::parse(pubkey_str)
-                            .map_err(|e| Error::StorageError(format!("invalid public key: {e}")))
-                    })
-                    .collect::<Result<Vec<_>, Error>>()?,
-            );
-        }
+        )?;
         Ok(Arc::new(svc))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{NixHTTPPathInfoServiceConfig, NixHTTPPathInfoServiceParams};
+    use rstest::rstest;
+    use url::Url;
+
+    #[rstest]
+    /// Correct Scheme for the cache.nixos.org binary cache.
+    #[case::correct_nix_https("nix+https://cache.nixos.org", Some(
+        NixHTTPPathInfoServiceConfig {
+            base_url: "https://cache.nixos.org".try_into().unwrap(),
+            params: NixHTTPPathInfoServiceParams {
+                blob_service: "&root".to_string(),
+                directory_service: "&root".to_string(),
+                trusted_public_keys: vec![]
+            }
+        }
+    ))]
+    /// Correct Scheme for the cache.nixos.org binary cache (HTTP URL).
+    #[case::correct_nix_http("nix+http://cache.nixos.org", Some(
+        NixHTTPPathInfoServiceConfig {
+            base_url: "http://cache.nixos.org".try_into().unwrap(),
+            params: NixHTTPPathInfoServiceParams {
+                blob_service: "&root".to_string(),
+                directory_service: "&root".to_string(),
+                trusted_public_keys: vec![]
+            }
+        }
+    ))]
+    /// Correct Scheme for Nix HTTP Binary cache, with a subpath.
+    #[case::correct_nix_http_with_subpath("nix+http://192.0.2.1/foo", Some(
+        NixHTTPPathInfoServiceConfig {
+            base_url: "http://192.0.2.1/foo".try_into().unwrap(),
+            params: NixHTTPPathInfoServiceParams {
+                blob_service: "&root".to_string(),
+                directory_service: "&root".to_string(),
+                trusted_public_keys: vec![]
+            }
+        }
+    ))]
+    /// Correct Scheme for Nix HTTP Binary cache, with a subpath and port.
+    #[case::correct_nix_http_with_subpath_and_port("nix+http://[::1]:8080/foo", Some(
+        NixHTTPPathInfoServiceConfig {
+            base_url: "http://[::1]:8080/foo".try_into().unwrap(),
+            params: NixHTTPPathInfoServiceParams {
+                blob_service: "&root".to_string(),
+                directory_service: "&root".to_string(),
+                trusted_public_keys: vec![]
+            }
+        }
+
+    ))]
+    /// Correct Scheme for the cache.nixos.org binary cache, and correct trusted public key set
+    #[case::correct_nix_https_with_trusted_public_key(
+        "nix+https://cache.nixos.org?trusted_public_keys[0]=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=", Some(
+        NixHTTPPathInfoServiceConfig {
+            base_url: "https://cache.nixos.org".try_into().unwrap(),
+            params: NixHTTPPathInfoServiceParams {
+                blob_service: "&root".to_string(),
+                directory_service: "&root".to_string(),
+                trusted_public_keys: vec![
+                    "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=".to_string()
+                ]
+            }
+        }
+    ))]
+    /// Correct Scheme for the cache.nixos.org binary cache, and two correct trusted public keys set
+    #[case::correct_nix_https_with_two_trusted_public_keys(
+        "nix+https://cache.nixos.org?trusted_public_keys[0]=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=&trusted_public_keys[1]=foo:jp4fCEx9tBEId/L0ZsVJ26k0wC0fu7vJqLjjIGFkup8=", Some(
+        NixHTTPPathInfoServiceConfig {
+            base_url: "https://cache.nixos.org".try_into().unwrap(),
+            params: NixHTTPPathInfoServiceParams {
+                blob_service: "&root".to_string(),
+                directory_service: "&root".to_string(),
+                trusted_public_keys: vec![
+                    "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=".to_string(),
+                    "foo:jp4fCEx9tBEId/L0ZsVJ26k0wC0fu7vJqLjjIGFkup8=".to_string()
+                ]
+            }
+        }
+    ))]
+    #[case::wrong_scheme("nix+grpc://example.com", None)]
+    #[case::missing_host("nix+http:///", None)]
+    #[case::missing_authority("nix+http:", None)]
+    /// Correct cache.nixos.org binary cache URL, but wrong `trusted_public_keys` param usage (should be list)
+    #[case::trusted_public_keys_no_sequence(
+        "nix+https://cache.nixos.org?trusted_public_keys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=",
+        None
+    )]
+    /// Correct cache.nixos.org binary cache URL, but wrong param name
+    #[case::trusted_public_keys_wrong_pubkey(
+        "nix+https://cache.nixos.org?trustedpublickeys=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=",
+        None
+    )]
+    fn parse_url(#[case] url_str: &str, #[case] exp_config: Option<NixHTTPPathInfoServiceConfig>) {
+        let url: Url = url_str.parse().expect("url to parse");
+
+        match (NixHTTPPathInfoServiceConfig::try_from(url), exp_config) {
+            (Ok(_), None) => panic!("parsing url unexpectedly succeeded"),
+            (Ok(config), Some(exp_config)) => assert_eq!(exp_config, config),
+            (Err(_), None) => {}
+            (Err(e), Some(_)) => panic!("parsing url unexpectedly failed: {e}"),
+        }
     }
 }
