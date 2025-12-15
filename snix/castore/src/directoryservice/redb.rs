@@ -229,7 +229,12 @@ impl DirectoryService for RedbDirectoryService {
         // FUTUREWORK: Ideally we should have all of the directory traversing happen in a single
         // redb transaction to avoid constantly closing and opening new transactions for the
         // database.
-        traverse_directory(self.clone(), *root_directory_digest).boxed()
+        let svc = self.clone();
+        traverse_directory(*root_directory_digest, move |digest| {
+            let svc = svc.clone();
+            async move { svc.get(&digest).await }
+        })
+        .boxed()
     }
 
     #[instrument(skip_all)]

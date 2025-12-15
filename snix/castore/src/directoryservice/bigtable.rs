@@ -313,7 +313,12 @@ impl DirectoryService for BigtableDirectoryService {
         &self,
         root_directory_digest: &B3Digest,
     ) -> BoxStream<'static, Result<Directory, Error>> {
-        traverse_directory(self.clone(), *root_directory_digest).boxed()
+        let svc = self.clone();
+        traverse_directory(*root_directory_digest, move |digest| {
+            let svc = svc.clone();
+            async move { svc.get(&digest).await }
+        })
+        .boxed()
     }
 
     #[instrument(skip_all, fields(instance_name=%self.instance_name))]

@@ -1,9 +1,8 @@
 use super::Directory;
-use super::DirectoryService;
 use crate::B3Digest;
 use crate::Error;
 use crate::Node;
-use async_stream::try_stream;
+use futures::StreamExt;
 use std::collections::{HashSet, VecDeque};
 use tracing::instrument;
 use tracing::warn;
@@ -11,23 +10,26 @@ use tracing::warn;
 /// Traverses a [Directory] from the root to the children.
 ///
 /// This is mostly BFS, but directories are only returned once.
-#[instrument(skip(directory_service))]
-pub fn traverse_directory<DS: DirectoryService + 'static>(
-    directory_service: DS,
+#[instrument(skip(get_directory))]
+pub fn traverse_directory<F, Fut>(
     root_directory_digest: B3Digest,
-) -> impl futures::Stream<Item = Result<Directory, Error>> + use<DS> {
+    get_directory: F,
+) -> impl futures::Stream<Item = Result<Directory, Error>> + use<F, Fut>
+where
+    F: Fn(B3Digest) -> Fut + Sync + Send + 'static,
+    Fut: Future<Output = Result<Option<Directory>, Error>> + Send,
+{
     // The list of all directories that still need to be traversed. The next
     // element is picked from the front, new elements are enqueued at the
     // back.
-    let mut worklist_directory_digests: VecDeque<B3Digest> =
-        VecDeque::from([root_directory_digest]);
+    let mut worklist_directory_digests = VecDeque::from([root_directory_digest]);
     // The list of directory digests already sent to the consumer.
     // We omit sending the same directories multiple times.
     let mut sent_directory_digests: HashSet<B3Digest> = HashSet::new();
 
-    Box::pin(try_stream! {
+    async_stream::try_stream! {
         while let Some(current_directory_digest) = worklist_directory_digests.pop_front() {
-            let current_directory = match directory_service.get(&current_directory_digest).await.map_err(|e| {
+            let current_directory = match get_directory(current_directory_digest).await.map_err(|e| {
                 warn!("failed to look up directory");
                 Error::StorageError(format!(
                     "unable to look up directory {current_directory_digest}: {e}"
@@ -66,5 +68,5 @@ pub fn traverse_directory<DS: DirectoryService + 'static>(
 
             yield current_directory;
         }
-    })
+    }.boxed()
 }
