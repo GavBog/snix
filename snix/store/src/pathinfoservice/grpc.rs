@@ -4,7 +4,7 @@ use crate::{
     proto::{self, ListPathInfoRequest},
 };
 use async_stream::try_stream;
-use futures::stream::BoxStream;
+use futures::{StreamExt, stream::BoxStream};
 use nix_compat::nixbase32;
 use snix_castore::Error;
 use snix_castore::Node;
@@ -85,7 +85,7 @@ where
     fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>> {
         let mut grpc_client = self.grpc_client.clone();
 
-        let stream = try_stream! {
+        try_stream! {
             let resp = grpc_client.list(ListPathInfoRequest::default()).await;
 
             let mut stream = resp.map_err(|e| Error::StorageError(e.to_string()))?.into_inner();
@@ -97,9 +97,7 @@ where
                     Err(e) => Err(Error::StorageError(e.to_string()))?,
                 }
             }
-        };
-
-        Box::pin(stream)
+        }.boxed()
     }
 
     #[instrument(level = "trace", skip_all)]
