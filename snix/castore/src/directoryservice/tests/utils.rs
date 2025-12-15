@@ -15,7 +15,7 @@ pub async fn make_grpc_directory_service_client() -> Box<dyn DirectoryService> {
 
     // spin up a server, which will only connect once, to the left side.
     tokio::spawn(async {
-        let directory_service = Box::new(gen_test_directory_service()) as Box<dyn DirectoryService>;
+        let directory_service = Box::new(gen_test_directory_service());
 
         let mut server = Server::builder();
         let router = server.add_service(DirectoryServiceServer::new(

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use futures::StreamExt;
-use futures::TryFutureExt;
 use futures::TryStreamExt;
 use futures::stream::BoxStream;
 use tonic::async_trait;
@@ -94,19 +93,22 @@ where
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, Error>> {
-        let near = self.near.clone();
-        let far = self.far.clone();
+    ) -> BoxStream<'_, Result<Directory, Error>> {
+        let near = &self.near;
+        let far = &self.far;
         let digest = *root_directory_digest;
 
-        async move {
+        async_stream::try_stream! {
             let mut directories = near.get_recursive(&digest);
 
             if let Some(first) = directories.try_next().await? {
                 trace!("serving from cache");
-                return Ok(futures::stream::once(async { Ok(first) })
-                    .chain(directories)
-                    .left_stream());
+                yield first;
+
+                while let Some(dir) = directories.try_next().await? {
+                    yield dir;
+                }
+                return;
             }
 
             trace!("not found in near, asking remote…");
@@ -115,29 +117,25 @@ where
             let mut builder = DirectoryGraphBuilder::new_root_to_leaves(digest);
 
             // Return to the client, while inserting to the graph builder.
-            Ok(async_stream::try_stream! {
-                while let Some(directory) = directories.try_next().await? {
-                    builder.try_insert(directory.clone())?;
-                    yield directory;
-                }
-
-                match builder.build() {
-                    Ok(directory_graph) => {
-                        // Drain into near
-                        let mut near_putter = near.put_multiple_start();
-                        for directory in directory_graph.drain_leaves_to_root() {
-                            near_putter.put(directory).await?;
-                        }
-                        let actual_digest = near_putter.close().await?;
-                        debug_assert_eq!(digest, actual_digest);
-                    }
-                    Err(crate::directoryservice::OrderingError::EmptySet) => return,
-                    Err(e) => Err(e)?
-                }
+            while let Some(directory) = directories.try_next().await? {
+                builder.try_insert(directory.clone())?;
+                yield directory;
             }
-            .right_stream())
+
+            match builder.build() {
+                Ok(directory_graph) => {
+                    // Drain into near
+                    let mut near_putter = near.put_multiple_start();
+                    for directory in directory_graph.drain_leaves_to_root() {
+                        near_putter.put(directory).await?;
+                    }
+                    let actual_digest = near_putter.close().await?;
+                    debug_assert_eq!(digest, actual_digest);
+                }
+                Err(crate::directoryservice::OrderingError::EmptySet) => return,
+                Err(e) => Err(e)?
+            }
         }
-        .try_flatten_stream()
         .boxed()
     }
 

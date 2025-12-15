@@ -2,13 +2,10 @@ use std::collections::HashMap;
 use std::collections::hash_map;
 use std::sync::Arc;
 
-use async_stream::try_stream;
 use data_encoding::HEXLOWER;
 use futures::SinkExt;
 use futures::StreamExt;
-use futures::TryFutureExt;
 use futures::TryStreamExt;
-use futures::future::Either;
 use futures::stream::BoxStream;
 use object_store::{ObjectStore, path::Path};
 use prost::Message;
@@ -141,21 +138,20 @@ impl DirectoryService for ObjectStoreDirectoryService {
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, Error>> {
+    ) -> BoxStream<'_, Result<Directory, Error>> {
         // Check that we are not passing on bogus from the object store to the client, and that the
         // trust chain from the root digest to the leaves is intact.
         let dir_path = derive_dirs_path(&self.base_path, root_directory_digest);
-        let object_store = self.object_store.clone();
-        let root_directory_digest = root_directory_digest.to_owned();
+        let object_store = &self.object_store;
+        let root_directory_digest = *root_directory_digest;
 
-        Box::pin(
-            (async move {
+        async_stream::try_stream! {
                 let stream = match object_store.get(&dir_path).await {
                     Ok(v) => v.into_stream(),
                     Err(object_store::Error::NotFound { .. }) => {
-                        return Ok(Either::Left(futures::stream::empty()));
+                        return;
                     }
-                    Err(e) => return Err(std::io::Error::from(e).into()),
+                    Err(e) => Err(Error::StorageError(e.to_string()))?,
                 };
 
                 // get a reader of the response body.
@@ -169,7 +165,6 @@ impl DirectoryService for ObjectStoreDirectoryService {
                     .new_read(decompressed_stream)
                     .err_into::<Error>();
 
-                Ok(Either::Right(try_stream! {
                     let mut order_validator = if let Some(encoded_directory) = encoded_directories.try_next().await? {
                         let directory = parse_proto_directory(&encoded_directory, |digest| {
                             digest == &root_directory_digest
@@ -194,10 +189,7 @@ impl DirectoryService for ObjectStoreDirectoryService {
                     }
 
                     order_validator.finalize().map_err(|e| Error::StorageError(e.to_string()))?;
-                }))
-            })
-            .try_flatten_stream(),
-        )
+        }.boxed()
     }
 
     #[instrument(skip_all)]

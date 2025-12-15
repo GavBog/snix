@@ -1,9 +1,7 @@
 use crate::directoryservice::{DirectoryService, LeavesToRootValidator};
 use crate::{B3Digest, DirectoryError, proto};
-use futures::TryStreamExt;
 use futures::stream::BoxStream;
-use std::ops::Deref;
-use tokio_stream::once;
+use futures::{StreamExt, TryStreamExt};
 use tonic::{Request, Response, Status, Streaming, async_trait};
 use tracing::{instrument, warn};
 
@@ -20,54 +18,57 @@ impl<T> GRPCDirectoryServiceWrapper<T> {
 #[async_trait]
 impl<T> proto::directory_service_server::DirectoryService for GRPCDirectoryServiceWrapper<T>
 where
-    T: Deref<Target = dyn DirectoryService> + Send + Sync + 'static,
+    T: DirectoryService + Clone + Send + Sync + 'static,
 {
     type GetStream = BoxStream<'static, tonic::Result<proto::Directory, Status>>;
 
     #[instrument(skip_all)]
-    async fn get<'a>(
-        &'a self,
+    async fn get(
+        &self,
         request: Request<proto::GetDirectoryRequest>,
     ) -> Result<Response<Self::GetStream>, Status> {
         let req_inner = request.into_inner();
 
-        let by_what = &req_inner
+        match &req_inner
             .by_what
-            .ok_or_else(|| Status::invalid_argument("invalid by_what"))?;
-
-        match by_what {
+            .ok_or_else(|| Status::invalid_argument("invalid by_what"))?
+        {
             proto::get_directory_request::ByWhat::Digest(digest) => {
                 let digest: B3Digest = digest
                     .clone()
                     .try_into()
                     .map_err(|_e| Status::invalid_argument("invalid digest length"))?;
 
-                Ok(tonic::Response::new({
-                    if !req_inner.recursive {
-                        let directory = self
-                            .directory_service
-                            .get(&digest)
-                            .await
-                            .map_err(|e| {
-                                warn!(err = %e, directory.digest=%digest, "failed to get directory");
-                                tonic::Status::new(tonic::Code::Internal, e.to_string())
-                            })?
-                            .ok_or_else(|| {
-                                Status::not_found(format!("directory {digest} not found"))
-                            })?;
+                let directory_service = self.directory_service.clone();
 
-                        Box::pin(once(Ok(directory.into())))
-                    } else {
-                        // If recursive was requested, traverse via get_recursive.
-                        Box::pin(
-                            self.directory_service
-                                .get_recursive(&digest)
-                                .map_ok(proto::Directory::from)
+                Ok(tonic::Response::new({
+                    async_stream::try_stream! {
+                        if !req_inner.recursive {
+                            let directory = directory_service
+                                .get(&digest)
+                                .await
                                 .map_err(|e| {
+                                    warn!(err = %e, directory.digest=%digest, "failed to get directory");
                                     tonic::Status::new(tonic::Code::Internal, e.to_string())
-                                }),
-                        )
-                    }
+                                })?
+                                .ok_or_else(|| {
+                                    Status::not_found(format!("directory {digest} not found"))
+                                })?;
+
+                            yield directory.into();
+                        } else {
+                            // If recursive was requested, traverse via get_recursive.
+                            // We need to use some type acrobatics as prost wants streams with 'static lifetimes.
+                            let mut s = get_recursive_owned(std::sync::Arc::new(directory_service),digest)
+                                .map_ok(proto::Directory::from)
+                                .map_err(|e| tonic::Status::new(tonic::Code::Internal, e.to_string()));
+
+                            while let Some(directory) = s.try_next().await? {
+                                yield directory
+                            }
+                        }
+
+                    }.boxed()
                 }))
             }
         }
@@ -108,4 +109,22 @@ where
             root_digest: directory_putter.close().await?.into(),
         }))
     }
+}
+
+/// The same as [DirectoryService::get_recursive], but returning a stream with a static lifetime.
+/// It's only used for the gRPC server wrapper, which requires static lifetimes.
+fn get_recursive_owned<S>(
+    svc: std::sync::Arc<S>,
+    root_directory_digest: B3Digest,
+) -> BoxStream<'static, Result<crate::Directory, crate::Error>>
+where
+    S: DirectoryService + 'static,
+{
+    async_stream::try_stream! {
+        let mut  directories = svc.get_recursive(&root_directory_digest);
+        while let Some(directory) = directories.try_next().await? {
+            yield directory;
+        }
+    }
+    .boxed()
 }

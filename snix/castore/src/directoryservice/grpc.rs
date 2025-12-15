@@ -4,7 +4,7 @@ use super::{Directory, DirectoryPutter, DirectoryService};
 use crate::composition::{CompositionContext, ServiceBuilder};
 use crate::proto::{self, get_directory_request::ByWhat};
 use crate::{B3Digest, DirectoryError, Error};
-use async_stream::try_stream;
+use futures::StreamExt;
 use futures::stream::BoxStream;
 use std::sync::Arc;
 use tokio::spawn;
@@ -110,8 +110,7 @@ where
     ) -> BoxStream<'static, Result<Directory, Error>> {
         let mut grpc_client = self.grpc_client.clone();
         let root_directory_digest = *root_directory_digest;
-
-        let stream = try_stream! {
+        async_stream::try_stream! {
             let mut stream = grpc_client
                 .get(proto::GetDirectoryRequest {
                     recursive: true,
@@ -184,9 +183,7 @@ where
                     },
                 }
             }
-        };
-
-        Box::pin(stream)
+        }.boxed()
     }
 
     #[instrument(skip_all)]
@@ -345,9 +342,7 @@ mod tests {
             let mut server = tonic::transport::Server::builder();
             let router = server.add_service(
                 crate::proto::directory_service_server::DirectoryServiceServer::new(
-                    GRPCDirectoryServiceWrapper::new(
-                        Box::new(gen_test_directory_service()) as Box<dyn DirectoryService>
-                    ),
+                    GRPCDirectoryServiceWrapper::new(Box::new(gen_test_directory_service())),
                 ),
             );
             router.serve_with_incoming(uds_stream).await

@@ -73,7 +73,7 @@ pub trait DirectoryService: Send + Sync {
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, Error>>;
+    ) -> BoxStream<'_, Result<Directory, Error>>;
 
     /// Allows persisting a closure of [Directory], which is a graph of
     /// connected Directory messages.
