@@ -48,7 +48,7 @@ where
 {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
     async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error> {
-        let path_info = self
+        match self
             .grpc_client
             .clone()
             .get(proto::GetPathInfoRequest {
@@ -56,9 +56,8 @@ where
                     digest.to_vec().into(),
                 )),
             })
-            .await;
-
-        match path_info {
+            .await
+        {
             Ok(path_info) => Ok(Some(
                 PathInfo::try_from(path_info.into_inner())
                     .map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?,
