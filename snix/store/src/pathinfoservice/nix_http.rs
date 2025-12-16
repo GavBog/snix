@@ -1,5 +1,5 @@
 use super::{PathInfo, PathInfoService};
-use crate::nar::ingest_nar_and_hash;
+use crate::nar::{NarIngestionError, ingest_nar_and_hash};
 use futures::{TryStreamExt, stream::BoxStream};
 use nix_compat::{
     narinfo::{self, NarInfo, Signature},
@@ -9,11 +9,11 @@ use nix_compat::{
 };
 use reqwest::StatusCode;
 use snix_castore::composition::{CompositionContext, ServiceBuilder};
-use snix_castore::{Error, blobservice::BlobService, directoryservice::DirectoryService};
+use snix_castore::{blobservice::BlobService, directoryservice::DirectoryService};
 use std::sync::Arc;
 use tokio::io::{self, AsyncRead};
 use tonic::async_trait;
-use tracing::{debug, instrument, warn};
+use tracing::{Span, instrument, warn};
 use url::Url;
 
 /// NixHTTPPathInfoService acts as a bridge in between the Nix HTTP Binary cache
@@ -55,8 +55,7 @@ impl<BS, DS> NixHTTPPathInfoService<BS, DS> {
         let mut trusted_public_keys = Vec::new();
         for s in config.params.trusted_public_keys {
             trusted_public_keys.push(
-                narinfo::VerifyingKey::parse(&s)
-                    .map_err(|e| Error::StorageError(format!("invalid public key: {e}")))?,
+                narinfo::VerifyingKey::parse(&s).map_err(|e| Error::ParseTrustedPublicKey(s, e))?,
             )
         }
 
@@ -77,6 +76,56 @@ impl<BS, DS> NixHTTPPathInfoService<BS, DS> {
             trusted_public_keys,
         })
     }
+
+    #[instrument(level=tracing::Level::TRACE, skip_all,fields(path.digest=nixbase32::encode(&digest)),err)]
+    fn derive_narinfo_url(&self, digest: [u8; 20]) -> Result<Url, Error> {
+        let s = format!("{}.narinfo", nixbase32::encode(&digest));
+        self.base_url
+            .join(&s)
+            .map_err(|e| Error::JoinUrl(self.base_url.to_owned(), s.to_owned(), e))
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("wrong arguments: {0}")]
+    WrongConfig(&'static str),
+    #[error("serde-qs error: {0}")]
+    SerdeQS(#[from] serde_qs::Error),
+    #[error("unable to parse pubkey {0}")]
+    ParseTrustedPublicKey(String, nix_compat::narinfo::VerifyingKeyError),
+
+    #[error("unable to join URL {0} with {1}")]
+    JoinUrl(Url, String, url::ParseError),
+    #[error("unable to send request")]
+    Reqwest(#[from] reqwest_middleware::Error),
+    #[error("unable to decode NARInfo response as string")]
+    DecodeBody(reqwest::Error),
+    #[error("unable to parse NARInfo")]
+    ParseNARInfo(nix_compat::narinfo::Error),
+    #[error("no valid signature found")]
+    NoValidSignature,
+    #[error("failed to request NAR, status {0}")]
+    FailedToRequestNAR(reqwest::StatusCode),
+    #[error("unsupported NAR compression: {0}")]
+    UnsupportedNARCompression(String),
+    #[error("failed to ingest NAR")]
+    IngestNAR(NarIngestionError),
+    #[error("NARSize mismatch, narinfo size {narinfo_size}, actual size {actual_size}")]
+    NARSizeMismatch { narinfo_size: u64, actual_size: u64 },
+    #[error("NARHash mismatch, narinfo NARHash {exp}, actual NARHash {act}",
+        exp = NixHash::Sha256(*.narinfo_nar_sha256),
+        act = NixHash::Sha256(*.actual_nar_sha256))]
+    NARHashMismatch {
+        narinfo_nar_sha256: [u8; 32],
+        actual_nar_sha256: [u8; 32],
+    },
+}
+
+impl From<Error> for snix_castore::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
+    }
 }
 
 #[async_trait]
@@ -86,29 +135,18 @@ where
     DS: DirectoryService + Send + Sync + Clone + 'static,
 {
     #[instrument(skip_all, err, fields(path.digest=nixbase32::encode(&digest), instance_name=%self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error> {
-        let narinfo_url = self
-            .base_url
-            .join(&format!("{}.narinfo", nixbase32::encode(&digest)))
-            .map_err(|e| {
-                warn!(e = %e, "unable to join URL");
-                io::Error::new(io::ErrorKind::InvalidInput, "unable to join url")
-            })?;
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+        let narinfo_url = self.derive_narinfo_url(digest)?;
 
-        debug!(narinfo_url= %narinfo_url, "constructed NARInfo url");
+        let span = Span::current();
+        span.record("narinfo.url", narinfo_url.to_string());
 
         let resp = self
             .http_client
             .get(narinfo_url)
             .send()
             .await
-            .map_err(|e| {
-                warn!(e=%e,"unable to send NARInfo request");
-                io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "unable to send NARInfo request",
-                )
-            })?;
+            .map_err(Error::Reqwest)?;
 
         // In the case of a 404, return a NotFound.
         // We also return a NotFound in case of a 403 - this is to match the behaviour as Nix,
@@ -117,22 +155,10 @@ where
             return Ok(None);
         }
 
-        let narinfo_str = resp.text().await.map_err(|e| {
-            warn!(e=%e,"unable to decode response as string");
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                "unable to decode response as string",
-            )
-        })?;
+        let narinfo_str = resp.text().await.map_err(Error::DecodeBody)?;
 
         // parse the received narinfo
-        let narinfo = NarInfo::parse(&narinfo_str).map_err(|e| {
-            warn!(e=%e,"unable to parse response as NarInfo");
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                "unable to parse response as NarInfo",
-            )
-        })?;
+        let narinfo = NarInfo::parse(&narinfo_str).map_err(Error::ParseNARInfo)?;
 
         // if [self.trusted_public_keys] is set, ensure there's at least one valid signature.
         if !self.trusted_public_keys.is_empty() {
@@ -144,11 +170,7 @@ where
                     .iter()
                     .any(|sig| pubkey.verify(&fingerprint, sig))
             }) {
-                warn!("no valid signature found");
-                Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "no valid signature found",
-                ))?;
+                Err(Error::NoValidSignature)?
             }
         }
 
@@ -159,29 +181,22 @@ where
         // StorePath) and avoid downloading the same NAR a second time.
 
         // create a request for the NAR file itself.
-        let nar_url = self.base_url.join(narinfo.url).map_err(|e| {
-            warn!(e = %e, "unable to join URL");
-            io::Error::new(io::ErrorKind::InvalidInput, "unable to join url")
-        })?;
-        debug!(nar_url= %nar_url, "constructed NAR url");
+        let nar_url = self
+            .base_url
+            .join(narinfo.url)
+            .map_err(|e| Error::JoinUrl(self.base_url.clone(), narinfo.url.to_owned(), e))?;
+        span.record("nar.url", nar_url.to_string());
 
         let resp = self
             .http_client
             .get(nar_url.clone())
             .send()
             .await
-            .map_err(|e| {
-                warn!(e=%e,"unable to send NAR request");
-                io::Error::new(io::ErrorKind::InvalidInput, "unable to send NAR request")
-            })?;
+            .map_err(Error::Reqwest)?;
 
         // if the request is not successful, return an error.
         if !resp.status().is_success() {
-            return Err(Error::StorageError(format!(
-                "unable to retrieve NAR at {}, status {}",
-                nar_url,
-                resp.status()
-            )));
+            Err(Error::FailedToRequestNAR(resp.status()))?;
         }
 
         // get a reader of the response body.
@@ -202,11 +217,7 @@ where
                 as Box<dyn AsyncRead + Send + Unpin>,
             Some("zstd") => Box::new(async_compression::tokio::bufread::ZstdDecoder::new(r))
                 as Box<dyn AsyncRead + Send + Unpin>,
-            Some(comp_str) => {
-                return Err(Error::StorageError(format!(
-                    "unsupported compression: {comp_str}"
-                )));
-            }
+            Some(comp_str) => Err(Error::UnsupportedNARCompression(comp_str.to_owned()))?,
         };
 
         let (root_node, nar_hash, nar_size) = ingest_nar_and_hash(
@@ -216,30 +227,20 @@ where
             &narinfo.ca,
         )
         .await
-        .map_err(io::Error::other)?;
+        .map_err(Error::IngestNAR)?;
 
         // ensure the ingested narhash and narsize do actually match.
         if narinfo.nar_size != nar_size {
-            warn!(
-                narinfo.nar_size = narinfo.nar_size,
-                http.nar_size = nar_size,
-                "NarSize mismatch"
-            );
-            Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "NarSize mismatch".to_string(),
-            ))?;
+            Err(Error::NARSizeMismatch {
+                narinfo_size: narinfo.nar_size,
+                actual_size: nar_size,
+            })?
         }
         if narinfo.nar_hash != nar_hash {
-            warn!(
-                narinfo.nar_hash = %NixHash::Sha256(narinfo.nar_hash),
-                http.nar_hash = %NixHash::Sha256(nar_hash),
-                "NarHash mismatch"
-            );
-            Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "NarHash mismatch".to_string(),
-            ))?;
+            Err(Error::NARHashMismatch {
+                narinfo_nar_sha256: narinfo.nar_hash,
+                actual_nar_sha256: nar_hash,
+            })?
         }
 
         Ok(Some(PathInfo {
@@ -259,15 +260,15 @@ where
     }
 
     #[instrument(skip_all, fields(path_info=?_path_info, instance_name=%self.instance_name))]
-    async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, Error> {
-        Err(Error::InvalidRequest(
+    async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
+        Err(snix_castore::Error::InvalidRequest(
             "put not supported for this backend".to_string(),
         ))
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
         Box::pin(futures::stream::once(async {
-            Err(Error::InvalidRequest(
+            Err(snix_castore::Error::InvalidRequest(
                 "list not supported for this backend".to_string(),
             ))
         }))
@@ -309,20 +310,16 @@ impl TryFrom<Url> for NixHTTPPathInfoServiceConfig {
         let scheme = url
             .scheme()
             .strip_prefix("nix+")
-            .ok_or_else(|| Error::StorageError("scheme must start with nix+".to_string()))?;
+            .ok_or_else(|| Error::WrongConfig("scheme must start with nix+"))?;
 
         if !url.has_authority() {
-            Err(Error::StorageError(
-                "url must have authority component".to_string(),
-            ))?
+            Err(Error::WrongConfig("url must have authority component"))?
         }
         if !url.has_host() {
-            Err(Error::StorageError(
-                "url must have host component".to_string(),
-            ))?
+            Err(Error::WrongConfig("url must have host component"))?
         }
         if !["http", "https"].contains(&scheme) {
-            Err(Error::StorageError("unknown scheme".to_string()))?
+            Err(Error::WrongConfig("unknown scheme"))?
         }
 
         Ok(NixHTTPPathInfoServiceConfig {
@@ -341,8 +338,7 @@ impl TryFrom<Url> for NixHTTPPathInfoServiceConfig {
                 url.set_query(None);
                 url
             },
-            params: serde_qs::from_str(url.query().unwrap_or_default())
-                .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?,
+            params: serde_qs::from_str(url.query().unwrap_or_default())?,
         })
     }
 }
