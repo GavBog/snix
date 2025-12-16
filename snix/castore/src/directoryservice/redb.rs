@@ -7,7 +7,7 @@ use tracing::{instrument, warn};
 
 use super::{Directory, DirectoryPutter, DirectoryService, traverse_directory};
 use crate::{
-    B3Digest, Error,
+    B3Digest,
     composition::{CompositionContext, ServiceBuilder},
     directoryservice::directory_graph::DirectoryGraphBuilder,
     proto,
@@ -22,18 +22,16 @@ enum Db {
 }
 
 impl Db {
-    fn begin_read(&self) -> Result<redb::ReadTransaction, redb::TransactionError> {
+    fn begin_read(&self) -> Result<redb::ReadTransaction, Error> {
         match self {
-            Db::ReadOnly(db) => db.begin_read(),
-            Db::ReadWrite(db) => db.begin_read(),
+            Db::ReadOnly(db) => Ok(db.begin_read()?),
+            Db::ReadWrite(db) => Ok(db.begin_read()?),
         }
     }
 
     fn begin_write(&self) -> Result<redb::WriteTransaction, Error> {
         match self {
-            Db::ReadOnly(_) => Err(Error::StorageError(
-                "unable to open write txn, database is opened read-only".to_string(),
-            )),
+            Db::ReadOnly(_) => Err(Error::OpenedReadonly),
             Db::ReadWrite(db) => Ok(db.begin_write()?),
         }
     }
@@ -55,12 +53,10 @@ impl RedbDirectoryService {
     ) -> Result<Self, Error> {
         if let Some(path) = config.path.clone() {
             if &path == "" {
-                return Err(Error::StorageError("empty path is disallowed".to_string()));
+                return Err(Error::WrongConfig("empty path is disallowed"));
             }
             if &path == "/" {
-                return Err(Error::StorageError(
-                    "cowardly refusing to open / with redb".to_string(),
-                ));
+                return Err(Error::WrongConfig("cowardly refusing to open / with redb"));
             }
 
             if config.read_only {
@@ -84,7 +80,7 @@ impl RedbDirectoryService {
 
                 let db = builder.create(path)?;
                 create_schema(&db)?;
-                Ok::<_, redb::Error>(db)
+                Ok::<_, Error>(db)
             })
             .await??;
 
@@ -109,9 +105,7 @@ impl RedbDirectoryService {
         );
 
         if config.read_only {
-            return Err(Error::StorageError(
-                "in-memory database cannot be read-only".to_string(),
-            ));
+            return Err(Error::WrongConfig("in-memory database cannot be read-only"));
         }
 
         let mut builder = redb::Database::builder();
@@ -139,7 +133,7 @@ fn configure_builder(builder: &mut redb::Builder, config: &RedbDirectoryServiceC
 /// Opens a write transaction and calls open_table on DIRECTORY_TABLE, which will
 /// create it if not present.
 #[allow(clippy::result_large_err)]
-fn create_schema(db: &redb::Database) -> Result<(), redb::Error> {
+fn create_schema(db: &redb::Database) -> Result<(), Error> {
     let txn = db.begin_write()?;
     txn.open_table(DIRECTORY_TABLE)?;
     txn.commit()?;
@@ -150,59 +144,44 @@ fn create_schema(db: &redb::Database) -> Result<(), redb::Error> {
 #[async_trait]
 impl DirectoryService for RedbDirectoryService {
     #[instrument(skip(self, digest), fields(directory.digest = %digest, instance_name = %self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
         let db = self.db.clone();
         let digest = *digest;
         // Retrieves the protobuf-encoded Directory for the corresponding digest.
-        let db_get_resp = tokio::task::spawn_blocking(move || -> Result<_, redb::Error> {
+        let directory_data = match tokio::task::spawn_blocking(move || -> Result<_, Error> {
             let txn = db.begin_read()?;
             let table = txn.open_table(DIRECTORY_TABLE)?;
             Ok(table.get(*digest)?)
         })
-        .await?
-        .map_err(|e| {
-            warn!(err=%e, "failed to retrieve Directory");
-            Error::StorageError("failed to retrieve Directory".to_string())
-        })?;
-
-        // The Directory was not found, return None.
-        let directory_data = match db_get_resp {
+        .await??
+        {
+            // The Directory was not found, return None.
             None => return Ok(None),
-            Some(d) => d,
+            Some(directory_data) => directory_data.value(),
         };
 
         // We check that the digest of the retrieved Directory matches the expected digest.
-        let actual_digest = blake3::hash(directory_data.value().as_slice());
-        if actual_digest.as_bytes() != digest.as_slice() {
-            warn!(directory.actual_digest=%actual_digest, "requested Directory got the wrong digest");
-            return Err(Error::StorageError(
-                "requested Directory got the wrong digest".to_string(),
-            ));
+        let actual = B3Digest::from(blake3::hash(&directory_data));
+        if actual != digest {
+            return Err(Error::WrongDigest {
+                expected: digest,
+                actual,
+            }
+            .into());
         }
 
-        // Attempt to decode the retrieved protobuf-encoded Directory, returning a parsing error if
-        // the decoding failed.
-        let directory = match proto::Directory::decode(&*directory_data.value()) {
-            Ok(dir) => {
-                // The returned Directory must be valid.
-                dir.try_into().map_err(|e| {
-                    warn!(err=%e, "Directory failed validation");
-                    Error::StorageError("Directory failed validation".to_string())
-                })?
-            }
-            Err(e) => {
-                warn!(err=%e, "failed to parse Directory");
-                return Err(Error::StorageError("failed to parse Directory".to_string()));
-            }
-        };
+        // Attempt to decode the retrieved protobuf-encoded Directory
+        let proto_directory =
+            proto::Directory::decode(directory_data.as_slice()).map_err(Error::ProtobufDecode)?;
+        let directory = Directory::try_from(proto_directory).map_err(Error::DirectoryValidation)?;
 
         Ok(Some(directory))
     }
 
     #[instrument(skip(self, directory), fields(directory.digest = %directory.digest(), instance_name = %self.instance_name))]
-    async fn put(&self, directory: Directory) -> Result<B3Digest, Error> {
+    async fn put(&self, directory: Directory) -> Result<B3Digest, crate::Error> {
         let db = self.db.clone();
-        tokio::task::spawn_blocking(move || {
+        let digest = tokio::task::spawn_blocking(move || -> Result<_, Error> {
             let digest = directory.digest();
 
             // Store the directory in the table.
@@ -218,14 +197,16 @@ impl DirectoryService for RedbDirectoryService {
 
             Ok(digest)
         })
-        .await?
+        .await??;
+
+        Ok(digest)
     }
 
     #[instrument(skip_all, fields(directory.digest = %root_directory_digest, instance_name = %self.instance_name))]
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, Error>> {
+    ) -> BoxStream<'static, Result<Directory, crate::Error>> {
         // FUTUREWORK: Ideally we should have all of the directory traversing happen in a single
         // redb transaction to avoid constantly closing and opening new transactions for the
         // database.
@@ -257,30 +238,32 @@ pub struct RedbDirectoryPutter<'a> {
 #[async_trait]
 impl DirectoryPutter for RedbDirectoryPutter<'_> {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
-    async fn put(&mut self, directory: Directory) -> Result<(), Error> {
+    async fn put(&mut self, directory: Directory) -> Result<(), crate::Error> {
         let builder = self
             .builder
             .as_mut()
-            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+            .ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
 
-        builder.try_insert(directory)?;
+        builder
+            .try_insert(directory)
+            .map_err(Error::DirectoryOrdering)?;
 
         Ok(())
     }
 
     #[instrument(level = "trace", skip_all, ret, err)]
-    async fn close(&mut self) -> Result<B3Digest, Error> {
+    async fn close(&mut self) -> Result<B3Digest, crate::Error> {
         let builder = self
             .builder
             .take()
-            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+            .ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
 
         // Insert all directories as a batch.
-        tokio::task::spawn_blocking({
+        let root_digest = tokio::task::spawn_blocking({
             let txn = self.db.begin_write()?;
             move || {
                 // Retrieve the validated directories.
-                let directory_graph = builder.build()?;
+                let directory_graph = builder.build().map_err(Error::DirectoryOrdering)?;
                 let root_digest = directory_graph.root().digest();
 
                 // Looping over all the verified directories, queuing them up for a
@@ -296,10 +279,62 @@ impl DirectoryPutter for RedbDirectoryPutter<'_> {
                 }
                 txn.commit()?;
 
-                Ok(root_digest)
+                Ok::<_, Error>(root_digest)
             }
         })
-        .await?
+        .await??;
+
+        Ok(root_digest)
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("wrong arguments: {0}")]
+    WrongConfig(&'static str),
+    #[error("serde-qs error: {0}")]
+    SerdeQS(#[from] serde_qs::Error),
+
+    #[error("Directory Graph ordering error")]
+    DirectoryOrdering(#[from] crate::directoryservice::OrderingError),
+
+    #[error("DirectoryPutter already closed")]
+    DirectoryPutterAlreadyClosed,
+
+    #[error("requested directory has wrong digest, expected {expected}, actual {actual}")]
+    WrongDigest {
+        expected: B3Digest,
+        actual: B3Digest,
+    },
+    #[error("failed to decode protobuf: {0}")]
+    ProtobufDecode(#[from] prost::DecodeError),
+    #[error("failed to validate directory: {0}")]
+    DirectoryValidation(#[from] crate::DirectoryError),
+
+    #[error("unable to open write txn, database opened read-only")]
+    OpenedReadonly,
+    #[error("redb commit error: {0}")]
+    RedbCommit(#[from] redb::CommitError),
+    #[error("redb database error: {0}")]
+    RedbDatabase(#[from] redb::DatabaseError),
+    #[error("redb error: {0}")]
+    Redb(#[from] redb::Error),
+    #[error("redb storage error: {0}")]
+    RedbStorage(#[from] redb::StorageError),
+    #[error("redb table error: {0}")]
+    RedbTable(#[from] redb::TableError),
+    #[error("redb txn error: {0}")]
+    RedbTransaction(#[from] redb::TransactionError),
+
+    #[error("join error: {0}")]
+    TokioJoin(#[from] tokio::task::JoinError),
+    #[error("io error: {0}")]
+    IO(#[from] std::io::Error),
+}
+
+impl From<Error> for crate::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
     }
 }
 
@@ -321,30 +356,26 @@ impl TryFrom<url::Url> for RedbDirectoryServiceConfig {
 
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
         if url.has_host() {
-            return Err(Error::StorageError("no host allowed".to_string()).into());
+            return Err(Error::WrongConfig("no host allowed").into());
         }
 
         let path: Option<PathBuf> = match (url.scheme(), url.has_authority(), url.path()) {
             ("redb+memory", false, "") => None,
-            ("redb+memory", false, _) => Err(Box::new(Error::StorageError(
-                "redb+memory with path is disallowed".to_string(),
+            ("redb+memory", false, _) => Err(Box::new(Error::WrongConfig(
+                "redb+memory with path is disallowed",
             )))?,
-            ("redb+memory", true, _) => Err(Box::new(Error::StorageError(
-                "redb+memory may not have authority".to_string(),
+            ("redb+memory", true, _) => Err(Box::new(Error::WrongConfig(
+                "redb+memory may not have authority",
             )))?,
-            ("redb", _, "") => Err(Box::new(Error::StorageError(
-                "redb without path is disallowed, use redb+memory if you want in-memory"
-                    .to_string(),
+            ("redb", _, "") => Err(Box::new(Error::WrongConfig(
+                "redb without path is disallowed, use redb+memory if you want in-memory",
             )))?,
             ("redb", _, path) => Some(path.into()),
-            (_scheme, _, _) => Err(Box::new(Error::StorageError(
-                "Unrecognized scheme".to_string(),
-            )))?,
+            (_scheme, _, _) => Err(Box::new(Error::WrongConfig("unrecognized scheme")))?,
         };
 
         let mut config: RedbDirectoryServiceConfig =
-            serde_qs::from_str(url.query().unwrap_or_default())
-                .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?;
+            serde_qs::from_str(url.query().unwrap_or_default())?;
 
         config.path = path;
 
