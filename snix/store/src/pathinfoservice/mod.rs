@@ -44,11 +44,10 @@ pub use self::fs::make_fs;
 #[async_trait]
 #[auto_impl(&, &mut, Arc, Box)]
 pub trait PathInfoService: Send + Sync {
-    /// Retrieve a PathInfo message by the output digest.
+    /// Retrieve a PathInfo by the output digest.
     async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error>;
 
-    /// Store a PathInfo message. Implementations MUST call validate and reject
-    /// invalid messages.
+    /// Store a PathInfo.
     async fn put(&self, path_info: PathInfo) -> Result<PathInfo, Error>;
 
     /// Iterate over all PathInfo objects in the store.
