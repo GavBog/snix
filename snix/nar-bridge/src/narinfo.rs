@@ -23,15 +23,10 @@ pub async fn head(
     let digest = nix_http::parse_narinfo_str(&narinfo_str).ok_or(StatusCode::NOT_FOUND)?;
     Span::current().record("path_info.digest", &narinfo_str[0..32]);
 
-    if path_info_service
-        .get(digest)
-        .await
-        .map_err(|e| {
-            warn!(err=%e, "failed to get PathInfo");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?
-        .is_some()
-    {
+    if path_info_service.has(digest).await.map_err(|e| {
+        warn!(err=%e, "failed to get PathInfo");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })? {
         Ok(([("content-type", nix_http::MIME_TYPE_NARINFO)], ""))
     } else {
         warn!("PathInfo not found");

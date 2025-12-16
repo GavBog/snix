@@ -57,6 +57,12 @@ where
         }
     }
 
+    #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
+    async fn has(&self, digest: [u8; 20]) -> Result<bool, Error> {
+        // FUTUREWORK: queue background tasks if ! self.near.has && self.far.has ? (configurable)
+        Ok(self.near.has(digest).await? || self.far.has(digest).await?)
+    }
+
     async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, Error> {
         Err(Error::StorageError("unimplemented".to_string()))
     }

@@ -47,6 +47,13 @@ pub trait PathInfoService: Send + Sync {
     /// Retrieve a PathInfo by the output digest.
     async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error>;
 
+    /// Check if a PathInfo exists.
+    /// Has a naïve default impl, but store implementations may decide to
+    /// implement their own.
+    async fn has(&self, digest: [u8; 20]) -> Result<bool, Error> {
+        Ok(self.get(digest).await?.is_some())
+    }
+
     /// Store a PathInfo.
     async fn put(&self, path_info: PathInfo) -> Result<PathInfo, Error>;
 

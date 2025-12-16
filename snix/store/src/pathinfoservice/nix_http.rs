@@ -259,6 +259,30 @@ where
         }))
     }
 
+    #[instrument(skip_all, err, fields(path.digest=nixbase32::encode(&digest), instance_name=%self.instance_name))]
+    async fn has(&self, digest: [u8; 20]) -> Result<bool, snix_castore::Error> {
+        let narinfo_url = self.derive_narinfo_url(digest)?;
+
+        let span = Span::current();
+        span.record("narinfo.url", narinfo_url.to_string());
+
+        let resp = self
+            .http_client
+            .head(narinfo_url)
+            .send()
+            .await
+            .map_err(Error::Reqwest)?;
+
+        // In the case of a 404, return a NotFound.
+        // We also return a NotFound in case of a 403 - this is to match the behaviour as Nix,
+        // when querying nix-cache.s3.amazonaws.com directly, rather than cache.nixos.org.
+        if resp.status() == StatusCode::NOT_FOUND || resp.status() == StatusCode::FORBIDDEN {
+            Ok(false)
+        } else {
+            Ok(true)
+        }
+    }
+
     #[instrument(skip_all, fields(path_info=?_path_info, instance_name=%self.instance_name))]
     async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
         Err(snix_castore::Error::InvalidRequest(
