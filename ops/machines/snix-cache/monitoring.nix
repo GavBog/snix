@@ -25,6 +25,8 @@ in
         grpc.endpoint = "127.0.0.1:4319";
       };
 
+      memberlist.bind_addr = [ "127.0.0.1" ];
+
       storage.trace = {
         backend = "local";
         wal.path = "/var/lib/tempo/wal";
@@ -103,11 +105,18 @@ in
     # https://github.com/grafana/mimir/discussions/8773
     compactor.sharding_ring.instance_addr = "127.0.0.1";
     distributor.ring.instance_addr = "127.0.0.1";
-    store_gateway.sharding_ring.instance_addr = "127.0.0.1";
+    frontend.address = "127.0.0.1";
+    frontend.port = 9096;
     ingester.ring.instance_addr = "127.0.0.1";
     ingester.ring.replication_factor = 1;
+    ruler.query_frontend.address = "127.0.0.1";
+    query_scheduler.ring.instance_addr = "127.0.0.1";
+    query_scheduler.ring.instance_port = 7947;
+    store_gateway.sharding_ring.instance_addr = "127.0.0.1";
 
     memberlist.advertise_addr = "127.0.0.1";
+    memberlist.bind_port = 7947; # 7946 already occupied
+    memberlist.advertise_port = 7947; # 7946 already occupied
   };
 
   services.grafana = {
