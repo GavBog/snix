@@ -2,18 +2,16 @@ use super::{PathInfo, PathInfoService};
 use crate::proto;
 use async_stream::try_stream;
 use bigtable_rs::{bigtable, google::bigtable::v2 as bigtable_v2};
-use bytes::Bytes;
 use data_encoding::HEXLOWER;
-use futures::stream::BoxStream;
+use futures::{StreamExt, TryStreamExt, stream::BoxStream};
 use nix_compat::nixbase32;
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationSeconds, serde_as};
-use snix_castore::Error;
 use snix_castore::composition::{CompositionContext, ServiceBuilder};
 use std::sync::Arc;
 use tonic::async_trait;
-use tracing::{Span, instrument, trace, warn};
+use tracing::{Span, instrument, trace};
 
 /// There should not be more than 10 MiB in a single cell.
 /// <https://cloud.google.com/bigtable/docs/schema-design#cells>
@@ -158,7 +156,7 @@ fn derive_pathinfo_key(digest: &[u8; 20]) -> String {
 #[async_trait]
 impl PathInfoService for BigtablePathInfoService {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
         let mut client = self.client.clone();
         let path_info_key = derive_pathinfo_key(&digest);
 
@@ -200,14 +198,15 @@ impl PathInfoService for BigtablePathInfoService {
         let mut response = client
             .read_rows(request)
             .await
-            .map_err(|e| Error::StorageError(format!("unable to read rows: {e}")))?;
+            .map_err(|e| Error::BigTable {
+                msg: "reading rows",
+                source: e,
+            })?;
 
         if response.len() != 1 {
             if response.len() > 1 {
                 // This shouldn't happen, we limit number of rows to 1
-                return Err(Error::StorageError(
-                    "got more than one row from bigtable".into(),
-                ));
+                Err(Error::UnexpectedDataReturned("got more than one row"))?
             }
             // else, this is simply a "not found".
             return Ok(None);
@@ -216,53 +215,46 @@ impl PathInfoService for BigtablePathInfoService {
         let (row_key, mut cells) = response.pop().unwrap();
         if row_key != path_info_key.as_bytes() {
             // This shouldn't happen, we requested this row key.
-            return Err(Error::StorageError(
-                "got wrong row key from bigtable".into(),
-            ));
+            Err(Error::UnexpectedDataReturned("got wrong row key"))?
         }
 
         let cell = cells
             .pop()
-            .ok_or_else(|| Error::StorageError("found no cells".into()))?;
+            .ok_or_else(|| Error::UnexpectedDataReturned("found no cells"))?;
 
         // Ensure there's only one cell (so no more left after the pop())
         // This shouldn't happen, We filter out other cells in our query.
         if !cells.is_empty() {
-            return Err(Error::StorageError(
-                "more than one cell returned from bigtable".into(),
-            ));
+            Err(Error::UnexpectedDataReturned("got more than one cell"))?
         }
 
         // We also require the qualifier to be correct in the filter above,
         // so this shouldn't happen.
         if path_info_key.as_bytes() != cell.qualifier {
-            return Err(Error::StorageError("unexpected cell qualifier".into()));
+            Err(Error::UnexpectedDataReturned("unexpected cell qualifier"))?
         }
 
         // Try to parse the value into a PathInfo message
-        let path_info_proto = proto::PathInfo::decode(Bytes::from(cell.value))
-            .map_err(|e| Error::StorageError(format!("unable to decode pathinfo proto: {e}")))?;
+        let path_info_proto =
+            proto::PathInfo::decode(cell.value.as_slice()).map_err(Error::ProtobufDecode)?;
 
-        let path_info = PathInfo::try_from(path_info_proto)
-            .map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?;
+        let path_info = PathInfo::try_from(path_info_proto).map_err(Error::PathInfoValidation)?;
 
         if path_info.store_path.digest() != &digest {
-            return Err(Error::StorageError("PathInfo has unexpected digest".into()));
+            Err(Error::PathInfoUnexpectedDigest)?;
         }
 
         Ok(Some(path_info))
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.root_node = ?path_info.node, instance_name = %self.instance_name))]
-    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, Error> {
+    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
         let mut client = self.client.clone();
         let path_info_key = derive_pathinfo_key(path_info.store_path.digest());
 
         let data = proto::PathInfo::from(path_info.clone()).encode_to_vec();
         if data.len() as u64 > CELL_SIZE_LIMIT {
-            return Err(Error::StorageError(
-                "PathInfo exceeds cell limit on Bigtable".into(),
-            ));
+            Err(Error::PathInfoTooBig)?;
         }
 
         let resp = client
@@ -294,7 +286,10 @@ impl PathInfoService for BigtablePathInfoService {
                 ],
             })
             .await
-            .map_err(|e| Error::StorageError(format!("unable to mutate rows: {e}")))?;
+            .map_err(|e| Error::BigTable {
+                msg: "mutating rows",
+                source: e,
+            })?;
 
         if resp.predicate_matched {
             trace!("already existed")
@@ -303,7 +298,7 @@ impl PathInfoService for BigtablePathInfoService {
         Ok(path_info)
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
         let mut client = self.client.clone();
 
         let request = bigtable_v2::ReadRowsRequest {
@@ -317,56 +312,90 @@ impl PathInfoService for BigtablePathInfoService {
             ..Default::default()
         };
 
-        let stream = try_stream! {
+        try_stream! {
             let mut rows = client
                 .stream_rows(request)
                 .await
-                .map_err(|e| Error::StorageError(format!("unable to read rows: {e}")))?.enumerate();
+                .map_err(|e| Error::BigTable {
+                    msg: "send stream rows request",
+                    source: e,
+                })?;
 
-            use futures::stream::StreamExt;
-
-            while let Some((i, elem)) = rows.next().await {
-                let (row_key, mut cells) = elem.map_err(|e| Error::StorageError(format!("unable to stream row {i}: {e}")))?;
+            while let Some((row_key, mut cells)) =
+                rows.try_next().await.map_err(|e| Error::BigTable {
+                    msg: "stream rows",
+                    source: e,
+                })?
+            {
                 let span = Span::current();
                 span.record("row.key", bstr::BStr::new(&row_key).to_string());
 
                 let cell = cells
                     .pop()
-                    .ok_or_else(|| Error::StorageError("found no cells".into()))?;
+                    .ok_or_else(|| Error::UnexpectedDataReturned("found no cells"))?;
 
                 // Ensure there's only one cell (so no more left after the pop())
                 // This shouldn't happen, We filter out other cells in our query.
                 if !cells.is_empty() {
-
-                    Err(Error::StorageError(
-                        "more than one cell returned from bigtable".into(),
-                    ))?
+                    Err(Error::UnexpectedDataReturned("got more than one cell"))?
                 }
 
                 // The cell must have the same qualifier as the row key
                 if row_key != cell.qualifier {
-                    warn!("unexpected cell qualifier");
-                    Err(Error::StorageError("unexpected cell qualifier".into()))?;
+                    Err(Error::UnexpectedDataReturned("unexpected cell qualifier"))?
                 }
 
                 // Try to parse the value into a PathInfo message.
-                let path_info_proto = proto::PathInfo::decode(Bytes::from(cell.value))
-                    .map_err(|e| Error::StorageError(format!("unable to decode pathinfo proto: {e}")))?;
+                let path_info_proto =
+                    proto::PathInfo::decode(cell.value.as_slice()).map_err(Error::ProtobufDecode)?;
 
-                let path_info = PathInfo::try_from(path_info_proto).map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?;
+                let path_info =
+                    PathInfo::try_from(path_info_proto).map_err(Error::PathInfoValidation)?;
 
                 let exp_path_info_key = derive_pathinfo_key(path_info.store_path.digest());
 
                 if exp_path_info_key.as_bytes() != row_key.as_slice() {
-                    Err(Error::StorageError("PathInfo has unexpected digest".into()))?
+                    Err(Error::PathInfoUnexpectedDigest)?;
                 }
-
 
                 yield path_info
             }
-        };
+        }
+        .boxed()
+    }
+}
 
-        Box::pin(stream)
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("wrong arguments: {0}")]
+    WrongConfig(&'static str),
+    #[error("serde-qs error: {0}")]
+    SerdeQS(#[from] serde_qs::Error),
+
+    #[error("failed to decode protobuf: {0}")]
+    ProtobufDecode(#[from] prost::DecodeError),
+    #[error("failed to validate PathInfo: {0}")]
+    PathInfoValidation(#[from] crate::proto::ValidatePathInfoError),
+    #[error("PathInfo has unexpected digest")]
+    PathInfoUnexpectedDigest,
+    #[error("PathInfo exceeds cell limit on Bigtable")]
+    PathInfoTooBig,
+
+    /// These should never happen, we simply double-check some of the data
+    /// returned by bigtable to actually match what we requested.
+    #[error("bigtable returned unexpected data: {0}")]
+    UnexpectedDataReturned(&'static str),
+    #[error("bigtable error occured while {msg}: {source}")]
+    BigTable {
+        msg: &'static str,
+        #[source]
+        source: bigtable::Error,
+    },
+}
+
+impl From<Error> for snix_castore::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
     }
 }
 
@@ -441,15 +470,14 @@ impl TryFrom<url::Url> for BigtableParameters {
         // parse the instance name from the hostname.
         let instance_name = url
             .host_str()
-            .ok_or_else(|| Error::StorageError("instance name missing".into()))?
-            .to_string();
+            .ok_or_else(|| Error::WrongConfig("instance name missing"))?
+            .to_owned();
 
         // … but add it to the query string now, so we just need to parse that.
         url.query_pairs_mut()
             .append_pair("instance_name", &instance_name);
 
-        let params: BigtableParameters = serde_qs::from_str(url.query().unwrap_or_default())
-            .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?;
+        let params: BigtableParameters = serde_qs::from_str(url.query().unwrap_or_default())?;
 
         Ok(params)
     }
