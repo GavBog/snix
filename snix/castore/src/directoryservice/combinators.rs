@@ -8,7 +8,6 @@ use tracing::{instrument, trace};
 
 use super::{Directory, DirectoryService, SimplePutter};
 use crate::B3Digest;
-use crate::Error;
 use crate::composition::{CompositionContext, ServiceBuilder};
 use crate::directoryservice::DirectoryPutter;
 use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
@@ -43,9 +42,9 @@ where
     DS2: DirectoryService + Clone + 'static,
 {
     #[instrument(skip(self, digest), fields(directory.digest = %digest, instance_name = %self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
         // check near
-        if let Some(directory) = self.near.get(digest).await? {
+        if let Some(directory) = self.near.get(digest).await.map_err(Error::NearGet)? {
             trace!("serving from cache");
             return Ok(Some(directory));
         }
@@ -60,7 +59,7 @@ where
         let mut graph_builder = DirectoryGraphBuilder::new_root_to_leaves(*digest);
 
         let mut resp_directory = None;
-        while let Some(directory) = directories.try_next().await? {
+        while let Some(directory) = directories.try_next().await.map_err(Error::FarGet)? {
             graph_builder.try_insert(directory.clone())?;
             if resp_directory.is_none() {
                 resp_directory = Some(directory);
@@ -73,10 +72,10 @@ where
             // Drain into near
             let mut near_putter = self.near.put_multiple_start();
             for directory in directory_graph.drain_leaves_to_root() {
-                near_putter.put(directory).await?;
+                near_putter.put(directory).await.map_err(Error::NearPut)?;
             }
 
-            let actual_digest = near_putter.close().await?;
+            let actual_digest = near_putter.close().await.map_err(Error::NearPut)?;
             debug_assert_eq!(digest, &actual_digest);
             Ok(Some(resp_directory))
         } else {
@@ -85,15 +84,15 @@ where
     }
 
     #[instrument(skip_all, fields(instance_name = %self.instance_name))]
-    async fn put(&self, _directory: Directory) -> Result<B3Digest, Error> {
-        Err(Error::StorageError("unimplemented".to_string()))
+    async fn put(&self, _directory: Directory) -> Result<B3Digest, crate::Error> {
+        Err(Error::Unimplemented.into())
     }
 
     #[instrument(skip_all, fields(directory.digest = %root_directory_digest, instance_name = %self.instance_name))]
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'_, Result<Directory, Error>> {
+    ) -> BoxStream<'_, Result<Directory, crate::Error>> {
         let near = &self.near;
         let far = &self.far;
         let digest = *root_directory_digest;
@@ -101,11 +100,11 @@ where
         async_stream::try_stream! {
             let mut directories = near.get_recursive(&digest);
 
-            if let Some(first) = directories.try_next().await? {
+            if let Some(first) = directories.try_next().await.map_err(Error::NearGet)? {
                 trace!("serving from cache");
                 yield first;
 
-                while let Some(dir) = directories.try_next().await? {
+                while let Some(dir) = directories.try_next().await.map_err(Error::NearGet)? {
                     yield dir;
                 }
                 return;
@@ -117,7 +116,7 @@ where
             let mut builder = DirectoryGraphBuilder::new_root_to_leaves(digest);
 
             // Return to the client, while inserting to the graph builder.
-            while let Some(directory) = directories.try_next().await? {
+            while let Some(directory) = directories.try_next().await.map_err(Error::FarGet)? {
                 builder.try_insert(directory.clone())?;
                 yield directory;
             }
@@ -127,9 +126,9 @@ where
                     // Drain into near
                     let mut near_putter = near.put_multiple_start();
                     for directory in directory_graph.drain_leaves_to_root() {
-                        near_putter.put(directory).await?;
+                        near_putter.put(directory).await.map_err(Error::NearPut)?;
                     }
-                    let actual_digest = near_putter.close().await?;
+                    let actual_digest = near_putter.close().await.map_err(Error::NearPut)?;
                     debug_assert_eq!(digest, actual_digest);
                 }
                 Err(crate::directoryservice::OrderingError::EmptySet) => return,
@@ -145,6 +144,30 @@ where
     }
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("wrong arguments: {0}")]
+    WrongConfig(&'static str),
+    #[error("serde-qs error: {0}")]
+    SerdeQS(#[from] serde_qs::Error),
+
+    #[error("getting from near: {0}")]
+    NearGet(#[source] crate::Error),
+    #[error("putting into near: {0}")]
+    NearPut(#[source] crate::Error),
+    #[error("getting from far: {0}")]
+    FarGet(#[source] crate::Error),
+
+    #[error("puts are unimplemented")]
+    Unimplemented,
+}
+
+impl From<Error> for crate::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
+    }
+}
+
 #[derive(serde::Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct CacheConfig {
@@ -157,7 +180,7 @@ impl TryFrom<url::Url> for CacheConfig {
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
         // cache doesn't support host or path in the URL.
         if url.has_host() || !url.path().is_empty() {
-            return Err(Error::StorageError("invalid url".to_string()).into());
+            return Err(Error::WrongConfig("no host or path allowed").into());
         }
         Ok(serde_qs::from_str(url.query().unwrap_or_default())?)
     }
