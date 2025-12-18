@@ -1,17 +1,14 @@
 use super::{PathInfo, PathInfoService};
 use crate::proto;
 use data_encoding::BASE64;
-use futures::{StreamExt, stream::BoxStream};
+use futures::{StreamExt, TryStreamExt, stream::BoxStream};
 use prost::Message;
 use redb::{ReadableDatabase, ReadableTable, TableDefinition};
-use snix_castore::{
-    Error,
-    composition::{CompositionContext, ServiceBuilder},
-};
+use snix_castore::composition::{CompositionContext, ServiceBuilder};
 use std::{path::PathBuf, sync::Arc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::async_trait;
-use tracing::{instrument, warn};
+use tracing::instrument;
 
 const PATHINFO_TABLE: TableDefinition<[u8; 20], Vec<u8>> = TableDefinition::new("pathinfo");
 
@@ -30,9 +27,7 @@ impl Db {
 
     fn begin_write(&self) -> Result<redb::WriteTransaction, Error> {
         match self {
-            Db::ReadOnly(_) => Err(Error::StorageError(
-                "unable to open write txn, database is opened read-only".to_string(),
-            )),
+            Db::ReadOnly(_) => Err(Error::OpenedReadonly),
             Db::ReadWrite(db) => Ok(db.begin_write()?),
         }
     }
@@ -57,12 +52,10 @@ impl RedbPathInfoService {
     ) -> Result<Self, Error> {
         if let Some(path) = config.path.clone() {
             if &path == "" {
-                return Err(Error::StorageError("empty path is disallowed".to_string()));
+                return Err(Error::WrongConfig("empty path is disallowed"));
             }
             if &path == "/" {
-                return Err(Error::StorageError(
-                    "cowardly refusing to open / with redb".to_string(),
-                ));
+                return Err(Error::WrongConfig("cowardly refusing to open / with redb"));
             }
 
             if config.read_only {
@@ -86,7 +79,7 @@ impl RedbPathInfoService {
 
                 let db = builder.create(path)?;
                 create_schema(&db)?;
-                Ok::<_, redb::Error>(db)
+                Ok::<_, Error>(db)
             })
             .await??;
 
@@ -111,9 +104,7 @@ impl RedbPathInfoService {
         );
 
         if config.read_only {
-            return Err(Error::StorageError(
-                "in-memory database cannot be read-only".to_string(),
-            ));
+            return Err(Error::WrongConfig("in-memory database cannot be read-only"));
         }
 
         let mut builder = redb::Database::builder();
@@ -141,7 +132,7 @@ fn configure_builder(builder: &mut redb::Builder, config: &RedbPathInfoServiceCo
 /// Opens a write transaction and calls open_table on PATHINFO_TABLE, which will
 /// create it if not present.
 #[allow(clippy::result_large_err)]
-fn create_schema(db: &redb::Database) -> Result<(), redb::Error> {
+fn create_schema(db: &redb::Database) -> Result<(), Error> {
     let txn = db.begin_write()?;
     txn.open_table(PATHINFO_TABLE)?;
     txn.commit()?;
@@ -152,51 +143,46 @@ fn create_schema(db: &redb::Database) -> Result<(), redb::Error> {
 #[async_trait]
 impl PathInfoService for RedbPathInfoService {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = BASE64.encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
         let db = self.db.clone();
 
-        tokio::task::spawn_blocking({
-            move || {
+        let path_info_bytes = match tokio::task::spawn_blocking({
+            move || -> Result<_, Error> {
                 let txn = db.begin_read()?;
                 let table = txn.open_table(PATHINFO_TABLE)?;
-                match table.get(digest)? {
-                    Some(pathinfo_bytes) => Ok(Some(
-                        proto::PathInfo::decode(pathinfo_bytes.value().as_slice())
-                            .map_err(|e| {
-                                warn!(err=%e, "failed to decode stored PathInfo");
-                                Error::StorageError("failed to decode stored PathInfo".to_string())
-                            })?
-                            .try_into()
-                            .map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?,
-                    )),
-                    None => Ok(None),
-                }
+                Ok(table.get(digest)?)
             }
         })
-        .await?
+        .await??
+        {
+            // The PathInfo was not found, return None.
+            None => return Ok(None),
+            Some(path_info_data) => path_info_data.value(),
+        };
+
+        let pathinfo_proto =
+            proto::PathInfo::decode(path_info_bytes.as_slice()).map_err(Error::ProtobufDecode)?;
+        let path_info = PathInfo::try_from(pathinfo_proto).map_err(Error::PathInfoValidation)?;
+
+        return Ok(Some(path_info));
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.root_node = ?path_info.node, instance_name = %self.instance_name))]
-    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, Error> {
+    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
         let db = self.db.clone();
-
         tokio::task::spawn_blocking({
             let path_info = path_info.clone();
             move || -> Result<(), Error> {
                 let txn = db.begin_write()?;
                 {
                     let mut table = txn.open_table(PATHINFO_TABLE)?;
-                    table
-                        .insert(
-                            *path_info.store_path.digest(),
-                            proto::PathInfo::from(path_info).encode_to_vec(),
-                        )
-                        .map_err(|e| {
-                            warn!(err=%e, "failed to insert PathInfo");
-                            Error::StorageError("failed to insert PathInfo".to_string())
-                        })?;
+                    table.insert(
+                        *path_info.store_path.digest(),
+                        proto::PathInfo::from(path_info).encode_to_vec(),
+                    )?;
                 }
-                Ok(txn.commit()?)
+                txn.commit()?;
+                Ok(())
             }
         })
         .await??;
@@ -204,42 +190,23 @@ impl PathInfoService for RedbPathInfoService {
         Ok(path_info)
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
         let db = self.db.clone();
         let (tx, rx) = tokio::sync::mpsc::channel(64);
 
         tokio::task::spawn_blocking(move || {
             // IIFE to be able to use ? for the error cases
             let result = (|| -> Result<(), Error> {
-                let read_txn = db.begin_read().map_err(|err| {
-                    warn!(%err, "failed to open read transaction");
-                    Error::StorageError("failed to open read transaction".to_string())
-                })?;
+                let read_txn = db.begin_read()?;
 
-                let table = read_txn.open_table(PATHINFO_TABLE).map_err(|err| {
-                    warn!(%err, "failed to open table");
-                    Error::StorageError("failed to open table".to_string())
-                })?;
+                let table = read_txn.open_table(PATHINFO_TABLE)?;
 
-                let table_iter = table.iter().map_err(|err| {
-                    warn!(%err, "failed to iterate over table items");
-                    Error::StorageError("failed to iterate over table items".into())
-                })?;
+                let table_iter = table.iter()?;
 
                 for elem in table_iter {
-                    let elem = elem.map_err(|err| {
-                        warn!(%err, "failed to retrieve item");
-                        Error::StorageError("failed to retrieve item".into())
-                    })?;
+                    let path_info_proto = proto::PathInfo::decode(elem?.1.value().as_slice())?;
 
-                    let path_info_proto = proto::PathInfo::decode(elem.1.value().as_slice())
-                        .map_err(|err| {
-                            warn!(%err, "invalid PathInfo");
-                            Error::StorageError("invalid PathInfo".into())
-                        })?;
-
-                    let path_info = PathInfo::try_from(path_info_proto)
-                        .map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?;
+                    let path_info = PathInfo::try_from(path_info_proto)?;
 
                     if tx.blocking_send(Ok(path_info)).is_err() {
                         break;
@@ -254,7 +221,47 @@ impl PathInfoService for RedbPathInfoService {
             }
         });
 
-        ReceiverStream::new(rx).boxed()
+        ReceiverStream::new(rx).err_into().boxed()
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("wrong arguments: {0}")]
+    WrongConfig(&'static str),
+    #[error("serde-qs error: {0}")]
+    SerdeQS(#[from] serde_qs::Error),
+
+    #[error("failed to decode protobuf: {0}")]
+    ProtobufDecode(#[from] prost::DecodeError),
+    #[error("failed to validate PathInfo: {0}")]
+    PathInfoValidation(#[from] crate::proto::ValidatePathInfoError),
+
+    #[error("unable to open write txn, database opened read-only")]
+    OpenedReadonly,
+
+    #[error("redb commit error: {0}")]
+    RedbCommit(#[from] redb::CommitError),
+    #[error("redb database error: {0}")]
+    RedbDatabase(#[from] redb::DatabaseError),
+    #[error("redb error: {0}")]
+    Redb(#[from] redb::Error),
+    #[error("redb storage error: {0}")]
+    RedbStorage(#[from] redb::StorageError),
+    #[error("redb table error: {0}")]
+    RedbTable(#[from] redb::TableError),
+    #[error("redb txn error: {0}")]
+    RedbTransaction(#[from] redb::TransactionError),
+
+    #[error("join error: {0}")]
+    TokioJoin(#[from] tokio::task::JoinError),
+    #[error("io error: {0}")]
+    IO(#[from] std::io::Error),
+}
+
+impl From<Error> for snix_castore::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
     }
 }
 
@@ -275,30 +282,26 @@ impl TryFrom<url::Url> for RedbPathInfoServiceConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
         if url.has_host() {
-            return Err(Error::StorageError("no host allowed".to_string()).into());
+            return Err(Error::WrongConfig("no host allowed").into());
         }
 
         let path: Option<PathBuf> = match (url.scheme(), url.has_authority(), url.path()) {
             ("redb+memory", false, "") => None,
-            ("redb+memory", false, _) => Err(Box::new(Error::StorageError(
-                "redb+memory with path is disallowed".to_string(),
+            ("redb+memory", false, _) => Err(Box::new(Error::WrongConfig(
+                "redb+memory with path is disallowed",
             )))?,
-            ("redb+memory", true, _) => Err(Box::new(Error::StorageError(
-                "redb+memory may not have authority".to_string(),
+            ("redb+memory", true, _) => Err(Box::new(Error::WrongConfig(
+                "redb+memory may not have authority",
             )))?,
-            ("redb", _, "") => Err(Box::new(Error::StorageError(
-                "redb without path is disallowed, use redb+memory if you want in-memory"
-                    .to_string(),
+            ("redb", _, "") => Err(Box::new(Error::WrongConfig(
+                "redb without path is disallowed, use redb+memory if you want in-memory",
             )))?,
             ("redb", _, path) => Some(path.into()),
-            (_scheme, _, _) => Err(Box::new(Error::StorageError(
-                "Unrecognized scheme".to_string(),
-            )))?,
+            (_scheme, _, _) => Err(Box::new(Error::WrongConfig("unrecognized scheme")))?,
         };
 
         let mut config: RedbPathInfoServiceConfig =
-            serde_qs::from_str(url.query().unwrap_or_default())
-                .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?;
+            serde_qs::from_str(url.query().unwrap_or_default())?;
 
         config.path = path;
 
