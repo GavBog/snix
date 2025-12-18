@@ -1,5 +1,4 @@
 use bigtable_rs::{bigtable, google::bigtable::v2 as bigtable_v2};
-use bytes::Bytes;
 use data_encoding::HEXLOWER;
 use futures::StreamExt;
 use futures::stream::BoxStream;
@@ -14,7 +13,7 @@ use super::{
     Directory, DirectoryPutter, DirectoryService, SimplePutter, utils::traverse_directory,
 };
 use crate::composition::{CompositionContext, ServiceBuilder};
-use crate::{B3Digest, Error, proto};
+use crate::{B3Digest, proto};
 
 /// There should not be more than 10 MiB in a single cell.
 /// <https://cloud.google.com/bigtable/docs/schema-design#cells>
@@ -161,7 +160,7 @@ fn derive_directory_key(digest: &B3Digest) -> String {
 #[async_trait]
 impl DirectoryService for BigtableDirectoryService {
     #[instrument(skip(self, digest), err, fields(directory.digest = %digest, instance_name=%self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
         let mut client = self.client.clone();
         let directory_key = derive_directory_key(digest);
 
@@ -203,14 +202,15 @@ impl DirectoryService for BigtableDirectoryService {
         let mut response = client
             .read_rows(request)
             .await
-            .map_err(|e| Error::StorageError(format!("unable to read rows: {e}")))?;
+            .map_err(|e| Error::BigTable {
+                msg: "reading rows",
+                source: e,
+            })?;
 
         if response.len() != 1 {
             if response.len() > 1 {
                 // This shouldn't happen, we limit number of rows to 1
-                return Err(Error::StorageError(
-                    "got more than one row from bigtable".into(),
-                ));
+                Err(Error::UnexpectedDataReturned("got more than one row"))?
             }
             // else, this is simply a "not found".
             return Ok(None);
@@ -219,55 +219,48 @@ impl DirectoryService for BigtableDirectoryService {
         let (row_key, mut row_cells) = response.pop().unwrap();
         if row_key != directory_key.as_bytes() {
             // This shouldn't happen, we requested this row key.
-            return Err(Error::StorageError(
-                "got wrong row key from bigtable".into(),
-            ));
+            Err(Error::UnexpectedDataReturned("got wrong row key"))?
         }
 
         let row_cell = row_cells
             .pop()
-            .ok_or_else(|| Error::StorageError("found no cells".into()))?;
+            .ok_or_else(|| Error::UnexpectedDataReturned("found no cells"))?;
 
         // Ensure there's only one cell (so no more left after the pop())
         // This shouldn't happen, We filter out other cells in our query.
         if !row_cells.is_empty() {
-            return Err(Error::StorageError(
-                "more than one cell returned from bigtable".into(),
-            ));
+            Err(Error::UnexpectedDataReturned("got more than one cell"))?;
         }
 
         // We also require the qualifier to be correct in the filter above,
         // so this shouldn't happen.
         if directory_key.as_bytes() != row_cell.qualifier {
-            return Err(Error::StorageError("unexpected cell qualifier".into()));
+            Err(Error::UnexpectedDataReturned("unexpected cell qualifier"))?
         }
 
         // For the data in that cell, ensure the digest matches what's requested, before parsing.
         let got_digest = B3Digest::from(blake3::hash(&row_cell.value).as_bytes());
         if got_digest != *digest {
-            return Err(Error::StorageError(format!("invalid digest: {got_digest}")));
+            Err(Error::DirectoryUnexpectedDigest)?
         }
 
         // Try to parse the value into a Directory message.
-        let directory = proto::Directory::decode(Bytes::from(row_cell.value))
-            .map_err(|e| Error::StorageError(format!("unable to decode directory proto: {e}")))?
-            .try_into()
-            .map_err(|e| Error::StorageError(format!("invalid Directory message: {e}")))?;
+        let directory_proto =
+            proto::Directory::decode(row_cell.value.as_slice()).map_err(Error::ProtobufDecode)?;
+        let directory = Directory::try_from(directory_proto).map_err(Error::DirectoryValidation)?;
 
         Ok(Some(directory))
     }
 
     #[instrument(skip(self, directory), err, fields(directory.digest = %directory.digest(), instance_name=%self.instance_name))]
-    async fn put(&self, directory: Directory) -> Result<B3Digest, Error> {
+    async fn put(&self, directory: Directory) -> Result<B3Digest, crate::Error> {
         let directory_digest = directory.digest();
         let mut client = self.client.clone();
         let directory_key = derive_directory_key(&directory_digest);
 
         let data = proto::Directory::from(directory).encode_to_vec();
         if data.len() as u64 > CELL_SIZE_LIMIT {
-            return Err(Error::StorageError(
-                "Directory exceeds cell limit on Bigtable".into(),
-            ));
+            Err(Error::DirectoryTooBig)?;
         }
 
         let resp = client
@@ -299,7 +292,10 @@ impl DirectoryService for BigtableDirectoryService {
                 ],
             })
             .await
-            .map_err(|e| Error::StorageError(format!("unable to mutate rows: {e}")))?;
+            .map_err(|e| Error::BigTable {
+                msg: "mutating rows",
+                source: e,
+            })?;
 
         if resp.predicate_matched {
             trace!("already existed")
@@ -312,7 +308,7 @@ impl DirectoryService for BigtableDirectoryService {
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, Error>> {
+    ) -> BoxStream<'static, Result<Directory, crate::Error>> {
         let svc = self.clone();
         traverse_directory(*root_directory_digest, move |digest| {
             let svc = svc.clone();
@@ -324,6 +320,40 @@ impl DirectoryService for BigtableDirectoryService {
     #[instrument(skip_all, fields(instance_name=%self.instance_name))]
     fn put_multiple_start(&self) -> Box<dyn DirectoryPutter + '_> {
         Box::new(SimplePutter::new(self))
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("wrong arguments: {0}")]
+    WrongConfig(&'static str),
+    #[error("serde-qs error: {0}")]
+    SerdeQS(#[from] serde_qs::Error),
+
+    #[error("failed to decode protobuf: {0}")]
+    ProtobufDecode(#[from] prost::DecodeError),
+    #[error("failed to validate directory: {0}")]
+    DirectoryValidation(#[from] crate::DirectoryError),
+    #[error("Directory has unexpected digest")]
+    DirectoryUnexpectedDigest,
+    #[error("Directory exceeds cell limit on Bigtable")]
+    DirectoryTooBig,
+
+    /// These should never happen, we simply double-check some of the data
+    /// returned by bigtable to actually match what we requested.
+    #[error("bigtable returned unexpected data: {0}")]
+    UnexpectedDataReturned(&'static str),
+    #[error("bigtable error occured while {msg}: {source}")]
+    BigTable {
+        msg: &'static str,
+        #[source]
+        source: bigtable::Error,
+    },
+}
+
+impl From<Error> for crate::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
     }
 }
 
@@ -383,15 +413,14 @@ impl TryFrom<url::Url> for BigtableParameters {
         // parse the instance name from the hostname.
         let instance_name = url
             .host_str()
-            .ok_or_else(|| Error::StorageError("instance name missing".into()))?
-            .to_string();
+            .ok_or_else(|| Error::WrongConfig("instance name missing"))?
+            .to_owned();
 
         // … but add it to the query string now, so we just need to parse that.
         url.query_pairs_mut()
             .append_pair("instance_name", &instance_name);
 
-        let params: BigtableParameters = serde_qs::from_str(url.query().unwrap_or_default())
-            .map_err(|e| Error::InvalidRequest(format!("failed to parse parameters: {e}")))?;
+        let params: BigtableParameters = serde_qs::from_str(url.query().unwrap_or_default())?;
 
         Ok(params)
     }
