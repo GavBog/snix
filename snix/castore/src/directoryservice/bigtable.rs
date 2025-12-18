@@ -351,6 +351,18 @@ pub struct BigtableParameters {
     app_profile_id: String,
 }
 
+fn default_app_profile_id() -> String {
+    "default".to_owned()
+}
+
+fn default_channel_size() -> usize {
+    4
+}
+
+fn default_timeout() -> Option<std::time::Duration> {
+    Some(std::time::Duration::from_secs(4))
+}
+
 #[async_trait]
 impl ServiceBuilder for BigtableParameters {
     type Output = dyn DirectoryService;
@@ -383,16 +395,4 @@ impl TryFrom<url::Url> for BigtableParameters {
 
         Ok(params)
     }
-}
-
-fn default_app_profile_id() -> String {
-    "default".to_owned()
-}
-
-fn default_channel_size() -> usize {
-    4
-}
-
-fn default_timeout() -> Option<std::time::Duration> {
-    Some(std::time::Duration::from_secs(4))
 }

@@ -393,6 +393,18 @@ pub struct BigtableParameters {
     app_profile_id: String,
 }
 
+fn default_app_profile_id() -> String {
+    "default".to_owned()
+}
+
+fn default_channel_size() -> usize {
+    4
+}
+
+fn default_timeout() -> Option<std::time::Duration> {
+    Some(std::time::Duration::from_secs(4))
+}
+
 impl BigtableParameters {
     #[cfg(test)]
     pub fn default_for_tests() -> Self {
@@ -407,18 +419,6 @@ impl BigtableParameters {
             app_profile_id: default_app_profile_id(),
         }
     }
-}
-
-fn default_app_profile_id() -> String {
-    "default".to_owned()
-}
-
-fn default_channel_size() -> usize {
-    4
-}
-
-fn default_timeout() -> Option<std::time::Duration> {
-    Some(std::time::Duration::from_secs(4))
 }
 
 #[async_trait]
