@@ -47,10 +47,15 @@ pub enum OrderingError {
 /// as well as a list of introduced, but not yet received digest (to detect
 /// still-missing directories).
 pub struct RootToLeavesValidator {
-    /// directory digest introduced so far, and the sizes they are expected to have.
-    introduced_directories: HashMap<B3Digest, u64>,
+    /// the expected root digest
+    root_digest: B3Digest,
 
-    /// the subset of `introduced_directories` that we still wait to receive.
+    /// references of (directory digest, size) we have seen so far.
+    referenced_directories: HashMap<B3Digest, u64>,
+
+    /// Directories we still wait to receive, because we heard about them but
+    /// didn't accept them yet.
+    /// These consist of the root digest and any subset of `referenced_directories`.
     pending_directories: HashSet<B3Digest>,
 
     /// tracks whether [Self::finalize] has been called,
@@ -59,16 +64,15 @@ pub struct RootToLeavesValidator {
 }
 
 impl RootToLeavesValidator {
-    /// Initialize with the passed root directory
-    /// That directory is implicitly accepted and should not be sent again
-    pub fn new_with_root(directory: &Directory) -> Self {
-        let mut this = Self {
-            introduced_directories: HashMap::from_iter([(directory.digest(), directory.size())]),
-            pending_directories: Default::default(),
+    /// Initialize with an expected root directory
+    /// That directory should be sent next.
+    pub fn new_with_root_digest(root_digest: B3Digest) -> Self {
+        Self {
+            root_digest,
+            referenced_directories: HashMap::default(),
+            pending_directories: HashSet::from_iter([root_digest]),
             poison: false,
-        };
-        this.introduce_children_of(directory);
-        this
+        }
     }
 
     /// Checks a directory digest on whether it's introduced.
@@ -80,18 +84,18 @@ impl RootToLeavesValidator {
     /// to add its children to the list of expected digests.
     pub fn would_accept(&self, digest: &B3Digest) -> bool {
         assert!(!self.poison, "Snix bug: RootToLeavesValidator poisoned");
-        self.introduced_directories.contains_key(digest)
+        digest == &self.root_digest || self.referenced_directories.contains_key(digest)
     }
 
     /// Accepts a directory if previously introduced, or returns an error if it's unknown.
     pub fn try_accept(&mut self, directory: &Directory) -> Result<(), OrderingError> {
         assert!(!self.poison, "Snix bug: RootToLeavesValidator poisoned");
 
-        // every incoming directory must already have been introduced.
         let size = directory.size();
         let digest = directory.digest();
 
-        match self.introduced_directories.get(&digest) {
+        // Every incoming directory must already have been introduced.
+        match self.referenced_directories.get(&digest) {
             Some(s) if *s == size => {
                 if !self.pending_directories.remove(&digest) {
                     warn!("directory received multiple times");
@@ -104,6 +108,13 @@ impl RootToLeavesValidator {
             Some(_) => {
                 self.poison = true;
                 Err(OrderingError::WrongSize { digest, size })
+            }
+            // The root may be inserted even if's not in self.referenced_directories.
+            None if digest == self.root_digest => {
+                // Introduce children
+                self.introduce_children_of(directory);
+                self.pending_directories.remove(&self.root_digest);
+                Ok(())
             }
             None => {
                 self.poison = true;
@@ -135,7 +146,7 @@ impl RootToLeavesValidator {
             if let Node::Directory { digest, size } = node {
                 // if there's a pointer to a new directory
                 if self
-                    .introduced_directories
+                    .referenced_directories
                     .insert(digest.to_owned(), *size)
                     .is_none()
                 {
@@ -146,27 +157,25 @@ impl RootToLeavesValidator {
     }
 
     /// This receives a stream of Directories, validating them to be in Root-To-Leaves order.
+    /// The expected root digest needs to be passed in.
     /// If the order is correct, they are yielded wrapped in an Ok().
     /// If not, we yield an error.
-    pub fn validate_stream<'s, S>(directories: S) -> BoxStream<'s, Result<Directory, OrderingError>>
+    pub fn validate_stream<'s, S>(
+        root_digest: B3Digest,
+        directories: S,
+    ) -> BoxStream<'s, Result<Directory, OrderingError>>
     where
         S: Stream<Item = Directory> + Send + 's,
     {
+        let mut validator = RootToLeavesValidator::new_with_root_digest(root_digest);
         let mut directories = directories.boxed();
 
         Box::pin(try_stream! {
-            // in the else case (empty stream), we emit an empty stream.
-            if let Some(first_incoming_directory) = directories.next().await {
-                let mut validator = RootToLeavesValidator::new_with_root(&first_incoming_directory);
-
-                while let Some(incoming_directory) = directories.next().await {
-                    validator.try_accept(&incoming_directory)?;
-                    yield incoming_directory;
-                }
-
-                validator.finalize()?;
+            while let Some(directory) = directories.next().await {
+                        validator.try_accept(&directory)?;
+                        yield directory;
             }
-
+            validator.finalize()?;
         })
     }
 }
@@ -315,6 +324,7 @@ mod tests {
     use super::{LeavesToRootValidator, RootToLeavesValidator};
     use crate::directoryservice::Directory;
     use crate::fixtures::{DIRECTORY_A, DIRECTORY_B, DIRECTORY_C, DIRECTORY_D, DIRECTORY_E};
+    use futures::TryStreamExt;
     use rstest::rstest;
 
     #[rstest]
@@ -363,25 +373,25 @@ mod tests {
 
     #[rstest]
     /// Downloading an empty directory should succeed.
-    #[case::empty_directory(&*DIRECTORY_A, &[], false)]
+    #[case::empty_directory(&[&*DIRECTORY_A], false)]
     /// Downlading B, then A (referenced by B) should succeed.
-    #[case::simple_closure(&*DIRECTORY_B, &[&*DIRECTORY_A], false)]
+    #[case::simple_closure(&[&*DIRECTORY_B, &*DIRECTORY_A], false)]
     /// Downloading C (referring to A twice), then A should succeed.
-    #[case::same_child_dedup(&*DIRECTORY_C, &[&*DIRECTORY_A], false)]
+    #[case::same_child_dedup(&[&*DIRECTORY_C, &*DIRECTORY_A], false)]
     /// Downloading C, then A twice should succeed.
-    #[case::same_child_redundant(&*DIRECTORY_C, &[&*DIRECTORY_A, &*DIRECTORY_A], false)]
+    #[case::same_child_redundant(&[&*DIRECTORY_C, &*DIRECTORY_A, &*DIRECTORY_A], false)]
     /// Downloading C, then A should succeed, even if we receive C twice
-    #[case::with_root_sent_twice(&*DIRECTORY_C, &[&*DIRECTORY_C, &*DIRECTORY_A], false)]
+    #[case::with_root_sent_twice(&[&*DIRECTORY_C, &*DIRECTORY_C, &*DIRECTORY_A], false)]
     /// Downloading E -> D -> A,B should succeed.
-    #[case::more_levels(&*DIRECTORY_E, &[&*DIRECTORY_D, &*DIRECTORY_A, &*DIRECTORY_B], false)]
+    #[case::more_levels(&[&*DIRECTORY_E, &*DIRECTORY_D, &*DIRECTORY_A, &*DIRECTORY_B], false)]
     /// Downloading C, then B (both referring to A but not referring to each other) should fail immediately as B has no connection to C (the root)
-    #[case::unconnected_node(&*DIRECTORY_C, &[&*DIRECTORY_B], true)]
+    #[case::unconnected_node(&[&*DIRECTORY_C, &*DIRECTORY_B], true)]
     fn root_to_leaves(
-        #[case] root: &Directory,
         #[case] directories_to_upload: &[&Directory],
         #[case] exp_fail_upload_last: bool,
     ) {
-        let mut validator = RootToLeavesValidator::new_with_root(root);
+        let root_digest = directories_to_upload[0].digest();
+        let mut validator = RootToLeavesValidator::new_with_root_digest(root_digest);
         let mut it = directories_to_upload.iter().peekable();
 
         while let Some(d) = it.next() {
@@ -406,5 +416,44 @@ mod tests {
         if !exp_fail_upload_last {
             validator.finalize().expect("finalize to succeed");
         }
+    }
+
+    #[test]
+    /// This initializes a validator with another root than what we try to upload.
+    fn root_to_leaves_root_mismatch() {
+        let mut validator = RootToLeavesValidator::new_with_root_digest(DIRECTORY_A.digest());
+
+        validator
+            .try_accept(&DIRECTORY_B)
+            .expect_err("shouldn't accept wrong first directory");
+        validator.finalize().expect_err("expect finalize to fail");
+    }
+
+    #[tokio::test]
+    async fn root_to_leaves_stream() {
+        let directories_to_upload = vec![
+            DIRECTORY_E.to_owned(),
+            DIRECTORY_D.to_owned(),
+            DIRECTORY_A.to_owned(),
+            DIRECTORY_B.to_owned(),
+        ];
+        let root_digest = directories_to_upload[0].digest();
+
+        let validated_stream = RootToLeavesValidator::validate_stream(
+            root_digest,
+            futures::stream::iter(directories_to_upload.iter().map(|d| (*d).to_owned())),
+        );
+
+        let validated_directories: Vec<Directory> = validated_stream
+            .try_collect()
+            .await
+            .expect("stream to collect successfully");
+
+        assert_eq!(directories_to_upload, validated_directories);
+
+        RootToLeavesValidator::validate_stream(root_digest, futures::stream::empty())
+            .try_collect::<Vec<_>>()
+            .await
+            .expect_err("an empty stream to fail");
     }
 }

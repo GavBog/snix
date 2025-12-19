@@ -165,30 +165,18 @@ impl DirectoryService for ObjectStoreDirectoryService {
                     .new_read(decompressed_stream)
                     .err_into::<Error>();
 
-                    let mut order_validator = if let Some(encoded_directory) = encoded_directories.try_next().await? {
-                        let directory = parse_proto_directory(&encoded_directory, |digest| {
-                            digest == &root_directory_digest
-                        })?;
+                let mut order_validator = RootToLeavesValidator::new_with_root_digest(root_directory_digest);
+                while let Some(encoded_directory) = encoded_directories.try_next().await? {
+                    let directory = parse_proto_directory(&encoded_directory, |digest| {
+                        order_validator.would_accept(digest)
+                    })?;
 
-                        let order_validator = RootToLeavesValidator::new_with_root(&directory);
-                        yield directory;
-                        order_validator
-                    } else {
-                        // no elements in stream
-                        Err(Error::StorageError("no directories stored".to_string()))?
-                    };
+                    order_validator.try_accept(&directory).map_err(|e| Error::StorageError(e.to_string()))?;
 
-                    while let Some(encoded_directory) = encoded_directories.try_next().await? {
-                        let directory = parse_proto_directory(&encoded_directory, |digest| {
-                            order_validator.would_accept(digest)
-                        })?;
+                    yield directory;
+                }
 
-                        order_validator.try_accept(&directory).map_err(|e| Error::StorageError(e.to_string()))?;
-
-                        yield directory;
-                    }
-
-                    order_validator.finalize().map_err(|e| Error::StorageError(e.to_string()))?;
+                order_validator.finalize().map_err(|e| Error::StorageError(e.to_string()))?;
         }.boxed()
     }
 
