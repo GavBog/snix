@@ -10,7 +10,7 @@ use snix_eval::builtin_macros::builtins;
 use snix_eval::generators::Gen;
 use snix_eval::generators::GenCo;
 use snix_eval::{CatchableErrorKind, ErrorKind, Value, try_cek};
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 use url::Url;
 
 // Used as a return type for extract_fetch_args, which is sharing some
@@ -33,7 +33,7 @@ async fn extract_fetch_args(
             String::from_utf8(url_str.as_bytes().to_vec()).map_err(|_| ErrorKind::Utf8)?;
 
         // Parse the URL.
-        let url = Url::parse(&url_str).map_err(|e| ErrorKind::SnixError(Rc::new(e)))?;
+        let url = Url::parse(&url_str).map_err(|e| ErrorKind::SnixError(Arc::from(e)))?;
 
         return Ok(Ok(NixFetchArgs {
             url,
@@ -62,7 +62,7 @@ async fn extract_fetch_args(
     let sha256_str = try_cek!(select_string(co, &attrs, "sha256").await?);
 
     Ok(Ok(NixFetchArgs {
-        url: Url::parse(&url_str).map_err(|e| ErrorKind::SnixError(Rc::new(e)))?,
+        url: Url::parse(&url_str).map_err(|e| ErrorKind::SnixError(Arc::from(e)))?,
         name,
         // parse the sha256 string into a digest, and bail out if it's not sha256.
         sha256: sha256_str
@@ -94,7 +94,7 @@ pub(crate) mod fetcher_builtins {
     fn fetch_lazy(state: Rc<SnixStoreIO>, name: String, fetch: Fetch) -> Result<Value, ErrorKind> {
         match fetch
             .store_path(&name)
-            .map_err(|e| ErrorKind::SnixError(Rc::new(e)))?
+            .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?
         {
             Some(store_path) => {
                 // Move the fetch to KnownPaths, so it can be actually fetched later.
@@ -117,7 +117,7 @@ pub(crate) mod fetcher_builtins {
                 let (store_path, _path_info) = state
                     .tokio_handle
                     .block_on(async { state.fetcher.ingest_and_persist(&name, fetch).await })
-                    .map_err(|e| ErrorKind::SnixError(Rc::new(e)))?;
+                    .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?;
 
                 Ok(Value::Path(Box::new(store_path.to_absolute_path().into())))
             }
@@ -192,7 +192,7 @@ pub(crate) mod fetcher_builtins {
 
         let fetch_args = flake_ref_str
             .parse()
-            .map_err(|err| ErrorKind::SnixError(Rc::new(err)))?;
+            .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?;
 
         // Convert the FlakeRef to our Value format
         let mut attrs = BTreeMap::new();

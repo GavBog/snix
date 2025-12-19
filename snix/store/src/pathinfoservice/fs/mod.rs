@@ -56,7 +56,8 @@ where
         Ok(self
             .0
             .get(*store_path.digest())
-            .await?
+            .await
+            .map_err(|e| Error::StorageError(e.to_string()))?
             .map(|path_info| path_info.node))
     }
 
@@ -72,6 +73,7 @@ where
                     .expect("Snix bug: StorePath must be PathComponent");
                 (name, path_info.node)
             })
+            .map_err(|e| Error::StorageError(e.to_string()))
             .boxed()
     }
 }

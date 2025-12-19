@@ -118,7 +118,8 @@ impl SnixStoreIO {
             .path_info_service
             .as_ref()
             .get(*store_path.digest())
-            .await?
+            .await
+            .map_err(std::io::Error::other)?
         {
             Some(path_info) => path_info,
             // If there's no PathInfo found, this normally means we have to
@@ -237,7 +238,8 @@ impl SnixStoreIO {
                             let (nar_size, nar_sha256) = self
                                 .nar_calculation_service
                                 .calculate_nar(&output.node)
-                                .await?;
+                                .await
+                                .map_err(std::io::Error::other)?;
 
                             // assemble the PathInfo to persist
                             let path_info = PathInfo {

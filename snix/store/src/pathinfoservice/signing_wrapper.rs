@@ -1,6 +1,7 @@
 //! This module provides a [PathInfoService] implementation that signs narinfos
 
 use super::{PathInfo, PathInfoService};
+use crate::pathinfoservice;
 use futures::stream::BoxStream;
 use futures::{StreamExt, TryStreamExt};
 use std::path::PathBuf;
@@ -47,11 +48,11 @@ where
     S: ed25519::signature::Signer<ed25519::Signature> + Sync + Send,
 {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, pathinfoservice::Error> {
         Ok(self.inner.get(digest).await.map_err(Error::Inner)?)
     }
 
-    async fn put(&self, mut path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
+    async fn put(&self, mut path_info: PathInfo) -> Result<PathInfo, pathinfoservice::Error> {
         path_info.signatures.push({
             let mut nar_info = path_info.to_narinfo();
             nar_info.signatures.clear();
@@ -71,7 +72,7 @@ where
         Ok(self.inner.put(path_info).await.map_err(Error::Inner)?)
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, pathinfoservice::Error>> {
         self.inner.list().map_err(Error::Inner).err_into().boxed()
     }
 }
@@ -85,13 +86,7 @@ pub enum Error {
     ParsingSigningKey(#[from] nix_compat::narinfo::SigningKeyError),
 
     #[error("inner store returned error: {0}")]
-    Inner(#[from] snix_castore::Error),
-}
-
-impl From<Error> for snix_castore::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
+    Inner(#[from] pathinfoservice::Error),
 }
 
 /// [ServiceBuilder] implementation that builds a [SigningPathInfoService] that signs narinfos using

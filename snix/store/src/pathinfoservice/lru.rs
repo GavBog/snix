@@ -10,6 +10,8 @@ use tracing::instrument;
 
 use snix_castore::composition::{CompositionContext, ServiceBuilder};
 
+use crate::pathinfoservice;
+
 use super::{PathInfo, PathInfoService};
 
 pub struct LruPathInfoService {
@@ -29,12 +31,12 @@ impl LruPathInfoService {
 #[async_trait]
 impl PathInfoService for LruPathInfoService {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, pathinfoservice::Error> {
         Ok(self.lru.write().await.get(&digest).cloned())
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.root_node = ?path_info.node, instance_name = %self.instance_name))]
-    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
+    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, pathinfoservice::Error> {
         self.lru
             .write()
             .await
@@ -43,7 +45,7 @@ impl PathInfoService for LruPathInfoService {
         Ok(path_info)
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, pathinfoservice::Error>> {
         let lru = self.lru.clone();
         Box::pin(try_stream! {
             let lru = lru.read().await;

@@ -121,6 +121,7 @@ mod import_builtins {
     use snix_eval::{ErrorKind, Value, generators::GenCo};
     use snix_store::path_info::PathInfo;
     use std::rc::Rc;
+    use std::sync::Arc;
     use tokio::io::AsyncWriteExt;
 
     /// Helper function dealing with uploading something from a std::io::Read to
@@ -279,7 +280,7 @@ mod import_builtins {
                     .calculate_nar(&root_node)
                     .await
             })
-            .map_err(|e| snix_eval::ErrorKind::SnixError(Rc::new(e)))?;
+            .map_err(|e| snix_eval::ErrorKind::SnixError(Arc::from(e)))?;
 
         // Calculate the CA hash for the recursive cases, this is only already
         // `Some(_)` for flat ingestion.
@@ -302,7 +303,7 @@ mod import_builtins {
         };
 
         let store_path = build_ca_path(&name, &ca, Vec::<&str>::new(), false)
-            .map_err(|e| snix_eval::ErrorKind::SnixError(Rc::new(e)))?;
+            .map_err(|e| snix_eval::ErrorKind::SnixError(Arc::from(e)))?;
 
         let path_info = state
             .tokio_handle
@@ -325,7 +326,7 @@ mod import_builtins {
             })
             .map_err(|e| snix_eval::ErrorKind::IO {
                 path: Some(path),
-                error: Rc::new(e.into()),
+                error: Rc::new(std::io::Error::other(e)),
             })?;
 
         // We need to attach context to the final output path.
@@ -487,7 +488,7 @@ mod import_builtins {
             .nar_calculation_service
             .calculate_nar(&root_node)
             .await
-            .map_err(|e| ErrorKind::SnixError(Rc::new(e)))?;
+            .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?;
 
         let ca_hash = CAHash::Text(h.finalize().into());
 
@@ -514,7 +515,7 @@ mod import_builtins {
                         .iter_ctx_plain()
                         .map(|elem| StorePath::from_absolute_path(elem.as_bytes()))
                         .collect::<Result<_, _>>()
-                        .map_err(|e| ErrorKind::SnixError(Rc::new(e)))?,
+                        .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?,
                     nar_size,
                     nar_sha256,
                     signatures: vec![],
@@ -522,7 +523,7 @@ mod import_builtins {
                     ca: Some(ca_hash),
                 }),
             )
-            .map_err(|e| ErrorKind::SnixError(Rc::new(e)))
+            .map_err(|e| ErrorKind::SnixError(Arc::from(e)))
             .map(|path_info| path_info.store_path)?;
 
         let abs_path = store_path.to_absolute_path();

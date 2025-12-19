@@ -171,6 +171,7 @@ fn handle_fixed_output(
 #[builtins(state = "Rc<SnixStoreIO>")]
 pub(crate) mod derivation_builtins {
     use std::collections::BTreeMap;
+    use std::sync::Arc;
 
     use bstr::ByteSlice;
 
@@ -500,12 +501,12 @@ pub(crate) mod derivation_builtins {
         // If the derivation is a fake derivation (builtin:fetchurl),
         // synthesize a [Fetch] and add it there, too.
         if drv.builder == "builtin:fetchurl" {
-            let (name, fetch) =
-                fetchurl_derivation_to_fetch(&drv).map_err(|e| ErrorKind::SnixError(Rc::new(e)))?;
+            let (name, fetch) = fetchurl_derivation_to_fetch(&drv)
+                .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?;
 
             known_paths
                 .add_fetch(fetch, &name)
-                .map_err(|e| ErrorKind::SnixError(Rc::new(e)))?;
+                .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?;
         }
 
         // Register the Derivation in known_paths.

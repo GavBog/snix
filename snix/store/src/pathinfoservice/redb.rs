@@ -1,5 +1,5 @@
 use super::{PathInfo, PathInfoService};
-use crate::proto;
+use crate::{pathinfoservice, proto};
 use data_encoding::BASE64;
 use futures::{StreamExt, TryStreamExt, stream::BoxStream};
 use prost::Message;
@@ -143,7 +143,7 @@ fn create_schema(db: &redb::Database) -> Result<(), Error> {
 #[async_trait]
 impl PathInfoService for RedbPathInfoService {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = BASE64.encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, pathinfoservice::Error> {
         let db = self.db.clone();
 
         let path_info_bytes = match tokio::task::spawn_blocking({
@@ -168,7 +168,7 @@ impl PathInfoService for RedbPathInfoService {
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.root_node = ?path_info.node, instance_name = %self.instance_name))]
-    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
+    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, pathinfoservice::Error> {
         let db = self.db.clone();
         tokio::task::spawn_blocking({
             let path_info = path_info.clone();
@@ -190,7 +190,7 @@ impl PathInfoService for RedbPathInfoService {
         Ok(path_info)
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, pathinfoservice::Error>> {
         let db = self.db.clone();
         let (tx, rx) = tokio::sync::mpsc::channel(64);
 
@@ -257,12 +257,6 @@ pub enum Error {
     TokioJoin(#[from] tokio::task::JoinError),
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
-}
-
-impl From<Error> for snix_castore::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 #[derive(Clone, Default, serde::Deserialize)]

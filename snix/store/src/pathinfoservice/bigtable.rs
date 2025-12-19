@@ -1,5 +1,5 @@
 use super::{PathInfo, PathInfoService};
-use crate::proto;
+use crate::{pathinfoservice, proto};
 use async_stream::try_stream;
 use bigtable_rs::{bigtable, google::bigtable::v2 as bigtable_v2};
 use data_encoding::HEXLOWER;
@@ -156,7 +156,7 @@ fn derive_pathinfo_key(digest: &[u8; 20]) -> String {
 #[async_trait]
 impl PathInfoService for BigtablePathInfoService {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, pathinfoservice::Error> {
         let mut client = self.client.clone();
         let path_info_key = derive_pathinfo_key(&digest);
 
@@ -248,7 +248,7 @@ impl PathInfoService for BigtablePathInfoService {
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.root_node = ?path_info.node, instance_name = %self.instance_name))]
-    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
+    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, pathinfoservice::Error> {
         let mut client = self.client.clone();
         let path_info_key = derive_pathinfo_key(path_info.store_path.digest());
 
@@ -298,7 +298,7 @@ impl PathInfoService for BigtablePathInfoService {
         Ok(path_info)
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, pathinfoservice::Error>> {
         let mut client = self.client.clone();
 
         let request = bigtable_v2::ReadRowsRequest {
@@ -391,12 +391,6 @@ pub enum Error {
         #[source]
         source: bigtable::Error,
     },
-}
-
-impl From<Error> for snix_castore::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 /// Represents configuration of [BigtablePathInfoService].

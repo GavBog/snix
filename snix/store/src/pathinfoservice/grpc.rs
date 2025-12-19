@@ -1,4 +1,5 @@
 use super::{PathInfo, PathInfoService};
+use crate::pathinfoservice;
 use crate::{nar::NarCalculationService, proto};
 use async_stream::try_stream;
 use futures::{StreamExt, stream::BoxStream};
@@ -43,7 +44,7 @@ where
     T::Future: Send,
 {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, pathinfoservice::Error> {
         match self
             .grpc_client
             .clone()
@@ -63,7 +64,7 @@ where
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.root_node = ?path_info.node, instance_name = %self.instance_name))]
-    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
+    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, pathinfoservice::Error> {
         let path_info = self
             .grpc_client
             .clone()
@@ -75,7 +76,7 @@ where
     }
 
     #[instrument(level = "trace", skip_all)]
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, pathinfoservice::Error>> {
         let mut grpc_client = self.grpc_client.clone();
 
         try_stream! {
@@ -108,7 +109,7 @@ where
     async fn calculate_nar(
         &self,
         root_node: &Node,
-    ) -> Result<(u64, [u8; 32]), snix_castore::Error> {
+    ) -> Result<(u64, [u8; 32]), pathinfoservice::Error> {
         let span = Span::current();
         span.pb_set_message("Waiting for NAR calculation");
         span.pb_start();
@@ -151,12 +152,6 @@ pub enum Error {
     TokioJoin(#[from] tokio::task::JoinError),
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
-}
-
-impl From<Error> for snix_castore::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 #[derive(serde::Deserialize, Debug)]

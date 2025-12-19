@@ -1,4 +1,4 @@
-use crate::utils::AsyncIoBridge;
+use crate::{pathinfoservice, utils::AsyncIoBridge};
 
 use super::{NarCalculationService, RenderError};
 use count_write::CountWrite;
@@ -32,14 +32,13 @@ where
     async fn calculate_nar(
         &self,
         root_node: &Node,
-    ) -> Result<(u64, [u8; 32]), snix_castore::Error> {
-        calculate_size_and_sha256(
+    ) -> Result<(u64, [u8; 32]), pathinfoservice::Error> {
+        Ok(calculate_size_and_sha256(
             root_node,
             self.blob_service.clone(),
             self.directory_service.clone(),
         )
-        .await
-        .map_err(|e| snix_castore::Error::StorageError(format!("failed rendering nar: {e}")))
+        .await?)
     }
 }
 

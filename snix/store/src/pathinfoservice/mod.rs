@@ -14,7 +14,6 @@ mod tests;
 
 use auto_impl::auto_impl;
 use futures::stream::BoxStream;
-use snix_castore::Error;
 use snix_castore::composition::{Registry, ServiceBuilder};
 use tonic::async_trait;
 
@@ -39,6 +38,8 @@ pub use self::bigtable::{BigtableParameters, BigtablePathInfoService};
 
 #[cfg(any(feature = "fuse", feature = "virtiofs"))]
 pub use self::fs::make_fs;
+
+pub type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 /// The base trait all PathInfo services need to implement.
 #[async_trait]

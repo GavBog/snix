@@ -47,7 +47,7 @@ where
                     Ok(Some(path_info)) => Ok(Response::new(proto::PathInfo::from(path_info))),
                     Err(e) => {
                         warn!(err = %e, "failed to get PathInfo");
-                        Err(e.into())
+                        Err(Status::unknown(e.to_string()))
                     }
                 }
             }
@@ -67,7 +67,7 @@ where
             Ok(path_info_new) => Ok(Response::new(proto::PathInfo::from(path_info_new))),
             Err(e) => {
                 warn!(err = %e, "failed to put PathInfo");
-                Err(e.into())
+                Err(Status::unknown(e.to_string()))
             }
         }
     }
@@ -92,7 +92,7 @@ where
             })),
             Err(e) => {
                 warn!(err = %e, "error during NAR calculation");
-                Err(e.into())
+                Err(Status::unknown(e.to_string()))
             }
         }
     }

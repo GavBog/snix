@@ -319,7 +319,7 @@ to a missing value in the attribute set(s) included via `with`."#
     /// Variant for errors that bubble up to eval from other Snix
     /// components.
     #[error("{0}")]
-    SnixError(Rc<dyn error::Error>),
+    SnixError(Arc<dyn error::Error + Send + Sync>),
 
     /// Variant for code paths that are known bugs in Snix (usually
     /// issues with the compiler/VM interaction).

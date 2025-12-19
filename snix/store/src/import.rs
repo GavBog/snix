@@ -97,7 +97,10 @@ where
             .map_err(std::io::Error::other)?;
 
     // Ask for the NAR size and sha256
-    let (nar_size, nar_sha256) = nar_calculation_service.calculate_nar(&root_node).await?;
+    let (nar_size, nar_sha256) = nar_calculation_service
+        .calculate_nar(&root_node)
+        .await
+        .map_err(std::io::Error::other)?;
 
     let ca = CAHash::Nar(NixHash::Sha256(nar_sha256));
 
@@ -113,7 +116,7 @@ where
         })?;
 
     // Insert a PathInfo. On success, return it back to the caller.
-    Ok(path_info_service
+    path_info_service
         .as_ref()
         .put(PathInfo {
             store_path: output_path.to_owned(),
@@ -126,7 +129,8 @@ where
             deriver: None,
             ca: Some(ca),
         })
-        .await?)
+        .await
+        .map_err(std::io::Error::other)
 }
 
 #[cfg(test)]

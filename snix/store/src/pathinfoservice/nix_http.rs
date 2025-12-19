@@ -1,5 +1,8 @@
 use super::{PathInfo, PathInfoService};
-use crate::nar::{NarIngestionError, ingest_nar_and_hash};
+use crate::{
+    nar::{NarIngestionError, ingest_nar_and_hash},
+    pathinfoservice,
+};
 use futures::{TryStreamExt, stream::BoxStream};
 use nix_compat::{
     narinfo::{self, NarInfo, Signature},
@@ -120,12 +123,11 @@ pub enum Error {
         narinfo_nar_sha256: [u8; 32],
         actual_nar_sha256: [u8; 32],
     },
-}
 
-impl From<Error> for snix_castore::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
+    #[error("put not supported")]
+    PutNotSupported,
+    #[error("list not supported")]
+    ListNotSupported,
 }
 
 #[async_trait]
@@ -135,7 +137,7 @@ where
     DS: DirectoryService + Send + Sync + Clone + 'static,
 {
     #[instrument(skip_all, err, fields(path.digest=nixbase32::encode(&digest), instance_name=%self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, pathinfoservice::Error> {
         let narinfo_url = self.derive_narinfo_url(digest)?;
 
         let span = Span::current();
@@ -260,7 +262,7 @@ where
     }
 
     #[instrument(skip_all, err, fields(path.digest=nixbase32::encode(&digest), instance_name=%self.instance_name))]
-    async fn has(&self, digest: [u8; 20]) -> Result<bool, snix_castore::Error> {
+    async fn has(&self, digest: [u8; 20]) -> Result<bool, pathinfoservice::Error> {
         let narinfo_url = self.derive_narinfo_url(digest)?;
 
         let span = Span::current();
@@ -284,17 +286,13 @@ where
     }
 
     #[instrument(skip_all, fields(path_info=?_path_info, instance_name=%self.instance_name))]
-    async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
-        Err(snix_castore::Error::InvalidRequest(
-            "put not supported for this backend".to_string(),
-        ))
+    async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, pathinfoservice::Error> {
+        Err(Box::new(Error::PutNotSupported))
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, pathinfoservice::Error>> {
         Box::pin(futures::stream::once(async {
-            Err(snix_castore::Error::InvalidRequest(
-                "list not supported for this backend".to_string(),
-            ))
+            Err(Error::ListNotSupported)?
         }))
     }
 }

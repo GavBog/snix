@@ -6,6 +6,8 @@ use snix_castore::composition::{CompositionContext, ServiceBuilder};
 use tonic::async_trait;
 use tracing::{debug, instrument};
 
+use crate::pathinfoservice;
+
 use super::{PathInfo, PathInfoService};
 
 /// Asks near first, if not found, asks far.
@@ -36,7 +38,7 @@ where
     PS2: PathInfoService,
 {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, pathinfoservice::Error> {
         match self.near.get(digest).await.map_err(Error::NearGet)? {
             Some(path_info) => {
                 debug!("serving from cache");
@@ -60,17 +62,17 @@ where
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn has(&self, digest: [u8; 20]) -> Result<bool, snix_castore::Error> {
+    async fn has(&self, digest: [u8; 20]) -> Result<bool, pathinfoservice::Error> {
         // FUTUREWORK: queue background tasks if ! self.near.has && self.far.has ? (configurable)
         Ok(self.near.has(digest).await.map_err(Error::NearGet)?
             || self.far.has(digest).await.map_err(Error::FarGet)?)
     }
 
-    async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
+    async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, pathinfoservice::Error> {
         Err(Error::Unimplemented)?
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, pathinfoservice::Error>> {
         Box::pin(tokio_stream::once(Err(Error::Unimplemented)).err_into())
     }
 }
@@ -88,20 +90,14 @@ pub enum Error {
     URLNotSupported,
 
     #[error("getting from near: {0}")]
-    NearGet(#[source] snix_castore::Error),
+    NearGet(#[source] pathinfoservice::Error),
     #[error("putting into near: {0}")]
-    NearPut(#[source] snix_castore::Error),
+    NearPut(#[source] pathinfoservice::Error),
     #[error("getting from far: {0}")]
-    FarGet(#[source] snix_castore::Error),
+    FarGet(#[source] pathinfoservice::Error),
 
     #[error("puts are unimplemented")]
     Unimplemented,
-}
-
-impl From<Error> for snix_castore::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 impl TryFrom<url::Url> for CacheConfig {

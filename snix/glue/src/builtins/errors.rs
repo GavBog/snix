@@ -5,7 +5,7 @@ use nix_compat::{
 };
 use reqwest::Url;
 use snix_castore::import;
-use std::{path::PathBuf, rc::Rc};
+use std::{path::PathBuf, sync::Arc};
 use thiserror::Error;
 
 /// Errors related to derivation construction
@@ -27,7 +27,7 @@ pub enum DerivationError {
 
 impl From<DerivationError> for snix_eval::ErrorKind {
     fn from(err: DerivationError) -> Self {
-        snix_eval::ErrorKind::SnixError(Rc::new(err))
+        snix_eval::ErrorKind::SnixError(Arc::from(err))
     }
 }
 
@@ -75,6 +75,6 @@ pub enum ImportError {
 
 impl From<ImportError> for snix_eval::ErrorKind {
     fn from(err: ImportError) -> Self {
-        snix_eval::ErrorKind::SnixError(Rc::new(err))
+        snix_eval::ErrorKind::SnixError(Arc::from(err))
     }
 }

@@ -43,7 +43,11 @@ impl NixDaemonIO for SnixDaemon {
         &self,
         path: &StorePath<String>,
     ) -> Result<Option<UnkeyedValidPathInfo>> {
-        if let Some(path_info) = self.path_info_service.get(*path.digest()).await?
+        if let Some(path_info) = self
+            .path_info_service
+            .get(*path.digest())
+            .await
+            .map_err(std::io::Error::other)?
             && path_info.store_path.name() == path.name()
         {
             return Ok(Some(into_unkeyed_path_info(path_info)));
@@ -56,7 +60,12 @@ impl NixDaemonIO for SnixDaemon {
         let digest = hash
             .try_into()
             .map_err(|_| Error::other("invalid digest length"))?;
-        match self.path_info_service.get(digest).await? {
+        match self
+            .path_info_service
+            .get(digest)
+            .await
+            .map_err(std::io::Error::other)?
+        {
             Some(path_info) => Ok(Some(into_unkeyed_path_info(path_info))),
             None => Ok(None),
         }

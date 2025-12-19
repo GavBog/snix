@@ -437,7 +437,7 @@ where
                     .await
                     .map_err(|e| {
                         // convert the generic Store error to an IO error.
-                        FetcherError::Io(e.into())
+                        FetcherError::Io(std::io::Error::other(e))
                     })?;
 
                 if let Some(exp_nar_sha256) = exp_nar_sha256
@@ -608,7 +608,7 @@ where
                 .nar_calculation_service
                 .calculate_nar(&node)
                 .await
-                .map_err(|e| FetcherError::Io(e.into()))?,
+                .map_err(|e| FetcherError::Io(std::io::Error::other(e)))?,
             CAHash::Text(_) => unreachable!("Snix bug: fetch returned CAHash::Text"),
         };
 
@@ -627,7 +627,7 @@ where
         self.path_info_service
             .put(path_info.clone())
             .await
-            .map_err(|e| FetcherError::Io(e.into()))?;
+            .map_err(|e| FetcherError::Io(std::io::Error::other(e)))?;
 
         Ok((store_path, path_info))
     }
