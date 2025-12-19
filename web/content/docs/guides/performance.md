@@ -21,6 +21,22 @@ might already be a known issue, or there a design proposal on how to solve it.
 [issues]: https://git.snix.dev/snix/snix/issues
 {{< /callout >}}
 
+## Chrome Trace Event Format
+Snix supports emitting traces in Chrome's trace event format that can be viewed
+with `chrome://tracing` or [ui.perfetto.dev](https://ui.perfetto.dev).
+
+Compile and run Snix with the `tracing-chrome` feature flag enabled.
+After stopping the binary, a file named like `trace-1668480819035032.json` will
+be written to your current working directory, which you can drag & drop into the
+above web interface.
+
+You might need to expand the "Global Legacy Events" section to see the graph.
+
+If you want to compare multiple traces, make sure to have
+`dev.perfetto.MultiTraceOpen` enabled (in "Settings" > "Plugins").
+If enabled, a new menu item "New Trace" > "Open multiple trace files" should
+be available.
+
 
 ## OTLP
 Snix comes with [OpenTelemetry][] enabled by default [^opentelemetry].

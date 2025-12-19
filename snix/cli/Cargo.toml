@@ -37,5 +37,6 @@ expect-test.workspace = true
 
 [features]
 default = []
+tracing-chrome = ["snix-tracing/chrome"]
 tracy = ["snix-tracing/tracy"]
 xp-store-composition-cli = ["snix-store/xp-composition-cli"]

@@ -18953,11 +18953,13 @@ rec {
           }
         ];
         features = {
+          "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracy" = [ "snix-tracing/tracy" ];
           "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
         };
         resolvedDefaultFeatures = [
           "default"
+          "tracing-chrome"
           "tracy"
           "xp-store-composition-cli"
         ];
@@ -19738,6 +19740,7 @@ rec {
             "dep:tonic-reflection"
             "snix-castore/tonic-reflection"
           ];
+          "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracy" = [ "snix-tracing/tracy" ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
           "xp-composition-cli" = [
@@ -19753,6 +19756,7 @@ rec {
           "otlp"
           "toml"
           "tonic-reflection"
+          "tracing-chrome"
           "tracy"
           "virtiofs"
           "xp-composition-cli"
@@ -19837,6 +19841,11 @@ rec {
             ];
           }
           {
+            name = "tracing-chrome";
+            packageId = "tracing-chrome";
+            optional = true;
+          }
+          {
             name = "tracing-indicatif";
             packageId = "tracing-indicatif";
           }
@@ -19859,6 +19868,7 @@ rec {
         ];
         features = {
           "axum" = [ "dep:axum" ];
+          "chrome" = [ "dep:tracing-chrome" ];
           "otlp" = [
             "dep:tracing-opentelemetry"
             "dep:opentelemetry"
@@ -19877,6 +19887,7 @@ rec {
         };
         resolvedDefaultFeatures = [
           "axum"
+          "chrome"
           "default"
           "otlp"
           "reqwest"
@@ -23780,6 +23791,31 @@ rec {
         ];
         features = {
         };
+      };
+      "tracing-chrome" = rec {
+        crateName = "tracing-chrome";
+        version = "0.7.2";
+        edition = "2018";
+        sha256 = "0977zy46gpawva2laffigxr2pph8v0xa51kfp6ghlifnsn7762mz";
+        libName = "tracing_chrome";
+        authors = [
+          "Thoren Paulson <thoren.paulson@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "serde_json";
+            packageId = "serde_json";
+          }
+          {
+            name = "tracing-core";
+            packageId = "tracing-core";
+          }
+          {
+            name = "tracing-subscriber";
+            packageId = "tracing-subscriber";
+          }
+        ];
+
       };
       "tracing-core" = rec {
         crateName = "tracing-core";

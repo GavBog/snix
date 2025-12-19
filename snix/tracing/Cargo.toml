@@ -14,6 +14,7 @@ tracing-indicatif.workspace = true
 tokio = { workspace = true, features = ["sync", "rt"] }
 thiserror.workspace = true
 
+tracing-chrome = { workspace = true, optional = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 opentelemetry = { workspace = true, optional = true }
 opentelemetry-otlp = { workspace = true, features = [
@@ -37,6 +38,7 @@ axum = { workspace = true, optional = true }
 
 [features]
 default = []
+chrome = ["dep:tracing-chrome"]
 otlp = [
   "dep:tracing-opentelemetry",
   "dep:opentelemetry",

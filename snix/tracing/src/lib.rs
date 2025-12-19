@@ -53,6 +53,10 @@ pub struct TracingHandle {
     stdout_writer: IndicatifWriter<writer::Stdout>,
     stderr_writer: IndicatifWriter<writer::Stderr>,
 
+    #[cfg(feature = "chrome")]
+    #[allow(dead_code)]
+    chrome_guard: std::rc::Rc<tracing_chrome::FlushGuard>,
+
     #[cfg(feature = "otlp")]
     meter_provider: Option<opentelemetry_sdk::metrics::SdkMeterProvider>,
 
@@ -185,8 +189,14 @@ impl TracingBuilder {
                     IndicatifFilter::new(false),
                 )
             }));
-        #[cfg(feature = "tracy")]
-        let layered = layered.and_then(TracyLayer::default());
+        #[cfg(feature = "chrome")]
+        let (layered, chrome_guard) = {
+            let (chrome_layer, guard) = tracing_chrome::ChromeLayerBuilder::new()
+                .include_args(true)
+                .trace_style(tracing_chrome::TraceStyle::Async)
+                .build();
+            (layered.and_then(chrome_layer), guard)
+        };
 
         #[cfg(feature = "otlp")]
         let mut g_tracer_provider = None;
@@ -222,6 +232,9 @@ impl TracingBuilder {
             }
         });
 
+        #[cfg(feature = "tracy")]
+        let layered = layered.and_then(TracyLayer::default());
+
         let layered = layered.with_filter(
             EnvFilter::builder()
                 .with_default_directive(LevelFilter::INFO.into())
@@ -244,6 +257,8 @@ impl TracingBuilder {
             meter_provider: g_meter_provider,
             #[cfg(feature = "otlp")]
             tracer_provider: g_tracer_provider,
+            #[cfg(feature = "chrome")]
+            chrome_guard: std::rc::Rc::new(chrome_guard),
         })
     }
 }
