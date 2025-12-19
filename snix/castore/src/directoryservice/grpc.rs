@@ -159,46 +159,6 @@ where
     }
 }
 
-#[derive(serde::Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct GRPCDirectoryServiceConfig {
-    url: String,
-}
-
-impl TryFrom<url::Url> for GRPCDirectoryServiceConfig {
-    type Error = Box<dyn std::error::Error + Send + Sync>;
-    fn try_from(url: url::Url) -> Result<Self, Self::Error> {
-        //   This is normally grpc+unix for unix sockets, and grpc+http(s) for the HTTP counterparts.
-        // - In the case of unix sockets, there must be a path, but may not be a host.
-        // - In the case of non-unix sockets, there must be a host, but no path.
-        // Constructing the channel is handled by snix_castore::channel::from_url.
-        Ok(GRPCDirectoryServiceConfig {
-            url: url.to_string(),
-        })
-    }
-}
-
-#[async_trait]
-impl ServiceBuilder for GRPCDirectoryServiceConfig {
-    type Output = dyn DirectoryService;
-    async fn build<'a>(
-        &'a self,
-        instance_name: &str,
-        _context: &CompositionContext,
-    ) -> Result<Arc<dyn DirectoryService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
-        let client = proto::directory_service_client::DirectoryServiceClient::with_interceptor(
-            crate::tonic::channel_from_url(&self.url.parse()?).await?,
-            // tonic::service::Interceptor wants an unboxed Status as return type.
-            // https://github.com/hyperium/tonic/issues/2253
-            |rq| snix_tracing::propagate::tonic::send_trace(rq).map_err(|e| *e),
-        );
-        Ok(Arc::new(GRPCDirectoryService::from_client(
-            instance_name.to_string(),
-            client,
-        )))
-    }
-}
-
 /// Allows uploading multiple Directory messages in the same gRPC stream.
 pub struct GRPCPutter {
     /// Data about the current request - a handle to the task, and the tx part
@@ -258,6 +218,45 @@ impl DirectoryPutter for GRPCPutter {
     }
 }
 
+#[derive(serde::Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct GRPCDirectoryServiceConfig {
+    url: String,
+}
+
+impl TryFrom<url::Url> for GRPCDirectoryServiceConfig {
+    type Error = Box<dyn std::error::Error + Send + Sync>;
+    fn try_from(url: url::Url) -> Result<Self, Self::Error> {
+        //   This is normally grpc+unix for unix sockets, and grpc+http(s) for the HTTP counterparts.
+        // - In the case of unix sockets, there must be a path, but may not be a host.
+        // - In the case of non-unix sockets, there must be a host, but no path.
+        // Constructing the channel is handled by snix_castore::channel::from_url.
+        Ok(GRPCDirectoryServiceConfig {
+            url: url.to_string(),
+        })
+    }
+}
+
+#[async_trait]
+impl ServiceBuilder for GRPCDirectoryServiceConfig {
+    type Output = dyn DirectoryService;
+    async fn build<'a>(
+        &'a self,
+        instance_name: &str,
+        _context: &CompositionContext,
+    ) -> Result<Arc<dyn DirectoryService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+        let client = proto::directory_service_client::DirectoryServiceClient::with_interceptor(
+            crate::tonic::channel_from_url(&self.url.parse()?).await?,
+            // tonic::service::Interceptor wants an unboxed Status as return type.
+            // https://github.com/hyperium/tonic/issues/2253
+            |rq| snix_tracing::propagate::tonic::send_trace(rq).map_err(|e| *e),
+        );
+        Ok(Arc::new(GRPCDirectoryService::from_client(
+            instance_name.to_string(),
+            client,
+        )))
+    }
+}
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
