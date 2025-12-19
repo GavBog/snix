@@ -1,8 +1,8 @@
 use super::{Directory, DirectoryPutter, DirectoryService};
+use crate::B3Digest;
 use crate::composition::{CompositionContext, ServiceBuilder};
 use crate::directoryservice::RootToLeavesValidator;
 use crate::proto::{self, get_directory_request::ByWhat};
-use crate::{B3Digest, DirectoryError, Error};
 use futures::StreamExt;
 use futures::stream::BoxStream;
 use std::sync::Arc;
@@ -46,39 +46,39 @@ where
 {
     #[instrument(level = "trace", skip_all, fields(directory.digest = %digest, instance_name = %self.instance_name))]
     async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
-        // Get a new handle to the gRPC client, and copy the digest.
-        let mut grpc_client = self.grpc_client.clone();
-        let message = async move {
-            let mut s = grpc_client
-                .get(proto::GetDirectoryRequest {
-                    recursive: false,
-                    by_what: Some(ByWhat::Digest((*digest).into())),
-                })
-                .await?
-                .into_inner();
-
-            // Retrieve the first message only, then close the stream (we set recursive to false)
-            s.message().await
-        };
-
-        match message.await {
-            Ok(Some(directory)) => {
+        // clone the client, as it takes a &mut.
+        // We retrieve the first message only, then close the stream (we set recursive to false)
+        match self
+            .grpc_client
+            .clone()
+            .get(proto::GetDirectoryRequest {
+                recursive: false,
+                by_what: Some(ByWhat::Digest((*digest).into())),
+            })
+            .await
+            .map_err(Error::Tonic)?
+            .into_inner()
+            .message()
+            .await
+        {
+            Ok(Some(proto_directory)) => {
                 // Validate the retrieved Directory indeed has the
                 // digest we expect it to have, to detect corruptions.
-                let actual_digest = directory.digest();
+                let actual_digest = proto_directory.digest();
                 if &actual_digest != digest {
-                    Err(crate::Error::StorageError(format!(
-                        "requested directory with digest {digest}, but got {actual_digest}"
-                    )))
+                    Err(Error::WrongDigest {
+                        expected: *digest,
+                        actual: actual_digest,
+                    })?
                 } else {
-                    Ok(Some(directory.try_into().map_err(|_| {
-                        Error::StorageError("invalid root digest length in response".to_string())
-                    })?))
+                    let directory =
+                        Directory::try_from(proto_directory).map_err(Error::DirectoryValidation)?;
+                    Ok(Some(directory))
                 }
             }
             Ok(None) => Ok(None),
             Err(e) if e.code() == Code::NotFound => Ok(None),
-            Err(e) => Err(crate::Error::StorageError(e.to_string())),
+            Err(e) => Err(Error::Tonic(e))?,
         }
     }
 
@@ -88,25 +88,23 @@ where
             .grpc_client
             .clone()
             .put(tokio_stream::once(proto::Directory::from(directory)))
-            .await;
+            .await
+            .map_err(Error::Tonic)?;
 
-        match resp {
-            Ok(put_directory_resp) => Ok(put_directory_resp
-                .into_inner()
-                .root_digest
-                .try_into()
-                .map_err(|_| {
-                    Error::StorageError("invalid root digest length in response".to_string())
-                })?),
-            Err(e) => Err(crate::Error::StorageError(e.to_string())),
-        }
+        let digest = resp
+            .into_inner()
+            .root_digest
+            .try_into()
+            .map_err(|_| Error::InvalidDigestLen)?;
+
+        Ok(digest)
     }
 
     #[instrument(level = "trace", skip_all, fields(directory.digest = %root_directory_digest, instance_name = %self.instance_name))]
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, Error>> {
+    ) -> BoxStream<'static, Result<Directory, crate::Error>> {
         let mut grpc_client = self.grpc_client.clone();
         let root_directory_digest = *root_directory_digest;
 
@@ -120,14 +118,12 @@ where
                     by_what: Some(ByWhat::Digest((root_directory_digest).into())),
                 })
                 .await
-                .map_err(|e| crate::Error::StorageError(e.to_string()))?
+                .map_err(Error::Tonic)?
                 .into_inner();
 
-            while let Some(directory) = directories.message().await.map_err(|e| crate::Error::StorageError(e.to_string()))? {
-                let directory = directory.try_into()
-                    .map_err(|e: DirectoryError| Error::StorageError(e.to_string()))?;
-
-                order_validator.try_accept(&directory).map_err(|e| Error::StorageError(e.to_string()))?;
+            while let Some(proto_directory) = directories.message().await.map_err(|e| crate::Error::StorageError(e.to_string()))? {
+                let directory = Directory::try_from(proto_directory).map_err(Error::DirectoryValidation)?;
+                order_validator.try_accept(&directory).map_err(Error::DirectoryOrdering)?;
 
                 yield directory;
             }
@@ -176,22 +172,18 @@ pub struct GRPCPutter {
 impl DirectoryPutter for GRPCPutter {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
     async fn put(&mut self, directory: Directory) -> Result<(), crate::Error> {
-        match self.rq {
-            // If we're not already closed, send the directory to directory_sender.
-            Some((_, ref directory_sender)) => {
-                if directory_sender.send(directory.into()).is_err() {
-                    // If the channel has been prematurely closed, invoke close (so we can peek at the error code)
-                    // That error code is much more helpful, because it
-                    // contains the error message from the server.
-                    self.close().await?;
-                }
-                Ok(())
-            }
-            // If self.close() was already called, we can't put again.
-            None => Err(Error::StorageError(
-                "DirectoryPutter already closed".to_string(),
-            )),
+        let (_, directory_sender) = self
+            .rq
+            .as_ref()
+            .ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
+        // If we're not already closed, send the directory to directory_sender.
+        if directory_sender.send(directory.into()).is_err() {
+            // If the channel has been prematurely closed, invoke close (so we can peek at the error code)
+            // That error code is much more helpful, because it
+            // contains the error message from the server.
+            self.close().await?;
         }
+        Ok(())
     }
 
     /// Closes the stream for sending, and returns the value.
@@ -199,22 +191,52 @@ impl DirectoryPutter for GRPCPutter {
     async fn close(&mut self) -> Result<B3Digest, crate::Error> {
         // get self.rq, and replace it with None.
         // This ensures we can only close it once.
-        match std::mem::take(&mut self.rq) {
-            None => Err(Error::StorageError("already closed".to_string())),
-            Some((task, directory_sender)) => {
-                // close directory_sender, so blocking on task will finish.
-                drop(directory_sender);
+        let (task, directory_sender) =
+            std::mem::take(&mut self.rq).ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
 
-                let root_digest = task
-                    .await?
-                    .map_err(|e| Error::StorageError(e.to_string()))?
-                    .root_digest;
+        // close directory_sender, so blocking on task will finish.
+        drop(directory_sender);
 
-                root_digest.try_into().map_err(|_| {
-                    Error::StorageError("invalid root digest length in response".to_string())
-                })
-            }
-        }
+        let resp = task.await?.map_err(Error::Tonic)?;
+
+        Ok(B3Digest::try_from(resp.root_digest).map_err(|_| Error::InvalidDigestLen)?)
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("Directory Graph ordering error")]
+    DirectoryOrdering(#[from] crate::directoryservice::OrderingError),
+
+    #[error("DirectoryPutter already closed")]
+    DirectoryPutterAlreadyClosed,
+
+    #[error("requested directory has wrong digest, expected {expected}, actual {actual}")]
+    WrongDigest {
+        expected: B3Digest,
+        actual: B3Digest,
+    },
+
+    #[error("tonic status: {0}")]
+    Tonic(#[from] tonic::Status),
+
+    #[error("invalid digest length returned from put")]
+    InvalidDigestLen,
+
+    #[error("failed to decode protobuf: {0}")]
+    ProtobufDecode(#[from] prost::DecodeError),
+    #[error("failed to validate directory: {0}")]
+    DirectoryValidation(#[from] crate::DirectoryError),
+
+    #[error("join error: {0}")]
+    TokioJoin(#[from] tokio::task::JoinError),
+    #[error("io error: {0}")]
+    IO(#[from] std::io::Error),
+}
+
+impl From<Error> for crate::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
     }
 }
 
