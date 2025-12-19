@@ -8,7 +8,6 @@ use tokio::sync::RwLock;
 use tonic::async_trait;
 use tracing::instrument;
 
-use snix_castore::Error;
 use snix_castore::composition::{CompositionContext, ServiceBuilder};
 
 use super::{PathInfo, PathInfoService};
@@ -30,12 +29,12 @@ impl LruPathInfoService {
 #[async_trait]
 impl PathInfoService for LruPathInfoService {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
         Ok(self.lru.write().await.get(&digest).cloned())
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.root_node = ?path_info.node, instance_name = %self.instance_name))]
-    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, Error> {
+    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
         self.lru
             .write()
             .await
@@ -44,7 +43,7 @@ impl PathInfoService for LruPathInfoService {
         Ok(path_info)
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
         let lru = self.lru.clone();
         Box::pin(try_stream! {
             let lru = lru.read().await;
@@ -57,6 +56,12 @@ impl PathInfoService for LruPathInfoService {
     }
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("instantiating from a url is not supported")]
+    URLNotSupported,
+}
+
 #[derive(serde::Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct LruPathInfoServiceConfig {
@@ -66,10 +71,7 @@ pub struct LruPathInfoServiceConfig {
 impl TryFrom<url::Url> for LruPathInfoServiceConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(_url: url::Url) -> Result<Self, Self::Error> {
-        Err(Error::StorageError(
-            "Instantiating a LruPathInfoService from a url is not supported".into(),
-        )
-        .into())
+        Err(Error::URLNotSupported)?
     }
 }
 
