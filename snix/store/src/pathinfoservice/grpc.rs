@@ -1,12 +1,8 @@
 use super::{PathInfo, PathInfoService};
-use crate::{
-    nar::NarCalculationService,
-    proto::{self, ListPathInfoRequest},
-};
+use crate::{nar::NarCalculationService, proto};
 use async_stream::try_stream;
 use futures::{StreamExt, stream::BoxStream};
 use nix_compat::nixbase32;
-use snix_castore::Error;
 use snix_castore::Node;
 use snix_castore::composition::{CompositionContext, ServiceBuilder};
 use std::sync::Arc;
@@ -47,7 +43,7 @@ where
     T::Future: Send,
 {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error> {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
         match self
             .grpc_client
             .clone()
@@ -59,52 +55,44 @@ where
             .await
         {
             Ok(path_info) => Ok(Some(
-                PathInfo::try_from(path_info.into_inner())
-                    .map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?,
+                PathInfo::try_from(path_info.into_inner()).map_err(Error::PathInfoValidation)?,
             )),
             Err(e) if e.code() == Code::NotFound => Ok(None),
-            Err(e) => Err(Error::StorageError(e.to_string())),
+            Err(e) => Err(Error::Tonic(e))?,
         }
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.root_node = ?path_info.node, instance_name = %self.instance_name))]
-    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, Error> {
+    async fn put(&self, path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
         let path_info = self
             .grpc_client
             .clone()
             .put(proto::PathInfo::from(path_info))
             .await
-            .map_err(|e| Error::StorageError(e.to_string()))?
+            .map_err(Error::Tonic)?
             .into_inner();
-        Ok(PathInfo::try_from(path_info)
-            .map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?)
+        Ok(PathInfo::try_from(path_info).map_err(Error::PathInfoValidation)?)
     }
 
     #[instrument(level = "trace", skip_all)]
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>> {
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
         let mut grpc_client = self.grpc_client.clone();
 
         try_stream! {
-            let resp = grpc_client.list(ListPathInfoRequest::default()).await;
+            let resp = grpc_client.list(proto::ListPathInfoRequest::default()).await;
 
-            let mut stream = resp.map_err(|e| Error::StorageError(e.to_string()))?.into_inner();
+            let mut stream = resp.map_err(Error::Tonic)?.into_inner();
 
-            loop {
-                match stream.message().await {
-                    Ok(Some(path_info)) => yield PathInfo::try_from(path_info).map_err(|e| Error::StorageError(format!("Invalid path info: {e}")))?,
-                    Ok(None) => return,
-                    Err(e) => Err(Error::StorageError(e.to_string()))?,
-                }
+            while let Some(path_info_proto) =  stream.message().await.map_err(Error::Tonic)? {
+                yield PathInfo::try_from(path_info_proto).map_err(Error::PathInfoValidation)?
             }
-        }.boxed()
+        }
+        .boxed()
     }
 
     #[instrument(level = "trace", skip_all)]
     fn nar_calculation_service(&self) -> Option<Box<dyn NarCalculationService>> {
-        Some(Box::new(GRPCPathInfoService {
-            instance_name: self.instance_name.clone(),
-            grpc_client: self.grpc_client.clone(),
-        }) as Box<dyn NarCalculationService>)
+        Some(Box::new(self.clone()) as Box<dyn NarCalculationService>)
     }
 }
 
@@ -117,7 +105,10 @@ where
     T::Future: Send,
 {
     #[instrument(level = "trace", skip_all, fields(root_node = ?root_node, indicatif.pb_show=tracing::field::Empty))]
-    async fn calculate_nar(&self, root_node: &Node) -> Result<(u64, [u8; 32]), Error> {
+    async fn calculate_nar(
+        &self,
+        root_node: &Node,
+    ) -> Result<(u64, [u8; 32]), snix_castore::Error> {
         let span = Span::current();
         span.pb_set_message("Waiting for NAR calculation");
         span.pb_start();
@@ -130,16 +121,41 @@ where
                 root_node.to_owned(),
             ))
             .await
-            .map_err(|e| Error::StorageError(e.to_string()))?
+            .map_err(Error::Tonic)?
             .into_inner();
 
         let nar_sha256: [u8; 32] = path_info
             .nar_sha256
             .to_vec()
             .try_into()
-            .map_err(|_e| Error::StorageError("invalid digest length".to_string()))?;
+            .map_err(|_| Error::NarCalcInvalidDigestLen)?;
 
         Ok((path_info.nar_size, nar_sha256))
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("failed to decode protobuf: {0}")]
+    ProtobufDecode(#[from] prost::DecodeError),
+    #[error("failed to validate PathInfo: {0}")]
+    PathInfoValidation(#[from] crate::proto::ValidatePathInfoError),
+
+    #[error("tonic status: {0}")]
+    Tonic(#[from] tonic::Status),
+
+    #[error("invalid digest length returned from nar calculation")]
+    NarCalcInvalidDigestLen,
+
+    #[error("join error: {0}")]
+    TokioJoin(#[from] tokio::task::JoinError),
+    #[error("io error: {0}")]
+    IO(#[from] std::io::Error),
+}
+
+impl From<Error> for snix_castore::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
     }
 }
 
