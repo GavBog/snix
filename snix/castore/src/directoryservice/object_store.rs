@@ -18,7 +18,7 @@ use url::Url;
 use super::{Directory, DirectoryPutter, DirectoryService, RootToLeavesValidator};
 use crate::composition::{CompositionContext, ServiceBuilder};
 use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
-use crate::{B3Digest, Error, Node, proto};
+use crate::{B3Digest, Node, proto};
 
 /// Stores directory closures in an object store.
 /// Notably, this makes use of the option to disallow accessing child directories except when
@@ -54,20 +54,13 @@ where
 {
     let actual_digest = B3Digest::from(blake3::hash(encoded_directory).as_bytes());
     if !digest_allowed(&actual_digest) {
-        return Err(crate::Error::StorageError(
-            "unexpected directory digest".to_string(),
-        ));
+        return Err(Error::UnexpectedDigest(actual_digest));
     }
 
-    let directory_proto = proto::Directory::decode(encoded_directory).map_err(|e| {
-        warn!("unable to parse directory {}: {}", actual_digest, e);
-        Error::StorageError(e.to_string())
-    })?;
+    let directory_proto =
+        proto::Directory::decode(encoded_directory).map_err(Error::ProtobufDecode)?;
 
-    Directory::try_from(directory_proto).map_err(|e| {
-        warn!("unable to convert directory {}: {}", actual_digest, e);
-        Error::StorageError(e.to_string())
-    })
+    Directory::try_from(directory_proto).map_err(Error::DirectoryValidation)
 }
 
 #[allow(clippy::identity_op)]
@@ -113,20 +106,18 @@ impl DirectoryService for ObjectStoreDirectoryService {
     /// This is the same steps as for get_recursive anyways, so we just call get_recursive and
     /// return the first element of the stream and drop the request.
     #[instrument(level = "trace", skip_all, fields(directory.digest = %digest, instance_name = %self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
         self.get_recursive(digest).take(1).next().await.transpose()
     }
 
     #[instrument(level = "trace", skip_all, fields(directory.digest = %directory.digest(), instance_name = %self.instance_name))]
-    async fn put(&self, directory: Directory) -> Result<B3Digest, Error> {
+    async fn put(&self, directory: Directory) -> Result<B3Digest, crate::Error> {
         // Ensure the directory doesn't contain other directory children
         if directory
             .nodes()
             .any(|(_, e)| matches!(e, Node::Directory { .. }))
         {
-            return Err(Error::InvalidRequest(
-                    "only put_multiple_start is supported by the ObjectStoreDirectoryService for directories with children".into(),
-            ));
+            Err(Error::PutForDirectoryWithChildren)?
         }
 
         let mut handle = self.put_multiple_start();
@@ -138,7 +129,7 @@ impl DirectoryService for ObjectStoreDirectoryService {
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'_, Result<Directory, Error>> {
+    ) -> BoxStream<'_, Result<Directory, crate::Error>> {
         // Check that we are not passing on bogus from the object store to the client, and that the
         // trust chain from the root digest to the leaves is intact.
         let dir_path = derive_dirs_path(&self.base_path, root_directory_digest);
@@ -146,16 +137,16 @@ impl DirectoryService for ObjectStoreDirectoryService {
         let root_directory_digest = *root_directory_digest;
 
         async_stream::try_stream! {
-                let stream = match object_store.get(&dir_path).await {
+                let bytes_stream = match object_store.get(&dir_path).await {
                     Ok(v) => v.into_stream(),
                     Err(object_store::Error::NotFound { .. }) => {
                         return;
                     }
-                    Err(e) => Err(Error::StorageError(e.to_string()))?,
+                    Err(e) => Err(Error::ObjectStore(e))?,
                 };
 
                 // get a reader of the response body.
-                let r = tokio_util::io::StreamReader::new(stream);
+                let r = tokio_util::io::StreamReader::new(bytes_stream);
                 let decompressed_stream = async_compression::tokio::bufread::ZstdDecoder::new(r);
 
                 // the subdirectories are stored in a length delimited format
@@ -171,12 +162,12 @@ impl DirectoryService for ObjectStoreDirectoryService {
                         order_validator.would_accept(digest)
                     })?;
 
-                    order_validator.try_accept(&directory).map_err(|e| Error::StorageError(e.to_string()))?;
+                    order_validator.try_accept(&directory).map_err(Error::DirectoryOrdering)?;
 
                     yield directory;
                 }
 
-                order_validator.finalize().map_err(|e| Error::StorageError(e.to_string()))?;
+                order_validator.finalize().map_err(Error::DirectoryOrdering)?;
         }.boxed()
     }
 
@@ -189,6 +180,38 @@ impl DirectoryService for ObjectStoreDirectoryService {
             self.object_store.clone(),
             &self.base_path,
         ))
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+enum Error {
+    #[error("wrong arguments: {0}")]
+    WrongConfig(&'static str),
+    #[error("put() may only be used for directories without children")]
+    PutForDirectoryWithChildren,
+
+    #[error("Directory Graph ordering error")]
+    DirectoryOrdering(#[from] crate::directoryservice::OrderingError),
+    #[error("requested directory has unexpected digest {0}")]
+    UnexpectedDigest(B3Digest),
+    #[error("failed to decode protobuf: {0}")]
+    ProtobufDecode(#[from] prost::DecodeError),
+    #[error("failed to validate directory: {0}")]
+    DirectoryValidation(#[from] crate::DirectoryError),
+
+    #[error("DirectoryPutter already closed")]
+    DirectoryPutterAlreadyClosed,
+
+    #[error("ObjectStore error: {0}")]
+    ObjectStore(#[from] object_store::Error),
+
+    #[error("io error: {0}")]
+    IO(#[from] std::io::Error),
+}
+
+impl From<Error> for crate::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
     }
 }
 
@@ -207,10 +230,9 @@ impl TryFrom<url::Url> for ObjectStoreDirectoryServiceConfig {
         // parse it back as url, as Url::set_scheme() rejects some of the transitions we want to do.
         let trimmed_url = {
             let s = url.to_string();
-            let mut url = Url::parse(
-                s.strip_prefix("objectstore+")
-                    .ok_or(Error::StorageError("Missing objectstore uri".into()))?,
-            )?;
+            let mut url = Url::parse(s.strip_prefix("objectstore+").ok_or(Error::WrongConfig(
+                "Missing objectstore+ part in URI scheme",
+            ))?)?;
             // trim the query pairs, they might contain credentials or local settings we don't want to send as-is.
             url.set_query(None);
             url
@@ -280,11 +302,11 @@ impl<'a> ObjectStoreDirectoryPutter<'a> {
 #[async_trait]
 impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
-    async fn put(&mut self, directory: Directory) -> Result<(), Error> {
+    async fn put(&mut self, directory: Directory) -> Result<(), crate::Error> {
         let builder = self
             .builder
             .as_mut()
-            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+            .ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
 
         builder.try_insert(directory)?;
 
@@ -292,11 +314,11 @@ impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
     }
 
     #[instrument(level = "trace", skip_all, ret, err)]
-    async fn close(&mut self) -> Result<B3Digest, Error> {
+    async fn close(&mut self) -> Result<B3Digest, crate::Error> {
         let builder = self
             .builder
             .take()
-            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+            .ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
 
         // Retrieve the validated directories.
         let directory_graph = builder.build()?;
@@ -334,7 +356,7 @@ impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
                 compressed_writer.shutdown().await?;
             }
             // other error
-            Err(err) => Err(std::io::Error::from(err))?,
+            Err(err) => Err(Error::ObjectStore(err))?,
         }
 
         Ok(root_digest)
