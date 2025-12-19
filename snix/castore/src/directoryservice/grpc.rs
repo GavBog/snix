@@ -1,7 +1,6 @@
-use std::collections::HashSet;
-
 use super::{Directory, DirectoryPutter, DirectoryService};
 use crate::composition::{CompositionContext, ServiceBuilder};
+use crate::directoryservice::RootToLeavesValidator;
 use crate::proto::{self, get_directory_request::ByWhat};
 use crate::{B3Digest, DirectoryError, Error};
 use futures::StreamExt;
@@ -110,8 +109,12 @@ where
     ) -> BoxStream<'static, Result<Directory, Error>> {
         let mut grpc_client = self.grpc_client.clone();
         let root_directory_digest = *root_directory_digest;
+
+        let mut order_validator =
+            RootToLeavesValidator::new_with_root_digest(root_directory_digest);
+
         async_stream::try_stream! {
-            let mut stream = grpc_client
+            let mut directories = grpc_client
                 .get(proto::GetDirectoryRequest {
                     recursive: true,
                     by_what: Some(ByWhat::Digest((root_directory_digest).into())),
@@ -120,68 +123,13 @@ where
                 .map_err(|e| crate::Error::StorageError(e.to_string()))?
                 .into_inner();
 
-            // The Directory digests we received so far
-            let mut received_directory_digests: HashSet<B3Digest> = HashSet::new();
-            // The Directory digests we're still expecting to get sent.
-            let mut expected_directory_digests: HashSet<B3Digest> = HashSet::from([root_directory_digest]);
+            while let Some(directory) = directories.message().await.map_err(|e| crate::Error::StorageError(e.to_string()))? {
+                let directory = directory.try_into()
+                    .map_err(|e: DirectoryError| Error::StorageError(e.to_string()))?;
 
-            loop {
-                match stream.message().await {
-                    Ok(Some(directory)) => {
-                        // validate we actually expected that directory, and move it from expected to received.
-                        let directory_digest = directory.digest();
-                        let was_expected = expected_directory_digests.remove(&directory_digest);
-                        if !was_expected {
-                            // FUTUREWORK: dumb clients might send the same stuff twice.
-                            // as a fallback, we might want to tolerate receiving
-                            // it if it's in received_directory_digests (as that
-                            // means it once was in expected_directory_digests)
-                            Err(crate::Error::StorageError(format!(
-                                "received unexpected directory {directory_digest}"
-                            )))?;
-                        }
-                        received_directory_digests.insert(directory_digest);
+                order_validator.try_accept(&directory).map_err(|e| Error::StorageError(e.to_string()))?;
 
-                        // register all children in expected_directory_digests.
-                        for child_directory in &directory.directories {
-                            // We ran validate() above, so we know these digests must be correct.
-                            let child_directory_digest =
-                                child_directory.digest.clone().try_into().unwrap();
-
-                            expected_directory_digests
-                                .insert(child_directory_digest);
-                        }
-
-                        let directory = directory.try_into()
-                            .map_err(|e: DirectoryError| Error::StorageError(e.to_string()))?;
-
-                        yield directory;
-                    },
-                    Ok(None) if expected_directory_digests.len() == 1 && expected_directory_digests.contains(&root_directory_digest) => {
-                        // The root directory of the requested closure was not found, return an
-                        // empty stream
-                        return
-                    }
-                    Ok(None) => {
-                        // The stream has ended
-                        let diff_len = expected_directory_digests
-                            // Account for directories which have been referenced more than once,
-                            // but only received once since they were deduplicated
-                            .difference(&received_directory_digests)
-                            .count();
-                        // If this is not empty, then the closure is incomplete
-                        if diff_len != 0 {
-                            Err(crate::Error::StorageError(format!(
-                                "still expected {diff_len} directories, but got premature end of stream"
-                            )))?
-                        } else {
-                            return
-                        }
-                    },
-                    Err(e) => {
-                        Err(crate::Error::StorageError(e.to_string()))?;
-                    },
-                }
+                yield directory;
             }
         }.boxed()
     }
