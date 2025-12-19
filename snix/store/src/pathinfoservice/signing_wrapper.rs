@@ -2,13 +2,12 @@
 
 use super::{PathInfo, PathInfoService};
 use futures::stream::BoxStream;
+use futures::{StreamExt, TryStreamExt};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tonic::async_trait;
 
 use snix_castore::composition::{CompositionContext, ServiceBuilder};
-
-use snix_castore::Error;
 
 use nix_compat::narinfo::{Signature, SigningKey, parse_keypair};
 use nix_compat::nixbase32;
@@ -48,11 +47,11 @@ where
     S: ed25519::signature::Signer<ed25519::Signature> + Sync + Send,
 {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error> {
-        self.inner.get(digest).await
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+        Ok(self.inner.get(digest).await.map_err(Error::Inner)?)
     }
 
-    async fn put(&self, mut path_info: PathInfo) -> Result<PathInfo, Error> {
+    async fn put(&self, mut path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
         path_info.signatures.push({
             let mut nar_info = path_info.to_narinfo();
             nar_info.signatures.clear();
@@ -69,11 +68,29 @@ where
 
             Signature::new(s.name().to_string(), *s.bytes())
         });
-        self.inner.put(path_info).await
+        Ok(self.inner.put(path_info).await.map_err(Error::Inner)?)
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>> {
-        self.inner.list()
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+        self.inner.list().map_err(Error::Inner).err_into().boxed()
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("instantiating from a url is not supported")]
+    URLNotSupported,
+
+    #[error("parsing signing key failed: {0}")]
+    ParsingSigningKey(#[from] nix_compat::narinfo::SigningKeyError),
+
+    #[error("inner store returned error: {0}")]
+    Inner(#[from] snix_castore::Error),
+}
+
+impl From<Error> for snix_castore::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
     }
 }
 
@@ -91,10 +108,7 @@ pub struct KeyFileSigningPathInfoServiceConfig {
 impl TryFrom<url::Url> for KeyFileSigningPathInfoServiceConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(_url: url::Url) -> Result<Self, Self::Error> {
-        Err(Error::StorageError(
-            "Instantiating a SigningPathInfoService from a url is not supported".into(),
-        )
-        .into())
+        Err(Error::URLNotSupported)?
     }
 }
 
@@ -108,8 +122,9 @@ impl ServiceBuilder for KeyFileSigningPathInfoServiceConfig {
     ) -> Result<Arc<dyn PathInfoService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let inner = context.resolve::<Self::Output>(&self.inner).await?;
         let signing_key = parse_keypair(tokio::fs::read_to_string(&self.keyfile).await?.trim())
-            .map_err(|e| Error::StorageError(e.to_string()))?
+            .map_err(Error::ParsingSigningKey)?
             .0;
+
         Ok(Arc::new(SigningPathInfoService {
             instance_name: instance_name.to_string(),
             inner,
