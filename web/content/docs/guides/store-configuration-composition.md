@@ -98,7 +98,7 @@ anything serde can deserialize), and the composition hierarchy needs to be built
 separately for each `{Blob,Directory,Pathinfo}Service`, dropping the namespaces
 present in the TOML.
 
-#### Example: combined remote/local blobservice
+#### Example: combined remote/local BlobService
 This fetches blobs from a local store. If not found there, a remote store is
 queried, and results are returned to the client and inserted into the local
 store, to make subsequent lookups not query the remote again.
@@ -121,7 +121,7 @@ url = "grpc+http://[::1]:8000"
 # […] directoryservices/pathinfoservices go here […]
 ```
 
-### Example: LRU cache wrapping pathinfoservice
+### Example: LRU cache wrapping PathInfoService
 This keeps the last 1000 requested `PathInfo`s around in a local cache.
 ```toml
 [pathinfoservices.root]
@@ -140,7 +140,7 @@ url = "grpc+http://localhost:8000"
 # […] blobservices/directoryservices go here […]
 ```
 
-### Example: Self-contained fetch-through snIx-store for `cache.nixos.org`.
+### Example: Self-contained fetch-through Snix Store for `cache.nixos.org`.
 This provides a `PathInfoService` "containing" `PathInfo` that are in
 `cache.nixos.org`.
 
