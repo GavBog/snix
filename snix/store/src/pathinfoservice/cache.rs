@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use futures::stream::BoxStream;
+use futures::{TryStreamExt, stream::BoxStream};
 use nix_compat::nixbase32;
-use snix_castore::Error;
 use snix_castore::composition::{CompositionContext, ServiceBuilder};
 use tonic::async_trait;
 use tracing::{debug, instrument};
@@ -37,19 +36,22 @@ where
     PS2: PathInfoService,
 {
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, Error> {
-        match self.near.get(digest).await? {
+    async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, snix_castore::Error> {
+        match self.near.get(digest).await.map_err(Error::NearGet)? {
             Some(path_info) => {
                 debug!("serving from cache");
                 Ok(Some(path_info))
             }
             None => {
                 debug!("not found in near, asking remote…");
-                match self.far.get(digest).await? {
+                match self.far.get(digest).await.map_err(Error::FarGet)? {
                     None => Ok(None),
                     Some(path_info) => {
                         debug!("found in remote, adding to cache");
-                        self.near.put(path_info.clone()).await?;
+                        self.near
+                            .put(path_info.clone())
+                            .await
+                            .map_err(Error::NearPut)?;
                         Ok(Some(path_info))
                     }
                 }
@@ -58,35 +60,54 @@ where
     }
 
     #[instrument(level = "trace", skip_all, fields(path_info.digest = nixbase32::encode(&digest), instance_name = %self.instance_name))]
-    async fn has(&self, digest: [u8; 20]) -> Result<bool, Error> {
+    async fn has(&self, digest: [u8; 20]) -> Result<bool, snix_castore::Error> {
         // FUTUREWORK: queue background tasks if ! self.near.has && self.far.has ? (configurable)
-        Ok(self.near.has(digest).await? || self.far.has(digest).await?)
+        Ok(self.near.has(digest).await.map_err(Error::NearGet)?
+            || self.far.has(digest).await.map_err(Error::FarGet)?)
     }
 
-    async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, Error> {
-        Err(Error::StorageError("unimplemented".to_string()))
+    async fn put(&self, _path_info: PathInfo) -> Result<PathInfo, snix_castore::Error> {
+        Err(Error::Unimplemented)?
     }
 
-    fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>> {
-        Box::pin(tokio_stream::once(Err(Error::StorageError(
-            "unimplemented".to_string(),
-        ))))
+    fn list(&self) -> BoxStream<'static, Result<PathInfo, snix_castore::Error>> {
+        Box::pin(tokio_stream::once(Err(Error::Unimplemented)).err_into())
     }
 }
 
 #[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CacheConfig {
     pub near: String,
     pub far: String,
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("instantiating from a url is not supported")]
+    URLNotSupported,
+
+    #[error("getting from near: {0}")]
+    NearGet(#[source] snix_castore::Error),
+    #[error("putting into near: {0}")]
+    NearPut(#[source] snix_castore::Error),
+    #[error("getting from far: {0}")]
+    FarGet(#[source] snix_castore::Error),
+
+    #[error("puts are unimplemented")]
+    Unimplemented,
+}
+
+impl From<Error> for snix_castore::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
+    }
+}
+
 impl TryFrom<url::Url> for CacheConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(_url: url::Url) -> Result<Self, Self::Error> {
-        Err(Error::StorageError(
-            "Instantiating a CombinedPathInfoService from a url is not supported".into(),
-        )
-        .into())
+        Err(Error::URLNotSupported)?
     }
 }
 
