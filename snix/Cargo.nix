@@ -24284,9 +24284,9 @@ rec {
       };
       "tracing-tracy" = rec {
         crateName = "tracing-tracy";
-        version = "0.11.4";
+        version = "0.11.1";
         edition = "2021";
-        sha256 = "1fp4asppg1kzz44ww4961xgd1nfj1gf57ajcwklhyvm9mx91iahf";
+        sha256 = "1ziz1msy34h1xak7v72xg7d5n2fmvr7chx4q7wkf8f349n3zirwv";
         libName = "tracing_tracy";
         authors = [
           "Simonas Kazlauskas <tracing-tracy@kazlauskas.me>"
@@ -24319,7 +24319,6 @@ rec {
           "callstack-inlines" = [ "client/callstack-inlines" ];
           "code-transfer" = [ "client/code-transfer" ];
           "context-switch-tracing" = [ "client/context-switch-tracing" ];
-          "debuginfod" = [ "client/debuginfod" ];
           "default" = [
             "enable"
             "system-tracing"
@@ -24341,7 +24340,6 @@ rec {
           "sampling" = [ "client/sampling" ];
           "system-tracing" = [ "client/system-tracing" ];
           "timer-fallback" = [ "client/timer-fallback" ];
-          "verify" = [ "client/verify" ];
         };
         resolvedDefaultFeatures = [
           "broadcast"
@@ -24357,9 +24355,9 @@ rec {
       };
       "tracy-client" = rec {
         crateName = "tracy-client";
-        version = "0.18.3";
+        version = "0.17.6";
         edition = "2021";
-        sha256 = "0ir9hy2g8ddbvnmldfnrhf1a39jaglm77i3iz7z336z4byh25mwi";
+        sha256 = "0zkwz9aq97znyal3hz9wmxya97pj01ddpv92ha7l39a6fdw2s83k";
         libName = "tracy_client";
         authors = [
           "Simonas Kazlauskas <tracy-client@kazlauskas.me>"
@@ -24386,7 +24384,6 @@ rec {
           "callstack-inlines" = [ "sys/callstack-inlines" ];
           "code-transfer" = [ "sys/code-transfer" ];
           "context-switch-tracing" = [ "sys/context-switch-tracing" ];
-          "crash-handler" = [ "sys/crash-handler" ];
           "debuginfod" = [ "sys/debuginfod" ];
           "default" = [
             "enable"
@@ -24396,7 +24393,6 @@ rec {
             "code-transfer"
             "broadcast"
             "callstack-inlines"
-            "crash-handler"
           ];
           "delayed-init" = [ "sys/delayed-init" ];
           "demangle" = [
@@ -24428,9 +24424,9 @@ rec {
       };
       "tracy-client-sys" = rec {
         crateName = "tracy-client-sys";
-        version = "0.27.0";
+        version = "0.24.3";
         edition = "2021";
-        sha256 = "07yv23nh5wj6gd7l36ipxg0yr5cgkjzqyqamlybk0as6f2n93crg";
+        sha256 = "0ps3iwb7q1fzs9pir6b0nqi8n7i67lci4jp6z4xrq8s8lmyz7zv9";
         libName = "tracy_client_sys";
         authors = [
           "Simonas Kazlauskas <tracy-client-sys@kazlauskas.me>"
@@ -24458,7 +24454,6 @@ rec {
             "code-transfer"
             "broadcast"
             "callstack-inlines"
-            "crash-handler"
           ];
           "manual-lifetime" = [ "delayed-init" ];
         };
