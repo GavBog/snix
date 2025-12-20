@@ -8,12 +8,11 @@ use std::{
 
 use data_encoding::HEXLOWER;
 use fastcdc::v2020::AsyncStreamCDC;
-use futures::Future;
+use futures::{Future, TryStreamExt};
 use object_store::{ObjectStore, path::Path};
 use pin_project_lite::pin_project;
 use prost::Message;
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
-use tokio_stream::StreamExt;
 use tonic::async_trait;
 use tracing::{Level, debug, instrument, trace};
 use url::Url;
@@ -342,27 +341,18 @@ async fn chunk_and_upload<R: AsyncRead + Unpin>(
     let mut chunker =
         AsyncStreamCDC::new(&mut b3_r, min_chunk_size, avg_chunk_size, max_chunk_size);
 
-    /// This really should just belong into the closure at
-    /// `chunker.as_stream().then(|_| { … })``, but if we try to, rustc spits
-    /// higher-ranked lifetime errors at us.
-    async fn fastcdc_chunk_uploader(
-        resp: Result<fastcdc::v2020::ChunkData, fastcdc::v2020::Error>,
-        base_path: Path,
-        object_store: Arc<dyn ObjectStore>,
-    ) -> std::io::Result<ChunkMeta> {
-        let chunk_data = resp?;
-        let chunk_digest: B3Digest = blake3::hash(&chunk_data.data).as_bytes().into();
-        let chunk_path = derive_chunk_path(&base_path, &chunk_digest);
-
-        upload_chunk(object_store, chunk_digest, chunk_path, chunk_data.data).await
-    }
-
     // Use the fastcdc chunker to produce a stream of chunks, and upload these
     // that don't exist to the backend.
     let chunks = chunker
         .as_stream()
-        .then(|resp| fastcdc_chunk_uploader(resp, base_path.clone(), object_store.clone()))
-        .collect::<io::Result<Vec<ChunkMeta>>>()
+        .err_into()
+        .and_then(|chunk_data| {
+            let object_store = object_store.clone();
+            let chunk_digest: B3Digest = blake3::hash(&chunk_data.data).as_bytes().into();
+            let chunk_path = derive_chunk_path(&base_path, &chunk_digest);
+            upload_chunk(object_store, chunk_digest, chunk_path, chunk_data.data)
+        })
+        .try_collect::<Vec<ChunkMeta>>()
         .await?;
 
     let chunks = if chunks.len() < 2 {
