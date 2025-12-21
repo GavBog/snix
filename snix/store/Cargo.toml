@@ -60,7 +60,7 @@ reqwest = { workspace = true, features = ["rustls-tls-native-roots", "stream"] }
 reqwest-middleware.workspace = true
 lru.workspace = true
 parking_lot.workspace = true
-snix-tracing = { path = "../tracing", features = ["tonic", "reqwest"] }
+snix-tracing = { path = "../tracing", features = ["clap", "reqwest", "tonic"] }
 tracing.workspace = true
 tracing-indicatif.workspace = true
 hyper-util.workspace = true

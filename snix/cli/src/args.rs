@@ -70,6 +70,9 @@ pub struct Args {
     #[arg(long, env, default_value = "dummy://")]
     pub build_service_addr: String,
 
+    #[clap(flatten)]
+    pub tracing_args: snix_tracing::TracingArgs,
+
     /// An optional path in which Derivations encountered during evaluation
     /// are dumped into, after evaluation. If it doesn't exist, the directory is created.
     ///

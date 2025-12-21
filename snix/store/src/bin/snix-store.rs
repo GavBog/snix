@@ -53,9 +53,8 @@ static GLOBAL: MiMalloc = MiMalloc;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Whether to configure OTLP. Set --otlp=false to disable.
-    #[arg(long, default_missing_value = "true", default_value = "true", num_args(0..=1), require_equals(true), action(clap::ArgAction::Set))]
-    otlp: bool,
+    #[clap(flatten)]
+    tracing_args: snix_tracing::TracingArgs,
 
     #[command(subcommand)]
     command: Commands,
@@ -532,17 +531,10 @@ async fn run_cli(
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
-    let tracing_handle = {
-        let mut builder = snix_tracing::TracingBuilder::default();
-        builder = builder.enable_progressbar();
-        #[cfg(feature = "otlp")]
-        {
-            if cli.otlp {
-                builder = builder.enable_otlp("snix.store");
-            }
-        }
-        builder.build()?
-    };
+    let tracing_handle = snix_tracing::TracingBuilder::default()
+        .handle_tracing_args("snix.store", &cli.tracing_args)
+        .enable_progressbar()
+        .build()?;
 
     tokio::select! {
         res = tokio::signal::ctrl_c() => {

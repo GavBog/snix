@@ -263,6 +263,17 @@ impl TracingBuilder {
             chrome_guard: std::rc::Rc::new(chrome_guard),
         })
     }
+
+    #[cfg(feature = "clap")]
+    /// Configure with the tracing-related args.
+    pub fn handle_tracing_args(mut self, service_name: &'static str, args: &TracingArgs) -> Self {
+        #[cfg(feature = "otlp")]
+        if args.otlp {
+            self = self.enable_otlp(service_name)
+        }
+
+        self
+    }
 }
 
 #[cfg(feature = "otlp")]
@@ -345,4 +356,13 @@ fn gen_meter_provider(
         .with_reader(reader)
         .with_resource(gen_resources(service_name))
         .build())
+}
+
+#[cfg(feature = "clap")]
+#[derive(clap::Parser, Clone)]
+pub struct TracingArgs {
+    #[cfg(feature = "otlp")]
+    /// Whether to configure OTLP.
+    #[arg(long, action(clap::ArgAction::SetTrue))]
+    otlp: bool,
 }

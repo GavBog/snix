@@ -73,6 +73,7 @@
 
   services.nar-bridge = {
     enable = true;
+    enableOTLP = true;
 
     settings = {
       blobservices = {

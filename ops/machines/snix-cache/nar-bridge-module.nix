@@ -23,12 +23,15 @@ let
     "sd-listen"
     "--experimental-store-composition"
     storeCompositionFile
-  ];
+  ]
+  ++ lib.optionals cfg.enableOTLP [ "--otlp" ];
 in
 {
   options = {
     services.nar-bridge = {
       enable = lib.mkEnableOption "nar-bridge service";
+
+      enableOTLP = lib.mkEnableOption "support for OpenTelemetry";
 
       settings = lib.mkOption {
         type = storeCompositionFormat.type;

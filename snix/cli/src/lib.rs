@@ -28,38 +28,29 @@ pub mod repl;
 pub use args::Args;
 pub use repl::Repl;
 
-pub fn init_io_handle(tokio_runtime: &tokio::runtime::Runtime, args: &Args) -> Rc<SnixStoreIO> {
+pub async fn init_io_handle(args: &Args) -> SnixStoreIO {
     let (blob_service, directory_service, path_info_service, nar_calculation_service) =
-        tokio_runtime
-            .block_on(snix_store::utils::construct_services(
-                args.service_addrs.clone(),
-            ))
+        snix_store::utils::construct_services(args.service_addrs.clone())
+            .await
             .expect("unable to setup {blob|directory|pathinfo}service before interpreter setup");
 
-    let build_service = tokio_runtime
-        .block_on({
-            let blob_service = blob_service.clone();
-            let directory_service = directory_service.clone();
-            async move {
-                buildservice::from_addr(
-                    &args.build_service_addr,
-                    blob_service.clone(),
-                    directory_service.clone(),
-                )
-                .await
-            }
-        })
-        .expect("unable to setup buildservice before interpreter setup");
-
-    Rc::new(SnixStoreIO::new(
+    let build_service = buildservice::from_addr(
+        &args.build_service_addr,
         blob_service.clone(),
         directory_service.clone(),
+    )
+    .await
+    .expect("unable to setup buildservice before interpreter setup");
+
+    SnixStoreIO::new(
+        blob_service,
+        directory_service,
         path_info_service,
         nar_calculation_service.into(),
         build_service.into(),
-        tokio_runtime.handle().clone(),
+        tokio::runtime::Handle::current(),
         args.hashed_mirrors.clone(),
-    ))
+    )
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

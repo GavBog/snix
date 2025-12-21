@@ -4399,11 +4399,11 @@ dependencies = [
  "mime_guess",
  "path-clean",
  "snix-castore",
+ "snix-tracing",
  "tokio",
  "tokio-listener",
  "tokio-util",
  "tracing",
- "tracing-subscriber",
  "tracing-test",
 ]
 
@@ -4603,6 +4603,7 @@ name = "snix-tracing"
 version = "0.1.0"
 dependencies = [
  "axum 0.7.9",
+ "clap",
  "http 1.4.0",
  "opentelemetry",
  "opentelemetry-http",

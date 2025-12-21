@@ -11110,6 +11110,10 @@ rec {
           {
             name = "snix-tracing";
             packageId = "snix-tracing";
+            features = [
+              "clap"
+              "otlp"
+            ];
           }
           {
             name = "tokio";
@@ -18273,6 +18277,10 @@ rec {
           {
             name = "snix-tracing";
             packageId = "snix-tracing";
+            features = [
+              "clap"
+              "otlp"
+            ];
           }
           {
             name = "thiserror";
@@ -18510,7 +18518,10 @@ rec {
           {
             name = "snix-tracing";
             packageId = "snix-tracing";
-            features = [ "tonic" ];
+            features = [
+              "clap"
+              "tonic"
+            ];
           }
           {
             name = "thiserror";
@@ -18793,6 +18804,15 @@ rec {
             packageId = "snix-castore";
           }
           {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [
+              "clap"
+              "reqwest"
+              "tonic"
+            ];
+          }
+          {
             name = "tokio";
             packageId = "tokio";
             features = [ "tracing" ];
@@ -18814,10 +18834,6 @@ rec {
           {
             name = "tracing";
             packageId = "tracing";
-          }
-          {
-            name = "tracing-subscriber";
-            packageId = "tracing-subscriber";
           }
         ];
         devDependencies = [
@@ -18954,12 +18970,15 @@ rec {
           }
         ];
         features = {
+          "default" = [ "otlp" ];
+          "otlp" = [ "snix-tracing/otlp" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracy" = [ "snix-tracing/tracy" ];
           "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
         };
         resolvedDefaultFeatures = [
           "default"
+          "otlp"
           "tracing-chrome"
           "tracy"
           "xp-store-composition-cli"
@@ -19593,8 +19612,9 @@ rec {
             name = "snix-tracing";
             packageId = "snix-tracing";
             features = [
-              "tonic"
+              "clap"
               "reqwest"
+              "tonic"
             ];
           }
           {
@@ -19779,6 +19799,12 @@ rec {
             optional = true;
           }
           {
+            name = "clap";
+            packageId = "clap";
+            optional = true;
+            features = [ "derive" ];
+          }
+          {
             name = "http";
             packageId = "http 1.4.0";
             optional = true;
@@ -19870,6 +19896,7 @@ rec {
         features = {
           "axum" = [ "dep:axum" ];
           "chrome" = [ "dep:tracing-chrome" ];
+          "clap" = [ "dep:clap" ];
           "otlp" = [
             "dep:tracing-opentelemetry"
             "dep:opentelemetry"
@@ -19889,6 +19916,7 @@ rec {
         resolvedDefaultFeatures = [
           "axum"
           "chrome"
+          "clap"
           "default"
           "otlp"
           "reqwest"

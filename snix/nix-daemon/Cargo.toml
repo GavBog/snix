@@ -12,7 +12,7 @@ mimalloc.workspace = true
 nix-compat = { path = "../nix-compat" }
 snix-castore = { path = "../castore" }
 snix-store = { path = "../store" }
-snix-tracing = { path = "../tracing" }
+snix-tracing = { path = "../tracing", features = ["clap", "otlp"] }
 tokio = { workspace = true, features = [
   "fs",
   "macros",

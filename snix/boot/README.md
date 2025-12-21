@@ -34,7 +34,7 @@ export PATH=$PATH:$PWD/target/release-with-debug
 Now, spin up snix-daemon, connecting to some (local) backends:
 
 ```
-snix-store --otlp=false daemon \
+snix-store daemon \
   --blob-service-addr=objectstore+file://$PWD/blobs \
   --directory-service-addr=redb://$PWD/directories.redb \
   --path-info-service-addr=redb://$PWD/pathinfo.redb &
@@ -43,7 +43,7 @@ snix-store --otlp=false daemon \
 Copy some data into snix-store (we use `nar-bridge` for this for now):
 
 ```
-mg run //snix:nar-bridge -- --otlp=false &
+mg run //snix:nar-bridge &
 rm -Rf ~/.cache/nix; nix copy --to http://localhost:9000\?compression\=none $(mg build //third_party/nixpkgs:hello)
 pkill nar-bridge
 ```

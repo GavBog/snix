@@ -20,13 +20,19 @@ struct Args {
     /// Whether a directory listing should be returned if a client requests a directory but none of the `index_names` matched
     #[arg(short, long)]
     auto_index: bool,
+
+    #[clap(flatten)]
+    tracing_args: snix_tracing::TracingArgs,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt().init();
-
     let args = Args::parse();
+
+    let _tracing_handle = snix_tracing::TracingBuilder::default()
+        .handle_tracing_args("snix.castore-http", &args.tracing_args)
+        .enable_progressbar()
+        .build()?;
 
     snix_castore_http::router::gen_router(
         args.listen_args,

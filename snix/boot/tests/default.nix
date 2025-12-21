@@ -74,9 +74,7 @@ let
           BLOB_SERVICE_ADDR=${lib.escapeShellArg blobServiceAddr} \
           DIRECTORY_SERVICE_ADDR=${lib.escapeShellArg directoryServiceAddr} \
           PATH_INFO_SERVICE_ADDR=${lib.escapeShellArg pathInfoServiceAddr} \
-            snix-store \
-              --otlp=false \
-              daemon -l $PWD/snix-store.sock &
+            snix-store daemon -l $PWD/snix-store.sock &
 
           # Wait for the service to report healthy.
           timeout 22 sh -c "until ${pkgs.ip2unix}/bin/ip2unix -r out,path=$PWD/snix-store.sock ${pkgs.grpc-health-check}/bin/grpc-health-check --address 127.0.0.1 --port 8080; do sleep 1; done"
@@ -90,20 +88,18 @@ let
         + lib.optionalString (!isClosure) ''
           echo "Importing ${path} into snix-store with name ${importPathName}…"
           cp -R ${path} ${importPathName}
-          outpath=$(snix-store --otlp=false import ${importPathName})
+          outpath=$(snix-store import ${importPathName})
 
           echo "imported to $outpath"
         ''
         + lib.optionalString (isClosure && !useNarBridge) ''
           echo "Copying closure ${path}…"
           # This picks up the `closure` key in `$NIX_ATTRS_JSON_FILE` automatically.
-          snix-store --otlp=false copy
+          snix-store copy
         ''
         + lib.optionalString (isClosure && useNarBridge) ''
           echo "Starting nar-bridge…"
-          nar-bridge \
-            --otlp=false \
-            -l $PWD/nar-bridge.sock &
+          nar-bridge -l $PWD/nar-bridge.sock &
 
           # Wait for nar-bridge to report healthy.
           timeout 22 sh -c "until ${pkgs.curl}/bin/curl -s --unix-socket $PWD/nar-bridge.sock http:///nix-binary-cache; do sleep 1; done"

@@ -20,27 +20,17 @@ struct Cli {
     #[clap(flatten)]
     listen_args: tokio_listener::ListenerAddressLFlag,
 
-    #[cfg(feature = "otlp")]
-    /// Whether to configure OTLP. Set --otlp=false to disable.
-    #[arg(long, default_missing_value = "true", default_value = "true", num_args(0..=1), require_equals(true), action(clap::ArgAction::Set))]
-    otlp: bool,
+    #[clap(flatten)]
+    tracing_args: snix_tracing::TracingArgs,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let cli = Cli::parse();
+    let args = Cli::parse();
 
-    let tracing_handle = {
-        let mut builder = snix_tracing::TracingBuilder::default();
-        builder = builder.enable_progressbar();
-        #[cfg(feature = "otlp")]
-        {
-            if cli.otlp {
-                builder = builder.enable_otlp("snix.daemon");
-            }
-        }
-        builder.build()?
-    };
+    let tracing_handle = snix_tracing::TracingBuilder::default()
+        .handle_tracing_args("snix.nix-daemon", &args.tracing_args)
+        .build()?;
 
     tokio::select! {
         res = tokio::signal::ctrl_c() => {
@@ -50,7 +40,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             }
             Ok(())
         },
-        res = run(cli) => {
+        res = run(args) => {
             if let Err(e) = tracing_handle.shutdown().await {
                 eprintln!("failed to shutdown tracing: {e}");
             }

@@ -39,27 +39,17 @@ struct Cli {
     #[arg(long, env, default_value_t = NonZeroUsize::new(1000).unwrap())]
     root_nodes_cache_capacity: NonZeroUsize,
 
-    #[cfg(feature = "otlp")]
-    /// Whether to configure OTLP. Set --otlp=false to disable.
-    #[arg(long, default_missing_value = "true", default_value = "true", num_args(0..=1), require_equals(true), action(clap::ArgAction::Set))]
-    otlp: bool,
+    #[clap(flatten)]
+    pub tracing_args: snix_tracing::TracingArgs,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
-    let _tracing_handle = {
-        #[allow(unused_mut)]
-        let mut builder = snix_tracing::TracingBuilder::default();
-        #[cfg(feature = "otlp")]
-        {
-            if cli.otlp {
-                builder = builder.enable_otlp("nar-bridge");
-            }
-        }
-        builder.build()?
-    };
+    let _tracing_handle = snix_tracing::TracingBuilder::default()
+        .handle_tracing_args("snix.nar-bridge", &cli.tracing_args)
+        .build()?;
 
     // initialize stores
     let (blob_service, directory_service, path_info_service, _nar_calculation_service) =

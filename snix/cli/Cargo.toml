@@ -36,7 +36,8 @@ rand = "0.8.5"
 expect-test.workspace = true
 
 [features]
-default = []
+default = ["otlp"]
+otlp = ["snix-tracing/otlp"]
 tracing-chrome = ["snix-tracing/chrome"]
 tracy = ["snix-tracing/tracy"]
 xp-store-composition-cli = ["snix-store/xp-composition-cli"]

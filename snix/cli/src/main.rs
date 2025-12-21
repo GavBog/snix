@@ -64,19 +64,22 @@ fn lint<E: Write + Clone + Send>(
     result.errors.is_empty()
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Args::parse();
 
-    let tracing_handle = snix_tracing::TracingBuilder::default()
-        .enable_progressbar()
-        .build()
-        .expect("unable to set up tracing subscriber");
-    let mut stdout = tracing_handle.get_stdout_writer();
-    let mut stderr = tracing_handle.get_stderr_writer();
+    let tokio_runtime = tokio::runtime::Runtime::new()?;
+    let (mut stdout, mut stderr, io_handle) = tokio_runtime.block_on(async {
+        let tracing_handle = snix_tracing::TracingBuilder::default()
+            .handle_tracing_args("snix.store", &args.tracing_args)
+            .enable_progressbar()
+            .build()?;
 
-    let tokio_runtime = tokio::runtime::Runtime::new().expect("failed to setup tokio runtime");
-
-    let io_handle = init_io_handle(&tokio_runtime, &args);
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>((
+            tracing_handle.get_stdout_writer(),
+            tracing_handle.get_stderr_writer(),
+            Rc::new(init_io_handle(&args).await),
+        ))
+    })?;
 
     if let Some(file) = &args.script {
         run_file(&mut stdout, &mut stderr, io_handle, file.clone(), &args)
@@ -102,6 +105,8 @@ fn main() {
         let mut repl = Repl::new(io_handle, &args);
         repl.run(&mut stdout, &mut stderr)
     }
+
+    Ok(())
 }
 
 fn run_file<O: Write, E: Write + Clone + Send>(

@@ -39,7 +39,8 @@ be available.
 
 
 ## OTLP
-Snix comes with [OpenTelemetry][] enabled by default [^opentelemetry].
+Snix comes with [OpenTelemetry][] support [^opentelemetry].
+It can be enabled by runnig Snix with the `--otlp` command line argument.
 You need to have an OTLP collector running, which will collect these traces.
 
 It will give you "callgraphs" of various Snix components, alongside with

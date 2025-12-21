@@ -1,8 +1,8 @@
-use std::ffi::OsString;
-
 use clap::Parser;
 use expect_test::expect;
 use snix_cli::init_io_handle;
+use std::ffi::OsString;
+use std::rc::Rc;
 
 macro_rules! test_repl {
     ($name:ident() {$($send:expr => $expect:expr;)*}) => {
@@ -14,7 +14,8 @@ macro_rules! test_repl {
               OsString::from("--extra-nix-path"),
               OsString::from("nixpkgs=/tmp"),
             ]);
-            let mut repl = snix_cli::Repl::new(init_io_handle(&tokio_runtime, &args), &args);
+            let io_handle = tokio_runtime.block_on(init_io_handle(&args));
+            let mut repl = snix_cli::Repl::new(Rc::new(io_handle), &args);
             let mut buffer = std::io::Cursor::new(Vec::new());
             $({
                 let result = repl.send(&mut buffer, $send.into());

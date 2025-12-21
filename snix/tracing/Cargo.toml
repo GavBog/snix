@@ -5,6 +5,7 @@ edition = "2024"
 rust-version.workspace = true
 
 [dependencies]
+clap = { workspace = true, optional = true, features = ["derive"] }
 tracing = { workspace = true, features = [
   "max_level_trace",
   "release_max_level_debug",
@@ -39,6 +40,7 @@ axum = { workspace = true, optional = true }
 [features]
 default = []
 chrome = ["dep:tracing-chrome"]
+clap = ["dep:clap"]
 otlp = [
   "dep:tracing-opentelemetry",
   "dep:opentelemetry",

@@ -27,6 +27,9 @@ static GLOBAL: MiMalloc = MiMalloc;
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+
+    #[clap(flatten)]
+    tracing_args: snix_tracing::TracingArgs,
 }
 #[derive(Subcommand)]
 enum Commands {
@@ -48,13 +51,14 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let cli = Cli::parse();
+    let args = Cli::parse();
 
-    snix_tracing::TracingBuilder::default()
+    let _tracing_handle = snix_tracing::TracingBuilder::default()
+        .handle_tracing_args("snix.build", &args.tracing_args)
         .enable_progressbar()
         .build()?;
 
-    match cli.command {
+    match args.command {
         Commands::Daemon {
             listen_address,
             blob_service_addr,

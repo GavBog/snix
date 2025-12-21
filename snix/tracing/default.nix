@@ -12,11 +12,12 @@
       // (depot.snix.utils.mkFeaturePowerset {
         inherit (old) crateName;
         features = [
+          "axum"
+          "clap"
           "otlp"
           "tracy"
           "tonic"
           "reqwest"
-          "axum"
         ];
       });
   })
