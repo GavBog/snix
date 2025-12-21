@@ -331,7 +331,7 @@ impl CompositionContext<'_> {
 
             #[cfg(not(feature = "xp-composition-url-refs"))]
             {
-                return Err(CompositionError::InvalidReference(s.to_owned()).into());
+                Err(CompositionError::InvalidReference(s.to_owned()))
             }
         }
     }

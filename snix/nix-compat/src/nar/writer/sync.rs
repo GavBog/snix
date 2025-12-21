@@ -223,6 +223,7 @@ impl<'a, W: Write> Directory<'a, W> {
         debug_assert!(name != b"..", "name == {:?}", "..");
 
         match self.prev_name {
+            #[cfg_attr(not(debug_assertions), expect(clippy::unit_arg))]
             None => {
                 self.prev_name = Some(into_name(name));
             }
