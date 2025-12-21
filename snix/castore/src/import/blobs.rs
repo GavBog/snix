@@ -9,7 +9,7 @@ use tokio::{
     task::{JoinError, JoinSet},
 };
 use tokio_util::io::InspectReader;
-use tracing::Instrument;
+use tracing::{Instrument, Level, instrument};
 
 use crate::{B3Digest, Path, PathBuf, blobservice::BlobService};
 
@@ -79,6 +79,7 @@ where
     /// and uploaded in the background.
     /// This will read the entirety of the provided reader unless an error occurs, even if blobs
     /// are uploaded in the background..
+    #[instrument(skip_all, fields(nar.path=%path, blob.size=expected_size), err, ret(level = Level::TRACE, Display))]
     pub async fn upload<R>(
         &mut self,
         path: &Path,
