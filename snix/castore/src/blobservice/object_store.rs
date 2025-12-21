@@ -25,6 +25,9 @@ use crate::{
 
 use super::{BlobReader, BlobService, BlobWriter, ChunkedReader};
 
+/// The number of chunks that will be uploaded in parallel, per blob.
+const COCURRENT_CHUNK_UPLOADS: usize = 64;
+
 /// Uses any object storage supported by the [object_store] crate to provide a
 /// snix-castore [BlobService].
 ///
@@ -346,12 +349,13 @@ async fn chunk_and_upload<R: AsyncRead + Unpin>(
     let chunks = chunker
         .as_stream()
         .err_into()
-        .and_then(|chunk_data| {
+        .map_ok(|chunk_data| {
             let object_store = object_store.clone();
             let chunk_digest: B3Digest = blake3::hash(&chunk_data.data).as_bytes().into();
             let chunk_path = derive_chunk_path(&base_path, &chunk_digest);
             upload_chunk(object_store, chunk_digest, chunk_path, chunk_data.data)
         })
+        .try_buffered(COCURRENT_CHUNK_UPLOADS)
         .try_collect::<Vec<ChunkMeta>>()
         .await?;
 
