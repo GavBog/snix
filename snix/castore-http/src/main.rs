@@ -1,12 +1,32 @@
 use clap::Parser;
 use snix_castore::Node;
-use snix_castore_http::cli::CliArgs;
+
+use snix_castore::{B3Digest, utils::ServiceUrlsGrpc};
+
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    /// The address to listen on.
+    #[clap(flatten)]
+    listen_args: tokio_listener::ListenerAddressLFlag,
+    #[clap(flatten)]
+    service_addrs: ServiceUrlsGrpc,
+    /// The root directory digest to serve.
+    #[arg(short, long)]
+    root_directory: B3Digest,
+    /// The name of the file to serve if a client requests a directory, seperated by ','. e.g. "index.html,index.htm"
+    #[arg(long, value_delimiter = ',')]
+    index_names: Vec<String>,
+    /// Whether a directory listing should be returned if a client requests a directory but none of the `index_names` matched
+    #[arg(short, long)]
+    auto_index: bool,
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt().init();
 
-    let args: CliArgs = snix_castore_http::cli::CliArgs::parse();
+    let args = Args::parse();
 
     snix_castore_http::router::gen_router(
         args.listen_args,
