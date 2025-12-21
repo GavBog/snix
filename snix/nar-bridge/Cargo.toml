@@ -55,3 +55,6 @@ xp-store-composition-cli = ["snix-store/xp-composition-cli"]
 [dev-dependencies]
 axum-test = "16.4.0"
 sha2.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true

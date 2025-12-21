@@ -33,6 +33,18 @@ let
     );
   };
 
+  commonCraneArgs = {
+    src = src;
+    strictDeps = true;
+    nativeBuildInputs = with pkgs; [
+      pkg-config
+      protobuf
+    ];
+    PROTO_ROOT = protos;
+    SNIX_BUILD_SANDBOX_SHELL = "/homeless-shelter";
+  };
+  nightlyCargoArtifacts = depot.third_party.crane.libNightly.buildDepsOnly commonCraneArgs;
+
   # The cleaned sources.
   src = depot.third_party.gitignoreSource ./.;
 
@@ -102,19 +114,28 @@ in
   );
 
   # Build the Rust documentation for publishing on snix.dev/rustdoc.
-  rust-docs = mkCargoBuild {
-    name = "snix-rust-docs";
-
-    buildInputs = [
-      pkgs.fuse
-    ]
-    ++ lib.optional pkgs.stdenv.isDarwin pkgs.libiconv;
-
-    buildPhase = ''
-      RUSTDOCFLAGS="-D rustdoc::broken-intra-doc-links" cargo doc --document-private-items
-      mv target/doc $out
-    '';
-  };
+  rust-docs = depot.third_party.crane.cargoDocsRs (
+    commonCraneArgs
+    // {
+      name = "snix-rust-docs";
+      cargoArtifacts = nightlyCargoArtifacts;
+      RUSTDOCFLAGS = "-D rustdoc::broken-intra-doc-links --document-private-items";
+      packages = [
+        "snix-build"
+        "snix-castore"
+        "snix-castore-http"
+        "snix-cli"
+        "snix-eval"
+        "snix-glue"
+        "nar-bridge"
+        "nix-compat"
+        "nix-daemon"
+        "snix-serde"
+        "snix-store"
+        "snix-tracing"
+      ];
+    }
+  );
 
   # Run cargo clippy. We run it with -Dwarnings, so warnings cause a nonzero
   # exit code.

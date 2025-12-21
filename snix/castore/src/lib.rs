@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 mod digests;
 mod errors;
 mod hashing_reader;

@@ -11,6 +11,18 @@
         "url": "https://github.com/ryantm/agenix/archive/531beac616433bac6f9e2a19feb8e99a22a66baf.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "crane": {
+        "branch": "master",
+        "description": "A Nix library for building cargo projects. Never build twice thanks to incremental artifact caching.",
+        "homepage": "https://crane.dev",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "c1f101c1de5c2fe9838937774270ae71a7482340",
+        "sha256": "0ywij0y8n0an7875mxacix2mzkr54lmcj661qlv1jmprwhls3v62",
+        "type": "tarball",
+        "url": "https://github.com/ipetkov/crane/archive/c1f101c1de5c2fe9838937774270ae71a7482340.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "disko": {
         "branch": "master",
         "description": "Declarative disk partitioning and formatting using nix [maintainers=@Lassulus @Enzime @iFreilicht]",
@@ -99,10 +111,10 @@
         "homepage": "",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "87f0965f9f5b13fca9f38074eee8369dc767550d",
-        "sha256": "1zn183sf42hhjk3y6rccz75c72hz7pmhnig0p8q8hp28bw8187a4",
+        "rev": "66bb33fdfb50b1ee724381c3f5d6012dac6c89b3",
+        "sha256": "0ll8ryqxi9vaz06va4rdk7mmsdi44dznfqipxfq9gn9f46ngalkz",
         "type": "tarball",
-        "url": "https://github.com/oxalica/rust-overlay/archive/87f0965f9f5b13fca9f38074eee8369dc767550d.tar.gz",
+        "url": "https://github.com/oxalica/rust-overlay/archive/66bb33fdfb50b1ee724381c3f5d6012dac6c89b3.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "rustsec-advisory-db": {

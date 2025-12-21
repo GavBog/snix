@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 extern crate self as nix_compat;
 
 /// Hashes formatted string data with SHA-256, without an intermediate buffer.

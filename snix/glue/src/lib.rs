@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 pub mod builtins;
 pub mod fetchers;
 pub mod known_paths;

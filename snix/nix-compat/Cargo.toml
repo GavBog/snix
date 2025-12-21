@@ -72,3 +72,6 @@ harness = false
 [[bench]]
 name = "narinfo_parse"
 harness = false
+
+[package.metadata.docs.rs]
+all-features = true

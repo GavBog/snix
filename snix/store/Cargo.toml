@@ -98,3 +98,15 @@ xp-composition-cli = ["toml", "snix-castore/xp-composition-url-refs"]
 # Requires the following packages in $PATH:
 # cbtemulator, google-cloud-bigtable-tool
 integration = []
+
+[package.metadata.docs.rs]
+# Everything but virtiofs since that doesn't build on MacOS
+features = [
+  "cloud",
+  "fuse",
+  "otlp",
+  "tonic-reflection",
+  "tracing-chrome",
+  "tracy",
+  "xp-composition-cli",
+]

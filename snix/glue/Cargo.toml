@@ -57,3 +57,6 @@ nix_tests = []
 [[bench]]
 name = "eval"
 harness = false
+
+[package.metadata.docs.rs]
+all-features = true

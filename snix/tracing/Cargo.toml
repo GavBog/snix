@@ -52,3 +52,6 @@ tracy = ["dep:tracing-tracy"]
 tonic = ["dep:tonic", "dep:http"]
 reqwest = ["dep:reqwest-tracing"]
 axum = ["dep:axum"]
+
+[package.metadata.docs.rs]
+all-features = true

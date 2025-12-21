@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 pub mod buildservice;
 #[cfg(target_os = "linux")]
 pub mod bwrap;

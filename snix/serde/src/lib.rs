@@ -1,6 +1,7 @@
 //! `snix-serde` implements (de-)serialisation of Rust data structures
 //! to/from Nix. This is intended to make it easy to use Nix as as
 //! configuration language.
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod de;
 mod error;

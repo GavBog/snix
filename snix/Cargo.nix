@@ -11012,6 +11012,7 @@ rec {
           filter = sourceFilter;
           src = ./nix-compat-derive-tests;
         };
+        libName = "nix_compat_derive_tests";
         devDependencies = [
           {
             name = "hex-literal";

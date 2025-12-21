@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 use std::sync::LazyLock;
 use tracing::level_filters::LevelFilter;
 use tracing_indicatif::{

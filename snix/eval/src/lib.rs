@@ -11,6 +11,7 @@
 //! reading from the NIX_PATH environment variable, or interacting with files).
 //! These features are optional and the API of this crate exposes functionality
 //! for controlling how they work.
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod builtins;
 mod chunk;

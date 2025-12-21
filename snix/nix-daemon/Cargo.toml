@@ -27,3 +27,6 @@ tracing.workspace = true
 [features]
 default = ["otlp"]
 otlp = ["snix-tracing/otlp"]
+
+[package.metadata.docs.rs]
+all-features = true

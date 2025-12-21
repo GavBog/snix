@@ -117,3 +117,14 @@ xp-composition-url-refs = []
 # Requires the following packages in $PATH:
 # cbtemulator, google-cloud-bigtable-tool
 integration = []
+
+[package.metadata.docs.rs]
+# Everything but virtiofs since that doesn't build on MacOS
+features = [
+  "cloud",
+  "fs",
+  "fuse",
+  "tonic-reflection",
+  "xp-composition-cli",
+  "xp-composition-url-refs",
+]

@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{head, put};

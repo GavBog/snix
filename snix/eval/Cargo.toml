@@ -71,3 +71,6 @@ no_leak = []
 [[bench]]
 name = "eval"
 harness = false
+
+[package.metadata.docs.rs]
+all-features = true

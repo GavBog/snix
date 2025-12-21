@@ -35,8 +35,12 @@ members = [
   "store",
   "tracing",
 ]
+metadata.crane.name = "snix"
 
 [workspace.package]
+# Default version
+version = "0.1.0"
+
 # This is the Minimum Supported Rust Version (MSRV):
 # https://doc.rust-lang.org/cargo/reference/rust-version.html
 # Update with the Rust version in the pinned
