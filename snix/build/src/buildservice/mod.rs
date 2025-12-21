@@ -9,6 +9,7 @@ mod grpc;
 #[cfg(target_os = "linux")]
 mod oci;
 
+#[cfg(target_os = "linux")]
 mod bwrap;
 
 pub use dummy::DummyBuildService;
