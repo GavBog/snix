@@ -13,26 +13,6 @@ let
     defaultCrateOverrides = here.utils.defaultCrateOverridesForPkgs pkgs;
   };
 
-  # Cargo dependencies to be used with nixpkgs rustPlatform functions.
-  cargoDeps = pkgs.rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
-    # Extract the hashes from `crates` / Cargo.nix, we already get them from cargo2nix.
-    # This returns an attribute set containing "${crateName}-${version}" as key,
-    # and the outputHash as value.
-    outputHashes = builtins.listToAttrs (
-      map
-        (
-          k:
-          (lib.nameValuePair "${crates.internal.crates.${k}.crateName}-${
-            crates.internal.crates.${k}.version
-          }" crates.internal.crates.${k}.src.outputHash)
-        )
-        [
-          "wu-manber"
-        ]
-    );
-  };
-
   commonCraneArgs = {
     src = src;
     strictDeps = true;
@@ -42,8 +22,14 @@ let
     ];
     PROTO_ROOT = protos;
     SNIX_BUILD_SANDBOX_SHELL = "/homeless-shelter";
+    doInstallCargoArtifacts = false;
   };
-  nightlyCargoArtifacts = depot.third_party.crane.libNightly.buildDepsOnly commonCraneArgs;
+  cargoArtifacts = depot.third_party.crane.lib.buildDepsOnly (
+    commonCraneArgs // { doInstallCargoArtifacts = true; }
+  );
+  nightlyCargoArtifacts = depot.third_party.crane.libNightly.buildDepsOnly (
+    commonCraneArgs // { doInstallCargoArtifacts = true; }
+  );
 
   # The cleaned sources.
   src = depot.third_party.gitignoreSource ./.;
@@ -58,31 +44,14 @@ let
       here.store.protos.protos
     ];
   };
-
-  mkCargoBuild =
-    args:
-    pkgs.stdenv.mkDerivation (
-      {
-        inherit cargoDeps src;
-        PROTO_ROOT = protos;
-        SNIX_BUILD_SANDBOX_SHELL = "/homeless-shelter";
-
-        nativeBuildInputs =
-          with pkgs;
-          [
-            cargo
-            pkg-config
-            protobuf
-            rustc
-            rustPlatform.cargoSetupHook
-          ]
-          ++ (args.nativeBuildInputs or [ ]);
-      }
-      // (pkgs.lib.removeAttrs args [ "nativeBuildInputs" ])
-    );
 in
 {
-  inherit crates protos mkCargoBuild;
+  inherit
+    crates
+    protos
+    commonCraneArgs
+    cargoArtifacts
+    ;
 
   # Provide the snix logo in both .webp and .png format.
   logo =
@@ -137,28 +106,24 @@ in
     }
   );
 
-  # Run cargo clippy. We run it with -Dwarnings, so warnings cause a nonzero
+  # Run cargo clippy. We run it with --deny warnings, so warnings cause a nonzero
   # exit code.
-  clippy = mkCargoBuild {
-    name = "snix-clippy";
+  clippy = depot.third_party.crane.lib.cargoClippy (
+    commonCraneArgs
+    // {
+      name = "snix-clippy";
+      inherit cargoArtifacts;
+      cargoClippyExtraArgs = "--all-targets --no-deps --all-features -- --deny warnings";
+    }
+  );
 
-    buildInputs = [
-      pkgs.fuse
-    ];
-
-    nativeBuildInputs = with pkgs; [
-      clippy
-    ];
-
-    buildPhase = "cargo clippy --tests --all-features --benches --examples -- -Dwarnings | tee $out";
-  };
-
-  doc-tests = mkCargoBuild {
-    name = "nixrs-doc-tests";
-    buildPhase = ''
-      cargo test --doc | tee $out
-    '';
-  };
+  doc-tests = depot.third_party.crane.lib.cargoDocTest (
+    commonCraneArgs
+    // {
+      name = "snix-doc-tests";
+      inherit cargoArtifacts;
+    }
+  );
 
   crate2nix-check =
     let
