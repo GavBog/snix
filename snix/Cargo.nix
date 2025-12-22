@@ -10320,12 +10320,14 @@ rec {
             "tower-otel-http-metrics"
           ];
           "tower-otel-http-metrics" = [ "dep:tower-otel-http-metrics" ];
+          "tracing-chrome" = [ "snix-tracing/chrome" ];
           "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
         };
         resolvedDefaultFeatures = [
           "default"
           "otlp"
           "tower-otel-http-metrics"
+          "tracing-chrome"
           "xp-store-composition-cli"
         ];
       };
