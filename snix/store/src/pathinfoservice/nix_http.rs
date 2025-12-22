@@ -179,8 +179,8 @@ where
         // To construct the full PathInfo, we also need to populate the node field,
         // and for this we need to download the NAR file and ingest it into castore.
         // FUTUREWORK: Keep some database around mapping from narsha256 to
-        // (unnamed) rootnode, so we can use that (and the name from the
-        // StorePath) and avoid downloading the same NAR a second time.
+        // (unnamed) rootnode, so we can use that and avoid downloading the same
+        // NAR a second time.
 
         // create a request for the NAR file itself.
         let nar_url = self
