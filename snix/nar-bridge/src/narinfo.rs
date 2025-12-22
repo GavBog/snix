@@ -5,6 +5,7 @@ use nix_compat::{
     nix_http, nixbase32,
     store_path::StorePath,
 };
+use snix_castore::proto::write_infused_nar_path;
 use snix_store::pathinfoservice::PathInfo;
 use tracing::{Span, instrument, warn};
 
@@ -136,17 +137,10 @@ pub async fn put(
 
 /// Constructs a String in NARInfo format for the given [PathInfo].
 fn gen_narinfo_str(path_info: &PathInfo) -> String {
-    use prost::Message;
-
     let mut narinfo = path_info.to_narinfo();
-    let url = format!(
-        "nar/snix-castore/{}?narsize={}",
-        data_encoding::BASE64URL_NOPAD.encode(
-            &snix_castore::proto::Entry::from_name_and_node("".into(), path_info.node.to_owned())
-                .encode_to_vec()
-        ),
-        path_info.nar_size,
-    );
+    let mut url = String::new();
+    write_infused_nar_path(&mut url, path_info.node.clone(), narinfo.nar_size)
+        .expect("write into string");
     narinfo.url = &url;
 
     // Set FileSize to NarSize, as otherwise progress reporting in Nix looks very broken

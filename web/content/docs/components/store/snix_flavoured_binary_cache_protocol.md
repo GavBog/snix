@@ -60,7 +60,7 @@ Snix-unaware clients (like Nix) can substitute this just fine. They can even
 make use of content negotiation to still download with compression (which is
 what `nar-bridge` uses to still send NARs in compressed fashion).
 
-## castore-infused NAR URL
+## castore-infused NAR path
 While Nix usually produces NARInfo files with
 `nar/$filehash.nar[.$compressionSuffix]` as `URL` field, the field can be any
 valid (relative) URL.
@@ -79,13 +79,13 @@ the store path contents.
 `$nar_size` is used to signal the total NAR length. [^nar-size]
 
 ## NAR-{rendering,ingesting} Backends
-Using these kind of NAR URLs allows a backend to assemble NARs on the fly from
+Using these kind of NAR paths allows a backend to assemble NARs on the fly from
 only castore storage, without having to maintain any context / information about
 store paths. This makes it a good candidate to run separately.
 
 Only the write path (assuming HTTP PUT from a Nix client) needs to internally
 maintain a mapping from (recent) NAR hashes to the castore node calculated while
-receiving the NAR payload (to replace the NAR url sent by the client with the
+receiving the NAR payload (to replace the NAR path sent by the client with the
 castore-infused NAR one).
 
 This is implemented in nar-bridge, both the read path (with ranging), as well as

@@ -3,11 +3,10 @@ use axum::http::{Response, StatusCode};
 use axum::{body::Body, response::IntoResponse};
 use axum_extra::{TypedHeader, headers::Range};
 use axum_range::{KnownSize, Ranged};
-use bytes::Bytes;
-use data_encoding::BASE64URL_NOPAD;
 use futures::TryStreamExt;
 use nix_compat::{nix_http, nixbase32};
 use serde::Deserialize;
+use snix_castore::proto::parse_urlsafe_proto;
 use snix_store::nar::ingest_nar_and_hash;
 use std::io;
 use tokio_util::io::ReaderStream;
@@ -33,7 +32,6 @@ pub async fn get_head(
         ..
     }): axum::extract::State<AppState>,
 ) -> Result<impl axum::response::IntoResponse, StatusCode> {
-    use prost::Message;
     // We insist on the nar_size field being set. If the client dropped it from
     // the NARInfo we sent, it's misbehaving and we reject it.
     let nar_size = nar_size.ok_or_else(|| {
@@ -41,29 +39,9 @@ pub async fn get_head(
         StatusCode::BAD_REQUEST
     })?;
 
-    // b64decode the root node passed *by the user*
-    let root_node_proto = BASE64URL_NOPAD
-        .decode(root_node_enc.as_bytes())
-        .map_err(|e| {
-            warn!(err=%e, "unable to decode root node b64");
-            StatusCode::NOT_FOUND
-        })?;
-
-    // check the proto size to be somewhat reasonable before parsing it.
-    if root_node_proto.len() > 4096 {
-        warn!("rejected too large root node");
-        return Err(StatusCode::BAD_REQUEST);
-    }
-
-    // parse the proto
-    let root_node: snix_castore::proto::Entry = Message::decode(Bytes::from(root_node_proto))
-        .map_err(|e| {
-            warn!(err=%e, "unable to decode root node proto");
-            StatusCode::NOT_FOUND
-        })?;
-
-    let root_node = root_node.try_into_anonymous_node().map_err(|e| {
-        warn!(err=%e, "root node validation failed");
+    // Attempt to parse the root node passed *by the user*
+    let root_node = parse_urlsafe_proto(root_node_enc).ok_or_else(|| {
+        warn!("unable to parse castore-infused NAR path");
         StatusCode::NOT_FOUND
     })?;
 
