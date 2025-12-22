@@ -3,7 +3,7 @@ use std::io::{self, Cursor, Write};
 use std::task::Poll;
 use std::{collections::HashMap, sync::Arc};
 use tonic::async_trait;
-use tracing::instrument;
+use tracing::{Level, instrument};
 
 use super::{BlobReader, BlobService, BlobWriter};
 use crate::composition::{CompositionContext, ServiceBuilder};
@@ -17,7 +17,7 @@ pub struct MemoryBlobService {
 
 #[async_trait]
 impl BlobService for MemoryBlobService {
-    #[instrument(skip_all, ret, err, fields(blob.digest=%digest, instance_name=%self.instance_name))]
+    #[instrument(skip_all, ret(level = Level::TRACE), err, fields(blob.digest=%digest, instance_name=%self.instance_name))]
     async fn has(&self, digest: &B3Digest) -> io::Result<bool> {
         let db = self.db.read();
         Ok(db.contains_key(digest))
