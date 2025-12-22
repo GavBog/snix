@@ -69,7 +69,7 @@ impl<BS, DS> NixHTTPPathInfoService<BS, DS> {
                 reqwest::Client::builder()
                     .user_agent(crate::USER_AGENT)
                     .build()
-                    .expect("Client::new()"),
+                    .map_err(reqwest_middleware::Error::Reqwest)?,
             )
             .with(snix_tracing::propagate::reqwest::tracing_middleware())
             .build(),
@@ -100,7 +100,7 @@ pub enum Error {
 
     #[error("unable to join URL {0} with {1}")]
     JoinUrl(Url, String, url::ParseError),
-    #[error("unable to send request")]
+    #[error("reqwest error")]
     Reqwest(#[from] reqwest_middleware::Error),
     #[error("unable to decode NARInfo response as string")]
     DecodeBody(reqwest::Error),
