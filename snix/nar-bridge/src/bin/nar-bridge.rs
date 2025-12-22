@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
     let _tracing_handle = snix_tracing::TracingBuilder::default()
-        .handle_tracing_args("snix.nar-bridge", &cli.tracing_args)
+        .handle_tracing_args(&cli.tracing_args)
         .build()?;
 
     // initialize stores

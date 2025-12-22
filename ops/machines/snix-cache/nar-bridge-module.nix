@@ -65,6 +65,7 @@ in
       requires = [ "nar-bridge.socket" ];
       after = [ "nar-bridge.socket" ];
       wantedBy = [ "multi-user.target" ];
+      environment.OTEL_SERVICE_NAME = "snix.nar-bridge";
       serviceConfig = {
         ExecStart = "${package}/bin/nar-bridge ${utils.escapeSystemdExecArgs args}";
 

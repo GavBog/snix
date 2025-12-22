@@ -30,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     let _tracing_handle = snix_tracing::TracingBuilder::default()
-        .handle_tracing_args("snix.castore-http", &args.tracing_args)
+        .handle_tracing_args(&args.tracing_args)
         .enable_progressbar()
         .build()?;
 

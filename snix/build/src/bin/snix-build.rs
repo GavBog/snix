@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Cli::parse();
 
     let _tracing_handle = snix_tracing::TracingBuilder::default()
-        .handle_tracing_args("snix.build", &args.tracing_args)
+        .handle_tracing_args(&args.tracing_args)
         .enable_progressbar()
         .build()?;
 
