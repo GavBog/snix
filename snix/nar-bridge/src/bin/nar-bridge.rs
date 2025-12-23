@@ -21,7 +21,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 /// compressed.
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-struct Cli {
+struct Args {
     #[clap(flatten)]
     service_addrs: ServiceUrlsGrpc,
 
@@ -45,24 +45,24 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let cli = Cli::parse();
+    let args = Args::parse();
 
     let _tracing_handle = snix_tracing::TracingBuilder::default()
-        .handle_tracing_args(&cli.tracing_args)
+        .handle_tracing_args(&args.tracing_args)
         .build()?;
 
     // initialize stores
     let (blob_service, directory_service, path_info_service, _nar_calculation_service) =
-        snix_store::utils::construct_services(cli.service_addrs).await?;
+        snix_store::utils::construct_services(args.service_addrs).await?;
 
     let state = AppState::new(
         blob_service,
         directory_service,
         path_info_service,
-        cli.root_nodes_cache_capacity,
+        args.root_nodes_cache_capacity,
     );
 
-    let app = nar_bridge::gen_router(cli.priority)
+    let app = nar_bridge::gen_router(args.priority)
         .layer(
             ServiceBuilder::new()
                 .layer(
@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         )
         .with_state(state);
 
-    let listen_address = &cli.listen_args.listen_address.unwrap_or_else(|| {
+    let listen_address = &args.listen_args.listen_address.unwrap_or_else(|| {
         "[::]:9000"
             .parse()
             .expect("invalid fallback listen address")
@@ -85,7 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let listener = tokio_listener::Listener::bind(
         listen_address,
         &Default::default(),
-        &cli.listen_args.listener_options,
+        &args.listen_args.listener_options,
     )
     .await?;
 
