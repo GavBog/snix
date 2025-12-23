@@ -52,7 +52,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-struct Cli {
+struct Args {
     #[clap(flatten)]
     tracing_args: snix_tracing::TracingArgs,
 
@@ -165,10 +165,10 @@ fn default_threads() -> usize {
 
 #[instrument(skip_all)]
 async fn run_cli(
-    cli: Cli,
+    args: Args,
     tracing_handle: TracingHandle,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    match cli.command {
+    match args.command {
         Commands::Daemon {
             listen_args,
             service_addrs,
@@ -529,10 +529,10 @@ async fn run_cli(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let cli = Cli::parse();
+    let args = Args::parse();
 
     let tracing_handle = snix_tracing::TracingBuilder::default()
-        .handle_tracing_args(&cli.tracing_args)
+        .handle_tracing_args(&args.tracing_args)
         .enable_progressbar()
         .build()?;
 
@@ -544,7 +544,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             }
             Ok(())
         },
-        res = run_cli(cli, tracing_handle.clone()) => {
+        res = run_cli(args, tracing_handle.clone()) => {
             if let Err(e) = tracing_handle.shutdown().await {
                 eprintln!("failed to shutdown tracing: {e}");
             }
