@@ -19632,7 +19632,6 @@ rec {
               "net"
               "rt"
               "rt-multi-thread"
-              "signal"
             ];
           }
           {
@@ -19852,6 +19851,8 @@ rec {
             name = "tokio";
             packageId = "tokio";
             features = [
+              "macros"
+              "signal"
               "sync"
               "rt"
             ];

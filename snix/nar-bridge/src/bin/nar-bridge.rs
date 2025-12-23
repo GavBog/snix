@@ -2,10 +2,11 @@ use clap::Parser;
 use mimalloc::MiMalloc;
 use nar_bridge::AppState;
 use snix_store::utils::ServiceUrlsGrpc;
+use snix_tracing::shutdown_signal;
 use std::num::NonZeroUsize;
 use tower::ServiceBuilder;
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
-use tracing::{debug, info};
+use tracing::info;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -101,31 +102,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(tracing_handle.shutdown().await.inspect_err(|err| {
         eprintln!("failed to shutdown tracing: {err}");
     })?)
-}
-
-/// future that listens to both ctrl-c and sigterm.
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-            .expect("failed to install SIGTERM handler")
-            .recv()
-            .await;
-    };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
-
-    debug!("signal received, shutting down…");
 }

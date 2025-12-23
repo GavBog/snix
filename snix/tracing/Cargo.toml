@@ -12,7 +12,7 @@ tracing = { workspace = true, features = [
 ] }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 tracing-indicatif.workspace = true
-tokio = { workspace = true, features = ["sync", "rt"] }
+tokio = { workspace = true, features = ["macros", "signal", "sync", "rt"] }
 thiserror.workspace = true
 
 tracing-chrome = { workspace = true, optional = true }

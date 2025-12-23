@@ -40,7 +40,6 @@ tokio = { workspace = true, features = [
   "net",
   "rt",
   "rt-multi-thread",
-  "signal",
 ] }
 tokio-listener = { workspace = true, features = [
   "clap",

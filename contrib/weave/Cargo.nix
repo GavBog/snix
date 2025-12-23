@@ -8697,6 +8697,24 @@ rec {
           "std"
         ];
       };
+      "signal-hook-registry" = rec {
+        crateName = "signal-hook-registry";
+        version = "1.4.7";
+        edition = "2015";
+        sha256 = "1bgdimrfqcldbplryknv87gywcdj9v29l3nwqbybs5p6p2ca0r3n";
+        libName = "signal_hook_registry";
+        authors = [
+          "Michal 'vorner' Vaner <vorner@vorner.cz>"
+          "Masaki Hara <ackie.h.gmai@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "libc";
+            packageId = "libc";
+          }
+        ];
+
+      };
       "signature" = rec {
         crateName = "signature";
         version = "2.2.0";
@@ -8849,6 +8867,8 @@ rec {
             name = "tokio";
             packageId = "tokio";
             features = [
+              "macros"
+              "signal"
               "sync"
               "rt"
             ];
@@ -9535,6 +9555,12 @@ rec {
             packageId = "pin-project-lite";
           }
           {
+            name = "signal-hook-registry";
+            packageId = "signal-hook-registry";
+            optional = true;
+            target = { target, features }: (target."unix" or false);
+          }
+          {
             name = "socket2";
             packageId = "socket2";
             optional = true;
@@ -9649,6 +9675,8 @@ rec {
           "net"
           "rt"
           "rt-multi-thread"
+          "signal"
+          "signal-hook-registry"
           "socket2"
           "sync"
           "time"
@@ -11792,6 +11820,7 @@ rec {
           "Win32_Storage_FileSystem"
           "Win32_System"
           "Win32_System_Com"
+          "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Pipes"
           "Win32_System_SystemServices"

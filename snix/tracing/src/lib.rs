@@ -1,7 +1,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 use std::sync::LazyLock;
-use tracing::level_filters::LevelFilter;
+use tracing::{debug, level_filters::LevelFilter};
 use tracing_indicatif::{
     IndicatifLayer, IndicatifWriter, filter::IndicatifFilter, style::ProgressStyle,
     util::FilteredFormatFields, writer,
@@ -360,4 +360,32 @@ pub struct TracingArgs {
     /// Whether to configure OTLP.
     #[arg(long, action(clap::ArgAction::SetTrue))]
     otlp: bool,
+}
+
+/// future that listens to both ctrl-c and sigterm.
+// FUTUREWORK: this should maybe belong into another crate…
+pub async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    debug!("signal received, shutting down…");
 }
