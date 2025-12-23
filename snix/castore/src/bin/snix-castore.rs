@@ -25,7 +25,7 @@ use tracing::{Level, info};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
-struct Cli {
+struct Args {
     #[command(subcommand)]
     command: Commands,
 }
@@ -84,7 +84,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let cli = Cli::parse();
+    let args = Args::parse();
     let tracing_handle = {
         let mut builder = snix_tracing::TracingBuilder::default();
         builder = builder.enable_progressbar();
@@ -99,7 +99,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             Ok(())
         },
         res = async {
-            match cli.command {
+            match args.command {
                 Commands::Daemon {
                     listen_args,
                     service_addrs,
