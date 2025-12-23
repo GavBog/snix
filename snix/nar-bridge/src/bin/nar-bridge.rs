@@ -5,7 +5,7 @@ use snix_store::utils::ServiceUrlsGrpc;
 use std::num::NonZeroUsize;
 use tower::ServiceBuilder;
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
-use tracing::info;
+use tracing::{debug, info};
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -47,7 +47,7 @@ struct Args {
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Args::parse();
 
-    let _tracing_handle = snix_tracing::TracingBuilder::default()
+    let tracing_handle = snix_tracing::TracingBuilder::default()
         .handle_tracing_args(&args.tracing_args)
         .build()?;
 
@@ -95,7 +95,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         listener,
         app.into_make_service_with_connect_info::<tokio_listener::SomeSocketAddrClonable>(),
     )
+    .with_graceful_shutdown(shutdown_signal())
     .await?;
 
-    Ok(())
+    Ok(tracing_handle.shutdown().await.inspect_err(|err| {
+        eprintln!("failed to shutdown tracing: {err}");
+    })?)
+}
+
+/// future that listens to both ctrl-c and sigterm.
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    debug!("signal received, shutting down…");
 }
