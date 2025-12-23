@@ -264,7 +264,10 @@ impl TracingBuilder {
 
     #[cfg(feature = "clap")]
     /// Configure with the tracing-related args.
-    pub fn handle_tracing_args(mut self, args: &TracingArgs) -> Self {
+    pub fn handle_tracing_args(
+        #[allow(unused_mut)] mut self,
+        #[allow(unused)] args: &TracingArgs,
+    ) -> Self {
         #[cfg(feature = "otlp")]
         if args.otlp {
             self = self.enable_otlp()
