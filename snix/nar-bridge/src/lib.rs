@@ -56,7 +56,7 @@ pub fn gen_router(priority: u64) -> Router<AppState> {
 
     let router = Router::new()
         .route("/", get(root))
-        .route("/nar/:nar_str", get(four_o_four))
+        .route("/nar/:nar_str", get(StatusCode::NOT_FOUND))
         .route("/nar/:nar_str", head(nar::head_root_nodes))
         .route("/nar/:nar_str", put(nar::put))
         .route("/nar/snix-castore/:root_node_enc", get(nar::get_head))
@@ -76,10 +76,6 @@ pub fn gen_router(priority: u64) -> Router<AppState> {
 
 async fn root() -> &'static str {
     "Hello from nar-bridge"
-}
-
-async fn four_o_four() -> Result<(), StatusCode> {
-    Err(StatusCode::NOT_FOUND)
 }
 
 async fn nix_cache_info(priority: u64) -> impl IntoResponse {
