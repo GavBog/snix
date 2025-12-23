@@ -13,14 +13,14 @@ use snix_castore::import::fs::ingest_path;
 use snix_store::import::path_to_name;
 use snix_store::nar::NarCalculationService;
 use snix_store::utils::{ServiceUrls, ServiceUrlsGrpc};
-use snix_tracing::TracingHandle;
+use snix_tracing::shutdown_signal;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tonic::transport::Server;
 use tower::ServiceBuilder;
 use tower_http::classify::{GrpcCode, GrpcErrorsAsFailures, SharedClassifier};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
-use tracing::{Instrument, Level, Span, debug, info, info_span, instrument, warn};
+use tracing::{Instrument, Level, Span, debug, info, info_span, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 
 use snix_castore::proto::GRPCBlobServiceWrapper;
@@ -163,11 +163,17 @@ fn default_threads() -> usize {
         .unwrap_or(4)
 }
 
-#[instrument(skip_all)]
-async fn run_cli(
-    args: Args,
-    tracing_handle: TracingHandle,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let args = Args::parse();
+
+    let tracing_handle = snix_tracing::TracingBuilder::default()
+        .handle_tracing_args(&args.tracing_args)
+        .enable_progressbar()
+        .build()?;
+
+    let stdout_writer = tracing_handle.get_stdout_writer();
+
     match args.command {
         Commands::Daemon {
             listen_args,
@@ -241,7 +247,9 @@ async fn run_cli(
 
             info!(listen_address=%listen_address, "starting daemon");
 
-            router.serve_with_incoming(listener).await?;
+            router
+                .serve_with_incoming_shutdown(listener, shutdown_signal())
+                .await?;
         }
         Commands::Import {
             paths,
@@ -281,7 +289,7 @@ async fn run_cli(
                     let path_info_service = path_info_service.clone();
                     let nar_calculation_service = nar_calculation_service.clone();
                     let imports_span = imports_span.clone();
-                    let tracing_handle = tracing_handle.clone();
+                    let mut stdout_writer = stdout_writer.clone();
 
                     async move {
                         let span = Span::current();
@@ -340,7 +348,7 @@ async fn run_cli(
                             Ok(path_info) => {
                                 use std::io::Write;
                                 debug!(store_path=%path_info.store_path.to_absolute_path(), "imported path");
-                                writeln!(&mut tracing_handle.get_stdout_writer(), "{}", path_info.store_path.to_absolute_path())?;
+                                writeln!(&mut stdout_writer, "{}", path_info.store_path.to_absolute_path())?;
                                 imports_span.pb_inc(1);
                                 Ok(())
                             }
@@ -486,10 +494,8 @@ async fn run_cli(
             tokio::spawn({
                 let fuse_daemon = fuse_daemon.clone();
                 async move {
-                    tokio::signal::ctrl_c().await.unwrap();
-                    info!("interrupt received, unmounting…");
+                    shutdown_signal().await;
                     tokio::task::spawn_blocking(move || fuse_daemon.unmount()).await??;
-                    info!("unmount occured, terminating…");
                     Ok::<_, std::io::Error>(())
                 }
             });
@@ -524,31 +530,8 @@ async fn run_cli(
             .await??;
         }
     };
-    Ok(())
-}
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let args = Args::parse();
-
-    let tracing_handle = snix_tracing::TracingBuilder::default()
-        .handle_tracing_args(&args.tracing_args)
-        .enable_progressbar()
-        .build()?;
-
-    tokio::select! {
-        res = tokio::signal::ctrl_c() => {
-            res?;
-            if let Err(e) = tracing_handle.shutdown().await {
-                eprintln!("failed to shutdown tracing: {e}");
-            }
-            Ok(())
-        },
-        res = run_cli(args, tracing_handle.clone()) => {
-            if let Err(e) = tracing_handle.shutdown().await {
-                eprintln!("failed to shutdown tracing: {e}");
-            }
-            res
-        }
-    }
+    Ok(tracing_handle.shutdown().await.inspect_err(|err| {
+        eprintln!("failed to shutdown tracing: {err}");
+    })?)
 }
