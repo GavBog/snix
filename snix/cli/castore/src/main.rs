@@ -221,6 +221,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     true,
                     uid_gid,
                     true,
+                    tokio::runtime::Handle::current(),
                 );
                 info!(mount_path=?dest, "mounting");
 
@@ -267,6 +268,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     true,
                     uid_gid,
                     true,
+                    tokio::runtime::Handle::current(),
                 );
                 info!(socket_path=?socket, "starting virtiofs-daemon");
 

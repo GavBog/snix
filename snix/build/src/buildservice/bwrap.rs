@@ -84,6 +84,7 @@ where
                     true,
                     None,
                     false,
+                    tokio::runtime::Handle::current(),
                 );
                 // FUTUREWORK: make fuse daemon threads configurable?
                 FuseDaemon::new(fs, path, 4, false)

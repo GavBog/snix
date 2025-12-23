@@ -103,6 +103,7 @@ where
                     true,
                     None,
                     false,
+                    tokio::runtime::Handle::current(),
                 );
                 // mount the filesystem and wait for it to be unmounted.
                 // FUTUREWORK: make fuse daemon threads configurable?

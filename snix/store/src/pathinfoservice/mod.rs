@@ -6,9 +6,6 @@ mod nix_http;
 mod redb;
 mod signing_wrapper;
 
-#[cfg(any(feature = "fuse", feature = "virtiofs"))]
-mod fs;
-
 #[cfg(test)]
 mod tests;
 
@@ -37,7 +34,10 @@ mod bigtable;
 pub use self::bigtable::{BigtableParameters, BigtablePathInfoService};
 
 #[cfg(any(feature = "fuse", feature = "virtiofs"))]
-pub use self::fs::make_fs;
+mod fs;
+
+#[cfg(any(feature = "fuse", feature = "virtiofs"))]
+pub use self::fs::RootNodesWrapper;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 

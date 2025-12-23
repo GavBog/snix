@@ -136,6 +136,7 @@ where
         list_root: bool,
         uid_gid_override: Option<(u32, u32)>,
         show_xattr: bool,
+        tokio_handle: tokio::runtime::Handle,
     ) -> Self {
         Self {
             blob_service,
@@ -154,7 +155,7 @@ where
 
             file_handles: RwLock::new(Default::default()),
             next_file_handle: AtomicU64::new(1),
-            tokio_handle: tokio::runtime::Handle::current(),
+            tokio_handle,
         }
     }
 

@@ -29,18 +29,9 @@ use snix_castore::proto::GRPCBlobServiceWrapper;
 use snix_castore::proto::GRPCDirectoryServiceWrapper;
 use snix_castore::proto::blob_service_server::BlobServiceServer;
 use snix_castore::proto::directory_service_server::DirectoryServiceServer;
-use snix_store::pathinfoservice::{PathInfo, PathInfoService};
+use snix_store::pathinfoservice::{self, PathInfo, PathInfoService};
 use snix_store::proto::GRPCPathInfoServiceWrapper;
 use snix_store::proto::path_info_service_server::PathInfoServiceServer;
-
-#[cfg(any(feature = "fuse", feature = "virtiofs"))]
-use snix_store::pathinfoservice::make_fs;
-
-#[cfg(feature = "fuse")]
-use snix_castore::fs::fuse::FuseDaemon;
-
-#[cfg(feature = "virtiofs")]
-use snix_castore::fs::virtiofs::start_virtiofs_daemon;
 
 #[cfg(feature = "tonic-reflection")]
 use snix_castore::proto::FILE_DESCRIPTOR_SET as CASTORE_FILE_DESCRIPTOR_SET;
@@ -533,15 +524,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let (blob_service, directory_service, path_info_service, _nar_calculation_service) =
                 snix_store::utils::construct_services(service_addrs).await?;
 
+            use snix_castore::fs::{SnixStoreFs, fuse::FuseDaemon};
+
+            let fs = SnixStoreFs::new(
+                blob_service,
+                directory_service,
+                pathinfoservice::RootNodesWrapper::from(path_info_service),
+                list_root,
+                uid_gid,
+                show_xattr,
+                tokio::runtime::Handle::current(),
+            );
+
             let fuse_daemon = tokio::task::spawn_blocking(move || {
-                let fs = make_fs(
-                    blob_service,
-                    directory_service,
-                    path_info_service,
-                    list_root,
-                    uid_gid,
-                    show_xattr,
-                );
                 info!(mount_path=?dest, "mounting");
 
                 FuseDaemon::new(fs, &dest, threads, allow_other)
@@ -574,15 +569,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let (blob_service, directory_service, path_info_service, _nar_calculation_service) =
                 snix_store::utils::construct_services(service_addrs).await?;
 
+            use snix_castore::fs::{SnixStoreFs, virtiofs::start_virtiofs_daemon};
+
+            let fs = SnixStoreFs::new(
+                blob_service,
+                directory_service,
+                pathinfoservice::RootNodesWrapper::from(path_info_service),
+                list_root,
+                uid_gid,
+                show_xattr,
+                tokio::runtime::Handle::current(),
+            );
+
             tokio::task::spawn_blocking(move || {
-                let fs = make_fs(
-                    blob_service,
-                    directory_service,
-                    path_info_service,
-                    list_root,
-                    uid_gid,
-                    show_xattr,
-                );
                 info!(socket_path=?socket, "starting virtiofs-daemon");
 
                 start_virtiofs_daemon(fs, socket)

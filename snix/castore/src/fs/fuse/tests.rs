@@ -57,6 +57,7 @@ where
         list_root,
         uid_gid_override,
         show_xattr,
+        tokio::runtime::Handle::current(),
     );
     FuseDaemon::new(Arc::new(fs), mountpoint.as_ref(), 4, false)
 }
