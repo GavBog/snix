@@ -34,10 +34,10 @@ let
           nix-build -A ci.gcroot --out-link /nix/var/nix/gcroots/buildkite/canon
         '';
 
-        # Ensure that anchoring happens on build01, so that a possibly deployed
+        # Ensure that anchoring happens on build02, so that a possibly deployed
         # binary cache there has the store paths. Unanchored machines may
         # garbage collect live paths.
-        agents.hostname = "build01";
+        agents.hostname = "build02";
       }
     ];
   };
