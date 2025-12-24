@@ -124,7 +124,7 @@ time. They can be accessed by building the `snix.cli.benchmark-*` attrsets
 (in `snix/cli/default.nix`), currently emit a very simple JSON, logging the time
 and memory used.
 
-### Continous Benchmarking
+### Continuous Benchmarking
 
 {{< callout context="caution" title="Caution" icon="outline/alert-triangle" >}}
 We plan to extend these scenarios, as well as the metrics collected, and ideally
