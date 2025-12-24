@@ -6,6 +6,6 @@
   services.nginx.virtualHosts."cache.snix.dev" = {
     forceSSL = true;
     enableACME = true;
-    locations."/".proxyPass = "http://build01.infra.snix.dev:5000";
+    locations."/".proxyPass = "http://build02.infra.snix.dev:5000";
   };
 }
