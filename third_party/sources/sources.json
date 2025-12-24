@@ -73,10 +73,16 @@
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nix-gerrit": {
-        "branch": "main",
-        "repo": "https://git.afnix.fr/afnix/nix-gerrit",
+        "branch": "master",
+        "description": "Backup of https://git.afnix.fr/afnix/nix-gerrit",
+        "homepage": null,
+        "owner": "flokli",
+        "repo": "nix-gerrit",
         "rev": "69df19557922602ae411bda4d751e35a6feea447",
-        "type": "git"
+        "sha256": "0pfvmcig27l9yd7ylna05q31v7r2q4vsqcym9pv5m8vg173vks37",
+        "type": "tarball",
+        "url": "https://github.com/flokli/nix-gerrit/archive/69df19557922602ae411bda4d751e35a6feea447.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {
         "branch": "nixos-unstable",
