@@ -7,8 +7,9 @@
   gerrit01
   # Public-facing services
   public01
-  # Build machine
+  # Build machines
   build01
+  build02
   # Observability stack and internal software
   meta01
   # fetch-through cache for cache.nixos.org
