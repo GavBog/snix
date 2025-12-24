@@ -14,7 +14,7 @@ let
   };
 
   commonCraneArgs = {
-    src = src;
+    src = "${src}";
     strictDeps = true;
     nativeBuildInputs = with pkgs; [
       pkg-config
