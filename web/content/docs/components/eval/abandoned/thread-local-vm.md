@@ -1,4 +1,11 @@
-# We can't have nice things because IFD
+---
+title: "Thread-local VM"
+summary: "We can't have nice things because IFD"
+date: 2025-12-24T09:55:22+01:00
+lastmod: 2025-12-24T09:55:22+01:00
+weight: 10
+toc: true
+---
 
 The thread-local VM work below was ultimately not merged because it
 was decided that it would be harmful for `tvix::eval::Value` to
@@ -26,9 +33,9 @@ The implementation can be found in these CLs:
 - [feat(tvix/eval): [FOUNDLING] VM::vm_xxx convenience methods](https://cl.tvl.fyi/c/depot/+/7196)
 - [refactor(tvix/eval): [FOUNDLING]: drop explicit `&mut vm` parameter](https://cl.tvl.fyi/c/depot/+/7197)
 
-# Thread-local storage for tvix::eval::vm::VM
+## Thread-local storage for tvix::eval::vm::VM
 
-## The problem
+### The problem
 
 `Value::force()` takes a `&mut VM` argument, since forcing a value
 requires executing opcodes.  This means that `Value::nix_eq()` too
@@ -47,7 +54,7 @@ but it's the most glaring one.  The main problem is that you need a
 `VM` in order to force thunks, and thunks can be anywhere in a
 `Value`.
 
-## Solving the problem with thread-locals
+### Solving the problem with thread-locals
 
 We could avoid threading the `&mut VM` through the entire codebase
 by making it a thread-local.
@@ -69,7 +76,7 @@ be.  Since you can't get a mutable reference to a `thread_local!()`
 it will have to be some interior-mutability-bestowing wrapper around
 our current `struct VM`.  Here are the choices:
 
-### `RefCell<VM>`
+#### `RefCell<VM>`
 
 This is the obvious first choice, since it lets you borrow a
 `RefMut<Target=VM>`.  The problem here is that we want to keep the
@@ -83,7 +90,7 @@ active borrow.
 The problem here is that you can't "unborrow" a `RefMut` except by
 dropping it.  There's no way around this.
 
-#### Problem: Uglification
+##### Problem: Uglification
 
 The only solution here is to rewrite all the functions in `impl VM`
 so they don't take any kind of `self` argument, and then have them
@@ -106,7 +113,7 @@ of the `self.frame().ip+=1` statements.  You can't just do one big
 `borrow_mut()` because `some_other_method()` will call
 `borrow_mut()` and panic.
 
-#### Problem: Performance
+##### Problem: Performance
 
 The `RefCell<VM>` approach also has a fairly huge performance hit,
 because every single modification to any part of `VM` will require a
@@ -115,13 +122,13 @@ on the check (which will never fail) that the `RefCell` isn't
 already mutably borrowed.  It will also impede a lot of rustc's
 optimizations.
 
-### `Cell<VM>`
+#### `Cell<VM>`
 
 This is a non-starter because it means that in order to mutate any
 field of `VM`, you have to move the entire `struct VM` out of the
 `Cell`, mutate it, and move it back in.
 
-### `Cell<Box<VM>>`
+#### `Cell<Box<VM>>`
 
 Now we're getting warmer.  Here, we can move the `Box<VM>` out of
 the cell with a single pointer-sized memory access.
@@ -169,7 +176,7 @@ drop".
 There is still the issue of having to be careful about calls from
 `vm.rs` to things outside that file, but it's manageable.
 
-### `Cell<Option<Box<VM>>>`
+#### `Cell<Option<Box<VM>>>`
 
 In order to get the "safe and stable `#[thread_local]`"
 [exception][tls-const-init] we need a `const` initializer, which
@@ -192,11 +199,11 @@ aren't a valid `T`, so `sizeof(Option<T>)==sizeof(T)`.  And in fact,
 `Box<T>` is one of these cases (and this is guaranteed).  So the
 `Option` has no overhead.
 
-# Closing thoughts, language-level support
+## Closing thoughts, language-level support
 
 This would have been easier with language-level support.
 
-## What wouldn't help
+### What wouldn't help
 
 Although it [it was decreed][fiat-decree] that `Cell<T>` and `&mut
 T` are interchangeable, a `LocalKey<Cell<T>>` isn't quite the same
@@ -214,7 +221,7 @@ The problem here is that you can call `LocalKey<Cell<T>>::get_mut()` twice and
 end up with two `&mut T`s that point to the same thing (mutable aliasing) which
 results in undefined behavior.
 
-## What would help
+### What would help
 
 The ideal solution is for Rust to let you call arbitrary methods
 `T::foo(&mut self...)` on a `LocalKey<Cell<T>>`.  This way you can

@@ -1,3 +1,12 @@
+---
+title: "Builtins"
+description: ""
+summary: ""
+date: 2025-12-24T09:12:23+01:00
+lastmod: 2025-12-24T09:12:23+01:00
+toc: false
+weight: 2
+---
 # Nix builtins
 
 Nix has a lot of built-in functions, some of which are accessible in
@@ -7,7 +16,7 @@ global `builtins` attribute set.
 This document is an attempt to track all of these builtins, but
 without documenting their functionality.
 
-See also https://nixos.org/manual/nix/stable/expressions/builtins.html
+See also [the Nix manual](https://nixos.org/manual/nix/stable/expressions/builtins.html).
 
 The `impl` column indicates implementation status in tvix:
 - implemented: "" (empty cell)
@@ -135,3 +144,4 @@ The `impl` column indicates implementation status in tvix:
 | groupBy       | false  | 2     | true  |       |
 | traceVerbose  | false  | 2     |       | todo  |
 | zipAttrsWith  | false  | 2     | true  |       |
+

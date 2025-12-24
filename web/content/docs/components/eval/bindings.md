@@ -1,4 +1,11 @@
-# Compilation of bindings
+---
+title: "Compilation of bindings"
+date: 2025-12-24T08:57:56+01:00
+lastmod: 2025-12-24T08:57:56+01:00
+draft: false
+weight: 1
+toc: true
+---
 
 Compilation of Nix bindings is one of the most mind-bending parts of Nix
 evaluation. The implementation of just the compilation is currently almost 1000
@@ -6,7 +13,7 @@ lines of code, excluding the various insane test cases we dreamt up for it.
 
 ## What is a binding?
 
-In short, any attribute set or `let`-expression. Tvix currently does not treat
+In short, any attribute set or `let`-expression. Snix currently does not treat
 formals in function parameters (e.g. `{ name ? "fred" }: ...`) the same as these
 bindings.
 
@@ -17,7 +24,7 @@ They have two very difficult features:
 2. Attribute sets can be nested, and parts of one attribute set can be defined
    in multiple separate bindings.
 
-Tvix resolves as much of this logic statically (i.e. at compile-time) as
+Snix resolves as much of this logic statically (i.e. at compile-time) as
 possible, but the procedure is quite complicated.
 
 ## High-level concept
@@ -81,10 +88,10 @@ stack when the scope ends.
 
 ## Moving parts
 
-```admonish caution
+{{< callout context="caution" title="Caution" icon="outline/alert-triangle" >}}
 This documents the *current* implementation. If you only care about the
 conceptual aspects, see above.
-```
+{{</callout>}}
 
 There's a few types involved:
 

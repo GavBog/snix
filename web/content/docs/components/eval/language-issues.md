@@ -1,10 +1,16 @@
-# Nix language issues
+---
+title: "Nix Language Issues"
+date: 2025-12-24T09:39:33+01:00
+lastmod: 2025-12-24T09:39:33+01:00
+weight: 6
+toc: false
+---
 
 In the absence of a language standard, what Nix (the language) is, is prescribed
 by the behavior of the C++ Nix implementation. Still, there are reasons not to
 accept some behavior:
 
-* Tvix aims for nixpkgs compatibility only. This means we can ignore behavior in
+* Snix aims for nixpkgs compatibility only. This means we can ignore behavior in
   edge cases nixpkgs doesn't trigger as well as obscure features it doesn't use
   (e.g. `__overrides`).
 * Some behavior of the Nix evaluator seems to be unintentional or an

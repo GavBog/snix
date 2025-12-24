@@ -1,4 +1,10 @@
-# attrset-opcodes
+---
+title: "attrset-opcodes"
+date: 2025-12-24T09:42:24+01:00
+lastmod: 2025-12-24T09:42:24+01:00
+weight: 7
+toc: true
+---
 
 The problem with attrset literals is twofold:
 
@@ -94,7 +100,7 @@ The problem with attrset literals is twofold:
 
    Right before `0004` the stack would be left like this:
 
-   [ AttrPath[a,b], 42 ]
+   `[ AttrPath[a,b], 42 ]`
 
    Inside of the `OP_ATTRS` instruction we could then begin
    construction of the map and insert the nested attribute sets as

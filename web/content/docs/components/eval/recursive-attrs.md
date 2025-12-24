@@ -1,4 +1,10 @@
-# Recursive attribute sets
+---
+title: "Recursive attribute sets"
+date: 2025-12-24T09:45:07+01:00
+lastmod: 2025-12-24T09:45:07+01:00
+weight: 8
+toc: false
+---
 
 The construction behaviour of recursive attribute sets is very
 specific, and a bit peculiar.

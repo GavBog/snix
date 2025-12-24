@@ -1,4 +1,13 @@
-# (Possible) Implementation(s) of Catchable Errors for `builtins.tryEval`
+---
+title: "Catchable Errors"
+description: "(Possible) Implementation(s) of Catchable Errors for `builtins.tryEval`"
+date: 2025-12-24T09:15:54+01:00
+lastmod: 2025-12-24T09:15:54+01:00
+weight: 4
+toc: true
+---
+
+(Possible) Implementation(s) of Catchable Errors for `builtins.tryEval`.
 
 ## Terminology
 
@@ -42,7 +51,7 @@ time?
 
 ### Original
 
-The original implementation of `tryEval` in cl/6924 was quite straightforward:
+The original implementation of `tryEval` in [cl/6924][] was quite straightforward:
 It would simply interrupt the propagation of a potential catchable error to the
 top level (which usually happened using the `?` operator) in the builtin and
 construct the appropriate representation of an unsuccessful evaluation if the
@@ -50,7 +59,7 @@ error was deemed catchable. It had, however, multiple problems:
 
 - The VM was originally written without `tryEval` in mind, i.e. it largely
   assumed that an error would always cause execution to be terminated. This
-  problem was later solved (cl/6940).
+  problem was later solved ([cl/6940][]).
 - Thunks could not be `tryEval`-ed multiple times (b/281). This was another
   consequence of VM architecture at the time: Thunks would be blackholed
   before evaluation was started and the error could occur. Due to the
@@ -76,7 +85,7 @@ evaluation to abort.
 
 ### Present
 
-The current system (mostly implemented in cl/9289) uses a very different
+The current system (mostly implemented in [cl/9289][]) uses a very different
 approach: Instead of relying on the thunk boundary, catchable errors are no
 longer errors, but special values. They are created at the relevant points (e.g.
 `builtins.throw`) and propagated whenever they are encountered by VM ops or
@@ -90,7 +99,7 @@ that it necessitates:
   is not used a lot. So `throw`s usually end up causing evaluation to abort.
   Consequently, not only `Value::Catchable` is necessary, but also a corresponding
   error variant that is _only_ created if a catchable value remains at the end of
-  evaluation. A requirement that was missed until cl/10991 (!) which illustrate
+  evaluation. A requirement that was missed until [cl/10991][] (!) which illustrate
   how strange that architecture is. A consequence of this is that catchable
   errors have no location information at all.
 - `Value::Catchable` is similar to other internal values in Tvix, but is much
@@ -108,7 +117,7 @@ that it necessitates:
 ### Future?
 
 The core assumption of the original solution does offer a path forward: After
-cl/9289 we should be in a better position to introspect an error occurring from
+[cl/9289][] we should be in a better position to introspect an error occurring from
 within the VM code, but we need a better way of storing such an error to prevent
 another b/281. If catchable errors can only be generated in thunks, we can just
 use the thunk representation for this. This would mean that `Thunk::force_`
@@ -129,3 +138,11 @@ Besides the question whether this proposal can actually be implemented, another
 consideration is whether the underlying assumption will hold in the future, i.e.
 can we implement optimizations for thunk elimination in a way that thunks that
 generate catchable errors are never eliminated?
+
+--
+
+[cl/6924]: https://cl.snix.dev/q/6924
+[cl/6940]: https://cl.snix.dev/q/6942
+[cl/9289]: https://cl.snix.dev/q/9289
+[cl/10991]: https://cl.snix.dev/q/10091
+

@@ -1,13 +1,19 @@
-# tvix-eval VM loop
+---
+title: "VM loop"
+date: 2025-12-24T09:47:15+01:00
+lastmod: 2025-12-24T09:47:15+01:00
+weight: 9
+toc: true
+---
 
-This document describes the new tvix-eval VM execution loop implemented in the
-chain focusing around cl/8104.
+This document describes the new `snix-eval` VM execution loop implemented in the
+chain focusing around [cl/8104][].
 
 ## Background
 
-The VM loop implemented in Tvix prior to cl/8104 had several functions:
+The VM loop implemented in Snix prior to [cl/8104][] had several functions:
 
-1. Advancing the instruction pointer for a chunk of Tvix bytecode and
+1. Advancing the instruction pointer for a chunk of Snix bytecode and
    executing instructions in a loop until a result was yielded.
 
 2. Tracking Nix call frames as functions/thunks were entered/exited.
@@ -34,20 +40,20 @@ as finalisers), but that seems like it does not solve the root problem.
 
 ## New VM loop
 
-In cl/8104, a unified new solution is implemented with which the VM is capable
+In [cl/8104][], a unified new solution is implemented with which the VM is capable
 of evaluating everything without increasing the call stack size.
 
 This is done by introducing a new frame stack in the VM, on which execution
 frames are enqueued that are either:
 
-1. A bytecode frame, consisting of Tvix bytecode that evaluates compiled Nix
+1. A bytecode frame, consisting of Snix bytecode that evaluates compiled Nix
    code.
 2. A generator frame, consisting of some VM logic implemented in pure Rust
    code that can be *suspended* when it hits a point where the VM would
    previously need to recurse.
 
 We do this by making use of the `async` *keyword* in Rust, but notably
-*without* introducing asynchronous I/O or concurrency in tvix-eval (the
+*without* introducing asynchronous I/O or concurrency in `snix-eval` (the
 complexity of which is currently undesirable for us).
 
 Specifically, when writing a Rust function that uses the `async` keyword, such
@@ -85,11 +91,11 @@ leave a *single* value on the stack. It follows that the whole VM, upon
 completion of the last (or initial, depending on your perspective) frame
 yields its result as the return value.
 
-The core of the VM restructuring is cl/8104, unfortunately one of the largest
+The core of the VM restructuring is [cl/8104][], unfortunately one of the largest
 single commit changes we've had to make yet, as it touches pretty much all
-areas of tvix-eval. The introduction of the generators and the
+areas of `snix-eval`. The introduction of the generators and the
 message/response system we built to request something from the VM, suspend a
-generator, and wait for the return is in cl/8148.
+generator, and wait for the return is in [cl/8148][].
 
 The next sections describe in detail how the three different loops work.
 
@@ -147,7 +153,7 @@ been *completed* or *suspended* by returning a boolean.
 
 ### Inner bytecode loop
 
-The inner bytecode loop drives the execution of some Tvix bytecode by
+The inner bytecode loop drives the execution of some Snix bytecode by
 continously looking at the next instruction to execute, and dispatching to the
 instruction handler.
 
@@ -240,11 +246,11 @@ type of request, the inner generator loop will either handle it right away and
 send the response in a new `resume_with` call, or return `false` to the outer
 generator loop after setting up the frame stack.
 
-Most of this logic is implemented in cl/8148.
+Most of this logic is implemented in [cl/8148][].
 
 [`Gen::resume`]: https://docs.rs/genawaiter/0.99.1/genawaiter/rc/struct.Gen.html#method.resume_with
-[`VMRequest`]: https://code.tvl.fyi/tree/tvix/eval/src/vm/generators.rs?id=2696839770c1ccb62929ff2575a633c07f5c9593#n44
-[`VMResponse`]: https://code.tvl.fyi/tree/tvix/eval/src/vm/generators.rs?id=2696839770c1ccb62929ff2575a633c07f5c9593#n169
+[`VMRequest`]: https://code.tvl.fyi/tree/Snix/eval/src/vm/generators.rs?id=2696839770c1ccb62929ff2575a633c07f5c9593#n44
+[`VMResponse`]: https://code.tvl.fyi/tree/Snix/eval/src/vm/generators.rs?id=2696839770c1ccb62929ff2575a633c07f5c9593#n169
 
 ## Advantages & Disadvantages of the approach
 
@@ -260,10 +266,10 @@ This approach has several advantages:
   can argue about whether or not to introduce macros for simplifying it).
 
 * Several parts of the VM execution are now much easier to document,
-  potentially letting us onboard tvix-eval contributors faster.
+  potentially letting us onboard `snix-eval` contributors faster.
 
 * The linear VM execution itself is much easier to trace now, with for example
-  the `RuntimeObserver` (and by extension `tvixbolt`) giving much clearer
+  the `RuntimeObserver` (and by extension `Snixbolt`) giving much clearer
   output now.
 
 But it also comes with some disadvantages:
@@ -296,12 +302,12 @@ But it also comes with some disadvantages:
    implementation to accomodate problems as they show up. This is not
    preferred as the code is already getting messy.
 
-2. Making tvix-eval a fully `async` project, pulling in something like Tokio
+2. Making `snix-eval` a fully `async` project, pulling in something like Tokio
    or `async-std` as a runtime. This is not preferred due to the massively
    increased complexity of those solutions, and all the known issues of fully
    buying in to the async ecosystem.
 
-   tvix-eval fundamentally should work for use-cases besides building Nix
+   `snix-eval` fundamentally should work for use-cases besides building Nix
    packages (e.g. for `//snix/serde`), and its profile should be as slim as
    possible.
 
@@ -312,3 +318,5 @@ But it also comes with some disadvantages:
 4. ... ?
 
 [`genawaiter`]: https://docs.rs/genawaiter/
+[cl/8104]: https://cl.snix.dev/q/8104
+[cl/8148]: https://cl.snix.dev/q/8148
