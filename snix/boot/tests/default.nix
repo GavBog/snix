@@ -183,22 +183,22 @@ let
 
 in
 depot.nix.readTree.drvTargets {
-  docs-memory = (
+  website-memory = (
     mkBootTest {
-      name = "docs-memory";
-      path = ../../docs;
-      importPathName = "docs";
+      name = "website-memory";
+      path = ../../../web/content;
+      importPathName = "content";
     }
   );
 
-  docs-persistent = (
+  website-persistent = (
     mkBootTest {
-      name = "docs-persistent";
+      name = "website-persistent";
       blobServiceAddr = "objectstore+file:///build/blobs";
       directoryServiceAddr = "redb:///build/directories.redb";
       pathInfoServiceAddr = "redb:///build/pathinfo.redb";
-      path = ../../docs;
-      importPathName = "docs";
+      path = ../../../web/content;
+      importPathName = "content";
     }
   );
 
