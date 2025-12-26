@@ -1,15 +1,21 @@
-# tvix-[ca]store API
+---
+title: "snix-[ca]store API"
+date: 2025-12-26T09:33:01+01:00
+lastmod: 2025-12-26T09:33:01+01:00
+weight: 999
+toc: true
+---
 
-This document outlines the design of the API exposed by tvix-castore and tvix-
-store, as well as other implementations of this store protocol.
+This document outlines the design of the API exposed by `snix-castore` and
+`snix-store`, as well as other implementations of this store protocol.
 
 This document is meant to be read side-by-side with
-[Data Model](../castore/data-model.md) which describes the data model
+[Data Model][castore-data-model] which describes the data model
 in more detail.
 
 The store API has four main consumers:
 
-1. The evaluator (or more correctly, the CLI/coordinator, in the Tvix
+1. The evaluator (or more correctly, the CLI/coordinator, in the Snix
    case) communicates with the store to:
 
    * Upload files and directories (e.g. from `builtins.path`, or `src = ./path`
@@ -22,7 +28,7 @@ The store API has four main consumers:
    * Upload files and directories after a build, to persist build artifacts in
      the store.
 
-3. Tvix clients (such as users that have Tvix installed, or, depending
+3. Snix clients (such as users that have Snix installed, or, depending
    on perspective, builder environments) expect the store to
    "materialise" on disk to provide a directory layout with store
    paths.
@@ -38,13 +44,11 @@ of deduplication opportunities as well as granularity.
 
 ## The Store model
 
-Contents inside a tvix-store can be grouped into three different message types:
+Contents inside a snix-store can be grouped into three different message types:
 
  * Blobs
  * Directories
  * PathInfo (see further down)
-
-(check `castore.md` for more detailed field descriptions)
 
 ### Blobs
 A blob object contains the literal file contents of regular (or executable)
@@ -54,9 +58,9 @@ files.
 A directory object describes the direct children of a directory.
 
 It contains:
- - name of child (regular or executable) files, and their [blake3][blake3] hash.
+ - name of child (regular or executable) files, and their [BLAKE3][] hash.
  - name of child symlinks, and their target (as string)
- - name of child directories, and their [blake3][blake3] hash (forming a Merkle DAG)
+ - name of child directories, and their [BLAKE3][] hash (forming a Merkle DAG)
 
 ### Content-addressed Store Model
 For example, lets consider a directory layout like this, with some
@@ -116,9 +120,9 @@ content-addressed world to a physical path.
 
 ### PathInfo
 As most paths in the Nix store currently are input-addressed [^input-addressed],
-and the `tvix-castore` data model is also not intrinsically using NAR hashes,
+and the `snix-castore` data model is also not intrinsically using NAR hashes,
 we need something mapping from an input-addressed "output path hash" (or a Nix-
-specific content-addressed path) to the contents in the `tvix-castore` world.
+specific content-addressed path) to the contents in the `snix-castore` world.
 
 That's what `PathInfo` provides. It embeds the root node (Directory, File or
 Symlink) at a given store path.
@@ -138,7 +142,7 @@ There's three different services:
 `BlobService` can be used to store and retrieve blobs of data, used to host
 regular file contents.
 
-It is content-addressed, using [blake3][blake3]
+It is content-addressed, using [BLAKE3][]
 as a hashing function.
 
 As blake3 is a tree hash, there's an opportunity to do
@@ -157,7 +161,7 @@ message.
 
 ## Example flows
 
-Below there are some common use cases of tvix-store, and how the different
+Below there are some common use cases of snix-store, and how the different
 services are used.
 
 ###  Upload files and directories
@@ -211,16 +215,16 @@ contents of a store path to the evaluating machine, but really only fetching
 the files the evaluator currently cares about.
 
 ### Materializing store paths on disk
-This is useful for people running a Tvix-only system, or running builds on a
-"Tvix remote builder" in its own mount namespace.
+This is useful for people running a Snix-only system, or running builds on a
+"Snix remote builder" in its own mount namespace.
 
 In a system with Nix installed, we can't simply manually "extract" things to
 `/nix/store`, as Nix assumes to own all writes to this location.
-In these use cases, we're probably better off exposing a tvix-store as a local
+In these use cases, we're probably better off exposing a snix-store as a local
 binary cache (that's what `//snix/nar-bridge` does).
 
 Assuming we are in an environment where we control `/nix/store` exclusively, a
-"realize to disk" would either "extract" things from the `tvix-store` to a
+"realize to disk" would either "extract" things from the `snix-store` to a
 filesystem, or expose a `FUSE`/`virtio-fs` filesystem.
 
 The latter is already implemented, and particularly interesting for (remote)
@@ -239,12 +243,12 @@ In both cases, the API interactions are similar.
    (See the caveat in "Trust model" though!)
 
 ### Stores communicating with other stores
-The gRPC API exposed by the tvix-store allows composing multiple stores, and
+The gRPC API exposed by the snix-store allows composing multiple stores, and
 implementing some caching strategies, that store clients don't need to be aware
 of.
 
- * For example, a caching strategy could have a fast local tvix-store, that's
-   asked first and filled with data from a slower remote tvix-store.
+ * For example, a caching strategy could have a fast local snix-store, that's
+   asked first and filled with data from a slower remote snix-store.
 
  * Multiple stores could be asked for the same data, and whatever store returns
    the right data first wins.
@@ -257,7 +261,7 @@ As already described above, the only non-content-addressed service is the
 This means, all other messages (such as `Blob` and `Directory` messages) can be
 substituted from many different, untrusted sources/mirrors, which will make
 plugging in additional substitution strategies like IPFS, local network
-neighbors super simple. That's also why it's living in the `tvix-castore` crate.
+neighbors super simple. That's also why it's living in the `snix-castore` crate.
 
 As for `PathInfo`, we don't specify an additional signature mechanism yet, but
 carry the NAR-based signatures from Nix along.
@@ -276,8 +280,10 @@ access etc.
 
 
 
-[blake3]: https://github.com/BLAKE3-team/BLAKE3
+[BLAKE2]: https://github.com/BLAKE3-team/BLAKE3
 [bao]: https://github.com/oconnor663/bao
+[castore-data-model]: {{<ref "docs/components/castore/data-model.md">}}
+
 [^input-addressed]: Nix hashes the A-Term representation of a .drv, after doing
                     some replacements on refered Input Derivations to calculate
                     output paths.
