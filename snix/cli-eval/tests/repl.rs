@@ -1,6 +1,6 @@
 use clap::Parser;
 use expect_test::expect;
-use snix_cli::init_io_handle;
+use snix_cli_eval::init_io_handle;
 use std::ffi::OsString;
 use std::rc::Rc;
 
@@ -9,13 +9,13 @@ macro_rules! test_repl {
         #[test]
         fn $name() {
             let tokio_runtime = tokio::runtime::Runtime::new().unwrap();
-            let args = snix_cli::Args::parse_from(vec![
-              OsString::from("snix"),
+            let args = snix_cli_eval::Args::parse_from(vec![
+              OsString::from("snix-eval"),
               OsString::from("--extra-nix-path"),
               OsString::from("nixpkgs=/tmp"),
             ]);
             let io_handle = tokio_runtime.block_on(init_io_handle(&args));
-            let mut repl = snix_cli::Repl::new(Rc::new(io_handle), &args);
+            let mut repl = snix_cli_eval::Repl::new(Rc::new(io_handle), &args);
             let mut buffer = std::io::Cursor::new(Vec::new());
             $({
                 let result = repl.send(&mut buffer, $send.into());

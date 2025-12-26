@@ -114,10 +114,10 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
-    "snix-cli" = rec {
-      packageId = "snix-cli";
+    "snix-cli-eval" = rec {
+      packageId = "snix-cli-eval";
       build = internal.buildRustCrateWithFeatures {
-        packageId = "snix-cli";
+        packageId = "snix-cli-eval";
       };
 
       # Debug support which might change between releases.
@@ -18854,22 +18854,22 @@ rec {
         ];
 
       };
-      "snix-cli" = rec {
-        crateName = "snix-cli";
+      "snix-cli-eval" = rec {
+        crateName = "snix-cli-eval";
         version = "0.1.0";
         edition = "2024";
         crateBin = [
           {
-            name = "snix";
+            name = "snix-eval";
             path = "src/main.rs";
             requiredFeatures = [ ];
           }
         ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
-          src = ./cli;
+          src = ./cli-eval;
         };
-        libName = "snix_cli";
+        libName = "snix_cli_eval";
         dependencies = [
           {
             name = "bytes";

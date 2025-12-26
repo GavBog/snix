@@ -5,7 +5,7 @@
   ...
 }:
 
-(depot.snix.crates.workspaceMembers.snix-cli.build.override {
+(depot.snix.crates.workspaceMembers.snix-cli-eval.build.override {
   runTests = true;
   testPreRun = ''
     export SSL_CERT_FILE=/dev/null
@@ -37,7 +37,7 @@
       mkExprBenchmark =
         { expr, description }:
         let
-          name = "snix-cli-benchmark-${description}";
+          name = "snix-cli-eval-benchmark-${description}";
         in
         (pkgs.runCommand name { } ''
           export SSL_CERT_FILE=/dev/null
@@ -45,7 +45,7 @@
             "${pkgs.time}/bin/time"
             "--format"
             "${benchmark-gnutime-format-string description}"
-            "${snix-cli}/bin/snix"
+            "${snix-cli}/bin/snix-eval"
             "--no-warnings"
             "-E"
             expr
@@ -76,7 +76,7 @@
         in
         (pkgs.runCommand name { } ''
           export SSL_CERT_FILE=/dev/null
-          SNIX_OUTPUT=$(${snix-cli}/bin/snix --no-warnings -E '${
+          SNIX_OUTPUT=$(${snix-cli}/bin/snix-eval --no-warnings -E '${
             if expr != null then expr else "(import ${pkgs.path} {}).${attrPath}"
           }')
           EXPECTED='${

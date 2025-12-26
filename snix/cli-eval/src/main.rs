@@ -1,8 +1,8 @@
 use clap::Parser;
 use mimalloc::MiMalloc;
-use snix_cli::args::Args;
-use snix_cli::repl::Repl;
-use snix_cli::{AllowIncomplete, init_io_handle, interpret};
+use snix_cli_eval::args::Args;
+use snix_cli_eval::repl::Repl;
+use snix_cli_eval::{AllowIncomplete, init_io_handle, interpret};
 use snix_eval::EvalMode;
 use snix_eval::observer::DisassemblingObserver;
 use snix_glue::snix_store_io::SnixStoreIO;

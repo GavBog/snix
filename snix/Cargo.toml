@@ -22,7 +22,7 @@ members = [
   "build",
   "castore",
   "castore-http",
-  "cli",
+  "cli-eval",
   "eval",
   "eval/builtin-macros",
   "glue",
