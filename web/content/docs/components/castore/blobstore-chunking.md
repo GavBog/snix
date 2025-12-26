@@ -1,7 +1,12 @@
-# BlobStore: Chunking & Verified Streaming
+---
+title: "Blobstore: Chunking & Verified Streaming"
+date: 2025-12-26T09:07:44+01:00
+lastmod: 2025-12-26T09:07:44+01:00
+toc: false
+---
 
-`snix-castore`'s BlobStore is a content-addressed storage system, using [blake3]
-as hash function.
+`snix-castore`'s BlobStore is a content-addressed storage system, using
+[BLAKE3][] as hash function.
 
 Returned data is fetched by using the digest as lookup key, and can be verified
 to be correct by feeding the received data through the hash function and
@@ -32,8 +37,8 @@ and making a hash of *this listing* the blob digest/identifier.
 
  - BitTorrent for example breaks files up into smaller chunks, and maintains
    a list of sha1 digests for each of these chunks. Magnet links contain a
-   digest over this listing as an identifier. (See [bittorrent-v2][here for
-   more details]).
+   digest over this listing as an identifier.
+   (See [here][bittorrent-v2] for more details).
    With the identifier, a client can fetch the entire list, and then recursively
    "unpack the graph" of nodes, until it ends up with a list of individual small
    chunks, which can be fetched individually.
@@ -45,7 +50,7 @@ trusted fashion. They can also do some deduplication, in case there's the same
 leaf nodes same leaf nodes in multiple places.
 
 However, they also have a big disadvantage. The chunking parameters, and the
-"topology" of the graph structure itself "bleed" into the root hash of the
+"topology" of the graph structure itself "bleeds" into the root hash of the
 entire data structure itself.
 
 Depending on the chunking parameters used, there's different representations for
@@ -61,7 +66,7 @@ snix-castore's BlobStore uses a hybrid approach to eliminate some of the
 disadvantages, while still being content-addressed internally, with the
 highlighted benefits.
 
-It uses [blake3] as hash function, and the blake3 digest of **the raw data
+It uses [BLAKE3][] as hash function, and the blake3 digest of **the raw data
 itself** as an identifier (rather than some application-specific Merkle DAG that
 also embeds some chunking information).
 
@@ -77,7 +82,7 @@ our data model / identifier upfront, but can make this mostly a transport/
 storage concern.
 
 For some more description on the (remote) protocol, check
-[BlobStore Protocol](./blobstore-protocol.md).
+[BlobStore Protocol]({{< relref "blobstore-protocol.md" >}}).
 
 #### Logical vs. physical chunking
 
@@ -138,10 +143,9 @@ Each physical chunk fetched can be validated to have the blake3 digest that was
 communicated upfront, and can be stored in a client-side cache/storage, so
 subsequent / other requests for the same data will be fast(er).
 
----
-
 [^1]: and the surrounding context, aka position inside the whole blob, which is available while verifying the tree
+
 [bittorrent-v2]: https://blog.libtorrent.org/2020/09/bittorrent-v2/
-[blake3]: https://github.com/BLAKE3-team/BLAKE3
+[BLAKE3]: https://github.com/BLAKE3-team/BLAKE3
 [bao-spec]: https://github.com/oconnor663/bao/blob/master/docs/spec.md
 [bao-tree]: https://github.com/n0-computer/bao-tree

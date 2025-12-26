@@ -1,4 +1,10 @@
-# BlobStore: Protocol / Composition
+---
+title: "Blobstore: Protocol / Composition"
+date: 2025-12-26T09:17:00+01:00
+lastmod: 2025-12-26T09:17:00+01:00
+weight: 999
+toc: true
+---
 
 This documents describes the protocol that BlobStore uses to substitute blobs
 other ("remote") BlobStores.
@@ -6,9 +12,9 @@ other ("remote") BlobStores.
 How to come up with the blake3 digest of the blob to fetch is left to another
 layer in the stack.
 
-To put this into the context of Tvix as a Nix alternative, a blob represents an
+To put this into the context of Snix as a Nix alternative, a blob represents an
 individual file inside a StorePath.
-In the Tvix Data Model, this is accomplished by having a `FileNode` (either the
+In the Snix Data Model, this is accomplished by having a `FileNode` (either the
 `root_node` in a `PathInfo` message, or a individual file inside a `Directory`
 message) encode a BLAKE3 digest.
 
@@ -19,17 +25,16 @@ exchange/storage or access into data of which the blake3 digest is known.
 As an RPC protocol, BlobStore currently uses gRPC.
 
 On the Rust side of things, every blob service implements the
-[`BlobService`](../src/blobservice/mod.rs) async trait, which isn't
-gRPC-specific.
+[`BlobService`][rustdoc-blobservice] async trait, which isn't gRPC-specific.
 
 This `BlobService` trait provides functionality to check for existence of Blobs,
 read from blobs, and write new blobs.
 It also provides a method to ask for more granular chunks if they are available.
 
-In addition to some in-memory, on-disk and (soon) object-storage-based
-implementations, we also have a `BlobService` implementation that talks to a
-gRPC server, as well as a gRPC server wrapper component, which provides a gRPC
-service for anything implementing the `BlobService` trait.
+In addition to some in-memory, on-disk and object-storage-based implementations,
+we also have a `BlobService` implementation that talks to a gRPC server, as well
+as a gRPC server wrapper component, which provides a gRPC service for anything
+implementing the `BlobService` trait.
 
 This makes it very easy to talk to a remote `BlobService`, which does not even
 need to be written in the same language, as long it speaks the same gRPC
@@ -38,10 +43,10 @@ protocol.
 It also puts very little requirements on someone implementing a new
 `BlobService`, and how its internal storage or chunking algorithm looks like.
 
-The gRPC protocol is documented in `../protos/rpc_blobstore.proto`.
+The gRPC protocol is documented in [`rpc_blobstore.proto`][rpc-blobstore-proto].
 Contrary to the `BlobService` trait, it does not have any options for seeking/
 ranging, as it's more desirable to provide this through chunking (see also
-[BlobStore Chunking](./blobstore-chunking.md).
+[BlobStore Chunking][blobstore-chunking]).
 
 ## Composition
 Different `BlobStore` are supposed to be "composed"/"layered" to express
@@ -57,7 +62,7 @@ The flexibility of this doesn't need to be exposed to the user in the default
 case; in most cases we should be fine with some form of on-disk storage and a
 bunch of substituters with different priorities.
 
-Check [Store Configuration](./store-configuration.md) for more details.
+Check [Store Configuration][store-configuration] for more details.
 
 ### gRPC Clients
 Clients are encouraged to always read blobs in a chunked fashion (asking for a
@@ -78,7 +83,7 @@ an additional additional field in the response, which would allow clients to
 populate their local chunk store in a single roundtrip.
 
 ## Verified Streaming
-As already described in [BlobStore Chunking](./blobstore-chunking.md), the physical chunk
+As already described in [BlobStore Chunking][blobstore-chunking], the physical chunk
 information sent in a `BlobService.Stat()` response is still sufficient to fetch
 in an authenticated fashion.
 
@@ -96,11 +101,15 @@ The exact protocol and formats are still a bit in flux, but here's some notes:
    It would be nice to also be compatible with the baos used by [iroh], so we
    can provide an implementation using it too.
 
----
 
 [^1]: We might want to have some backchannel, so it becomes possible to provide
       feedback to the user that something is downloaded.
 [^2]: Something between 512K-4M, TBD.
+
 [bao-spec]: https://github.com/oconnor663/bao/blob/master/docs/spec.md
 [bao-tree]: https://github.com/n0-computer/bao-tree
 [iroh]: https://github.com/n0-computer/iroh
+[rustdoc-blobservice]: https://snix.dev/rustdoc/snix_castore/blobservice/trait.BlobService.html
+[store-configuration]: {{< ref "docs/guides/store-configuration-composition.md" >}}
+[blobstore-chunking]: {{< relref "blobstore-chunking.md" >}}
+[rpc-blobstore-proto]: https://git.snix.dev/snix/snix/src/branch/canon/snix/castore/protos/rpc_blobstore.proto
