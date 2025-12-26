@@ -18,7 +18,7 @@ work" and increased code complexity based on a mental model that might get
 disproved later on, as we work towards correctness.
 
 We do this by evaluating more and more parts of the official Nix test suite, as
-well as our own Tvix test suite, and compare it with Nix' output.
+well as our own Snix test suite, and compare it with Nix' output.
 
 Additionally, we evaluate attributes from nixpkgs, compare calculated output
 paths (to determine equivalence of evaluated A-Terms) and fix differences as we
@@ -37,20 +37,19 @@ in resulting store paths.
 
 ## Documentation
 Extend the other pages in here. Some ideas on what should be tackled:
- - Document what Tvix is, and what it is not yet. What it is now, what it is not
+ - Document what Snix is, and what it is not yet. What it is now, what it is not
    (yet), explaining some of the architectural choices (castore, more hermetic
    `Build` repr), while still being compatible. Explain how it's possible to
-   plug in other frontends, and use `tvix-{[ca]store,build}` without Nixlang even.
+   plug in other frontends, and use `snix-{[ca]store,build}` without Nixlang even.
    And how `nix-compat` is a useful crate for all sorts of formats and data
    types of Nix.
  - Update the Architecture diagram to model the current state of things.
    There's no gRPC between Coordinator and Evaluator.
- - Add a dedicated section/page explaining the separation between tvix-glue and
-   tvix-eval, and how more annoying builtins get injected into tvix-eval through
-   tvix-glue.
+ - Add a dedicated section/page explaining the separation between snix-glue and
+   snix-eval, and how more annoying builtins get injected into snix-eval through
+   snix-glue.
    Maybe restructure to only explain the component structure potentially
    crossing process boundaries (those with gRPC), and make the rest more crate
    and trait-focused?
  - Restructure docs on castore vs store, this seems to be duplicated a bit and
    is probably still not too clear.
- - Absorb the rest of //snix/website into this.
