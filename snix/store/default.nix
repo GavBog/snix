@@ -46,7 +46,7 @@ in
         "integration-tests"
       ]
       ++ lib.filter (x: lib.hasPrefix "with-features" x || x == "no-features") (lib.attrNames passthru);
-      extraSteps.import-docs = (mkImportCheck "snix/docs/src/store" ../docs/src/store);
+      extraSteps.import-website = (mkImportCheck "web/content" ../../web/content);
     };
     passthru =
       old.passthru
