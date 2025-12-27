@@ -8894,7 +8894,10 @@ rec {
         features = {
           "axum" = [ "dep:axum" ];
           "chrome" = [ "dep:tracing-chrome" ];
-          "clap" = [ "dep:clap" ];
+          "clap" = [
+            "dep:clap"
+            "dep:clap-verbosity-flag"
+          ];
           "otlp" = [
             "dep:tracing-opentelemetry"
             "dep:opentelemetry"

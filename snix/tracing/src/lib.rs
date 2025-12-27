@@ -1,7 +1,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+#[cfg(feature = "clap")]
+use clap_verbosity_flag::{InfoLevel, LogLevel, Verbosity};
 use std::sync::LazyLock;
-use tracing::{debug, level_filters::LevelFilter};
+use tracing::{Level, debug, level_filters::LevelFilter};
 use tracing_indicatif::{
     IndicatifLayer, IndicatifWriter, filter::IndicatifFilter, style::ProgressStyle,
     util::FilteredFormatFields, writer,
@@ -129,6 +131,9 @@ pub struct TracingBuilder {
 
     #[cfg(feature = "otlp")]
     otlp_enabled: bool,
+
+    quiet: bool,
+    verbosity: Option<Level>,
 }
 
 impl TracingBuilder {
@@ -142,6 +147,18 @@ impl TracingBuilder {
     /// Enable progress bar layer, default is disabled
     pub fn enable_progressbar(mut self) -> TracingBuilder {
         self.progess_bar = true;
+        self
+    }
+
+    /// Supress log and progress bar output to stderr
+    pub fn quiet_output(mut self) -> TracingBuilder {
+        self.quiet = true;
+        self
+    }
+
+    /// Sets the verbosity level, default is INFO
+    pub fn with_max_level(mut self, level: Level) -> TracingBuilder {
+        self.verbosity = Some(level);
         self
     }
 
@@ -178,26 +195,32 @@ impl TracingBuilder {
         let stdout_writer = indicatif_layer.get_stdout_writer();
         let stderr_writer = indicatif_layer.get_stderr_writer();
 
-        let layered = tracing_subscriber::fmt::Layer::new()
-            .fmt_fields(FilteredFormatFields::new(
-                tracing_subscriber::fmt::format::DefaultFields::new(),
-                |field| field.name() != "indicatif.pb_show",
-            ))
-            .with_writer(indicatif_layer.get_stderr_writer())
-            .compact()
-            .and_then((self.progess_bar).then(|| {
-                indicatif_layer.with_filter(
-                    // only show progress for spans with indicatif.pb_show field being set
-                    IndicatifFilter::new(false),
-                )
-            }));
+        let layered = if !self.quiet {
+            Some(
+                tracing_subscriber::fmt::Layer::new()
+                    .fmt_fields(FilteredFormatFields::new(
+                        tracing_subscriber::fmt::format::DefaultFields::new(),
+                        |field| field.name() != "indicatif.pb_show",
+                    ))
+                    .with_writer(indicatif_layer.get_stderr_writer())
+                    .compact()
+                    .and_then((self.progess_bar).then(|| {
+                        indicatif_layer.with_filter(
+                            // only show progress for spans with indicatif.pb_show field being set
+                            IndicatifFilter::new(false),
+                        )
+                    })),
+            )
+        } else {
+            None
+        };
         #[cfg(feature = "chrome")]
         let (layered, chrome_guard) = {
             let (chrome_layer, guard) = tracing_chrome::ChromeLayerBuilder::new()
                 .include_args(true)
                 .trace_style(tracing_chrome::TraceStyle::Async)
                 .build();
-            (layered.and_then(chrome_layer), guard)
+            (Layer::and_then(layered, chrome_layer), guard)
         };
 
         #[cfg(feature = "otlp")]
@@ -207,7 +230,7 @@ impl TracingBuilder {
 
         // Setup otlp if a service_name is configured
         #[cfg(feature = "otlp")]
-        let layered = layered.and_then({
+        let layered = Layer::and_then(layered, {
             self.otlp_enabled.then(|| {
                 use opentelemetry::trace::TracerProvider;
 
@@ -233,14 +256,19 @@ impl TracingBuilder {
         });
 
         #[cfg(feature = "tracy")]
-        let layered = layered.and_then(TracyLayer::default());
+        let layered = Layer::and_then(layered, TracyLayer::default());
 
-        let layered = layered.with_filter(
-            EnvFilter::builder()
+        let layered = layered.with_filter({
+            let b = EnvFilter::builder()
                 .with_default_directive(LevelFilter::INFO.into())
                 .from_env()
-                .expect("invalid RUST_LOG"),
-        );
+                .expect("invalid RUST_LOG");
+            if let Some(level) = self.verbosity {
+                b.add_directive(level.into())
+            } else {
+                b
+            }
+        });
 
         tracing_subscriber::registry()
             // TODO: if additional_layer has global filters, there is a risk that it will disable the "default" ones,
@@ -263,17 +291,28 @@ impl TracingBuilder {
     }
 
     #[cfg(feature = "clap")]
+    /// Configure with verbosity flags.
+    pub fn handle_verbosity_flags<L: LogLevel>(mut self, args: &Verbosity<L>) -> Self {
+        if let Some(level) = args.tracing_level() {
+            self = self.with_max_level(level)
+        } else {
+            self = self.quiet_output()
+        }
+
+        self
+    }
+
+    #[cfg(feature = "clap")]
     /// Configure with the tracing-related args.
-    pub fn handle_tracing_args(
+    pub fn handle_tracing_args<L: LogLevel>(
         #[allow(unused_mut)] mut self,
-        #[allow(unused)] args: &TracingArgs,
+        args: &TracingArgs<L>,
     ) -> Self {
         #[cfg(feature = "otlp")]
         if args.otlp {
             self = self.enable_otlp()
         }
-
-        self
+        self.handle_verbosity_flags(&args.verbosity)
     }
 }
 
@@ -355,11 +394,14 @@ fn gen_meter_provider()
 
 #[cfg(feature = "clap")]
 #[derive(clap::Parser, Clone)]
-pub struct TracingArgs {
+pub struct TracingArgs<L: LogLevel = InfoLevel> {
     #[cfg(feature = "otlp")]
     /// Whether to configure OTLP.
     #[arg(long, action(clap::ArgAction::SetTrue))]
     otlp: bool,
+
+    #[clap(flatten)]
+    verbosity: Verbosity<L>,
 }
 
 /// future that listens to both ctrl-c and sigterm.

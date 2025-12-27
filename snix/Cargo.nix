@@ -3020,6 +3020,50 @@ rec {
           "usage"
         ];
       };
+      "clap-verbosity-flag" = rec {
+        crateName = "clap-verbosity-flag";
+        version = "3.0.4";
+        edition = "2021";
+        sha256 = "1513fiasgif7h7nxbnzs3ddkwm6n43lwcz5ph4w99zkjnbxb34lx";
+        libName = "clap_verbosity_flag";
+        authors = [
+          "Pascal Hertleif <killercup@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "clap";
+            packageId = "clap";
+            usesDefaultFeatures = false;
+            features = [
+              "std"
+              "derive"
+            ];
+          }
+          {
+            name = "tracing-core";
+            packageId = "tracing-core";
+            optional = true;
+          }
+        ];
+        devDependencies = [
+          {
+            name = "clap";
+            packageId = "clap";
+            usesDefaultFeatures = false;
+            features = [
+              "help"
+              "usage"
+            ];
+          }
+        ];
+        features = {
+          "default" = [ "log" ];
+          "log" = [ "dep:log" ];
+          "serde" = [ "dep:serde" ];
+          "tracing" = [ "dep:tracing-core" ];
+        };
+        resolvedDefaultFeatures = [ "tracing" ];
+      };
       "clap_builder" = rec {
         crateName = "clap_builder";
         version = "4.5.53";
@@ -19806,6 +19850,13 @@ rec {
             features = [ "derive" ];
           }
           {
+            name = "clap-verbosity-flag";
+            packageId = "clap-verbosity-flag";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "tracing" ];
+          }
+          {
             name = "http";
             packageId = "http 1.4.0";
             optional = true;
@@ -19899,7 +19950,10 @@ rec {
         features = {
           "axum" = [ "dep:axum" ];
           "chrome" = [ "dep:tracing-chrome" ];
-          "clap" = [ "dep:clap" ];
+          "clap" = [
+            "dep:clap"
+            "dep:clap-verbosity-flag"
+          ];
           "otlp" = [
             "dep:tracing-opentelemetry"
             "dep:opentelemetry"
