@@ -34,6 +34,7 @@ tower-otel-http-metrics = { workspace = true, features = [
 snix-castore = { path = "../castore" }
 snix-store = { path = "../store" }
 snix-tracing = { path = "../tracing", features = ["tonic", "axum"] }
+snix-cli.path = "../cli/base"
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tracing-test.workspace = true

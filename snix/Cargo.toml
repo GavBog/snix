@@ -22,6 +22,7 @@ members = [
   "build",
   "castore",
   "castore-http",
+  "cli/base",
   "cli-eval",
   "eval",
   "eval/builtin-macros",
@@ -165,6 +166,7 @@ vm-memory = "=0.10.0"
 vmm-sys-util = "=0.11.2"
 vu128 = "1.1.0"
 walkdir = "2.5.0"
+which = "^8.0.0"
 # https://github.com/jneem/wu-manber/pull/1
 wu-manber = { git = "https://github.com/tvlfyi/wu-manber.git" }
 xattr = "1.3.1"

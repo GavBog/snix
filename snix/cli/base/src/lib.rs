@@ -1,0 +1,83 @@
+use std::env::{join_paths, split_paths, var_os};
+use std::ffi::OsString;
+use std::io;
+use std::path::PathBuf;
+
+use tracing::debug;
+use which::which_in;
+
+pub type SnixCliResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+pub const DEFAULT_LIBEXEC_PATH_VAR: &str = "SNIX_LIBEXEC_PATH";
+
+/// Make an os-specific search path.
+///
+/// This concatenates `SNIX_LIBEXEC_PATH` environment variable, `default_libexec_path`
+/// argument, `PATH` environment variable and the directory of the current executable
+/// into one string separated by the os-specific path separator.
+///
+/// It does this to crate one giant search path of places to look for a sub-command
+/// binary.
+pub fn make_search_path(default_libexec_path: Option<&str>) -> Option<OsString> {
+    let libexec_path = var_os(DEFAULT_LIBEXEC_PATH_VAR);
+    let libexec_paths = libexec_path.iter().flat_map(split_paths);
+
+    let default_libexec_paths = default_libexec_path.iter().flat_map(split_paths);
+
+    let path = var_os("PATH");
+    let paths = path.iter().flat_map(split_paths);
+
+    let current_exe = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(ToOwned::to_owned));
+    let paths = libexec_paths
+        .chain(default_libexec_paths)
+        .chain(paths)
+        .chain(current_exe);
+    join_paths(paths).ok()
+}
+
+/// Search for a snix sub-command.
+///
+/// This searches the paths in the `SNIX_LIBEXEC_PATH` environment variable,
+/// the `default_libexec_path` argument, the `PATH` environment variable and
+/// the directory of the current executable in that order for a binary called
+/// `snix-{sub_cmd}` and will return the absolute path to it if found.
+pub fn find_command(sub_cmd: &str, default_libexec_path: Option<&str>) -> SnixCliResult<PathBuf> {
+    let cwd = std::env::current_exe()
+        .ok()
+        .and_then(|c| c.parent().map(ToOwned::to_owned))
+        .or_else(|| std::env::current_dir().ok())
+        .ok_or_else(|| io::Error::other("Could not resolve current directory"))?;
+    let binary_name = format!("snix-{sub_cmd}");
+    let search_path: Option<OsString> = make_search_path(default_libexec_path);
+    debug!(?search_path, binary_name, "Searching for {binary_name}");
+    Ok(which_in(binary_name, search_path, cwd)?)
+}
+
+/// future that listens to both ctrl-c and sigterm.
+pub async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    debug!("signal received, shutting down…");
+}

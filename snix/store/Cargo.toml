@@ -60,6 +60,7 @@ reqwest-middleware.workspace = true
 lru.workspace = true
 parking_lot.workspace = true
 snix-tracing = { path = "../tracing", features = ["clap", "reqwest", "tonic"] }
+snix-cli.path = "../cli/base"
 tracing.workspace = true
 tracing-indicatif.workspace = true
 hyper-util.workspace = true

@@ -114,6 +114,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-cli" = rec {
+      packageId = "snix-cli";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-cli";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-cli-eval" = rec {
       packageId = "snix-cli-eval";
       build = internal.buildRustCrateWithFeatures {
@@ -5021,6 +5031,16 @@ rec {
         features = {
           "proc-macro-crate" = [ "dep:proc-macro-crate" ];
         };
+      };
+      "env_home" = rec {
+        crateName = "env_home";
+        version = "0.1.0";
+        edition = "2015";
+        sha256 = "1zn08mk95rjh97831rky1n944k024qrwjhbcgb0xv9zhrh94xy67";
+        authors = [
+          "Peter Tripp <peter.tripp@gmail.com>"
+        ];
+
       };
       "equivalent" = rec {
         crateName = "equivalent";
@@ -10312,6 +10332,10 @@ rec {
           {
             name = "snix-castore";
             packageId = "snix-castore";
+          }
+          {
+            name = "snix-cli";
+            packageId = "snix-cli";
           }
           {
             name = "snix-store";
@@ -18956,6 +18980,59 @@ rec {
         ];
 
       };
+      "snix-cli" = rec {
+        crateName = "snix-cli";
+        version = "0.1.0";
+        edition = "2024";
+        crateBin = [
+          {
+            name = "snix";
+            path = "src/bin/snix.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli/base;
+        };
+        libName = "snix_cli";
+        dependencies = [
+          {
+            name = "clap";
+            packageId = "clap";
+            features = [ "derive" ];
+          }
+          {
+            name = "clap-verbosity-flag";
+            packageId = "clap-verbosity-flag";
+            usesDefaultFeatures = false;
+            features = [ "tracing" ];
+          }
+          {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [ "clap" ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "signal"
+              "rt-multi-thread"
+              "process"
+            ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "which";
+            packageId = "which";
+          }
+        ];
+
+      };
       "snix-cli-eval" = rec {
         crateName = "snix-cli-eval";
         version = "0.1.0";
@@ -19711,6 +19788,10 @@ rec {
           {
             name = "snix-castore";
             packageId = "snix-castore";
+          }
+          {
+            name = "snix-cli";
+            packageId = "snix-cli";
           }
           {
             name = "snix-tracing";
@@ -27465,6 +27546,59 @@ rec {
           "serde" = [ "dep:serde" ];
         };
       };
+      "which" = rec {
+        crateName = "which";
+        version = "8.0.0";
+        edition = "2021";
+        sha256 = "07dsqyvvyaqp3dbj4cdl3ib5fxhdf29l6vihm3pcihq666avpynk";
+        authors = [
+          "Harry Fei <tiziyuanfang@gmail.com>, Jacob Kiesel <jake@bitcrafters.co>"
+        ];
+        dependencies = [
+          {
+            name = "env_home";
+            packageId = "env_home";
+            optional = true;
+            target =
+              { target, features }:
+              ((target."windows" or false) || (target."unix" or false) || ("redox" == target."os" or null));
+          }
+          {
+            name = "rustix";
+            packageId = "rustix";
+            optional = true;
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              ((target."unix" or false) || ("wasi" == target."os" or null) || ("redox" == target."os" or null));
+            features = [
+              "fs"
+              "std"
+            ];
+          }
+          {
+            name = "winsafe";
+            packageId = "winsafe";
+            optional = true;
+            target = { target, features }: (target."windows" or false);
+            features = [ "kernel" ];
+          }
+        ];
+        features = {
+          "default" = [ "real-sys" ];
+          "real-sys" = [
+            "dep:env_home"
+            "dep:rustix"
+            "dep:winsafe"
+          ];
+          "regex" = [ "dep:regex" ];
+          "tracing" = [ "dep:tracing" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "real-sys"
+        ];
+      };
       "winapi" = rec {
         crateName = "winapi";
         version = "0.3.9";
@@ -30538,6 +30672,39 @@ rec {
           "default"
           "std"
         ];
+      };
+      "winsafe" = rec {
+        crateName = "winsafe";
+        version = "0.0.19";
+        edition = "2021";
+        sha256 = "0169xy9mjma8dys4m8v4x0xhw2gkbhv2v1wsbvcjl9bhnxxd2dfi";
+        authors = [
+          "Rodrigo Cesar de Freitas Dias <rcesar@gmail.com>"
+        ];
+        features = {
+          "comctl" = [ "ole" ];
+          "dshow" = [ "oleaut" ];
+          "dwm" = [ "uxtheme" ];
+          "dxgi" = [ "ole" ];
+          "gdi" = [ "user" ];
+          "gui" = [
+            "comctl"
+            "shell"
+            "uxtheme"
+          ];
+          "mf" = [ "oleaut" ];
+          "ole" = [ "user" ];
+          "oleaut" = [ "ole" ];
+          "shell" = [ "oleaut" ];
+          "taskschd" = [ "oleaut" ];
+          "user" = [ "kernel" ];
+          "uxtheme" = [
+            "gdi"
+            "ole"
+          ];
+          "version" = [ "kernel" ];
+        };
+        resolvedDefaultFeatures = [ "kernel" ];
       };
       "wit-bindgen" = rec {
         crateName = "wit-bindgen";

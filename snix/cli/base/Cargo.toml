@@ -1,0 +1,25 @@
+[package]
+name = "snix-cli"
+edition = "2024"
+version.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "snix"
+
+[dependencies]
+clap = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = [
+  "signal",
+  "rt-multi-thread",
+  "process",
+] }
+tracing.workspace = true
+which.workspace = true
+snix-tracing = { path = "../../tracing", features = ["clap"] }
+clap-verbosity-flag = { version = "3.0.4", default-features = false, features = [
+  "tracing",
+] }
+
+[package.metadata.docs.rs]
+all-features = true

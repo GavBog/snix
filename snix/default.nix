@@ -93,6 +93,7 @@ in
         "snix-build"
         "snix-castore"
         "snix-castore-http"
+        "snix-cli"
         "snix-cli-eval"
         "snix-eval"
         "snix-glue"

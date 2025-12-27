@@ -1,8 +1,8 @@
 use clap::Parser;
 use mimalloc::MiMalloc;
 use nar_bridge::AppState;
+use snix_cli::shutdown_signal;
 use snix_store::utils::ServiceUrlsGrpc;
-use snix_tracing::shutdown_signal;
 use std::num::NonZeroUsize;
 use tower::ServiceBuilder;
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
