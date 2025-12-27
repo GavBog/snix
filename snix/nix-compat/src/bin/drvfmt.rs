@@ -34,6 +34,11 @@ fn main() {
         .read_to_end(&mut buf)
         .expect("failed to read from stdin");
 
+    use bstr::ByteSlice;
+    if buf.trim_end() != buf {
+        panic!("Derivation may not contain trailing whitespace, bailing out!");
+    }
+
     match Derivation::from_aterm_bytes(&buf) {
         Ok(drv) => {
             println!(
