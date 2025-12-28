@@ -76,6 +76,12 @@ in
     pkgs:
     pkgs.defaultCrateOverrides
     // {
+      # Build fails on Darwin otherwise, as build.rs gets confused and doesn't use cmake.
+      aws-lc-sys = prev: {
+        nativeBuildInputs = [ pkgs.cmake ];
+        env.AWS_LC_SYS_CMAKE_BUILDER = 1;
+      };
+
       nar-bridge = prev: {
         src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
