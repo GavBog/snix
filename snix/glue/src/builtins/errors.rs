@@ -23,6 +23,10 @@ pub enum DerivationError {
     InvalidOutputHash(#[from] nixhash::Error),
     #[error("invalid output hash mode: '{0}', only 'recursive' and 'flat` are supported")]
     InvalidOutputHashMode(String),
+    #[error(
+        "Cannot have an environment variable named '__json'. This key is reserved for encoding structured attrs"
+    )]
+    StructuredAttrsJsonKeyPresent,
 }
 
 impl From<DerivationError> for snix_eval::ErrorKind {

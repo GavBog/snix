@@ -15,7 +15,8 @@ use std::collections::{BTreeSet, btree_map};
 use std::rc::Rc;
 
 // Constants used for strangely named fields in derivation inputs.
-const STRUCTURED_ATTRS: &str = "__structuredAttrs";
+const STRUCTURED_ATTRS_ENABLE_KEY: &str = "__structuredAttrs";
+const STRUCTURED_ATTRS_JSON_KEY: &str = "__json";
 const IGNORE_NULLS: &str = "__ignoreNulls";
 
 /// Populate the inputs of a derivation from the build references
@@ -260,7 +261,7 @@ pub(crate) mod derivation_builtins {
         // If it's set and true, provide a BTreeMap that gets populated while looking at the arguments.
         // We need it to be a BTreeMap, so iteration order of keys is reproducible.
         let mut structured_attrs: Option<BTreeMap<String, serde_json::Value>> =
-            match input.select(STRUCTURED_ATTRS) {
+            match input.select(STRUCTURED_ATTRS_ENABLE_KEY) {
                 Some(b) => generators::request_force(&co, b.clone())
                     .await
                     .as_bool()?
@@ -363,31 +364,39 @@ pub(crate) mod derivation_builtins {
                 }
 
                 // Don't add STRUCTURED_ATTRS if enabled.
-                STRUCTURED_ATTRS if structured_attrs.is_some() => continue,
+                STRUCTURED_ATTRS_ENABLE_KEY if structured_attrs.is_some() => continue,
+
                 // IGNORE_NULLS is always skipped, even if it's not set to true.
                 IGNORE_NULLS => continue,
 
                 // all other args.
                 _ => {
-                    // In SA case, force and add to structured attrs.
-                    // In non-SA case, coerce to string and add to env.
-                    if let Some(ref mut structured_attrs) = structured_attrs {
-                        let val = generators::request_force(&co, value).await;
-                        if val.is_catchable() {
-                            return Ok(val);
+                    match structured_attrs {
+                        // In SA case, force and add to structured attrs.
+                        Some(ref mut structured_attrs) => {
+                            let val = generators::request_force(&co, value).await;
+                            if val.is_catchable() {
+                                return Ok(val);
+                            }
+
+                            let (val_json, context) = val.into_contextful_json(&co).await?;
+                            input_context.extend(context.into_iter());
+
+                            // No need to check for dups, we only iterate over every attribute name once
+                            structured_attrs.insert(arg_name.to_owned(), val_json);
                         }
+                        // In non-SA case, coerce to string and add to env.
+                        None => {
+                            if arg_name == STRUCTURED_ATTRS_JSON_KEY {
+                                return Err(DerivationError::StructuredAttrsJsonKeyPresent.into());
+                            }
+                            let val_str = try_cek_to_value!(
+                                strong_importing_coerce_to_string(&co, value).await
+                            );
+                            input_context.mimic(&val_str);
 
-                        let (val_json, context) = val.into_contextful_json(&co).await?;
-                        input_context.extend(context.into_iter());
-
-                        // No need to check for dups, we only iterate over every attribute name once
-                        structured_attrs.insert(arg_name.to_owned(), val_json);
-                    } else {
-                        let val_str =
-                            try_cek_to_value!(strong_importing_coerce_to_string(&co, value).await);
-                        input_context.mimic(&val_str);
-
-                        insert_env(&mut drv, arg_name, val_str.as_bytes().into())?;
+                            insert_env(&mut drv, arg_name, val_str.as_bytes().into())?;
+                        }
                     }
                 }
             }
@@ -436,7 +445,7 @@ pub(crate) mod derivation_builtins {
         if let Some(structured_attrs) = structured_attrs {
             // configure __json
             drv.environment.insert(
-                "__json".to_string(),
+                STRUCTURED_ATTRS_JSON_KEY.to_string(),
                 BString::from(serde_json::to_string(&structured_attrs)?),
             );
         }

@@ -198,7 +198,9 @@ mod tests {
     #[case::structured_attrs_and_ignore_nulls_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = false; foo = null; __structuredAttrs = true; }).drvPath"#, "/nix/store/rldskjdcwa3p7x5bqy3r217va1jsbjsc-foo.drv")]
     // structured attrs, setting outputs.
     #[case::structured_attrs_outputs_drvpath(r#"(builtins.derivation { name = "test"; system = "aarch64-linux"; builder = "/bin/sh"; __structuredAttrs = true; outputs = [ "out"]; }).drvPath"#, "/nix/store/6sgawp30zibsh525p7c948xxd22y2ngy-test.drv")]
-    fn test_outpath(#[case] code: &str, #[case] expected_path: &str) {
+    // structured attrs, setting __json, which will show up as an encoded __json key inside the __json.
+    #[case::structured_attrs_json(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __structuredAttrs = true; foo = "bar"; __json = "foo";}).drvPath"#, "/nix/store/98yvz8z0i6kzdcsv6zq8cv60dd784yxf-foo.drv")]
+    fn test_drvpath(#[case] code: &str, #[case] expected_path: &str) {
         let value = eval(code).value.expect("must succeed");
 
         match value {
@@ -214,7 +216,8 @@ mod tests {
     #[case::invalid_outputhash(r#"(builtins.derivation { name = "foo"; builder = "/bin/sh"; system = "x86_64-linux"; outputHashMode = "recursive"; outputHashAlgo = "sha256"; outputHash = "sha256-00"; }).outPath"#)]
     #[case::sha1_and_sha256(r#"(builtins.derivation { name = "foo"; builder = "/bin/sh"; system = "x86_64-linux"; outputHashMode = "recursive"; outputHashAlgo = "sha1"; outputHash = "sha256-Q3QXOoy+iN4VK2CflvRulYvPZXYgF0dO7FoF7CvWFTA="; }).outPath"#)]
     #[case::duplicate_output_names(r#"(builtins.derivation { name = "foo"; builder = "/bin/sh"; outputs = ["foo" "foo"]; system = "x86_64-linux"; }).outPath"#)]
-    fn test_outpath_invalid(#[case] code: &str) {
+    #[case::unstructured_attrs_json(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; foo = "bar"; __json = "foo";}).drvPath"#)]
+    fn test_invalid(#[case] code: &str) {
         let resp = eval(code);
         assert!(resp.value.is_none(), "Value should be None");
         assert!(
