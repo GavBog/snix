@@ -25,6 +25,7 @@ members = [
   "cli/base",
   "cli/derivation-show",
   "cli/eval",
+  "cli/nar-bridge",
   "eval",
   "eval/builtin-macros",
   "glue",

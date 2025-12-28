@@ -1,0 +1,34 @@
+[package]
+name = "snix-cli-nar-bridge"
+version.workspace = true
+edition = "2024"
+rust-version.workspace = true
+
+[[bin]]
+name = "snix-nar-bridge"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true, features = ["derive", "env"] }
+mimalloc.workspace = true
+nar-bridge.path = "../../nar-bridge"
+snix-cli.path = "../base"
+snix-store.path = "../../store"
+snix-tracing = { path = "../../tracing", features = ["tonic", "axum"] }
+tokio.workspace = true
+tokio-listener = { workspace = true, features = [
+  "axum07",
+  "clap",
+  "multi-listener",
+  "sd_listen",
+] }
+tower.workspace = true
+tower-http = { workspace = true, features = ["compression-zstd", "trace"] }
+tracing.workspace = true
+
+[features]
+default = ["otlp"]
+otlp = ["snix-tracing/otlp", "nar-bridge/otlp"]
+tracing-chrome = ["snix-tracing/chrome"]
+tracing-tracy = ["snix-tracing/tracy"]
+xp-store-composition-cli = ["snix-store/xp-composition-cli"]

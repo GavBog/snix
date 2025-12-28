@@ -56,7 +56,7 @@ let
           depot.snix.boot.runVM
         ]
         ++ lib.optionals (isClosure && useNarBridge) [
-          depot.snix.nar-bridge
+          depot.snix.cli.default-cli
           pkgs.curl
           pkgs.rush-parallel
           pkgs.zstd.bin
@@ -99,7 +99,7 @@ let
         ''
         + lib.optionalString (isClosure && useNarBridge) ''
           echo "Starting nar-bridge…"
-          nar-bridge -l $PWD/nar-bridge.sock &
+          snix nar-bridge -l $PWD/nar-bridge.sock &
 
           # Wait for nar-bridge to report healthy.
           timeout 22 sh -c "until ${pkgs.curl}/bin/curl -s --unix-socket $PWD/nar-bridge.sock http:///nix-binary-cache; do sleep 1; done"

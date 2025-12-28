@@ -8,55 +8,33 @@ rust-version.workspace = true
 axum = { workspace = true, features = ["http2"] }
 axum-extra.workspace = true
 axum-range.workspace = true
-tower.workspace = true
-tower-http = { workspace = true, features = ["compression-zstd", "trace"] }
 bytes.workspace = true
-clap = { workspace = true, features = ["derive", "env"] }
-data-encoding.workspace = true
 futures.workspace = true
-itertools.workspace = true
-prost.workspace = true
+lru.workspace = true
 nix-compat = { path = "../nix-compat", features = ["async"] }
 opentelemetry.workspace = true
-thiserror.workspace = true
+parking_lot.workspace = true
+serde = { workspace = true, features = ["derive"] }
+snix-castore = { path = "../castore" }
+snix-store = { path = "../store" }
 tokio.workspace = true
-tokio-listener = { workspace = true, features = [
-  "axum07",
-  "clap",
-  "multi-listener",
-  "sd_listen",
-] }
 tokio-util = { workspace = true, features = ["io", "io-util", "compat"] }
-tonic = { workspace = true, features = ["tls", "tls-roots"] }
+tower-http = { workspace = true, features = ["compression-zstd", "trace"] }
 tower-otel-http-metrics = { workspace = true, features = [
   "axum",
 ], optional = true }
-snix-castore = { path = "../castore" }
-snix-store = { path = "../store" }
-snix-tracing = { path = "../tracing", features = ["tonic", "axum"] }
-snix-cli.path = "../cli/base"
 tracing.workspace = true
-tracing-subscriber.workspace = true
-tracing-test.workspace = true
-url.workspace = true
-serde = { workspace = true, features = ["derive"] }
-lru.workspace = true
-parking_lot.workspace = true
-mimalloc.workspace = true
-
-[build-dependencies]
-prost-build.workspace = true
-tonic-build.workspace = true
 
 [features]
 default = ["otlp"]
-otlp = ["snix-tracing/otlp", "tower-otel-http-metrics"]
-tracing-chrome = ["snix-tracing/chrome"]
-xp-store-composition-cli = ["snix-store/xp-composition-cli"]
+otlp = ["dep:tower-otel-http-metrics"]
 
 [dev-dependencies]
 axum-test = "16.4.0"
+data-encoding.workspace = true
+prost.workspace = true
 sha2.workspace = true
+tracing-test.workspace = true
 
 [package.metadata.docs.rs]
 all-features = true

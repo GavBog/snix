@@ -144,6 +144,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-cli-nar-bridge" = rec {
+      packageId = "snix-cli-nar-bridge";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-cli-nar-bridge";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-eval" = rec {
       packageId = "snix-eval";
       build = internal.buildRustCrateWithFeatures {
@@ -10263,13 +10273,6 @@ rec {
         crateName = "nar-bridge";
         version = "0.1.0";
         edition = "2024";
-        crateBin = [
-          {
-            name = "nar-bridge";
-            path = "src/bin/nar-bridge.rs";
-            requiredFeatures = [ ];
-          }
-        ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
           src = ./nar-bridge;
@@ -10294,32 +10297,12 @@ rec {
             packageId = "bytes";
           }
           {
-            name = "clap";
-            packageId = "clap";
-            features = [
-              "derive"
-              "env"
-            ];
-          }
-          {
-            name = "data-encoding";
-            packageId = "data-encoding";
-          }
-          {
             name = "futures";
             packageId = "futures";
           }
           {
-            name = "itertools";
-            packageId = "itertools 0.12.1";
-          }
-          {
             name = "lru";
             packageId = "lru";
-          }
-          {
-            name = "mimalloc";
-            packageId = "mimalloc";
           }
           {
             name = "nix-compat";
@@ -10335,10 +10318,6 @@ rec {
             packageId = "parking_lot";
           }
           {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
             name = "serde";
             packageId = "serde";
             features = [ "derive" ];
@@ -10348,38 +10327,12 @@ rec {
             packageId = "snix-castore";
           }
           {
-            name = "snix-cli";
-            packageId = "snix-cli";
-          }
-          {
             name = "snix-store";
             packageId = "snix-store";
           }
           {
-            name = "snix-tracing";
-            packageId = "snix-tracing";
-            features = [
-              "tonic"
-              "axum"
-            ];
-          }
-          {
-            name = "thiserror";
-            packageId = "thiserror 2.0.17";
-          }
-          {
             name = "tokio";
             packageId = "tokio";
-          }
-          {
-            name = "tokio-listener";
-            packageId = "tokio-listener";
-            features = [
-              "axum07"
-              "clap"
-              "multi-listener"
-              "sd_listen"
-            ];
           }
           {
             name = "tokio-util";
@@ -10389,18 +10342,6 @@ rec {
               "io-util"
               "compat"
             ];
-          }
-          {
-            name = "tonic";
-            packageId = "tonic 0.12.3";
-            features = [
-              "tls"
-              "tls-roots"
-            ];
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.4.13";
           }
           {
             name = "tower-http";
@@ -10420,28 +10361,6 @@ rec {
             name = "tracing";
             packageId = "tracing";
           }
-          {
-            name = "tracing-subscriber";
-            packageId = "tracing-subscriber";
-          }
-          {
-            name = "tracing-test";
-            packageId = "tracing-test";
-          }
-          {
-            name = "url";
-            packageId = "url";
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "prost-build";
-            packageId = "prost-build";
-          }
-          {
-            name = "tonic-build";
-            packageId = "tonic-build 0.12.3";
-          }
         ];
         devDependencies = [
           {
@@ -10449,26 +10368,29 @@ rec {
             packageId = "axum-test";
           }
           {
+            name = "data-encoding";
+            packageId = "data-encoding";
+          }
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
             name = "sha2";
             packageId = "sha2";
+          }
+          {
+            name = "tracing-test";
+            packageId = "tracing-test";
           }
         ];
         features = {
           "default" = [ "otlp" ];
-          "otlp" = [
-            "snix-tracing/otlp"
-            "tower-otel-http-metrics"
-          ];
-          "tower-otel-http-metrics" = [ "dep:tower-otel-http-metrics" ];
-          "tracing-chrome" = [ "snix-tracing/chrome" ];
-          "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
+          "otlp" = [ "dep:tower-otel-http-metrics" ];
         };
         resolvedDefaultFeatures = [
           "default"
           "otlp"
-          "tower-otel-http-metrics"
-          "tracing-chrome"
-          "xp-store-composition-cli"
         ];
       };
       "nibble_vec" = rec {
@@ -19212,6 +19134,103 @@ rec {
           "otlp"
           "tracing-chrome"
           "tracy"
+          "xp-store-composition-cli"
+        ];
+      };
+      "snix-cli-nar-bridge" = rec {
+        crateName = "snix-cli-nar-bridge";
+        version = "0.1.0";
+        edition = "2024";
+        crateBin = [
+          {
+            name = "snix-nar-bridge";
+            path = "src/main.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli/nar-bridge;
+        };
+        dependencies = [
+          {
+            name = "clap";
+            packageId = "clap";
+            features = [
+              "derive"
+              "env"
+            ];
+          }
+          {
+            name = "mimalloc";
+            packageId = "mimalloc";
+          }
+          {
+            name = "nar-bridge";
+            packageId = "nar-bridge";
+          }
+          {
+            name = "snix-cli";
+            packageId = "snix-cli";
+          }
+          {
+            name = "snix-store";
+            packageId = "snix-store";
+          }
+          {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [
+              "tonic"
+              "axum"
+            ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+          }
+          {
+            name = "tokio-listener";
+            packageId = "tokio-listener";
+            features = [
+              "axum07"
+              "clap"
+              "multi-listener"
+              "sd_listen"
+            ];
+          }
+          {
+            name = "tower";
+            packageId = "tower 0.4.13";
+          }
+          {
+            name = "tower-http";
+            packageId = "tower-http";
+            features = [
+              "compression-zstd"
+              "trace"
+            ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        features = {
+          "default" = [ "otlp" ];
+          "otlp" = [
+            "snix-tracing/otlp"
+            "nar-bridge/otlp"
+          ];
+          "tracing-chrome" = [ "snix-tracing/chrome" ];
+          "tracing-tracy" = [ "snix-tracing/tracy" ];
+          "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "otlp"
+          "tracing-chrome"
+          "tracing-tracy"
           "xp-store-composition-cli"
         ];
       };

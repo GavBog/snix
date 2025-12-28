@@ -9,10 +9,7 @@
 let
   cfg = config.services.nar-bridge;
 
-  package = depot.snix.nar-bridge.override (old: {
-    features = old.features or [ "default" ] ++ [ "xp-store-composition-cli" ];
-    runTests = true;
-  });
+  package = depot.snix.cli.store-composition-cli;
 
   storeCompositionFormat = pkgs.formats.toml { };
 
@@ -67,7 +64,7 @@ in
       wantedBy = [ "multi-user.target" ];
       environment.OTEL_SERVICE_NAME = "snix.nar-bridge";
       serviceConfig = {
-        ExecStart = "${package}/bin/nar-bridge ${utils.escapeSystemdExecArgs args}";
+        ExecStart = "${package}/bin/snix nar-bridge ${utils.escapeSystemdExecArgs args}";
 
         Restart = "always";
         RestartSec = "10";
