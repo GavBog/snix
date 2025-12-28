@@ -3019,6 +3019,7 @@ rec {
           "wrap_help" = [ "clap_builder/wrap_help" ];
         };
         resolvedDefaultFeatures = [
+          "cargo"
           "color"
           "default"
           "derive"
@@ -3026,6 +3027,7 @@ rec {
           "error-context"
           "help"
           "std"
+          "string"
           "suggestions"
           "usage"
         ];
@@ -3135,11 +3137,13 @@ rec {
           ];
         };
         resolvedDefaultFeatures = [
+          "cargo"
           "color"
           "env"
           "error-context"
           "help"
           "std"
+          "string"
           "suggestions"
           "usage"
         ];
@@ -19060,6 +19064,8 @@ rec {
             features = [
               "derive"
               "env"
+              "cargo"
+              "string"
             ];
           }
           {

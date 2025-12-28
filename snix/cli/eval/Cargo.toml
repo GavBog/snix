@@ -15,7 +15,7 @@ snix-eval = { path = "../../eval" }
 snix-glue = { path = "../../glue" }
 snix-tracing = { path = "../../tracing" }
 bytes.workspace = true
-clap = { workspace = true, features = ["derive", "env"] }
+clap = { workspace = true, features = ["derive", "env", "cargo", "string"] }
 dirs.workspace = true
 rustyline.workspace = true
 rnix.workspace = true

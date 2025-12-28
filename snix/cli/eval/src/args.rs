@@ -1,8 +1,34 @@
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, crate_version};
 use snix_store::utils::ServiceUrlsMemory;
 use url::Url;
+
+fn make_version() -> String {
+    #[allow(unused_mut)]
+    let mut features = String::new();
+    #[cfg(feature = "otlp")]
+    {
+        features.push_str("+otlp");
+    }
+    #[cfg(feature = "tracing-chrome")]
+    {
+        features.push_str("+tracing-chrome");
+    }
+    #[cfg(feature = "tracy")]
+    {
+        features.push_str("+tracy");
+    }
+    #[cfg(feature = "xp-store-composition-cli")]
+    {
+        features.push_str("+xp-store-composition-cli");
+    }
+    if features.is_empty() {
+        String::from(crate_version!())
+    } else {
+        format!("{} ({features})", crate_version!())
+    }
+}
 
 /// Provides a CLI interface to trigger evaluation using snix-eval.
 ///
@@ -13,6 +39,7 @@ use url::Url;
 ///
 /// The CLI interface is not stable and subject to change.
 #[derive(Parser, Clone)]
+#[command(version = make_version())]
 pub struct Args {
     /// Path to a script to evaluate
     pub script: Option<PathBuf>,
