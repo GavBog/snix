@@ -7,7 +7,7 @@
 depot.snix.cli.make-cli {
   pname = "default";
   paths = [
-    depot.snix.cli-eval
+    depot.snix.cli.eval
     depot.snix.build
     depot.snix.castore
     depot.snix.castore-http

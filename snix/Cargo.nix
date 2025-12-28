@@ -19046,7 +19046,7 @@ rec {
         ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
-          src = ./cli-eval;
+          src = ./cli/eval;
         };
         libName = "snix_cli_eval";
         dependencies = [

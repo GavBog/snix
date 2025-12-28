@@ -9,11 +9,11 @@ name = "snix-eval"
 path = "src/main.rs"
 
 [dependencies]
-snix-build = { path = "../build" }
-snix-store = { path = "../store", default-features = false, features = [] }
-snix-eval = { path = "../eval" }
-snix-glue = { path = "../glue" }
-snix-tracing = { path = "../tracing" }
+snix-build = { path = "../../build" }
+snix-store = { path = "../../store", default-features = false, features = [] }
+snix-eval = { path = "../../eval" }
+snix-glue = { path = "../../glue" }
+snix-tracing = { path = "../../tracing" }
 bytes.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 dirs.workspace = true
