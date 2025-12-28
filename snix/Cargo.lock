@@ -4419,12 +4419,10 @@ dependencies = [
  "axum-range",
  "axum-test",
  "blake3",
- "clap",
  "mime",
  "mime_guess",
  "path-clean",
  "snix-castore",
- "snix-tracing",
  "tokio",
  "tokio-listener",
  "tokio-util",
@@ -4442,6 +4440,19 @@ dependencies = [
  "tokio",
  "tracing",
  "which",
+]
+
+[[package]]
+name = "snix-cli-castore-http"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "snix-castore",
+ "snix-castore-http",
+ "snix-tracing",
+ "tokio",
+ "tokio-listener",
 ]
 
 [[package]]

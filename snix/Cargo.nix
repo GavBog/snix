@@ -124,6 +124,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-cli-castore-http" = rec {
+      packageId = "snix-cli-castore-http";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-cli-castore-http";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-cli-derivation-show" = rec {
       packageId = "snix-cli-derivation-show";
       build = internal.buildRustCrateWithFeatures {
@@ -18809,13 +18819,6 @@ rec {
         crateName = "snix-castore-http";
         version = "0.1.0";
         edition = "2024";
-        crateBin = [
-          {
-            name = "snix-castore-http";
-            path = "src/main.rs";
-            requiredFeatures = [ ];
-          }
-        ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
           src = ./castore-http;
@@ -18840,11 +18843,6 @@ rec {
             packageId = "axum-range";
           }
           {
-            name = "clap";
-            packageId = "clap";
-            features = [ "derive" ];
-          }
-          {
             name = "mime";
             packageId = "mime";
           }
@@ -18859,20 +18857,6 @@ rec {
           {
             name = "snix-castore";
             packageId = "snix-castore";
-          }
-          {
-            name = "snix-tracing";
-            packageId = "snix-tracing";
-            features = [
-              "clap"
-              "reqwest"
-              "tonic"
-            ];
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [ "tracing" ];
           }
           {
             name = "tokio-listener";
@@ -18901,6 +18885,10 @@ rec {
           {
             name = "blake3";
             packageId = "blake3";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
           }
           {
             name = "tracing-test";
@@ -18958,6 +18946,66 @@ rec {
           {
             name = "which";
             packageId = "which";
+          }
+        ];
+
+      };
+      "snix-cli-castore-http" = rec {
+        crateName = "snix-cli-castore-http";
+        version = "0.1.0";
+        edition = "2024";
+        crateBin = [
+          {
+            name = "snix-castore-http";
+            path = "src/main.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli/castore-http;
+        };
+        dependencies = [
+          {
+            name = "anyhow";
+            packageId = "anyhow";
+          }
+          {
+            name = "clap";
+            packageId = "clap";
+            features = [ "derive" ];
+          }
+          {
+            name = "snix-castore";
+            packageId = "snix-castore";
+          }
+          {
+            name = "snix-castore-http";
+            packageId = "snix-castore-http";
+          }
+          {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [
+              "clap"
+              "reqwest"
+              "tonic"
+            ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [ "tracing" ];
+          }
+          {
+            name = "tokio-listener";
+            packageId = "tokio-listener";
+            features = [
+              "axum07"
+              "clap"
+              "multi-listener"
+              "sd_listen"
+            ];
           }
         ];
 

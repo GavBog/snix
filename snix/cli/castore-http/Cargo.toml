@@ -1,0 +1,27 @@
+[package]
+name = "snix-cli-castore-http"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+
+[[bin]]
+name = "snix-castore-http"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap = { workspace = true, features = ["derive"] }
+snix-castore.path = "../../castore"
+snix-castore-http.path = "../../castore-http"
+snix-tracing = { path = "../../tracing", features = [
+  "clap",
+  "reqwest",
+  "tonic",
+] }
+tokio = { workspace = true, features = ["tracing"] }
+tokio-listener = { workspace = true, features = [
+  "axum07",
+  "clap",
+  "multi-listener",
+  "sd_listen",
+] }

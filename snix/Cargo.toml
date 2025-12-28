@@ -24,6 +24,7 @@ members = [
   "castore-http",
   "cli/base",
   "cli/derivation-show",
+  "cli/castore-http",
   "cli/eval",
   "cli/nar-bridge",
   "eval",
