@@ -1,0 +1,15 @@
+[package]
+name = "snix-cli-derivation-show"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+
+[[bin]]
+name = "snix-derivation-show"
+path = "src/main.rs"
+
+[dependencies]
+bstr = { workspace = true, features = ["alloc", "unicode", "serde"] }
+mimalloc.workspace = true
+nix-compat = { path = "../../nix-compat", features = ["serde"] }
+serde_json.workspace = true

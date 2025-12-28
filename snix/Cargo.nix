@@ -124,6 +124,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-cli-derivation-show" = rec {
+      packageId = "snix-cli-derivation-show";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-cli-derivation-show";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-cli-eval" = rec {
       packageId = "snix-cli-eval";
       build = internal.buildRustCrateWithFeatures {
@@ -10839,13 +10849,6 @@ rec {
         crateName = "nix-compat";
         version = "0.1.0";
         edition = "2024";
-        crateBin = [
-          {
-            name = "drvfmt";
-            path = "src/bin/drvfmt.rs";
-            requiredFeatures = [ "serde" ];
-          }
-        ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
           src = ./nix-compat;
@@ -19033,6 +19036,47 @@ rec {
           {
             name = "which";
             packageId = "which";
+          }
+        ];
+
+      };
+      "snix-cli-derivation-show" = rec {
+        crateName = "snix-cli-derivation-show";
+        version = "0.1.0";
+        edition = "2024";
+        crateBin = [
+          {
+            name = "snix-derivation-show";
+            path = "src/main.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli/derivation-show;
+        };
+        dependencies = [
+          {
+            name = "bstr";
+            packageId = "bstr";
+            features = [
+              "alloc"
+              "unicode"
+              "serde"
+            ];
+          }
+          {
+            name = "mimalloc";
+            packageId = "mimalloc";
+          }
+          {
+            name = "nix-compat";
+            packageId = "nix-compat";
+            features = [ "serde" ];
+          }
+          {
+            name = "serde_json";
+            packageId = "serde_json";
           }
         ];
 

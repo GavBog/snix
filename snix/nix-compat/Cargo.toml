@@ -4,10 +4,6 @@ version = "0.1.0"
 edition = "2024"
 rust-version.workspace = true
 
-[[bin]]
-name = "drvfmt"
-required-features = ["serde"]
-
 [features]
 # async NAR writer. Also needs the `wire` feature.
 async = ["tokio"]

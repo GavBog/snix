@@ -5024,7 +5024,6 @@ rec {
         crateName = "nix-compat";
         version = "0.1.0";
         edition = "2024";
-        crateBin = [ ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
           src = ../../snix/nix-compat;

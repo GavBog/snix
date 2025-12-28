@@ -4458,6 +4458,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "snix-cli-derivation-show"
+version = "0.1.0"
+dependencies = [
+ "bstr",
+ "mimalloc",
+ "nix-compat",
+ "serde_json",
+]
+
+[[package]]
 name = "snix-cli-eval"
 version = "0.1.0"
 dependencies = [
