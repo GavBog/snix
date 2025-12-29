@@ -122,8 +122,6 @@ pub(crate) fn derivation_to_build_request(
     );
 
     // extend / overwrite with the keys set in the derivation environment itself.
-    // TODO: check if this order is correct, and environment vars set in the
-    // *Derivation actually* have priority.
     environment_vars.extend(derivation.environment.iter().map(|(k, v)| {
         (
             k.clone(),
