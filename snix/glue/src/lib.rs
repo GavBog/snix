@@ -1,9 +1,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+pub mod builder;
 pub mod builtins;
 pub mod fetchers;
 pub mod known_paths;
-pub mod snix_build;
 pub mod snix_io;
 pub mod snix_store_io;
 

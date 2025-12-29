@@ -24,9 +24,9 @@ use snix_castore::{
 };
 use snix_store::pathinfoservice::{PathInfo, PathInfoService};
 
+use crate::builder;
 use crate::fetchers::Fetcher;
 use crate::known_paths::KnownPaths;
-use crate::snix_build::derivation_to_build_request;
 
 /// Implements [EvalIO], asking given [PathInfoService], [DirectoryService]
 /// and [BlobService].
@@ -186,7 +186,7 @@ impl SnixStoreIO {
                         // all dependencies.
                         let resolved_inputs = {
                             let known_paths = &self.known_paths.borrow();
-                            crate::snix_build::get_all_inputs(&drv, known_paths, |path| {
+                            builder::get_all_inputs(&drv, known_paths, |path| {
                                 Box::pin(async move {
                                     self.store_path_to_path_info(&path, Path::new("")).await
                                 })
@@ -198,7 +198,8 @@ impl SnixStoreIO {
                         span.pb_set_message(&format!("🔨Building {}", &store_path));
 
                         // synthesize the build request.
-                        let build_request = derivation_to_build_request(&drv, &resolved_inputs)?;
+                        let build_request =
+                            builder::derivation_to_build_request(&drv, &resolved_inputs)?;
 
                         // collect all store paths from the request, sorted.
                         let output_paths: Vec<StorePath<String>> = build_request
