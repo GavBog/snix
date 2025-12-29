@@ -2,6 +2,8 @@
 
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::{InfoLevel, LogLevel, Verbosity};
+#[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+use enumset::EnumSet;
 use std::sync::LazyLock;
 use tracing::{Level, debug, level_filters::LevelFilter};
 use tracing_indicatif::{
@@ -59,7 +61,7 @@ pub struct TracingHandle {
 
     #[cfg(feature = "chrome")]
     #[allow(dead_code)]
-    chrome_guard: std::rc::Rc<tracing_chrome::FlushGuard>,
+    chrome_guard: Option<std::rc::Rc<tracing_chrome::FlushGuard>>,
 
     #[cfg(feature = "otlp")]
     meter_provider: Option<opentelemetry_sdk::metrics::SdkMeterProvider>,
@@ -124,23 +126,45 @@ impl TracingHandle {
     }
 }
 
+#[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+#[derive(enumset::EnumSetType, Debug)]
+#[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
+pub enum Tracer {
+    #[cfg(feature = "otlp")]
+    Otlp,
+    #[cfg(feature = "tracy")]
+    Tracy,
+    #[cfg(feature = "chrome")]
+    ChromeStyle,
+}
+
 #[must_use = "Don't forget to call build() to enable tracing."]
 #[derive(Default)]
 pub struct TracingBuilder {
     progess_bar: bool,
 
-    #[cfg(feature = "otlp")]
-    otlp_enabled: bool,
+    #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+    tracers: EnumSet<Tracer>,
 
     quiet: bool,
     verbosity: Option<Level>,
 }
 
 impl TracingBuilder {
-    #[cfg(feature = "otlp")]
-    /// Enable otlp by setting a custom service_name
-    pub fn enable_otlp(mut self) -> TracingBuilder {
-        self.otlp_enabled = true;
+    #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+    /// Enable the given tracer
+    pub fn enable_tracer(mut self, tracer: Tracer) -> TracingBuilder {
+        self.tracers.insert(tracer);
+        self
+    }
+
+    #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+    /// Enable the given tracers
+    pub fn enable_tracers<I>(mut self, tracers: I) -> TracingBuilder
+    where
+        I: IntoIterator<Item = Tracer>,
+    {
+        self.tracers.extend(tracers);
         self
     }
 
@@ -215,12 +239,17 @@ impl TracingBuilder {
             None
         };
         #[cfg(feature = "chrome")]
-        let (layered, chrome_guard) = {
+        let (layered, chrome_guard) = if self.tracers.contains(Tracer::ChromeStyle) {
             let (chrome_layer, guard) = tracing_chrome::ChromeLayerBuilder::new()
                 .include_args(true)
                 .trace_style(tracing_chrome::TraceStyle::Async)
                 .build();
-            (Layer::and_then(layered, chrome_layer), guard)
+            (
+                Layer::and_then(layered, Some(chrome_layer)),
+                Some(std::rc::Rc::new(guard)),
+            )
+        } else {
+            (Layer::and_then(layered, None), None)
         };
 
         #[cfg(feature = "otlp")]
@@ -231,7 +260,7 @@ impl TracingBuilder {
         // Setup otlp if a service_name is configured
         #[cfg(feature = "otlp")]
         let layered = Layer::and_then(layered, {
-            self.otlp_enabled.then(|| {
+            self.tracers.contains(Tracer::Otlp).then(|| {
                 use opentelemetry::trace::TracerProvider;
 
                 // register a text map propagator for trace propagation
@@ -256,7 +285,12 @@ impl TracingBuilder {
         });
 
         #[cfg(feature = "tracy")]
-        let layered = Layer::and_then(layered, TracyLayer::default());
+        let layered = Layer::and_then(
+            layered,
+            self.tracers
+                .contains(Tracer::Tracy)
+                .then(TracyLayer::default),
+        );
 
         let layered = layered.with_filter({
             let b = EnvFilter::builder()
@@ -286,7 +320,7 @@ impl TracingBuilder {
             #[cfg(feature = "otlp")]
             tracer_provider: g_tracer_provider,
             #[cfg(feature = "chrome")]
-            chrome_guard: std::rc::Rc::new(chrome_guard),
+            chrome_guard,
         })
     }
 
@@ -308,9 +342,9 @@ impl TracingBuilder {
         #[allow(unused_mut)] mut self,
         args: &TracingArgs<L>,
     ) -> Self {
-        #[cfg(feature = "otlp")]
-        if args.otlp {
-            self = self.enable_otlp()
+        #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+        {
+            self = self.enable_tracers(args.tracers());
         }
         self.handle_verbosity_flags(&args.verbosity)
     }
@@ -395,10 +429,10 @@ fn gen_meter_provider()
 #[cfg(feature = "clap")]
 #[derive(clap::Parser, Clone)]
 pub struct TracingArgs<L: LogLevel = InfoLevel> {
-    #[cfg(feature = "otlp")]
-    /// Whether to configure OTLP.
-    #[arg(long, action(clap::ArgAction::SetTrue))]
-    otlp: bool,
+    #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+    /// Which tracers to enable.
+    #[arg(long, value_enum, action(clap::ArgAction::Append))]
+    tracer: Vec<Tracer>,
 
     #[clap(flatten)]
     verbosity: Verbosity<L>,
@@ -430,4 +464,12 @@ pub async fn shutdown_signal() {
     }
 
     debug!("signal received, shutting down…");
+}
+
+#[cfg(feature = "clap")]
+impl<L: LogLevel> TracingArgs<L> {
+    #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+    pub fn tracers(&self) -> EnumSet<Tracer> {
+        self.tracer.iter().cloned().collect()
+    }
 }

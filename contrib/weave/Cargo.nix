@@ -8893,12 +8893,16 @@ rec {
         ];
         features = {
           "axum" = [ "dep:axum" ];
-          "chrome" = [ "dep:tracing-chrome" ];
+          "chrome" = [
+            "dep:enumset"
+            "dep:tracing-chrome"
+          ];
           "clap" = [
             "dep:clap"
             "dep:clap-verbosity-flag"
           ];
           "otlp" = [
+            "dep:enumset"
             "dep:tracing-opentelemetry"
             "dep:opentelemetry"
             "dep:opentelemetry-otlp"
@@ -8912,7 +8916,10 @@ rec {
             "dep:tonic"
             "dep:http"
           ];
-          "tracy" = [ "dep:tracing-tracy" ];
+          "tracy" = [
+            "dep:enumset"
+            "dep:tracing-tracy"
+          ];
         };
         resolvedDefaultFeatures = [ "default" ];
       };

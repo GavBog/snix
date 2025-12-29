@@ -4964,6 +4964,64 @@ rec {
         ];
 
       };
+      "enumset" = rec {
+        crateName = "enumset";
+        version = "1.1.10";
+        edition = "2021";
+        sha256 = "0d168laidd53xjyl9qrwqfqycvcnrznzkgd6q1j01z5vzf6pmc15";
+        authors = [
+          "Alissa Rao <aura@aura.moe>"
+        ];
+        dependencies = [
+          {
+            name = "enumset_derive";
+            packageId = "enumset_derive";
+          }
+        ];
+        features = {
+          "defmt" = [ "dep:defmt" ];
+          "proc-macro-crate" = [ "enumset_derive/proc-macro-crate" ];
+          "serde" = [ "dep:serde" ];
+          "serde2" = [ "enumset_derive/serde2_deprecation_warning" ];
+          "std" = [
+            "alloc"
+            "enumset_derive/proc-macro-crate"
+            "enumset_derive/std_deprecation_warning"
+          ];
+        };
+      };
+      "enumset_derive" = rec {
+        crateName = "enumset_derive";
+        version = "0.14.0";
+        edition = "2021";
+        sha256 = "1kmkv1bfimvjawm74zk1yfvjywkfwhrxk3p6mq7hcf539r778gpl";
+        procMacro = true;
+        authors = [
+          "Alissa Rao <aura@aura.moe>"
+        ];
+        dependencies = [
+          {
+            name = "darling";
+            packageId = "darling 0.21.3";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "proc-macro2";
+            packageId = "proc-macro2";
+          }
+          {
+            name = "quote";
+            packageId = "quote";
+          }
+          {
+            name = "syn";
+            packageId = "syn 2.0.111";
+          }
+        ];
+        features = {
+          "proc-macro-crate" = [ "dep:proc-macro-crate" ];
+        };
+      };
       "equivalent" = rec {
         crateName = "equivalent";
         version = "1.0.2";
@@ -19857,6 +19915,11 @@ rec {
             features = [ "tracing" ];
           }
           {
+            name = "enumset";
+            packageId = "enumset";
+            optional = true;
+          }
+          {
             name = "http";
             packageId = "http 1.4.0";
             optional = true;
@@ -19949,12 +20012,16 @@ rec {
         ];
         features = {
           "axum" = [ "dep:axum" ];
-          "chrome" = [ "dep:tracing-chrome" ];
+          "chrome" = [
+            "dep:enumset"
+            "dep:tracing-chrome"
+          ];
           "clap" = [
             "dep:clap"
             "dep:clap-verbosity-flag"
           ];
           "otlp" = [
+            "dep:enumset"
             "dep:tracing-opentelemetry"
             "dep:opentelemetry"
             "dep:opentelemetry-otlp"
@@ -19968,7 +20035,10 @@ rec {
             "dep:tonic"
             "dep:http"
           ];
-          "tracy" = [ "dep:tracing-tracy" ];
+          "tracy" = [
+            "dep:enumset"
+            "dep:tracing-tracy"
+          ];
         };
         resolvedDefaultFeatures = [
           "axum"
