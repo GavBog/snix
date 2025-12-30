@@ -6,7 +6,7 @@
 //!
 //! The scanner itself is using the Wu-Manber string-matching algorithm, using
 //! our fork of the `wu-mamber` crate.
-use pin_project::pin_project;
+use pin_project_lite::pin_project;
 use std::collections::BTreeSet;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -136,13 +136,14 @@ impl<P: Clone + Ord + AsRef<[u8]>> ReferenceScanner<P> {
 
 const DEFAULT_BUF_SIZE: usize = 8 * 1024;
 
-#[pin_project]
-pub struct ReferenceReader<'a, P, R> {
-    scanner: &'a ReferenceScanner<P>,
-    buffer: Vec<u8>,
-    consumed: usize,
-    #[pin]
-    reader: R,
+pin_project! {
+    pub struct ReferenceReader<'a, P, R> {
+        scanner: &'a ReferenceScanner<P>,
+        buffer: Vec<u8>,
+        consumed: usize,
+        #[pin]
+        reader: R,
+    }
 }
 
 impl<'a, P, R> ReferenceReader<'a, P, R>

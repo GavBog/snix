@@ -18550,10 +18550,6 @@ rec {
             packageId = "petgraph 0.6.5";
           }
           {
-            name = "pin-project";
-            packageId = "pin-project";
-          }
-          {
             name = "pin-project-lite";
             packageId = "pin-project-lite";
           }

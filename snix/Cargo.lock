@@ -4365,7 +4365,6 @@ dependencies = [
  "object_store",
  "parking_lot",
  "petgraph 0.6.5",
- "pin-project",
  "pin-project-lite",
  "prost",
  "prost-build",
