@@ -124,6 +124,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-cli-build" = rec {
+      packageId = "snix-cli-build";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-cli-build";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-cli-castore" = rec {
       packageId = "snix-cli-castore";
       build = internal.buildRustCrateWithFeatures {
@@ -18242,13 +18252,6 @@ rec {
         crateName = "snix-build";
         version = "0.1.0";
         edition = "2024";
-        crateBin = [
-          {
-            name = "snix-build";
-            path = "src/bin/snix-build.rs";
-            requiredFeatures = [ ];
-          }
-        ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
           src = ./build;
@@ -18904,6 +18907,92 @@ rec {
           }
         ];
 
+      };
+      "snix-cli-build" = rec {
+        crateName = "snix-cli-build";
+        version = "0.1.0";
+        edition = "2024";
+        crateBin = [
+          {
+            name = "snix-build";
+            path = "src/main.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli/build;
+        };
+        dependencies = [
+          {
+            name = "clap";
+            packageId = "clap";
+            features = [
+              "derive"
+              "env"
+            ];
+          }
+          {
+            name = "mimalloc";
+            packageId = "mimalloc";
+          }
+          {
+            name = "snix-build";
+            packageId = "snix-build";
+          }
+          {
+            name = "snix-castore";
+            packageId = "snix-castore";
+          }
+          {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [ "clap" ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [ "process" ];
+          }
+          {
+            name = "tokio-listener";
+            packageId = "tokio-listener";
+            features = [ "tonic012" ];
+          }
+          {
+            name = "tonic";
+            packageId = "tonic 0.12.3";
+            features = [
+              "tls"
+              "tls-roots"
+            ];
+          }
+          {
+            name = "tonic-reflection";
+            packageId = "tonic-reflection";
+            optional = true;
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        features = {
+          "default" = [ "otlp" ];
+          "otlp" = [ "snix-tracing/otlp" ];
+          "tonic-reflection" = [
+            "dep:tonic-reflection"
+            "snix-build/tonic-reflection"
+            "snix-castore/tonic-reflection"
+          ];
+          "tracing-chrome" = [ "snix-tracing/chrome" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "otlp"
+          "tonic-reflection"
+          "tracing-chrome"
+        ];
       };
       "snix-cli-castore" = rec {
         crateName = "snix-cli-castore";

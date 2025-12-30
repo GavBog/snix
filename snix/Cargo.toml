@@ -23,6 +23,7 @@ members = [
   "castore",
   "castore-http",
   "cli/base",
+  "cli/build",
   "cli/derivation-show",
   "cli/castore",
   "cli/castore-http",

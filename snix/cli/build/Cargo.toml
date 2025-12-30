@@ -1,0 +1,31 @@
+[package]
+name = "snix-cli-build"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+
+[[bin]]
+name = "snix-build"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true, features = ["derive", "env"] }
+mimalloc.workspace = true
+snix-build.path = "../../build"
+snix-castore.path = "../../castore"
+snix-tracing = { path = "../../tracing", features = ["clap"] }
+tokio = { workspace = true, features = ["process"] }
+tokio-listener = { workspace = true, features = ["tonic012"] }
+tonic = { workspace = true, features = ["tls", "tls-roots"] }
+tonic-reflection = { workspace = true, optional = true }
+tracing.workspace = true
+
+[features]
+default = ["otlp"]
+otlp = ["snix-tracing/otlp"]
+tracing-chrome = ["snix-tracing/chrome"]
+tonic-reflection = [
+  "dep:tonic-reflection",
+  "snix-build/tonic-reflection",
+  "snix-castore/tonic-reflection",
+]

@@ -4435,6 +4435,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "snix-cli-build"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "mimalloc",
+ "snix-build",
+ "snix-castore",
+ "snix-tracing",
+ "tokio",
+ "tokio-listener",
+ "tonic 0.12.3",
+ "tonic-reflection",
+ "tracing",
+]
+
+[[package]]
 name = "snix-cli-castore"
 version = "0.1.0"
 dependencies = [
