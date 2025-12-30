@@ -6,7 +6,7 @@ virtiofs.
 In the `tests/` subdirectory, there's some integration tests.
 
 ## //snix/boot:runVM
-A script spinning up a `snix-store virtiofs` daemon, then starting a cloud-
+A script spinning up a `snix store virtiofs` daemon, then starting a cloud-
 hypervisor VM.
 
 The cloud-hypervisor VM is using a (semi-)minimal kernel image with virtiofs
@@ -21,7 +21,7 @@ It supports the following env vars:
    boot)
 
 ### Usage
-First, ensure you have `snix-store` in `$PATH`, as that's what `run-snix-vm`
+First, ensure you have `snix` in `$PATH`, as that's what `run-snix-vm`
 expects:
 
 Assuming you ran `cargo build --profile=release-with-debug` before, and are in
@@ -34,7 +34,7 @@ export PATH=$PATH:$PWD/target/release-with-debug
 Now, spin up snix-daemon, connecting to some (local) backends:
 
 ```
-snix-store daemon \
+snix store daemon \
   --blob-service-addr=objectstore+file://$PWD/blobs \
   --directory-service-addr=redb://$PWD/directories.redb \
   --path-info-service-addr=redb://$PWD/pathinfo.redb &
@@ -48,12 +48,12 @@ rm -Rf ~/.cache/nix; nix copy --to http://localhost:9000\?compression\=none $(mg
 pkill nar-bridge
 ```
 
-By default, the `snix-store virtiofs` command used in the `runVM` script
-connects to a running `snix-store daemon` via gRPC - in which case you want to
-keep `snix-store daemon` running.
+By default, the `snix store virtiofs` command used in the `runVM` script
+connects to a running `snix store daemon` via gRPC - in which case you want to
+keep `snix store daemon` running.
 
-In case you want to have `snix-store virtiofs` open the stores directly, kill
-`snix-store daemon` too, and export the addresses from above:
+In case you want to have `snix store virtiofs` open the stores directly, kill
+`snix store daemon` too, and export the addresses from above:
 
 ```
 pkill snix-store

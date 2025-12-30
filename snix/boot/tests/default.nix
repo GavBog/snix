@@ -25,7 +25,7 @@ let
       # Whether the path should be imported as a closure.
       # If false, importPathName must be specified.
       isClosure ? false,
-      # Whether to use nar-bridge to upload, rather than snix-store copy.
+      # Whether to use nar-bridge to upload, rather than snix store copy.
       # using nar-bridge currently is "slower", as the `pkgs.mkBinaryCache` build
       # takes quite some time.
       useNarBridge ? false,
@@ -52,11 +52,10 @@ let
         name = "test-boot-${name}";
 
         nativeBuildInputs = [
-          depot.snix.store
+          depot.snix.cli.default-cli
           depot.snix.boot.runVM
         ]
         ++ lib.optionals (isClosure && useNarBridge) [
-          depot.snix.cli.default-cli
           pkgs.curl
           pkgs.rush-parallel
           pkgs.zstd.bin
@@ -74,13 +73,13 @@ let
           BLOB_SERVICE_ADDR=${lib.escapeShellArg blobServiceAddr} \
           DIRECTORY_SERVICE_ADDR=${lib.escapeShellArg directoryServiceAddr} \
           PATH_INFO_SERVICE_ADDR=${lib.escapeShellArg pathInfoServiceAddr} \
-            snix-store daemon -l $PWD/snix-store.sock &
+            snix store daemon -l $PWD/snix-store.sock &
 
           # Wait for the service to report healthy.
           timeout 22 sh -c "until ${pkgs.ip2unix}/bin/ip2unix -r out,path=$PWD/snix-store.sock ${pkgs.grpc-health-check}/bin/grpc-health-check --address 127.0.0.1 --port 8080; do sleep 1; done"
 
           # Export env vars so that subsequent snix-store commands will talk to
-          # our snix-store daemon over the unix socket.
+          # our snix store daemon over the unix socket.
           export BLOB_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
           export DIRECTORY_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
           export PATH_INFO_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
@@ -88,14 +87,14 @@ let
         + lib.optionalString (!isClosure) ''
           echo "Importing ${path} into snix-store with name ${importPathName}…"
           cp -R ${path} ${importPathName}
-          outpath=$(snix-store import ${importPathName})
+          outpath=$(snix store import ${importPathName})
 
           echo "imported to $outpath"
         ''
         + lib.optionalString (isClosure && !useNarBridge) ''
           echo "Copying closure ${path}…"
           # This picks up the `closure` key in `$NIX_ATTRS_JSON_FILE` automatically.
-          snix-store copy
+          snix store copy -qqq
         ''
         + lib.optionalString (isClosure && useNarBridge) ''
           echo "Starting nar-bridge…"

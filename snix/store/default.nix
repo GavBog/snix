@@ -5,31 +5,6 @@
   ...
 }:
 
-let
-  mkImportCheck = p: expectedPath: {
-    label = ":nix :import ${p} with snix-store import";
-    needsOutput = true;
-    command = pkgs.writeShellScript "snix-import-check" ''
-      export BLOB_SERVICE_ADDR=memory://
-      export DIRECTORY_SERVICE_ADDR=redb+memory:
-      export PATH_INFO_SERVICE_ADDR=redb+memory:
-      SNIX_STORE_OUTPUT=$(result/bin/snix-store import ${p})
-      EXPECTED='${
-        # the vebatim expected Snix output:
-        expectedPath
-      }'
-
-      echo "snix-store output: ''${SNIX_STORE_OUTPUT}"
-      if [ "$SNIX_STORE_OUTPUT" != "$EXPECTED" ]; then
-        echo "Correct would have been ''${EXPECTED}"
-        exit 1
-      fi
-
-      echo "Output was correct."
-    '';
-  };
-in
-
 (depot.snix.crates.workspaceMembers.snix-store.build.override (old: {
   runTests = true;
   testPreRun = ''
@@ -46,7 +21,6 @@ in
         "integration-tests"
       ]
       ++ lib.filter (x: lib.hasPrefix "with-features" x || x == "no-features") (lib.attrNames passthru);
-      extraSteps.import-website = (mkImportCheck "web/content" ../../web/content);
     };
     passthru =
       old.passthru

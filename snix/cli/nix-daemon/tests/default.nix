@@ -21,7 +21,6 @@ let
           nativeBuildInputs = [
             pkgs.util-linux # mount, mountpoint
             depot.third_party.nixpkgs.nixVersions.stable
-            depot.snix.store
             depot.snix.cli.default-cli
           ];
           __structuredAttrs = true;
@@ -36,7 +35,7 @@ let
           BLOB_SERVICE_ADDR=${lib.escapeShellArg blobServiceAddr} \
           DIRECTORY_SERVICE_ADDR=${lib.escapeShellArg directoryServiceAddr} \
           PATH_INFO_SERVICE_ADDR=${lib.escapeShellArg pathInfoServiceAddr} \
-            snix-store daemon -l $PWD/snix-store.sock &
+            snix store daemon -l $PWD/snix-store.sock &
 
           # Wait for the service to report healthy.
           timeout 22 sh -c "until ${pkgs.ip2unix}/bin/ip2unix -r out,path=$PWD/snix-store.sock ${pkgs.grpc-health-check}/bin/grpc-health-check --address 127.0.0.1 --port 8080; do sleep 1; done"
@@ -49,7 +48,7 @@ let
 
           echo "Copying closure ${closure}…"
           # This picks up the `closure` key in `$NIX_ATTRS_JSON_FILE` automatically.
-          snix-store copy 2> /dev/null # noisy progress bars
+          snix store -qqq copy 2> /dev/null # noisy progress bars
 
           # Create mountpoints
           # For this test, we overlay a (treated read-only) snix-provided mountpoint
@@ -57,7 +56,7 @@ let
           # It is exposed at /tmp/merged/nix/store.
           mkdir -p /tmp/snix /tmp/scratch /tmp/work /tmp/merged/nix/store
 
-          snix-store mount -l /tmp/snix --allow-other &
+          snix store mount -l /tmp/snix --allow-other &
           # FUTUREWORK: add snix-store mount "forking to background" option
           timeout 22 sh -c 'until mountpoint -q /tmp/snix; do sleep 0.5; done'
 

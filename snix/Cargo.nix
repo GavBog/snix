@@ -184,6 +184,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-cli-store" = rec {
+      packageId = "snix-cli-store";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-cli-store";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-eval" = rec {
       packageId = "snix-eval";
       build = internal.buildRustCrateWithFeatures {
@@ -19418,6 +19428,162 @@ rec {
           "xp-store-composition-cli"
         ];
       };
+      "snix-cli-store" = rec {
+        crateName = "snix-cli-store";
+        version = "0.1.0";
+        edition = "2024";
+        crateBin = [
+          {
+            name = "snix-store";
+            path = "src/main.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli/store;
+        };
+        dependencies = [
+          {
+            name = "clap";
+            packageId = "clap";
+            features = [
+              "derive"
+              "env"
+            ];
+          }
+          {
+            name = "futures";
+            packageId = "futures";
+          }
+          {
+            name = "mimalloc";
+            packageId = "mimalloc";
+          }
+          {
+            name = "nix-compat";
+            packageId = "nix-compat";
+            features = [
+              "async"
+              "serde"
+            ];
+          }
+          {
+            name = "serde";
+            packageId = "serde";
+            features = [ "derive" ];
+          }
+          {
+            name = "serde_json";
+            packageId = "serde_json";
+          }
+          {
+            name = "snix-castore";
+            packageId = "snix-castore";
+          }
+          {
+            name = "snix-cli";
+            packageId = "snix-cli";
+          }
+          {
+            name = "snix-store";
+            packageId = "snix-store";
+          }
+          {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [
+              "clap"
+              "reqwest"
+              "tonic"
+            ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "fs"
+              "macros"
+              "rt-multi-thread"
+            ];
+          }
+          {
+            name = "tokio-listener";
+            packageId = "tokio-listener";
+            features = [
+              "clap"
+              "multi-listener"
+              "sd_listen"
+              "tonic012"
+            ];
+          }
+          {
+            name = "tonic";
+            packageId = "tonic 0.12.3";
+            features = [
+              "tls"
+              "tls-roots"
+            ];
+          }
+          {
+            name = "tonic-health";
+            packageId = "tonic-health";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "tonic-reflection";
+            packageId = "tonic-reflection";
+            optional = true;
+          }
+          {
+            name = "tower";
+            packageId = "tower 0.4.13";
+          }
+          {
+            name = "tower-http";
+            packageId = "tower-http";
+            features = [ "trace" ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "tracing-indicatif";
+            packageId = "tracing-indicatif";
+          }
+        ];
+        features = {
+          "default" = [
+            "fuse"
+            "otlp"
+            "tonic-reflection"
+          ];
+          "fuse" = [ "snix-castore/fuse" ];
+          "otlp" = [ "snix-tracing/otlp" ];
+          "tonic-reflection" = [
+            "dep:tonic-reflection"
+            "snix-castore/tonic-reflection"
+          ];
+          "tracing-chrome" = [ "snix-tracing/chrome" ];
+          "tracing-tracy" = [ "snix-tracing/tracy" ];
+          "virtiofs" = [ "snix-castore/virtiofs" ];
+          "xp-composition-cli" = [
+            "snix-store/xp-composition-cli"
+            "snix-castore/xp-composition-cli"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "fuse"
+          "otlp"
+          "tonic-reflection"
+          "tracing-chrome"
+          "tracing-tracy"
+          "virtiofs"
+          "xp-composition-cli"
+        ];
+      };
       "snix-eval" = rec {
         crateName = "snix-eval";
         version = "0.1.0";
@@ -19871,13 +20037,6 @@ rec {
         crateName = "snix-store";
         version = "0.1.0";
         edition = "2024";
-        crateBin = [
-          {
-            name = "snix-store";
-            path = "src/bin/snix-store.rs";
-            requiredFeatures = [ ];
-          }
-        ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
           src = ./store;

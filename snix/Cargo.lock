@@ -4539,6 +4539,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "snix-cli-store"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "futures",
+ "mimalloc",
+ "nix-compat",
+ "serde",
+ "serde_json",
+ "snix-castore",
+ "snix-cli",
+ "snix-store",
+ "snix-tracing",
+ "tokio",
+ "tokio-listener",
+ "tonic 0.12.3",
+ "tonic-health",
+ "tonic-reflection",
+ "tower 0.4.13",
+ "tower-http",
+ "tracing",
+ "tracing-indicatif",
+]
+
+[[package]]
 name = "snix-eval"
 version = "0.1.0"
 dependencies = [

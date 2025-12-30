@@ -21,7 +21,7 @@ pub struct CompositionConfigs {
 /// Provides a set of clap arguments to configure snix-castore services.
 ///
 /// This particular variant has defaults tailored for usecases accessing data
-/// directly locally, like the `snix-store daemon` command.
+/// directly locally, like the `snix store daemon` command.
 #[derive(clap::Parser, Clone)]
 #[group(id = "CastoreServiceUrls")]
 pub struct ServiceUrls {

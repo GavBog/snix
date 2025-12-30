@@ -89,7 +89,7 @@ rec {
     trap cleanup EXIT
 
     # Spin up the virtiofs daemon
-    snix-store virtiofs -l $tempdir/snix.sock &
+    snix store virtiofs -l $tempdir/snix.sock &
     virtiofsd_pid=$!
 
     # Wait for the socket to exist.

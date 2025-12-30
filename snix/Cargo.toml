@@ -29,6 +29,7 @@ members = [
   "cli/eval",
   "cli/nar-bridge",
   "cli/nix-daemon",
+  "cli/store",
   "eval",
   "eval/builtin-macros",
   "glue",

@@ -1,0 +1,52 @@
+[package]
+name = "snix-cli-store"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+
+[[bin]]
+name = "snix-store"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true, features = ["derive", "env"] }
+futures.workspace = true
+mimalloc.workspace = true
+nix-compat = { path = "../../nix-compat", features = ["async", "serde"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+snix-castore.path = "../../castore"
+snix-cli.path = "../base"
+snix-store.path = "../../store"
+snix-tracing = { path = "../../tracing", features = [
+  "clap",
+  "reqwest",
+  "tonic",
+] }
+tokio = { workspace = true, features = ["fs", "macros", "rt-multi-thread"] }
+tokio-listener = { workspace = true, features = [
+  "clap",
+  "multi-listener",
+  "sd_listen",
+  "tonic012",
+] }
+tonic = { workspace = true, features = ["tls", "tls-roots"] }
+tonic-health.workspace = true
+tonic-reflection = { workspace = true, optional = true }
+tower.workspace = true
+tower-http = { workspace = true, features = ["trace"] }
+tracing.workspace = true
+tracing-indicatif.workspace = true
+
+[features]
+default = ["fuse", "otlp", "tonic-reflection"]
+fuse = ["snix-castore/fuse"]
+virtiofs = ["snix-castore/virtiofs"]
+tonic-reflection = ["dep:tonic-reflection", "snix-castore/tonic-reflection"]
+otlp = ["snix-tracing/otlp"]
+tracing-chrome = ["snix-tracing/chrome"]
+tracing-tracy = ["snix-tracing/tracy"]
+xp-composition-cli = [
+  "snix-store/xp-composition-cli",
+  "snix-castore/xp-composition-cli",
+]
