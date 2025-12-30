@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 #[cfg(any(feature = "fuse", feature = "virtiofs"))]
 use snix_castore::B3Digest;
-#[cfg(feature = "fs")]
+#[cfg(any(feature = "fuse", feature = "virtiofs"))]
 use snix_castore::fs::SnixStoreFs;
 #[cfg(feature = "fuse")]
 use snix_castore::fs::fuse::FuseDaemon;
@@ -26,6 +26,9 @@ use tracing::{Level, info};
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Args {
+    #[clap(flatten)]
+    tracing_args: snix_tracing::TracingArgs,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -85,14 +88,12 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let args = Args::parse();
-    let tracing_handle = {
-        let mut builder = snix_tracing::TracingBuilder::default();
-        builder = builder.enable_progressbar();
-        builder.build()?
-    };
+    let tracing_handle = snix_tracing::TracingBuilder::default()
+        .handle_tracing_args(&args.tracing_args)
+        .enable_progressbar()
+        .build()?;
     tokio::select! {
-        res = tokio::signal::ctrl_c() => {
-            res?;
+        _ = snix_cli::shutdown_signal() => {
             if let Err(e) = tracing_handle.shutdown().await {
                 eprintln!("failed to shutdown tracing: {e}");
             }

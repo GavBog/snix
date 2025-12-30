@@ -124,6 +124,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-cli-castore" = rec {
+      packageId = "snix-cli-castore";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-cli-castore";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-cli-castore-http" = rec {
       packageId = "snix-cli-castore-http";
       build = internal.buildRustCrateWithFeatures {
@@ -18430,13 +18440,6 @@ rec {
         crateName = "snix-castore";
         version = "0.1.0";
         edition = "2024";
-        crateBin = [
-          {
-            name = "snix-castore";
-            path = "src/bin/snix-castore.rs";
-            requiredFeatures = [ ];
-          }
-        ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
           src = ./castore;
@@ -18609,16 +18612,6 @@ rec {
               "rt"
               "rt-multi-thread"
               "signal"
-            ];
-          }
-          {
-            name = "tokio-listener";
-            packageId = "tokio-listener";
-            features = [
-              "clap"
-              "multi-listener"
-              "sd_listen"
-              "tonic012"
             ];
           }
           {
@@ -18949,6 +18942,109 @@ rec {
           }
         ];
 
+      };
+      "snix-cli-castore" = rec {
+        crateName = "snix-cli-castore";
+        version = "0.1.0";
+        edition = "2024";
+        crateBin = [
+          {
+            name = "snix-castore";
+            path = "src/main.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli/castore;
+        };
+        dependencies = [
+          {
+            name = "astral-tokio-tar";
+            packageId = "astral-tokio-tar";
+            rename = "tokio-tar";
+          }
+          {
+            name = "clap";
+            packageId = "clap";
+            features = [
+              "derive"
+              "env"
+            ];
+          }
+          {
+            name = "snix-castore";
+            packageId = "snix-castore";
+          }
+          {
+            name = "snix-cli";
+            packageId = "snix-cli";
+          }
+          {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [
+              "clap"
+              "tonic"
+            ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+          }
+          {
+            name = "tokio-listener";
+            packageId = "tokio-listener";
+            features = [
+              "clap"
+              "multi-listener"
+              "sd_listen"
+              "tonic012"
+            ];
+          }
+          {
+            name = "tonic";
+            packageId = "tonic 0.12.3";
+          }
+          {
+            name = "tonic-health";
+            packageId = "tonic-health";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "tonic-reflection";
+            packageId = "tonic-reflection";
+            optional = true;
+          }
+          {
+            name = "tower";
+            packageId = "tower 0.4.13";
+          }
+          {
+            name = "tower-http";
+            packageId = "tower-http";
+            features = [ "trace" ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        features = {
+          "fuse" = [ "snix-castore/fuse" ];
+          "tonic-reflection" = [
+            "snix-castore/tonic-reflection"
+            "dep:tonic-reflection"
+          ];
+          "virtiofs" = [ "snix-castore/virtiofs" ];
+          "xp-composition-cli" = [ "snix-castore/xp-composition-cli" ];
+        };
+        resolvedDefaultFeatures = [
+          "fuse"
+          "tonic-reflection"
+          "virtiofs"
+          "xp-composition-cli"
+        ];
       };
       "snix-cli-castore-http" = rec {
         crateName = "snix-cli-castore-http";

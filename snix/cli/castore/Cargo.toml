@@ -1,0 +1,35 @@
+[package]
+name = "snix-cli-castore"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+
+[[bin]]
+name = "snix-castore"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true, features = ["derive", "env"] }
+snix-castore.path = "../../castore"
+snix-cli.path = "../base"
+snix-tracing = { path = "../../tracing", features = ["clap", "tonic"] }
+tokio.workspace = true
+tokio-tar.workspace = true
+tokio-listener = { workspace = true, features = [
+  "clap",
+  "multi-listener",
+  "sd_listen",
+  "tonic012",
+] }
+tonic.workspace = true
+tonic-health.workspace = true
+tonic-reflection = { workspace = true, optional = true }
+tower.workspace = true
+tower-http = { workspace = true, features = ["trace"] }
+tracing.workspace = true
+
+[features]
+virtiofs = ["snix-castore/virtiofs"]
+fuse = ["snix-castore/fuse"]
+tonic-reflection = ["snix-castore/tonic-reflection", "dep:tonic-reflection"]
+xp-composition-cli = ["snix-castore/xp-composition-cli"]

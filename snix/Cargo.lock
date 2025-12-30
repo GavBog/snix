@@ -4382,7 +4382,6 @@ dependencies = [
  "thiserror 2.0.17",
  "threadpool",
  "tokio",
- "tokio-listener",
  "tokio-retry",
  "tokio-stream",
  "tokio-test",
@@ -4440,6 +4439,25 @@ dependencies = [
  "tokio",
  "tracing",
  "which",
+]
+
+[[package]]
+name = "snix-cli-castore"
+version = "0.1.0"
+dependencies = [
+ "astral-tokio-tar",
+ "clap",
+ "snix-castore",
+ "snix-cli",
+ "snix-tracing",
+ "tokio",
+ "tokio-listener",
+ "tonic 0.12.3",
+ "tonic-health",
+ "tonic-reflection",
+ "tower 0.4.13",
+ "tower-http",
+ "tracing",
 ]
 
 [[package]]
