@@ -5,28 +5,11 @@ edition = "2024"
 rust-version.workspace = true
 
 [dependencies]
-async-trait = "0.1.83"
-clap = { workspace = true, features = ["derive", "env"] }
-futures.workspace = true
-mimalloc.workspace = true
-nix-compat = { path = "../nix-compat" }
-snix-castore = { path = "../castore" }
-snix-store = { path = "../store" }
-snix-tracing = { path = "../tracing", features = ["clap", "otlp"] }
-tokio = { workspace = true, features = [
-  "fs",
-  "macros",
-  "net",
-  "rt",
-  "rt-multi-thread",
-  "signal",
-] }
-tokio-listener.workspace = true
+nix-compat.path = "../nix-compat"
+snix-castore.path = "../castore"
+snix-store.path = "../store"
+tokio = { workspace = true }
 tracing.workspace = true
-
-[features]
-default = ["otlp"]
-otlp = ["snix-tracing/otlp"]
 
 [package.metadata.docs.rs]
 all-features = true

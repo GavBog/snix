@@ -1,0 +1,35 @@
+[package]
+name = "snix-cli-nix-daemon"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+
+[[bin]]
+name = "snix-nix-daemon"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true, features = ["derive", "env"] }
+mimalloc.workspace = true
+nix-compat.path = "../../nix-compat"
+nix-daemon.path = "../../nix-daemon"
+snix-cli.path = "../base"
+snix-store.path = "../../store"
+snix-tracing = { path = "../../tracing", features = ["clap", "otlp"] }
+tokio = { workspace = true, features = [
+  "fs",
+  "macros",
+  "net",
+  "rt",
+  "rt-multi-thread",
+  "signal",
+] }
+tokio-listener.workspace = true
+tracing.workspace = true
+
+[features]
+default = ["otlp"]
+otlp = ["snix-tracing/otlp"]
+tracing-chrome = ["snix-tracing/chrome"]
+tracing-tracy = ["snix-tracing/tracy"]
+xp-store-composition-cli = ["snix-store/xp-composition-cli"]

@@ -22,6 +22,7 @@ let
             pkgs.util-linux # mount, mountpoint
             depot.third_party.nixpkgs.nixVersions.stable
             depot.snix.store
+            depot.snix.cli.default-cli
           ];
           __structuredAttrs = true;
           exportReferencesGraph.closure = [ closure ];
@@ -63,7 +64,7 @@ let
           mount -t overlay overlay -o lowerdir=/tmp/snix -o workdir=/tmp/work -o upperdir=/tmp/scratch /tmp/merged/nix/store
 
           # Run the Snix nix-daemon
-          RUST_LOG=nix_daemon=debug ${depot.snix.nix-daemon}/bin/nix-daemon --unix-listen-unlink --unix-listen-chmod everybody &
+          RUST_LOG=nix_daemon=debug snix nix-daemon --unix-listen-unlink --unix-listen-chmod everybody &
           timeout 22 sh -c 'until [ -e /tmp/snix-daemon.sock ]; do sleep 1; done'
 
           # Run the test script

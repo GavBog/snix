@@ -12,8 +12,8 @@ depot.snix.cli.make-cli {
     depot.snix.cli.castore-http
     depot.snix.cli.eval
     depot.snix.cli.nar-bridge
+    depot.snix.cli.nix-daemon
     depot.snix.build
-    depot.snix.nix-daemon
     depot.snix.store
   ];
   base = depot.snix.cli.base;

@@ -174,6 +174,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-cli-nix-daemon" = rec {
+      packageId = "snix-cli-nix-daemon";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-cli-nix-daemon";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-eval" = rec {
       packageId = "snix-eval";
       build = internal.buildRustCrateWithFeatures {
@@ -11139,39 +11149,12 @@ rec {
         crateName = "nix-daemon";
         version = "0.1.0";
         edition = "2024";
-        crateBin = [
-          {
-            name = "nix-daemon";
-            path = "src/bin/nix-daemon.rs";
-            requiredFeatures = [ ];
-          }
-        ];
         src = lib.cleanSourceWith {
           filter = sourceFilter;
           src = ./nix-daemon;
         };
         libName = "nix_daemon";
         dependencies = [
-          {
-            name = "async-trait";
-            packageId = "async-trait";
-          }
-          {
-            name = "clap";
-            packageId = "clap";
-            features = [
-              "derive"
-              "env"
-            ];
-          }
-          {
-            name = "futures";
-            packageId = "futures";
-          }
-          {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
           {
             name = "nix-compat";
             packageId = "nix-compat";
@@ -11185,42 +11168,15 @@ rec {
             packageId = "snix-store";
           }
           {
-            name = "snix-tracing";
-            packageId = "snix-tracing";
-            features = [
-              "clap"
-              "otlp"
-            ];
-          }
-          {
             name = "tokio";
             packageId = "tokio";
-            features = [
-              "fs"
-              "macros"
-              "net"
-              "rt"
-              "rt-multi-thread"
-              "signal"
-            ];
-          }
-          {
-            name = "tokio-listener";
-            packageId = "tokio-listener";
           }
           {
             name = "tracing";
             packageId = "tracing";
           }
         ];
-        features = {
-          "default" = [ "otlp" ];
-          "otlp" = [ "snix-tracing/otlp" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "otlp"
-        ];
+
       };
       "nom" = rec {
         crateName = "nom";
@@ -19362,6 +19318,94 @@ rec {
             "snix-tracing/otlp"
             "nar-bridge/otlp"
           ];
+          "tracing-chrome" = [ "snix-tracing/chrome" ];
+          "tracing-tracy" = [ "snix-tracing/tracy" ];
+          "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "otlp"
+          "tracing-chrome"
+          "tracing-tracy"
+          "xp-store-composition-cli"
+        ];
+      };
+      "snix-cli-nix-daemon" = rec {
+        crateName = "snix-cli-nix-daemon";
+        version = "0.1.0";
+        edition = "2024";
+        crateBin = [
+          {
+            name = "snix-nix-daemon";
+            path = "src/main.rs";
+            requiredFeatures = [ ];
+          }
+        ];
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./cli/nix-daemon;
+        };
+        dependencies = [
+          {
+            name = "clap";
+            packageId = "clap";
+            features = [
+              "derive"
+              "env"
+            ];
+          }
+          {
+            name = "mimalloc";
+            packageId = "mimalloc";
+          }
+          {
+            name = "nix-compat";
+            packageId = "nix-compat";
+          }
+          {
+            name = "nix-daemon";
+            packageId = "nix-daemon";
+          }
+          {
+            name = "snix-cli";
+            packageId = "snix-cli";
+          }
+          {
+            name = "snix-store";
+            packageId = "snix-store";
+          }
+          {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [
+              "clap"
+              "otlp"
+            ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "fs"
+              "macros"
+              "net"
+              "rt"
+              "rt-multi-thread"
+              "signal"
+            ];
+          }
+          {
+            name = "tokio-listener";
+            packageId = "tokio-listener";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        features = {
+          "default" = [ "otlp" ];
+          "otlp" = [ "snix-tracing/otlp" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracing-tracy" = [ "snix-tracing/tracy" ];
           "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];

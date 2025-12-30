@@ -28,6 +28,7 @@ members = [
   "cli/castore-http",
   "cli/eval",
   "cli/nar-bridge",
+  "cli/nix-daemon",
   "eval",
   "eval/builtin-macros",
   "glue",

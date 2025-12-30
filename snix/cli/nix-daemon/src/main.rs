@@ -33,8 +33,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .build()?;
 
     tokio::select! {
-        res = tokio::signal::ctrl_c() => {
-            res?;
+        _ = snix_cli::shutdown_signal() => {
             if let Err(e) = tracing_handle.shutdown().await {
                 eprintln!("failed to shutdown tracing: {e}");
             }
