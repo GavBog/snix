@@ -47,13 +47,13 @@ in which you don't need to enter the shell.
 From the root of the repository, you can build as follows:
 
 ```bash
-$ nix-build -A snix.cli
+$ nix-build -A snix.cli.default-cli
 ```
 
 Alternatively, you can use the [`mg`][mg] wrapper from anywhere in the repository (requires the direnv setup from above):
 
 ```bash
-mg build //snix:cli
+mg build //snix/cli:default-cli
 ```
 
 This uses [crate2nix][] to build each crate dependency individually.

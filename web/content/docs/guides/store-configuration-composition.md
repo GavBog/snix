@@ -10,17 +10,17 @@ weight: 15
 toc: true
 ---
 
-Currently, snix-store, snix-cli and other CLI endpoints expose three different
+Currently, `snix store`, `snix eval` and other CLI endpoints expose three different
 `--*-service-addr` CLI args, describing how to talk to the three different
 stores.
 
 Depending on the CLI entrypoint, they have different defaults:
 
- - `snix-cli` defaults to in-memory variants (`ServiceUrlsMemory`).
- - `snix-store daemon` defaults to using a local filesystem-based backend for
+ - `snix eval` defaults to in-memory variants (`ServiceUrlsMemory`).
+ - `snix store daemon` defaults to using a local filesystem-based backend for
    blobs, and redb backends for `DirectoryService` and `PathInfoService`
    (`ServiceUrls`).
- - other `snix-store` entrypoints, as well as `nar-bridge` default to talking to
+ - other `snix store` entrypoints, as well as `snix nar-bridge` default to talking to
    a `snix-store` gRPC daemon (`ServiceUrlsGrpc`).
 
 The exact config and paths can be inspected by invoking `--help` on each of

@@ -13,29 +13,17 @@ toc: true
 This document describes how to configure `snix` as the lower layer in your
 [Local Overlay] nix store.
 
-### Build required `snix` components
-
-To use this feature you will need to 2 `snix` compontents, for detailed building
-instructions see [Building]({{< ref "building" >}}).
-
-```bash
-nix-build -A snix.store -A snix.nix-daemon
-```
-
-These will provide `snix-store` and `nix-daemon` binaries.
-
 ### Run the `snix` daemon
 
 `snix daemon` is the component exposing `castore` and `store` data. By default,
-these live inside `/var/lib/snix`, so make sure it's writable for the user
-you're executing it with. See `snix-store daemon --help` for customization
-options. `/var/lib/snix`, you can run `snix-store daemon --help` for
-customization instructions.
+these live inside `/var/lib/snix-{castore,store}`, so make sure they are
+writable for the user you're executing it with. See `snix store daemon --help`
+for customization options.
 
 You can run the daemon with:
 
 ```bash
-$(nix-build -A snix.snix-store)/bin/snix-store daemon
+snix store daemon
 ```
 
 ### Mount the store
@@ -44,7 +32,7 @@ To expose the store paths and their contents as a file system, if can be
 FUSE-mounted with the following command:
 
 ```bash
-$(nix-build -A snix.snix-store)/bin/snix-store mount /path/to/mount
+snix store mount /path/to/mount
 ```
 
 This mount will talk to the previously invoked daemon.
@@ -56,7 +44,7 @@ be careful with it if your store is really large.
 ### Run `snix` nix-daemon
 
 ```bash
-$(nix-build -A snix.nix-daemon)/bin/nix-daemon -l /tmp/snix-daemon.sock \
+snix nix-daemon -l /tmp/snix-daemon.sock \
     --unix-listen-unlink
 ```
 
