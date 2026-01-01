@@ -352,41 +352,25 @@ mod test {
         )
         .expect("must succeed");
 
-        let mut expected_environment_vars = vec![
-            EnvVar {
-                key: "bar".into(),
-                value: "/nix/store/mp57d33657rf34lzvlbpfa1gjfv5gmpg-bar".into(),
-            },
-            EnvVar {
-                key: "builder".into(),
-                value: ":".into(),
-            },
-            EnvVar {
-                key: "name".into(),
-                value: "foo".into(),
-            },
-            EnvVar {
-                key: "out".into(),
-                value: "/nix/store/fhaj6gmwns62s6ypkcldbaj2ybvkhx3p-foo".into(),
-            },
-            EnvVar {
-                key: "system".into(),
-                value: ":".into(),
-            },
-        ];
-
-        expected_environment_vars.extend(NIX_ENVIRONMENT_VARS.iter().map(|(k, v)| EnvVar {
-            key: k.to_string(),
-            value: Bytes::from_static(v.as_bytes()),
-        }));
-
-        expected_environment_vars.sort_unstable_by_key(|e| e.key.to_owned());
+        let mut expected_environment_vars = BTreeMap::from_iter(NIX_ENVIRONMENT_VARS);
+        expected_environment_vars.extend([
+            ("bar", "/nix/store/mp57d33657rf34lzvlbpfa1gjfv5gmpg-bar"),
+            ("builder", ":"),
+            ("name", "foo"),
+            ("out", "/nix/store/fhaj6gmwns62s6ypkcldbaj2ybvkhx3p-foo"),
+            ("system", ":"),
+        ]);
 
         assert_eq!(
             BuildRequest {
                 command_args: vec![":".into()],
                 outputs: vec!["nix/store/fhaj6gmwns62s6ypkcldbaj2ybvkhx3p-foo".into()],
-                environment_vars: expected_environment_vars,
+                environment_vars: Vec::from_iter(expected_environment_vars.into_iter().map(
+                    |(k, v)| EnvVar {
+                        key: k.into(),
+                        value: v.into(),
+                    }
+                )),
                 inputs: BTreeMap::from([(
                     PathComponent::try_from(INPUT_NODE_FOO_NAME.clone()).unwrap(),
                     INPUT_NODE_FOO.clone()
@@ -416,39 +400,29 @@ mod test {
 
         let build_request =
             derivation_to_build_request(&derivation, &BTreeMap::from([])).expect("must succeed");
-        let mut expected_environment_vars = vec![
-            EnvVar {
-                key: "FOO".into(),
-                value: "/nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".into(),
-            },
-            EnvVar {
-                key: "BAR".into(),
-                // Non existent output placeholders should not get replaced.
-                value: hash_placeholder("non-existent").into(),
-            },
-            EnvVar {
-                key: "builder".into(),
-                value: "/bin/sh".into(),
-            },
-            EnvVar {
-                key: "name".into(),
-                value: "with-placeholders".into(),
-            },
-            EnvVar {
-                key: "out".into(),
-                value: "/nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".into(),
-            },
-            EnvVar {
-                key: "system".into(),
-                value: "x86_64-linux".into(),
-            },
-        ];
-        expected_environment_vars.extend(NIX_ENVIRONMENT_VARS.iter().map(|(k, v)| EnvVar {
-            key: k.to_string(),
-            value: Bytes::from_static(v.as_bytes()),
-        }));
 
-        expected_environment_vars.sort_unstable_by_key(|e| e.key.to_owned());
+        let mut expected_environment_vars: BTreeMap<&str, String> =
+            BTreeMap::from_iter(NIX_ENVIRONMENT_VARS.map(|(k, v)| (k, v.to_owned())));
+
+        expected_environment_vars.extend([
+            (
+                "FOO",
+                "/nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".to_owned(),
+            ),
+            (
+                "BAR",
+                // Non existent output placeholders should not get replaced.
+                hash_placeholder("non-existent"),
+            ),
+            ("builder", "/bin/sh".to_owned()),
+            ("name", "with-placeholders".to_owned()),
+            (
+                "out",
+                "/nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".to_owned(),
+            ),
+            ("system", "x86_64-linux".to_owned()),
+        ]);
+
         assert_eq!(
             BuildRequest {
                 command_args: vec![
@@ -461,7 +435,12 @@ mod test {
                 outputs: vec![
                     "nix/store/dgapb8kh5gis4w7hzfl5725sx5gam0nz-with-placeholders".into()
                 ],
-                environment_vars: expected_environment_vars,
+                environment_vars: Vec::from_iter(expected_environment_vars.into_iter().map(
+                    |(k, v)| EnvVar {
+                        key: k.into(),
+                        value: v.into(),
+                    }
+                )),
                 inputs: BTreeMap::new(),
                 inputs_dir: "nix/store".into(),
                 constraints: HashSet::from([
@@ -486,49 +465,30 @@ mod test {
         let build_request =
             derivation_to_build_request(&derivation, &BTreeMap::from([])).expect("must succeed");
 
-        let mut expected_environment_vars = vec![
-            EnvVar {
-                key: "builder".into(),
-                value: ":".into(),
-            },
-            EnvVar {
-                key: "name".into(),
-                value: "bar".into(),
-            },
-            EnvVar {
-                key: "out".into(),
-                value: "/nix/store/4q0pg5zpfmznxscq3avycvf9xdvx50n3-bar".into(),
-            },
-            EnvVar {
-                key: "outputHash".into(),
-                value: "08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba".into(),
-            },
-            EnvVar {
-                key: "outputHashAlgo".into(),
-                value: "sha256".into(),
-            },
-            EnvVar {
-                key: "outputHashMode".into(),
-                value: "recursive".into(),
-            },
-            EnvVar {
-                key: "system".into(),
-                value: ":".into(),
-            },
-        ];
-
-        expected_environment_vars.extend(NIX_ENVIRONMENT_VARS.iter().map(|(k, v)| EnvVar {
-            key: k.to_string(),
-            value: Bytes::from_static(v.as_bytes()),
-        }));
-
-        expected_environment_vars.sort_unstable_by_key(|e| e.key.to_owned());
+        let mut expected_environment_vars = BTreeMap::from_iter(NIX_ENVIRONMENT_VARS);
+        expected_environment_vars.extend([
+            ("builder", ":"),
+            ("name", "bar"),
+            ("out", "/nix/store/4q0pg5zpfmznxscq3avycvf9xdvx50n3-bar"),
+            (
+                "outputHash",
+                "08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba",
+            ),
+            ("outputHashAlgo", "sha256"),
+            ("outputHashMode", "recursive"),
+            ("system", ":"),
+        ]);
 
         assert_eq!(
             BuildRequest {
                 command_args: vec![":".to_string()],
                 outputs: vec!["nix/store/4q0pg5zpfmznxscq3avycvf9xdvx50n3-bar".into()],
-                environment_vars: expected_environment_vars,
+                environment_vars: Vec::from_iter(expected_environment_vars.into_iter().map(
+                    |(k, v)| EnvVar {
+                        key: k.into(),
+                        value: v.into(),
+                    }
+                )),
                 inputs: BTreeMap::new(),
                 inputs_dir: "nix/store".into(),
                 constraints: HashSet::from([
@@ -555,52 +515,36 @@ mod test {
         let build_request =
             derivation_to_build_request(&derivation, &BTreeMap::from([])).expect("must succeed");
 
-        let mut expected_environment_vars = vec![
+        let mut expected_environment_vars = BTreeMap::from_iter(NIX_ENVIRONMENT_VARS);
+        expected_environment_vars.extend([
             // Note how bar and baz are not present in the env anymore,
             // but replaced with barPath, bazPath respectively.
-            EnvVar {
-                key: "barPath".into(),
-                value: "/build/.attr-1fcgpy7vc4ammr7s17j2xq88scswkgz23dqzc04g8sx5vcp2pppw".into(),
-            },
-            EnvVar {
-                key: "bazPath".into(),
-                value: "/build/.attr-15l04iksj1280dvhbzdq9ai3wlf8ac2188m9qv0gn81k9nba19ds".into(),
-            },
-            EnvVar {
-                key: "builder".into(),
-                value: ":".into(),
-            },
-            EnvVar {
-                key: "name".into(),
-                value: "foo".into(),
-            },
-            EnvVar {
-                key: "out".into(),
-                value: "/nix/store/pp17lwra2jkx8rha15qabg2q3wij72lj-foo".into(),
-            },
+            (
+                "barPath",
+                "/build/.attr-1fcgpy7vc4ammr7s17j2xq88scswkgz23dqzc04g8sx5vcp2pppw",
+            ),
+            (
+                "bazPath",
+                "/build/.attr-15l04iksj1280dvhbzdq9ai3wlf8ac2188m9qv0gn81k9nba19ds",
+            ),
+            ("builder", ":"),
+            ("name", "foo"),
+            ("out", "/nix/store/pp17lwra2jkx8rha15qabg2q3wij72lj-foo"),
             // passAsFile stays around
-            EnvVar {
-                key: "passAsFile".into(),
-                value: "bar baz".into(),
-            },
-            EnvVar {
-                key: "system".into(),
-                value: ":".into(),
-            },
-        ];
-
-        expected_environment_vars.extend(NIX_ENVIRONMENT_VARS.iter().map(|(k, v)| EnvVar {
-            key: k.to_string(),
-            value: Bytes::from_static(v.as_bytes()),
-        }));
-
-        expected_environment_vars.sort_unstable_by_key(|e| e.key.to_owned());
+            ("passAsFile", "bar baz"),
+            ("system", ":"),
+        ]);
 
         assert_eq!(
             BuildRequest {
                 command_args: vec![":".to_string()],
                 outputs: vec!["nix/store/pp17lwra2jkx8rha15qabg2q3wij72lj-foo".into()],
-                environment_vars: expected_environment_vars,
+                environment_vars: Vec::from_iter(expected_environment_vars.into_iter().map(
+                    |(k, v)| EnvVar {
+                        key: k.into(),
+                        value: v.into(),
+                    }
+                )),
                 inputs: BTreeMap::new(),
                 inputs_dir: "nix/store".into(),
                 constraints: HashSet::from([
