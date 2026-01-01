@@ -9,6 +9,7 @@ use std::{
     env,
     ffi::{OsStr, OsString},
     io,
+    os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -195,31 +196,39 @@ impl SnixStoreIO {
                         .try_collect()
                         .await?;
 
-                        span.pb_set_message(&format!("🔨Building {}", &store_path));
+                        // precompute the `ca` field in the PathInfo, so we can send off drv.
+                        let mut ca = drv.fod_digest().map(|fod_digest| {
+                            CAHash::Nar(nix_compat::nixhash::NixHash::Sha256(fod_digest))
+                        });
 
                         // synthesize the build request.
                         let build_request =
                             builder::derivation_to_build_request(&drv, &resolved_inputs)?;
 
-                        // collect all store paths from the request, sorted.
-                        let output_paths: Vec<StorePath<String>> = build_request
+                        // Assemble a mapping table from needle back to store path, as well as a list of all outputs.
+                        // The latter is a subset of the former.
+                        // We need this to understand the response later.
+                        let mut output_paths: Vec<StorePath<String>> =
+                            Vec::with_capacity(build_request.outputs.len());
+                        let all_possible_refs: Vec<StorePath<String>> = build_request
                             .outputs
                             .iter()
-                            .map(|output_path| {
-                                // in the case of building nix store paths,
-                                // all outputs are in `inputs_dir`.
-                                // When stripping it, we end up with the store path
-                                // basename.
-                                StorePath::from_bytes(
-                                    output_path
-                                        .strip_prefix(&build_request.inputs_dir)
-                                        .expect("Snix bug: inputs_dir not prefix of request output")
+                            .map(|p| {
+                                let sp = StorePath::<String>::from_bytes(
+                                    p.strip_prefix(&nix_compat::store_path::STORE_DIR[1..])
+                                        .expect("output doesn't have expected store_dir prefix")
                                         .as_os_str()
-                                        .as_encoded_bytes(),
+                                        .as_bytes(),
                                 )
-                                .expect("Snix bug: unable to parse output path as StorePath")
+                                .expect("Snix bug: cannot parse output as StorePath");
+                                output_paths.push(sp.clone());
+
+                                sp
                             })
+                            .chain(resolved_inputs.keys().cloned())
                             .collect();
+
+                        span.pb_set_message(&format!("🔨Building {}", &store_path));
 
                         // create a build
                         let build_result = self
@@ -247,25 +256,18 @@ impl SnixStoreIO {
                                 store_path: output_path.clone(),
                                 node: output.node,
                                 references: {
-                                    let all_possible_refs: Vec<_> = drv
-                                        .outputs
-                                        .values()
-                                        .filter_map(|output| output.path.as_ref())
-                                        .chain(resolved_inputs.keys())
-                                        .collect();
-                                    let mut references: Vec<_> = output
-                                        .output_needles
-                                        .iter()
-                                        // Map each output needle index back to the refscan_needle
-                                        .map(|idx| {
-                                            all_possible_refs
-                                                .get(*idx as usize)
-                                                .map(|it| (*it).clone())
-                                                .ok_or(std::io::Error::other(
-                                                    "invalid build response",
-                                                ))
-                                        })
-                                        .collect::<Result<_, std::io::Error>>()?;
+                                    let mut references =
+                                        Vec::with_capacity(output.output_needles.len());
+
+                                    // Map each output needle index back into a store path.
+                                    for needle_idx in output.output_needles {
+                                        let output = all_possible_refs
+                                            .get(needle_idx as usize)
+                                            .ok_or(std::io::Error::other("invalid needle_idx"))?
+                                            .clone();
+                                        references.push(output);
+                                    }
+
                                     // Produce references sorted by name for consistency with nix narinfos
                                     references.sort();
                                     references
@@ -285,9 +287,8 @@ impl SnixStoreIO {
                                         "Snix bug: StorePath without .drv suffix must be valid",
                                     ),
                                 ),
-                                ca: drv.fod_digest().map(|fod_digest| {
-                                    CAHash::Nar(nix_compat::nixhash::NixHash::Sha256(fod_digest))
-                                }),
+                                // CA derivations only have one output, so this only runs once.
+                                ca: ca.take(),
                             };
 
                             self.path_info_service
