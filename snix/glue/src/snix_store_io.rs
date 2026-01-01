@@ -203,7 +203,7 @@ impl SnixStoreIO {
 
                         // synthesize the build request.
                         let build_request =
-                            builder::derivation_to_build_request(&drv, &resolved_inputs)?;
+                            builder::derivation_into_build_request(drv, &resolved_inputs)?;
 
                         // Assemble a mapping table from needle back to store path, as well as a list of all outputs.
                         // The latter is a subset of the former.
