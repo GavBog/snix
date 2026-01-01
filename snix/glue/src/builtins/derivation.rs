@@ -15,9 +15,8 @@ use std::collections::{BTreeSet, btree_map};
 use std::rc::Rc;
 
 // Constants used for strangely named fields in derivation inputs.
-const STRUCTURED_ATTRS_ENABLE_KEY: &str = "__structuredAttrs";
-const STRUCTURED_ATTRS_JSON_KEY: &str = "__json";
 const IGNORE_NULLS: &str = "__ignoreNulls";
+pub const STRUCTURED_ATTRS_ENABLE_KEY: &str = "__structuredAttrs";
 
 /// Populate the inputs of a derivation from the build references
 /// found when scanning the derivation's parameters and extracting their contexts.
@@ -257,7 +256,7 @@ pub(crate) mod derivation_builtins {
             None => false,
         };
 
-        // peek at the STRUCTURED_ATTRS argument.
+        // Peek at the STRUCTURED_ATTRS argument.
         // If it's set and true, provide a BTreeMap that gets populated while looking at the arguments.
         // We need it to be a BTreeMap, so iteration order of keys is reproducible.
         let mut structured_attrs: Option<BTreeMap<String, serde_json::Value>> =
@@ -363,7 +362,7 @@ pub(crate) mod derivation_builtins {
                     }
                 }
 
-                // Don't add STRUCTURED_ATTRS if enabled.
+                // Don't add `STRUCTURED_ATTRS_ENABLE_KEY`.
                 STRUCTURED_ATTRS_ENABLE_KEY if structured_attrs.is_some() => continue,
 
                 // IGNORE_NULLS is always skipped, even if it's not set to true.
@@ -387,7 +386,7 @@ pub(crate) mod derivation_builtins {
                         }
                         // In non-SA case, coerce to string and add to env.
                         None => {
-                            if arg_name == STRUCTURED_ATTRS_JSON_KEY {
+                            if arg_name == crate::builder::structured_attrs::JSON_KEY {
                                 return Err(DerivationError::StructuredAttrsJsonKeyPresent.into());
                             }
                             let val_str = try_cek_to_value!(
@@ -445,7 +444,7 @@ pub(crate) mod derivation_builtins {
         if let Some(structured_attrs) = structured_attrs {
             // configure __json
             drv.environment.insert(
-                STRUCTURED_ATTRS_JSON_KEY.to_string(),
+                crate::builder::structured_attrs::JSON_KEY.to_string(),
                 BString::from(serde_json::to_string(&structured_attrs)?),
             );
         }

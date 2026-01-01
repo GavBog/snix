@@ -4649,6 +4649,7 @@ dependencies = [
  "nix-compat",
  "pin-project",
  "pretty_assertions",
+ "regex",
  "reqwest",
  "rstest",
  "serde",

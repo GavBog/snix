@@ -18,7 +18,10 @@ use snix_castore::Node;
 use snix_store::path_info::PathInfo;
 use tracing::warn;
 
+use crate::builder::structured_attrs::handle_structured_attrs;
 use crate::known_paths::KnownPaths;
+
+pub mod structured_attrs;
 
 /// These are the environment variables that Nix sets in its sandbox for every
 /// build.
@@ -91,7 +94,7 @@ where
 /// Takes a [Derivation] and turns it into a [snix_build::buildservice::BuildRequest].
 /// It assumes the Derivation has been validated, and all referenced output paths are present in `inputs`.
 pub(crate) fn derivation_into_build_request(
-    derivation: Derivation,
+    mut derivation: Derivation,
     inputs: &BTreeMap<StorePath<String>, Node>,
 ) -> std::io::Result<BuildRequest> {
     debug_assert!(derivation.validate(true).is_ok(), "drv must validate");
@@ -121,17 +124,35 @@ pub(crate) fn derivation_into_build_request(
             .map(|(k, v)| (k.to_string(), Bytes::from_static(v.as_bytes()))),
     );
 
-    // extend / overwrite with the keys set in the derivation environment itself.
-    environment_vars.extend(derivation.environment.into_iter().map(|(k, v)| {
-        (
-            k.clone(),
-            Bytes::from(replace_placeholders_b(&v, &derivation.outputs).to_vec()),
-        )
-    }));
+    if let Some(json_str) = derivation.environment.remove(structured_attrs::JSON_KEY) {
+        handle_structured_attrs(
+            &json_str,
+            derivation.outputs.iter().map(|(out_name, output)| {
+                (
+                    out_name.as_str(),
+                    output
+                        .path
+                        .as_ref()
+                        .expect("Snix bug: output has no path")
+                        .as_ref(),
+                )
+            }),
+            &mut environment_vars,
+            &mut additional_files,
+        )?;
+    } else {
+        // If we're not in the structured_attrs case, add other keys set in the
+        // derivation environment itself.
+        environment_vars.extend(derivation.environment.into_iter().map(|(k, v)| {
+            (
+                k.clone(),
+                Bytes::from(replace_placeholders_b(&v, &derivation.outputs).to_vec()),
+            )
+        }));
 
-    handle_pass_as_file(&mut environment_vars, &mut additional_files)?;
-
-    // TODO: handle __json (structured attrs, provide JSON file and source-able bash script)
+        // passAsFile is only treated specially in the non-SA case.
+        handle_pass_as_file(&mut environment_vars, &mut additional_files)?;
+    }
 
     // Produce constraints.
     let mut constraints = HashSet::from([
@@ -562,6 +583,86 @@ mod test {
             scratch_paths: vec!["build".into(), "nix/store".into()],
             refscan_needles: vec!["pp17lwra2jkx8rha15qabg2q3wij72lj".into()],
         };
+
+        assert_eq!(
+            exp_build_request,
+            derivation_into_build_request(derivation, &BTreeMap::from([])).expect("must succeed")
+        );
+    }
+
+    #[test]
+    fn test_structured_attrs() {
+        // (builtins.derivation { name = "script.sh"; system = builtins.currentSystem; PATH = lib.makeBinPath [pkgs.coreutils]; ""="bar"; k = {"bar" = true; b =1.0; c = false; d = true;}; l = 42; m = false; n = 1.1; builder="${bash}/bin/bash"; args = ["-xc" "source \${NIX_ATTRS_SH_FILE:-/dev/null}; cat \${NIX_ATTRS_JSON_FILE:-/dev/null}; out=\${out:-\${outputs[out]}}; cat \${NIX_ATTRS_JSON_FILE:-/dev/null} >\$out; exit 0"];__structuredAttrs = true;})
+        let aterm_bytes = r#"Derive([("out","/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh","","")],[("/nix/store/azd4vaik6ssl5d411m5fsa757sic630r-bash-interactive-5.3p3.drv",["out"]),("/nix/store/m507z3g5zq4lv5x99rqb6dfdh5m0xixx-coreutils-9.8.drv",["out"])],[],"x86_64-linux","/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash",["-xc","source ${NIX_ATTRS_SH_FILE:-/dev/null}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null}; out=${out:-${outputs[out]}}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null} >$out; exit 0"],[("__json","{\"\":\"bar\",\"PATH\":\"/nix/store/imad8dvhp77h0pjbckp6wvmnyhp8dpgg-coreutils-9.8/bin\",\"builder\":\"/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash\",\"k\":{\"b\":1.0,\"bar\":true,\"c\":false,\"d\":true},\"l\":42,\"m\":false,\"n\":1.1,\"name\":\"script.sh\",\"system\":\"x86_64-linux\"}"),("out","/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh")])"#.as_bytes();
+
+        let derivation = Derivation::from_aterm_bytes(aterm_bytes).expect("must parse");
+
+        let mut expected_environment_vars = BTreeMap::from_iter(NIX_ENVIRONMENT_VARS);
+        expected_environment_vars.extend([
+            ("NIX_ATTRS_JSON_FILE", "/build/.attrs.json"),
+            ("NIX_ATTRS_SH_FILE", "/build/.attrs.sh"),
+            // PATH is `/path-not-set`, all $PATH setup happens by sourcing of /build/.attrs.sh!
+            // Compare with the build log from a structured attr build only calling env:
+            // builtins.derivation { name = "script.sh"; system = builtins.currentSystem; PATH = lib.makeBinPath [pkgs.coreutils]; ""="bar"; k = {"bar" = true; b =1.0; c = false; d = true;}; l = 42; m = false; n = 1.1; builder="${coreutils}/bin/env"; __structuredAttrs = true;}
+            // ```
+            // HOME=/homeless-shelter
+            // NIX_ATTRS_JSON_FILE=/build/.attrs.json
+            // NIX_ATTRS_SH_FILE=/build/.attrs.sh
+            // NIX_BUILD_CORES=0
+            // NIX_BUILD_TOP=/build
+            // NIX_LOG_FD=2
+            // NIX_STORE=/nix/store
+            // PATH=/path-not-set
+            // PWD=/build
+            // TEMP=/build
+            // TEMPDIR=/build
+            // TERM=xterm-256color
+            // TMP=/build
+            // TMPDIR=/build
+            // ```
+        ]);
+
+        let exp_build_request =  BuildRequest {
+                command_args: vec![
+                    "/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash".to_string(),
+                    "-xc".to_string(),
+                    r#"source ${NIX_ATTRS_SH_FILE:-/dev/null}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null}; out=${out:-${outputs[out]}}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null} >$out; exit 0"#.to_string()
+                ],
+                outputs: vec!["nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh".into()],
+                environment_vars: Vec::from_iter(expected_environment_vars.into_iter().map(
+                    |(k, v)| EnvVar {
+                        key: k.into(),
+                        value: v.into(),
+                    }
+                )),
+                inputs: BTreeMap::new(),
+                inputs_dir: "nix/store".into(),
+                constraints: HashSet::from([
+                BuildConstraints::System(derivation.system.to_owned()),
+                    BuildConstraints::ProvideBinSh,
+                ]),
+                additional_files: vec![
+                    AdditionalFile {
+                        path: "/build/.attrs.json".into(),
+                        contents: Bytes::from_static(br#"{"":"bar","PATH":"/nix/store/imad8dvhp77h0pjbckp6wvmnyhp8dpgg-coreutils-9.8/bin","builder":"/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash","k":{"b":1.0,"bar":true,"c":false,"d":true},"l":42,"m":false,"n":1.1,"name":"script.sh","outputs":{"out":"/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh"},"system":"x86_64-linux"}"#)
+                    },
+                    AdditionalFile {
+                        path: "/build/.attrs.sh".into(),
+                        contents: Bytes::from_static(br#"declare PATH='/nix/store/imad8dvhp77h0pjbckp6wvmnyhp8dpgg-coreutils-9.8/bin'
+declare builder='/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash'
+declare -A k=(['b']=1 ['bar']=1 ['c']= ['d']=1 )
+declare l=42
+declare m=
+declare name='script.sh'
+declare -A outputs=(['out']='/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh' )
+declare system='x86_64-linux'
+"#)
+                    }
+                ],
+                working_dir: "build".into(),
+                scratch_paths: vec!["build".into(), "nix/store".into()],
+                refscan_needles: vec!["s92b6ykfzn3d8z0479r56x9f23bsyl92".into()],
+            };
 
         assert_eq!(
             exp_build_request,
