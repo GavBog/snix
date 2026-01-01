@@ -35,7 +35,7 @@ pub const JSON_FILE_PATH: &str = "/build/.attrs.json";
 pub fn handle_structured_attrs<'a>(
     json_str: &[u8],
     outputs: impl Iterator<Item = (&'a str, StorePath<&'a str>)>,
-    environment_vars: &mut BTreeMap<String, Bytes>,
+    environment_vars: &mut BTreeMap<String, Vec<u8>>,
     additional_files: &mut BTreeMap<String, Bytes>,
 ) -> std::io::Result<()> {
     let mut map = match serde_json::from_slice::<serde_json::Value>(json_str) {

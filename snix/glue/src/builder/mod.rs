@@ -114,14 +114,14 @@ pub(crate) fn derivation_into_build_request(
     // Produce environment_vars and additional files.
     // We use a BTreeMap while producing, and only realize the resulting Vec
     // while populating BuildRequest, so we don't need to worry about ordering.
-    let mut environment_vars: BTreeMap<String, Bytes> = BTreeMap::new();
+    let mut environment_vars: BTreeMap<String, Vec<u8>> = BTreeMap::new();
     let mut additional_files: BTreeMap<String, Bytes> = BTreeMap::new();
 
     // Start with some the ones that nix magically sets:
     environment_vars.extend(
         NIX_ENVIRONMENT_VARS
             .iter()
-            .map(|(k, v)| (k.to_string(), Bytes::from_static(v.as_bytes()))),
+            .map(|(k, v)| (k.to_string(), v.to_owned().into())),
     );
 
     if let Some(json_str) = derivation.environment.remove(structured_attrs::JSON_KEY) {
@@ -146,7 +146,7 @@ pub(crate) fn derivation_into_build_request(
         environment_vars.extend(derivation.environment.into_iter().map(|(k, v)| {
             (
                 k.clone(),
-                Bytes::from(replace_placeholders_b(&v, &derivation.outputs).to_vec()),
+                replace_placeholders_b(&v, &derivation.outputs).into(),
             )
         }));
 
@@ -191,7 +191,10 @@ pub(crate) fn derivation_into_build_request(
         // Turn this into a sorted-by-key Vec<EnvVar>.
         environment_vars: environment_vars
             .into_iter()
-            .map(|(key, value)| EnvVar { key, value })
+            .map(|(key, value)| EnvVar {
+                key,
+                value: Bytes::from(value),
+            })
             .collect(),
         inputs: inputs
             .iter()
@@ -232,7 +235,7 @@ pub(crate) fn derivation_into_build_request(
 /// environment var added instead, referring to a path inside the build with
 /// the contents from the original env var.
 fn handle_pass_as_file(
-    environment_vars: &mut BTreeMap<String, Bytes>,
+    environment_vars: &mut BTreeMap<String, Vec<u8>>,
     additional_files: &mut BTreeMap<String, Bytes>,
 ) -> std::io::Result<()> {
     let pass_as_file = environment_vars.get("passAsFile").map(|v| {
@@ -255,8 +258,8 @@ fn handle_pass_as_file(
                 Some((k, contents)) => {
                     let (new_k, path) = calculate_pass_as_file_env(&k);
 
-                    additional_files.insert(path[1..].to_string(), contents);
-                    environment_vars.insert(new_k, Bytes::from(path));
+                    additional_files.insert(path[1..].to_string(), Bytes::from(contents));
+                    environment_vars.insert(new_k, path.into());
                 }
                 None => {
                     return Err(std::io::Error::new(
