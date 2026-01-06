@@ -1,4 +1,4 @@
-use futures::{StreamExt, stream::BoxStream};
+use futures::{StreamExt, TryStreamExt, stream::BoxStream};
 use prost::Message;
 use redb::{ReadableDatabase, TableDefinition};
 use std::{path::PathBuf, sync::Arc};
@@ -215,6 +215,7 @@ impl DirectoryService for RedbDirectoryService {
             let svc = svc.clone();
             async move { svc.get(&digest).await }
         })
+        .err_into()
         .boxed()
     }
 

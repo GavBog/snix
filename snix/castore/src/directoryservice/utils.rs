@@ -1,6 +1,5 @@
 use super::Directory;
 use crate::B3Digest;
-use crate::Error;
 use crate::Node;
 use futures::StreamExt;
 use std::collections::{HashSet, VecDeque};
@@ -17,7 +16,7 @@ pub fn traverse_directory<F, Fut>(
 ) -> impl futures::Stream<Item = Result<Directory, Error>> + use<F, Fut>
 where
     F: Fn(B3Digest) -> Fut + Sync + Send + 'static,
-    Fut: Future<Output = Result<Option<Directory>, Error>> + Send,
+    Fut: Future<Output = Result<Option<Directory>, crate::Error>> + Send,
 {
     // The list of all directories that still need to be traversed. The next
     // element is picked from the front, new elements are enqueued at the
@@ -30,19 +29,13 @@ where
     async_stream::try_stream! {
         while let Some(current_directory_digest) = worklist_directory_digests.pop_front() {
             let current_directory = match get_directory(current_directory_digest).await.map_err(|e| {
-                warn!("failed to look up directory");
-                Error::StorageError(format!(
-                    "unable to look up directory {current_directory_digest}: {e}"
-                ))
+                Error::GetFailure(current_directory_digest, Box::new(e))
             })? {
                 // the root node of the requested closure was not found, return an empty list
                 None if current_directory_digest == root_directory_digest => break,
                 // if a child directory of the closure is not there, we have an inconsistent store!
                 None => {
-                    warn!("directory {} does not exist", current_directory_digest);
-                    Err(Error::StorageError(format!(
-                        "directory {current_directory_digest} does not exist"
-                    )))?;
+                    Err(Error::NotFound(current_directory_digest))?;
                     break;
                 }
                 Some(dir) => dir,
@@ -69,4 +62,19 @@ where
             yield current_directory;
         }
     }.boxed()
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("unable to lookup directory {0}")]
+    GetFailure(B3Digest, #[source] Box<dyn std::error::Error + Send>),
+    #[error("referenced directory {0} not found")]
+    NotFound(B3Digest),
+}
+
+// FUTUREWORK: drop once DirectoryService trait stops using it
+impl From<Error> for crate::Error {
+    fn from(value: Error) -> Self {
+        Self::StorageError(value.to_string())
+    }
 }

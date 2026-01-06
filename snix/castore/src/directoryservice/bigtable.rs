@@ -1,7 +1,7 @@
 use bigtable_rs::{bigtable, google::bigtable::v2 as bigtable_v2};
 use data_encoding::HEXLOWER;
-use futures::StreamExt;
 use futures::stream::BoxStream;
+use futures::{StreamExt, TryStreamExt};
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationSeconds, serde_as};
@@ -314,6 +314,7 @@ impl DirectoryService for BigtableDirectoryService {
             let svc = svc.clone();
             async move { svc.get(&digest).await }
         })
+        .err_into()
         .boxed()
     }
 
