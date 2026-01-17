@@ -40,11 +40,11 @@ use std::{ffi::CStr, io::Cursor};
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tracing::{Span, debug, error, instrument, warn};
 
-/// This implements a read-only FUSE filesystem for a snix-store
+/// This implements a read-only [FileSystem] for a snix-castore
 /// with the passed [BlobService], [DirectoryService] and [RootNodes].
 ///
-/// Linux uses inodes in filesystems. When implementing FUSE, most calls are
-/// *for* a given inode.
+/// Linux uses inodes in filesystems. When implementing the trait, most calls
+/// *are for* a given inode.
 ///
 /// This means, we need to have a stable mapping of inode numbers to the
 /// corresponding store nodes.
