@@ -60,8 +60,8 @@ enum Commands {
         digest: String,
 
         /// Path to the mount point for FUSE
-        #[arg(value_name = "OUTPUT")]
-        output: PathBuf,
+        #[arg(value_name = "PATH")]
+        dest: PathBuf,
 
         #[clap(flatten)]
         service_addrs: ServiceUrls,
@@ -75,8 +75,8 @@ enum Commands {
         digest: String,
 
         /// Path to the virtiofs socket
-        #[arg(value_name = "OUTPUT")]
-        output: PathBuf,
+        #[arg(value_name = "PATH")]
+        socket: PathBuf,
 
         #[clap(flatten)]
         service_addrs: ServiceUrls,
@@ -188,7 +188,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 #[cfg(feature = "fuse")]
                 Commands::Mount {
                     digest,
-                    output,
+                    dest,
                     service_addrs,
                 } => {
                     let blob_service = snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
@@ -209,7 +209,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                             true,
                             true,
                         );
-                        FuseDaemon::new(fs, &output, 4, true)
+                        FuseDaemon::new(fs, &dest, 4, true)
                     })
                     .await??;
                     tokio::spawn({
@@ -225,7 +225,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 #[cfg(feature = "virtiofs")]
                 Commands::Virtiofs {
                     digest,
-                    output,
+                    socket,
                     service_addrs,
                 } => {
                     let blob_service = snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
@@ -247,7 +247,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                             true,
                             true,
                         );
-                        start_virtiofs_daemon(fs, &output)
+                        start_virtiofs_daemon(fs, &socket)
                     })
                     .await??;
                 }
