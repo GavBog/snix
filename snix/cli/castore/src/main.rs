@@ -42,9 +42,9 @@ enum Commands {
         service_addrs: ServiceUrls,
     },
 
-    /// Ingest a folder or tar archive and return its B3Digest
+    /// Ingest a directory or tar archive and return its B3Digest
     Ingest {
-        /// Path of the folder or tar archive to import
+        /// Path of the directory or tar archive to import
         #[arg(value_name = "INPUT")]
         input: PathBuf,
 
@@ -53,9 +53,9 @@ enum Commands {
     },
 
     #[cfg(feature = "fuse")]
-    /// Mount a folder using its B3Digest with FUSE
+    /// Mount a directory by its B3Digest with FUSE
     Mount {
-        /// B3Digest of the folder to mount (output of `snix-castore ingest`)
+        /// B3Digest of the directory to mount (output of `snix-castore ingest`)
         #[arg(value_name = "DIGEST")]
         digest: String,
 
@@ -68,9 +68,9 @@ enum Commands {
     },
 
     #[cfg(feature = "virtiofs")]
-    /// Expose a folder using its B3Digest through a Virtiofs daemon
+    /// Expose a directory by its B3Digest through a Virtiofs daemon
     Virtiofs {
-        /// B3Digest of the folder to expose (output of `snix-castore ingest`)
+        /// B3Digest of the directory to expose (output of `snix-castore ingest`)
         #[arg(value_name = "DIGEST")]
         digest: String,
 
