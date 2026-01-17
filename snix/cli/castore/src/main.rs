@@ -1,7 +1,5 @@
 use clap::{Parser, Subcommand};
 #[cfg(any(feature = "fuse", feature = "virtiofs"))]
-use snix_castore::B3Digest;
-#[cfg(any(feature = "fuse", feature = "virtiofs"))]
 use snix_castore::fs::SnixStoreFs;
 #[cfg(feature = "fuse")]
 use snix_castore::fs::fuse::FuseDaemon;
@@ -196,16 +194,18 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     let blob_service = snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
                     let directory_service =
                         snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr).await?;
-                    let digest: B3Digest = digest.parse()?;
-                    let root_nodes_provider = directory_service
+
+                    let digest = digest.parse()?;
+                    let directory = directory_service
                         .get(&digest)
                         .await?
-                        .ok_or("Root nodes provider not found")?;
+                        .ok_or("Root directory not found")?;
+
                     let fuse_daemon = tokio::task::spawn_blocking(move || {
                         let fs = SnixStoreFs::new(
                             blob_service,
                             directory_service,
-                            root_nodes_provider,
+                            directory,
                             true,
                             true,
                         );
@@ -231,16 +231,19 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     let blob_service = snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
                     let directory_service =
                         snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr).await?;
-                    let digest: B3Digest = digest.parse()?;
-                    let root_nodes_provider = directory_service
+
+
+                    let digest = digest.parse()?;
+                    let directory = directory_service
                         .get(&digest)
                         .await?
-                        .ok_or("Root nodes provider not found")?;
+                        .ok_or("Root directory not found")?;
+
                     tokio::task::spawn_blocking(move || {
                         let fs = SnixStoreFs::new(
                             blob_service,
                             directory_service,
-                            root_nodes_provider,
+                            directory,
                             true,
                             true,
                         );
