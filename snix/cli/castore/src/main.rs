@@ -171,11 +171,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             input,
             service_addrs,
         } => {
-            let blob_service =
-                snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
-            let directory_service =
-                snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr)
-                    .await?;
+            let (blob_service, directory_service) =
+                snix_castore::utils::construct_services(service_addrs).await?;
+
             let metadata = fs::metadata(&input).await?;
             let node = if metadata.is_dir() {
                 ingest_path::<_, _, _, &[u8]>(&blob_service, &directory_service, &input, None)
@@ -198,11 +196,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             dest,
             service_addrs,
         } => {
-            let blob_service =
-                snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
-            let directory_service =
-                snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr)
-                    .await?;
+            let (blob_service, directory_service) =
+                snix_castore::utils::construct_services(service_addrs).await?;
 
             let digest = digest.parse()?;
             let directory = directory_service
@@ -239,11 +234,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             socket,
             service_addrs,
         } => {
-            let blob_service =
-                snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
-            let directory_service =
-                snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr)
-                    .await?;
+            let (blob_service, directory_service) =
+                snix_castore::utils::construct_services(service_addrs).await?;
 
             let digest = digest.parse()?;
             let directory = directory_service
