@@ -12,10 +12,10 @@ mod object_store;
 mod order_validator;
 mod redb;
 mod simple_putter;
+pub mod traversal;
+
 #[cfg(test)]
 pub mod tests;
-mod traverse;
-mod utils;
 
 pub use self::combinators::{Cache, CacheConfig};
 pub use self::directory_graph::{DirectoryGraph, DirectoryGraphBuilder};
@@ -25,8 +25,6 @@ pub use self::object_store::{ObjectStoreDirectoryService, ObjectStoreDirectorySe
 pub use self::order_validator::{LeavesToRootValidator, OrderingError, RootToLeavesValidator};
 pub use self::redb::{RedbDirectoryService, RedbDirectoryServiceConfig};
 pub use self::simple_putter::SimplePutter;
-pub use self::traverse::descend_to;
-pub use self::utils::traverse_directory;
 
 #[cfg(feature = "cloud")]
 mod bigtable;

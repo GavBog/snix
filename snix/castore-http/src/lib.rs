@@ -9,7 +9,7 @@ use std::path;
 use snix_castore::{
     B3Digest, Directory, Node, Path, SymlinkTarget,
     blobservice::BlobService,
-    directoryservice::{DirectoryService, descend_to},
+    directoryservice::{DirectoryService, traversal::descend_to},
 };
 
 use axum::{

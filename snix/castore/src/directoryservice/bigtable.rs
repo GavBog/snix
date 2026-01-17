@@ -9,10 +9,9 @@ use std::sync::Arc;
 use tonic::async_trait;
 use tracing::{instrument, trace, warn};
 
-use super::{
-    Directory, DirectoryPutter, DirectoryService, SimplePutter, utils::traverse_directory,
-};
+use super::{Directory, DirectoryPutter, DirectoryService, SimplePutter};
 use crate::composition::{CompositionContext, ServiceBuilder};
+use crate::directoryservice::traversal;
 use crate::{B3Digest, proto};
 
 /// There should not be more than 10 MiB in a single cell.
@@ -310,10 +309,11 @@ impl DirectoryService for BigtableDirectoryService {
         root_directory_digest: &B3Digest,
     ) -> BoxStream<'static, Result<Directory, super::Error>> {
         let svc = self.clone();
-        traverse_directory(*root_directory_digest, move |digest| {
+        super::traversal::root_to_leaves(*root_directory_digest, move |digest| {
             let svc = svc.clone();
             async move { svc.get(&digest).await }
         })
+        .map_err(|err| Box::new(Error::DirectoryTraversal(err)))
         .err_into()
         .boxed()
     }
@@ -339,6 +339,9 @@ pub enum Error {
     DirectoryUnexpectedDigest,
     #[error("Directory exceeds cell limit on Bigtable")]
     DirectoryTooBig,
+
+    #[error("failure during directory traversal")]
+    DirectoryTraversal(#[source] traversal::Error),
 
     /// These should never happen, we simply double-check some of the data
     /// returned by bigtable to actually match what we requested.

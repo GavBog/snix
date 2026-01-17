@@ -21,7 +21,7 @@ use url::Url;
 use snix_castore::{
     Node,
     blobservice::BlobService,
-    directoryservice::{self, DirectoryService},
+    directoryservice::{DirectoryService, traversal::descend_to},
 };
 use snix_store::pathinfoservice::{PathInfo, PathInfoService};
 
@@ -98,8 +98,8 @@ impl SnixStoreIO {
     }
 
     /// for a given [StorePath] and additional [Path] inside the store path,
-    /// look up the [PathInfo], and if it exists, and then use
-    /// [directoryservice::descend_to] to return the
+    /// look up the [PathInfo], and if it exists, and then uses
+    /// [descend_to] to return the
     /// [Node] specified by `sub_path`.
     ///
     /// In case there is no PathInfo yet, this means we need to build it
@@ -312,7 +312,7 @@ impl SnixStoreIO {
         let sub_path = snix_castore::PathBuf::from_host_path(sub_path, true)?;
 
         Ok(
-            directoryservice::descend_to(&self.directory_service, path_info.node.clone(), sub_path)
+            descend_to(&self.directory_service, path_info.node.clone(), sub_path)
                 .await
                 .map_err(std::io::Error::other)?
                 .map(|node| {

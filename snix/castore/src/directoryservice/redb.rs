@@ -5,7 +5,7 @@ use std::{path::PathBuf, sync::Arc};
 use tonic::async_trait;
 use tracing::{instrument, warn};
 
-use super::{Directory, DirectoryPutter, DirectoryService, traverse_directory};
+use super::{Directory, DirectoryPutter, DirectoryService, traversal};
 use crate::{
     B3Digest,
     composition::{CompositionContext, ServiceBuilder},
@@ -211,10 +211,11 @@ impl DirectoryService for RedbDirectoryService {
         // redb transaction to avoid constantly closing and opening new transactions for the
         // database.
         let svc = self.clone();
-        traverse_directory(*root_directory_digest, move |digest| {
+        traversal::root_to_leaves(*root_directory_digest, move |digest| {
             let svc = svc.clone();
             async move { svc.get(&digest).await }
         })
+        .map_err(|err| Box::new(Error::DirectoryTraversal(err)))
         .err_into()
         .boxed()
     }
@@ -301,6 +302,9 @@ pub enum Error {
 
     #[error("DirectoryPutter already closed")]
     DirectoryPutterAlreadyClosed,
+
+    #[error("failure during directory traversal")]
+    DirectoryTraversal(#[source] traversal::Error),
 
     #[error("requested directory has wrong digest, expected {expected}, actual {actual}")]
     WrongDigest {

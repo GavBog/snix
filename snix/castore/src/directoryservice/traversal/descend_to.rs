@@ -1,7 +1,7 @@
 use crate::{Node, Path, directoryservice::DirectoryService};
 use tracing::{instrument, warn};
 
-use super::utils::TraversalError;
+use super::Error;
 
 /// This descends from a (root) node to the given (sub)path, returning the Node
 /// at that path, or none, if there's nothing at that path.
@@ -10,7 +10,7 @@ pub async fn descend_to<DS>(
     directory_service: DS,
     root_node: Node,
     path: impl AsRef<Path> + std::fmt::Display,
-) -> Result<Option<Node>, TraversalError>
+) -> Result<Option<Node>, Error>
 where
     DS: DirectoryService,
 {
@@ -27,12 +27,12 @@ where
                 let directory = directory_service
                     .get(&digest)
                     .await
-                    .map_err(|e| TraversalError::GetFailure(digest, e))?
+                    .map_err(|e| Error::GetFailure(digest, e))?
                     .ok_or_else(|| {
                         // If we didn't get the directory node that's linked, that's a store inconsistency, bail out!
                         warn!(directory.digest = %digest, "directory does not exist");
 
-                        TraversalError::NotFound(digest)
+                        Error::NotFound(digest)
                     })?;
 
                 // look for the component in the [Directory].
