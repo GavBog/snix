@@ -82,6 +82,7 @@ where
                     directory_service.clone(),
                     root_nodes,
                     true,
+                    None,
                     false,
                 );
                 // FUTUREWORK: make fuse daemon threads configurable?

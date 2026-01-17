@@ -66,6 +66,10 @@ enum Commands {
 
         #[clap(flatten)]
         service_addrs: ServiceUrls,
+
+        /// uid:gid to use, instead of 0:0
+        #[clap(long, value_parser = parse_uid_gid)]
+        uid_gid: Option<(u32, u32)>,
     },
 
     #[cfg(feature = "virtiofs")]
@@ -81,6 +85,10 @@ enum Commands {
 
         #[clap(flatten)]
         service_addrs: ServiceUrls,
+
+        /// uid:gid to use, instead of 0:0
+        #[clap(long, value_parser = parse_uid_gid)]
+        uid_gid: Option<(u32, u32)>,
     },
 }
 
@@ -195,6 +203,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             digest,
             dest,
             service_addrs,
+            uid_gid,
         } => {
             let (blob_service, directory_service) =
                 snix_castore::utils::construct_services(service_addrs).await?;
@@ -206,7 +215,14 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 .ok_or("Root directory not found")?;
 
             let fuse_daemon = tokio::task::spawn_blocking(move || {
-                let fs = SnixStoreFs::new(blob_service, directory_service, directory, true, true);
+                let fs = SnixStoreFs::new(
+                    blob_service,
+                    directory_service,
+                    directory,
+                    true,
+                    uid_gid,
+                    true,
+                );
                 info!(mount_path=?dest, "mounting");
 
                 FuseDaemon::new(fs, &dest, 4, true)
@@ -233,6 +249,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             digest,
             socket,
             service_addrs,
+            uid_gid,
         } => {
             let (blob_service, directory_service) =
                 snix_castore::utils::construct_services(service_addrs).await?;
@@ -244,7 +261,14 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 .ok_or("Root directory not found")?;
 
             tokio::task::spawn_blocking(move || {
-                let fs = SnixStoreFs::new(blob_service, directory_service, directory, true, true);
+                let fs = SnixStoreFs::new(
+                    blob_service,
+                    directory_service,
+                    directory,
+                    true,
+                    uid_gid,
+                    true,
+                );
                 info!(socket_path=?socket, "starting virtiofs-daemon");
 
                 start_virtiofs_daemon(fs, socket)
@@ -256,4 +280,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     Ok(tracing_handle.shutdown().await.inspect_err(|err| {
         eprintln!("failed to shutdown tracing: {err}");
     })?)
+}
+
+#[cfg(any(feature = "fuse", feature = "virtiofs"))]
+fn parse_uid_gid(s: &str) -> Result<(u32, u32), &'static str> {
+    match s.split_once(":") {
+        Some((left, right)) => {
+            let uid: u32 = left.parse().map_err(|_| "invalid lhs")?;
+            let gid: u32 = right.parse().map_err(|_| "invalid rhs")?;
+            Ok((uid, gid))
+        }
+        None => Err("no delimiter found"),
+    }
 }

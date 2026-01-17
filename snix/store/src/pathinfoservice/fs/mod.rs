@@ -17,6 +17,7 @@ pub fn make_fs<BS, DS, PS>(
     directory_service: DS,
     path_info_service: PS,
     list_root: bool,
+    uid_gid_override: Option<(u32, u32)>,
     show_xattr: bool,
 ) -> SnixStoreFs<BS, DS, RootNodesWrapper<PS>>
 where
@@ -29,6 +30,7 @@ where
         directory_service,
         RootNodesWrapper(path_info_service),
         list_root,
+        uid_gid_override,
         show_xattr,
     )
 }

@@ -43,6 +43,7 @@ fn do_mount<P: AsRef<Path>, BS, DS>(
     root_nodes: BTreeMap<PathComponent, Node>,
     mountpoint: P,
     list_root: bool,
+    uid_gid_override: Option<(u32, u32)>,
     show_xattr: bool,
 ) -> io::Result<FuseDaemon>
 where
@@ -54,6 +55,7 @@ where
         directory_service,
         Arc::new(root_nodes),
         list_root,
+        uid_gid_override,
         show_xattr,
     );
     FuseDaemon::new(Arc::new(fs), mountpoint.as_ref(), 4, false)
@@ -246,6 +248,7 @@ async fn mount() {
         BTreeMap::default(),
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -269,6 +272,7 @@ async fn root() {
         BTreeMap::default(),
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -303,6 +307,7 @@ async fn root_with_listing() {
         root_nodes,
         tmpdir.path(),
         true, /* allow listing */
+        None,
         false,
     )
     .expect("must succeed");
@@ -347,6 +352,7 @@ async fn stat_file_at_root() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -384,6 +390,7 @@ async fn read_file_at_root() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -421,6 +428,7 @@ async fn read_large_file_at_root() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -466,6 +474,7 @@ async fn symlink_readlink() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -513,6 +522,7 @@ async fn read_stat_through_symlink() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -558,6 +568,7 @@ async fn read_stat_directory() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -568,6 +579,44 @@ async fn read_stat_directory() {
     let metadata = tokio::fs::metadata(p).await.expect("must succeed");
     assert!(metadata.is_dir());
     assert!(metadata.permissions().readonly());
+
+    fuse_daemon.unmount().expect("unmount");
+}
+
+/// Ensure uid and gid are overridden if we configure it as such.
+#[tokio::test]
+async fn uid_gid_override() {
+    // https://plume.benboeckel.net/~/JustAnotherBlog/skipping-tests-in-rust
+    if !std::path::Path::new("/dev/fuse").exists() {
+        eprintln!("skipping test");
+        return;
+    }
+    let tmpdir = TempDir::new().unwrap();
+
+    let (blob_service, directory_service) = gen_svcs();
+    let mut root_nodes = BTreeMap::default();
+
+    populate_directory_with_keep(&blob_service, &directory_service, &mut root_nodes).await;
+
+    let fuse_daemon = do_mount(
+        blob_service,
+        directory_service,
+        root_nodes,
+        tmpdir.path(),
+        false,
+        Some((1000, 100)),
+        false,
+    )
+    .expect("must succeed");
+
+    let p = tmpdir.path().join(DIRECTORY_WITH_KEEP_NAME);
+
+    // peek at the metadata
+    let metadata = tokio::fs::metadata(p).await.expect("must succeed");
+    assert!(metadata.is_dir());
+    assert!(metadata.permissions().readonly());
+    assert_eq!(metadata.uid(), 1000, "uid should be as configured");
+    assert_eq!(metadata.gid(), 100, "gid should be as configured");
 
     fuse_daemon.unmount().expect("unmount");
 }
@@ -595,6 +644,7 @@ async fn xattr() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         true, /* support xattr */
     )
     .expect("must succeed");
@@ -678,6 +728,7 @@ async fn read_blob_inside_dir() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -718,6 +769,7 @@ async fn read_blob_deep_inside_dir() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -761,6 +813,7 @@ async fn readdir() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -821,6 +874,7 @@ async fn readdir_deep() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -871,6 +925,7 @@ async fn check_attributes() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -946,6 +1001,7 @@ async fn compare_inodes_directories() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -990,6 +1046,7 @@ async fn compare_inodes_files() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -1039,6 +1096,7 @@ async fn compare_inodes_symlinks() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -1082,6 +1140,7 @@ async fn read_wrong_paths_in_root() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -1137,6 +1196,7 @@ async fn disallow_writes() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -1169,6 +1229,7 @@ async fn missing_directory() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");
@@ -1217,6 +1278,7 @@ async fn missing_blob() {
         root_nodes,
         tmpdir.path(),
         false,
+        None,
         false,
     )
     .expect("must succeed");

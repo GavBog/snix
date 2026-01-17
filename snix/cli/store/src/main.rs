@@ -130,6 +130,10 @@ enum Commands {
         #[clap(long, short, action)]
         list_root: bool,
 
+        /// uid:gid to use, instead of 0:0
+        #[clap(long, value_parser = parse_uid_gid)]
+        uid_gid: Option<(u32, u32)>,
+
         #[arg(long, default_value_t = true)]
         /// Whether to expose blob and directory digests as extended attributes.
         show_xattr: bool,
@@ -149,6 +153,10 @@ enum Commands {
         /// (exhaustive) listing.
         #[clap(long, short, action)]
         list_root: bool,
+
+        /// uid:gid to use, instead of 0:0
+        #[clap(long, value_parser = parse_uid_gid)]
+        uid_gid: Option<(u32, u32)>,
 
         #[arg(long, default_value_t = true)]
         /// Whether to expose blob and directory digests as extended attributes.
@@ -469,6 +477,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             dest,
             service_addrs,
             list_root,
+            uid_gid,
             threads,
             allow_other,
             show_xattr,
@@ -482,6 +491,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     directory_service,
                     path_info_service,
                     list_root,
+                    uid_gid,
                     show_xattr,
                 );
                 info!(mount_path=?dest, "mounting");
@@ -510,6 +520,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             socket,
             service_addrs,
             list_root,
+            uid_gid,
             show_xattr,
         } => {
             let (blob_service, directory_service, path_info_service, _nar_calculation_service) =
@@ -521,6 +532,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     directory_service,
                     path_info_service,
                     list_root,
+                    uid_gid,
                     show_xattr,
                 );
                 info!(socket_path=?socket, "starting virtiofs-daemon");
@@ -534,4 +546,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(tracing_handle.shutdown().await.inspect_err(|err| {
         eprintln!("failed to shutdown tracing: {err}");
     })?)
+}
+
+#[cfg(any(feature = "fuse", feature = "virtiofs"))]
+fn parse_uid_gid(s: &str) -> Result<(u32, u32), &'static str> {
+    match s.split_once(":") {
+        Some((left, right)) => {
+            let uid: u32 = left.parse().map_err(|_| "invalid lhs")?;
+            let gid: u32 = right.parse().map_err(|_| "invalid rhs")?;
+            Ok((uid, gid))
+        }
+        None => Err("no delimiter found"),
+    }
 }

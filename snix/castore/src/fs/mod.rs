@@ -22,9 +22,12 @@ use crate::{
     path::PathComponent,
 };
 use bstr::ByteVec;
-use fuse_backend_rs::abi::fuse_abi::{OpenOptions, stat64};
 use fuse_backend_rs::api::filesystem::{
     Context, FileSystem, FsOptions, GetxattrReply, ListxattrReply, ROOT_ID,
+};
+use fuse_backend_rs::{
+    abi::fuse_abi::{Attr, OpenOptions, stat64},
+    api::filesystem::Entry,
 };
 use futures::{StreamExt, stream::BoxStream};
 use parking_lot::RwLock;
@@ -80,6 +83,9 @@ pub struct SnixStoreFs<BS, DS, RN> {
     /// Whether to (try) listing elements in the root.
     list_root: bool,
 
+    /// If uid/gid should be overridden, their values
+    uid_gid_override: Option<(u32, u32)>,
+
     /// Whether to expose blob and directory digests as extended attributes.
     show_xattr: bool,
 
@@ -130,6 +136,7 @@ where
         directory_service: DS,
         root_nodes_provider: RN,
         list_root: bool,
+        uid_gid_override: Option<(u32, u32)>,
         show_xattr: bool,
     ) -> Self {
         Self {
@@ -138,6 +145,7 @@ where
             root_nodes_provider,
 
             list_root,
+            uid_gid_override,
             show_xattr,
 
             root_nodes: RwLock::new(HashMap::default()),
@@ -286,6 +294,47 @@ where
             }
         }
     }
+
+    /// Helper function, converting a [InodeData] to [Attr],
+    /// applying uid/gid override if configured.
+    fn inode_data_to_attr(&self, inode_data: &InodeData, ino: u64) -> Attr {
+        let mut attr = Attr {
+            ino,
+            // FUTUREWORK: play with this numbers, as it affects read sizes for client applications.
+            blocks: 1024,
+            size: match inode_data {
+                InodeData::Regular(_, size, _) => *size,
+                InodeData::Symlink(target) => target.len() as u64,
+                InodeData::Directory(DirectoryInodeData::Sparse(_, size)) => *size,
+                InodeData::Directory(DirectoryInodeData::Populated(_, children)) => {
+                    children.len() as u64
+                }
+            },
+            mode: inode_data.as_fuse_type()
+                | match inode_data {
+                    InodeData::Regular(_, _, false) | InodeData::Symlink(_) => 0o444,
+                    InodeData::Regular(_, _, true) | InodeData::Directory(_) => 0o555,
+                },
+            mtime: 1, // Everything in /nix/store must have timestamp "1".
+            ..Default::default()
+        };
+
+        if let Some((uid, gid)) = self.uid_gid_override {
+            attr.uid = uid;
+            attr.gid = gid;
+        }
+
+        attr
+    }
+}
+fn attr_to_fuse_entry(attr: Attr) -> Entry {
+    Entry {
+        inode: attr.ino,
+        attr: attr.into(),
+        attr_timeout: Duration::MAX,
+        entry_timeout: Duration::MAX,
+        ..Default::default()
+    }
 }
 
 const XATTR_NAME_DIRECTORY_DIGEST: &[u8] = b"user.snix.castore.directory.digest";
@@ -344,11 +393,14 @@ where
         let attr = if inode == ROOT_ID {
             ROOT_FILE_ATTR
         } else {
-            self.inode_tracker
-                .read()
-                .get(inode)
-                .ok_or_else(|| io::Error::from_raw_os_error(libc::ENOENT))?
-                .as_fuse_file_attr(inode)
+            self.inode_data_to_attr(
+                self.inode_tracker
+                    .read()
+                    .get(inode)
+                    .ok_or_else(|| io::Error::from_raw_os_error(libc::ENOENT))?
+                    .as_ref(),
+                inode,
+            )
         };
 
         Ok((attr.into(), Duration::MAX))
@@ -360,7 +412,7 @@ where
         _ctx: &Context,
         parent: Self::Inode,
         name: &std::ffi::CStr,
-    ) -> io::Result<fuse_backend_rs::api::filesystem::Entry> {
+    ) -> io::Result<Entry> {
         debug!("lookup");
 
         // convert the CStr to a PathComponent
@@ -393,7 +445,15 @@ where
 
         debug!(inode_data=?&inode_data, ino=ino, "Some");
 
-        Ok(inode_data.as_fuse_entry(ino))
+        let attr = self.inode_data_to_attr(
+            self.inode_tracker
+                .read()
+                .get(ino)
+                .ok_or_else(|| io::Error::from_raw_os_error(libc::ENOENT))?
+                .as_ref(),
+            ino,
+        );
+        Ok(attr_to_fuse_entry(attr))
     }
 
     #[tracing::instrument(skip_all, fields(rq.inode = inode))]
@@ -531,7 +591,7 @@ where
         offset: u64,
         add_entry: &mut dyn FnMut(
             fuse_backend_rs::api::filesystem::DirEntry,
-            fuse_backend_rs::api::filesystem::Entry,
+            Entry,
         ) -> io::Result<usize>,
     ) -> io::Result<()> {
         debug!("readdirplus");
@@ -576,7 +636,7 @@ where
                         type_: inode_data.as_fuse_type(),
                         name: name.as_ref(),
                     },
-                    inode_data.as_fuse_entry(ino),
+                    attr_to_fuse_entry(self.inode_data_to_attr(&inode_data, ino)),
                 )?;
                 // If the buffer is full, add_entry will return `Ok(0)`.
                 if written == 0 {
@@ -601,7 +661,7 @@ where
                     type_: inode_data.as_fuse_type(),
                     name: name.as_ref(),
                 },
-                inode_data.as_fuse_entry(ino),
+                attr_to_fuse_entry(self.inode_data_to_attr(&inode_data, ino)),
             )?;
             // If the buffer is full, add_entry will return `Ok(0)`.
             if written == 0 {

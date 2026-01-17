@@ -101,6 +101,7 @@ where
                     directory_service,
                     root_nodes,
                     true,
+                    None,
                     false,
                 );
                 // mount the filesystem and wait for it to be unmounted.

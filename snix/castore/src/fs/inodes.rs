@@ -1,7 +1,5 @@
 //! This module contains all the data structures used to track information
 //! about inodes, which present snix-castore nodes in a filesystem.
-use std::time::Duration;
-
 use crate::{B3Digest, Node, path::PathComponent};
 
 #[derive(Clone, Debug)]
@@ -34,42 +32,6 @@ impl InodeData {
                 executable,
             } => Self::Regular(*digest, *size, *executable),
             Node::Symlink { target } => Self::Symlink(target.clone().into()),
-        }
-    }
-
-    pub fn as_fuse_file_attr(&self, inode: u64) -> fuse_backend_rs::abi::fuse_abi::Attr {
-        fuse_backend_rs::abi::fuse_abi::Attr {
-            ino: inode,
-            // FUTUREWORK: play with this numbers, as it affects read sizes for client applications.
-            blocks: 1024,
-            size: match self {
-                InodeData::Regular(_, size, _) => *size,
-                InodeData::Symlink(target) => target.len() as u64,
-                InodeData::Directory(DirectoryInodeData::Sparse(_, size)) => *size,
-                InodeData::Directory(DirectoryInodeData::Populated(_, children)) => {
-                    children.len() as u64
-                }
-            },
-            mode: self.as_fuse_type() | self.mode(),
-            mtime: 1, // Everything in /nix/store must have timestamp "1".
-            ..Default::default()
-        }
-    }
-
-    fn mode(&self) -> u32 {
-        match self {
-            InodeData::Regular(_, _, false) | InodeData::Symlink(_) => 0o444,
-            InodeData::Regular(_, _, true) | InodeData::Directory(_) => 0o555,
-        }
-    }
-
-    pub fn as_fuse_entry(&self, inode: u64) -> fuse_backend_rs::api::filesystem::Entry {
-        fuse_backend_rs::api::filesystem::Entry {
-            inode,
-            attr: self.as_fuse_file_attr(inode).into(),
-            attr_timeout: Duration::MAX,
-            entry_timeout: Duration::MAX,
-            ..Default::default()
         }
     }
 
