@@ -341,17 +341,17 @@ where
         inode: Self::Inode,
         _handle: Option<Self::Handle>,
     ) -> io::Result<(stat64, Duration)> {
-        if inode == ROOT_ID {
-            return Ok((ROOT_FILE_ATTR.into(), Duration::MAX));
-        }
+        let attr = if inode == ROOT_ID {
+            ROOT_FILE_ATTR
+        } else {
+            self.inode_tracker
+                .read()
+                .get(inode)
+                .ok_or_else(|| io::Error::from_raw_os_error(libc::ENOENT))?
+                .as_fuse_file_attr(inode)
+        };
 
-        match self.inode_tracker.read().get(inode) {
-            None => Err(io::Error::from_raw_os_error(libc::ENOENT)),
-            Some(inode_data) => {
-                debug!(inode_data = ?inode_data, "found node");
-                Ok((inode_data.as_fuse_file_attr(inode).into(), Duration::MAX))
-            }
-        }
+        Ok((attr.into(), Duration::MAX))
     }
 
     #[tracing::instrument(skip_all, fields(rq.parent_inode = parent, rq.name = ?name))]
