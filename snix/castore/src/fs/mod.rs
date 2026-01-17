@@ -368,36 +368,32 @@ where
         let name: PathComponent = name.try_into().map_err(|_| std::io::ErrorKind::NotFound)?;
 
         // This goes from a parent inode to a node.
-        // - If the parent is [ROOT_ID], we need to check
-        //   [self.root_nodes] (fetching from a [RootNode] provider if needed)
-        // - Otherwise, lookup the parent in [self.inode_tracker] (which must be
-        //   a [InodeData::Directory]), and find the child with that name.
-        if parent == ROOT_ID {
-            let (ino, inode_data) = self.name_in_root_to_ino_and_data(&name)?;
-
-            debug!(inode_data=?&inode_data, ino=ino, "Some");
-            return Ok(inode_data.as_fuse_entry(ino));
-        }
-        // This is the "lookup for "a" inside inode 42.
-        // We already know that inode 42 must be a directory.
-        let (parent_digest, children) = self.get_directory_children(parent)?;
-
-        Span::current().record("directory.digest", parent_digest.to_string());
-        // Search for that name in the list of children and return the FileAttrs.
-
-        // in the children, find the one with the desired name.
-        if let Some((child_ino, _, _)) = children.iter().find(|(_, n, _)| n == &name) {
-            // lookup the child [InodeData] in [self.inode_tracker].
-            // We know the inodes for children have already been allocated.
-            let child_inode_data = self.inode_tracker.read().get(*child_ino).unwrap();
-
-            // Reply with the file attributes for the child.
-            // For child directories, we still have all data we need to reply.
-            Ok(child_inode_data.as_fuse_entry(*child_ino))
+        let (ino, inode_data) = if parent == ROOT_ID {
+            // If the parent is [ROOT_ID], we need to check [self.root_nodes] (fetching from a [RootNode] provider if needed)
+            self.name_in_root_to_ino_and_data(&name)?
         } else {
-            // Child not found, return ENOENT.
-            Err(io::Error::from_raw_os_error(libc::ENOENT))
-        }
+            // else the parent must be a directory, otherwise we would never come up with this request.
+            // Lookup the parent in [self.inode_tracker] (which must be a [InodeData::Directory]), and find the child with that name.
+            let (parent_digest, children) = self.get_directory_children(parent)?;
+
+            Span::current().record("directory.digest", parent_digest.to_string());
+            // Search for that name in the list of children and return the FileAttrs.
+            // FUTUREWORK: we know children are sorted.
+            let (child_ino, _, child_node) = children
+                .into_iter()
+                .find(|(_, n, _)| n == &name)
+                .ok_or_else(|| {
+                    // Child not found, return ENOENT.
+                    io::Error::from_raw_os_error(libc::ENOENT)
+                })?;
+
+            // Reply with the file attributes for the child,
+            (child_ino, Arc::new(InodeData::from_node(&child_node)))
+        };
+
+        debug!(inode_data=?&inode_data, ino=ino, "Some");
+
+        Ok(inode_data.as_fuse_entry(ino))
     }
 
     #[tracing::instrument(skip_all, fields(rq.inode = inode))]
