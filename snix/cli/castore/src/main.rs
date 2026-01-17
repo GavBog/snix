@@ -10,6 +10,7 @@ use snix_castore::proto::blob_service_server::BlobServiceServer;
 use snix_castore::proto::directory_service_server::DirectoryServiceServer;
 use snix_castore::proto::{GRPCBlobServiceWrapper, GRPCDirectoryServiceWrapper};
 use snix_castore::{Node, utils::ServiceUrls};
+use snix_cli::shutdown_signal;
 use std::error::Error;
 use std::io::Write;
 use std::path::PathBuf;
@@ -86,178 +87,181 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let args = Args::parse();
+
     let tracing_handle = snix_tracing::TracingBuilder::default()
         .handle_tracing_args(&args.tracing_args)
         .enable_progressbar()
         .build()?;
-    tokio::select! {
-        _ = snix_cli::shutdown_signal() => {
-            if let Err(e) = tracing_handle.shutdown().await {
-                eprintln!("failed to shutdown tracing: {e}");
-            }
-            Ok(())
-        },
-        res = async {
-            match args.command {
-                Commands::Daemon {
-                    listen_args,
-                    service_addrs,
-                } => {
-                    let (blob_service, directory_service) =
-                        snix_castore::utils::construct_services(service_addrs).await?;
 
-                    let mut server = Server::builder().layer(
-                        ServiceBuilder::new()
-                            .layer(
-                                TraceLayer::new(SharedClassifier::new(
-                                    GrpcErrorsAsFailures::new()
-                                        .with_success(GrpcCode::InvalidArgument)
-                                        .with_success(GrpcCode::NotFound),
-                                ))
-                                .make_span_with(
-                                    DefaultMakeSpan::new()
-                                        .level(Level::INFO)
-                                        .include_headers(true),
-                                ),
-                            )
-                            .map_request(snix_tracing::propagate::tonic::accept_trace),
-                    );
+    match args.command {
+        Commands::Daemon {
+            listen_args,
+            service_addrs,
+        } => {
+            let (blob_service, directory_service) =
+                snix_castore::utils::construct_services(service_addrs).await?;
 
-                    let (_health_reporter, health_service) = tonic_health::server::health_reporter();
-
-                    #[allow(unused_mut)]
-                    let mut router = server
-                        .add_service(health_service)
-                        .add_service(BlobServiceServer::new(GRPCBlobServiceWrapper::new(blob_service)))
-                        .add_service(DirectoryServiceServer::new(GRPCDirectoryServiceWrapper::new(directory_service)));
-
-                    #[cfg(feature = "tonic-reflection")]
-                    {
-                        router = router.add_service(
-                            tonic_reflection::server::Builder::configure()
-                                .register_encoded_file_descriptor_set(snix_castore::proto::FILE_DESCRIPTOR_SET)
-                                .build_v1alpha()?,
-                        );
-                        router = router.add_service(
-                            tonic_reflection::server::Builder::configure()
-                                .register_encoded_file_descriptor_set(snix_castore::proto::FILE_DESCRIPTOR_SET)
-                                .build_v1()?,
-                        );
-                    }
-
-                    let listen_address = &listen_args.listen_address.unwrap_or_else(|| {
-                        "[::]:8000"
-                            .parse()
-                            .expect("invalid fallback listen address")
-                    });
-
-                    let listener = tokio_listener::Listener::bind(
-                        listen_address,
-                        &Default::default(),
-                        &listen_args.listener_options,
+            let mut server = Server::builder().layer(
+                ServiceBuilder::new()
+                    .layer(
+                        TraceLayer::new(SharedClassifier::new(
+                            GrpcErrorsAsFailures::new()
+                                .with_success(GrpcCode::InvalidArgument)
+                                .with_success(GrpcCode::NotFound),
+                        ))
+                        .make_span_with(
+                            DefaultMakeSpan::new()
+                                .level(Level::INFO)
+                                .include_headers(true),
+                        ),
                     )
+                    .map_request(snix_tracing::propagate::tonic::accept_trace),
+            );
+
+            let (_health_reporter, health_service) = tonic_health::server::health_reporter();
+
+            #[allow(unused_mut)]
+            let mut router = server
+                .add_service(health_service)
+                .add_service(BlobServiceServer::new(GRPCBlobServiceWrapper::new(
+                    blob_service,
+                )))
+                .add_service(DirectoryServiceServer::new(
+                    GRPCDirectoryServiceWrapper::new(directory_service),
+                ));
+
+            #[cfg(feature = "tonic-reflection")]
+            {
+                router = router.add_service(
+                    tonic_reflection::server::Builder::configure()
+                        .register_encoded_file_descriptor_set(
+                            snix_castore::proto::FILE_DESCRIPTOR_SET,
+                        )
+                        .build_v1alpha()?,
+                );
+                router = router.add_service(
+                    tonic_reflection::server::Builder::configure()
+                        .register_encoded_file_descriptor_set(
+                            snix_castore::proto::FILE_DESCRIPTOR_SET,
+                        )
+                        .build_v1()?,
+                );
+            }
+
+            let listen_address = &listen_args.listen_address.unwrap_or_else(|| {
+                "[::]:8000"
+                    .parse()
+                    .expect("invalid fallback listen address")
+            });
+
+            let listener = tokio_listener::Listener::bind(
+                listen_address,
+                &Default::default(),
+                &listen_args.listener_options,
+            )
+            .await?;
+
+            info!(listen_address=%listen_address, "starting daemon");
+
+            router
+                .serve_with_incoming_shutdown(listener, shutdown_signal())
+                .await?
+        }
+        Commands::Ingest {
+            input,
+            service_addrs,
+        } => {
+            let blob_service =
+                snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
+            let directory_service =
+                snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr)
+                    .await?;
+            let metadata = fs::metadata(&input).await?;
+            let node = if metadata.is_dir() {
+                ingest_path::<_, _, _, &[u8]>(&blob_service, &directory_service, &input, None)
+                    .await?
+            } else {
+                let file = File::open(&input).await?;
+                let archive_instance = Archive::new(file);
+                ingest_archive(blob_service.clone(), &directory_service, archive_instance).await?
+            };
+            let digest = match node {
+                Node::Directory { digest, .. } => digest,
+                _ => return Err("Expected a directory node".into()),
+            };
+            let mut stdout = tracing_handle.get_stdout_writer();
+            writeln!(stdout, "{digest}")?;
+        }
+        #[cfg(feature = "fuse")]
+        Commands::Mount {
+            digest,
+            dest,
+            service_addrs,
+        } => {
+            let blob_service =
+                snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
+            let directory_service =
+                snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr)
                     .await?;
 
-                    info!(listen_address=%listen_address, "starting daemon");
+            let digest = digest.parse()?;
+            let directory = directory_service
+                .get(&digest)
+                .await?
+                .ok_or("Root directory not found")?;
 
-                    router.serve_with_incoming(listener).await?;
+            let fuse_daemon = tokio::task::spawn_blocking(move || {
+                let fs = SnixStoreFs::new(blob_service, directory_service, directory, true, true);
+                info!(mount_path=?dest, "mounting");
+
+                FuseDaemon::new(fs, &dest, 4, true)
+            })
+            .await??;
+
+            // Wait for a ctrl_c and then call fuse_daemon.unmount().
+            tokio::spawn({
+                let fuse_daemon = fuse_daemon.clone();
+                async move {
+                    shutdown_signal().await;
+                    tokio::task::spawn_blocking(move || fuse_daemon.unmount()).await??;
+                    Ok::<_, std::io::Error>(())
                 }
-                Commands::Ingest {
-                    input,
-                    service_addrs,
-                } => {
-                    let blob_service = snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
-                    let directory_service =
-                        snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr).await?;
-                    let metadata = fs::metadata(&input).await?;
-                    let node = if metadata.is_dir() {
-                        ingest_path::<_, _, _, &[u8]>(&blob_service, &directory_service, &input, None)
-                            .await?
-                    } else {
-                        let file = File::open(&input).await?;
-                        let archive_instance = Archive::new(file);
-                        ingest_archive(blob_service.clone(), &directory_service, archive_instance).await?
-                    };
-                    let digest = match node {
-                        Node::Directory { digest, .. } => digest,
-                        _ => return Err("Expected a directory node".into()),
-                    };
-                    let mut stdout = tracing_handle.get_stdout_writer();
-                    writeln!(stdout, "{digest}")?;
-                }
-                #[cfg(feature = "fuse")]
-                Commands::Mount {
-                    digest,
-                    dest,
-                    service_addrs,
-                } => {
-                    let blob_service = snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
-                    let directory_service =
-                        snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr).await?;
+            });
 
-                    let digest = digest.parse()?;
-                    let directory = directory_service
-                        .get(&digest)
-                        .await?
-                        .ok_or("Root directory not found")?;
-
-                    let fuse_daemon = tokio::task::spawn_blocking(move || {
-                        let fs = SnixStoreFs::new(
-                            blob_service,
-                            directory_service,
-                            directory,
-                            true,
-                            true,
-                        );
-                        FuseDaemon::new(fs, &dest, 4, true)
-                    })
-                    .await??;
-                    tokio::spawn({
-                        let fuse_daemon = fuse_daemon.clone();
-                        async move {
-                            tokio::signal::ctrl_c().await.unwrap();
-                            tokio::task::spawn_blocking(move || fuse_daemon.unmount()).await??;
-                            Ok::<_, std::io::Error>(())
-                        }
-                    });
-                    tokio::task::spawn_blocking(move || fuse_daemon.wait()).await?;
-                }
-                #[cfg(feature = "virtiofs")]
-                Commands::Virtiofs {
-                    digest,
-                    socket,
-                    service_addrs,
-                } => {
-                    let blob_service = snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
-                    let directory_service =
-                        snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr).await?;
-
-
-                    let digest = digest.parse()?;
-                    let directory = directory_service
-                        .get(&digest)
-                        .await?
-                        .ok_or("Root directory not found")?;
-
-                    tokio::task::spawn_blocking(move || {
-                        let fs = SnixStoreFs::new(
-                            blob_service,
-                            directory_service,
-                            directory,
-                            true,
-                            true,
-                        );
-                        start_virtiofs_daemon(fs, &socket)
-                    })
-                    .await??;
-                }
-            }
-            Ok(())
+            // Wait for the server to finish, which can either happen through it
+            // being unmounted externally, or receiving a signal invoking the
+            // handler above.
+            tokio::task::spawn_blocking(move || fuse_daemon.wait()).await?;
+        }
+        #[cfg(feature = "virtiofs")]
+        Commands::Virtiofs {
+            digest,
+            socket,
+            service_addrs,
         } => {
-            if let Err(e) = tracing_handle.shutdown().await {
-                eprintln!("failed to shutdown tracing: {e}");
-            }
-            res
+            let blob_service =
+                snix_castore::blobservice::from_addr(&service_addrs.blob_service_addr).await?;
+            let directory_service =
+                snix_castore::directoryservice::from_addr(&service_addrs.directory_service_addr)
+                    .await?;
+
+            let digest = digest.parse()?;
+            let directory = directory_service
+                .get(&digest)
+                .await?
+                .ok_or("Root directory not found")?;
+
+            tokio::task::spawn_blocking(move || {
+                let fs = SnixStoreFs::new(blob_service, directory_service, directory, true, true);
+                info!(socket_path=?socket, "starting virtiofs-daemon");
+
+                start_virtiofs_daemon(fs, socket)
+            })
+            .await??;
         }
     }
+
+    Ok(tracing_handle.shutdown().await.inspect_err(|err| {
+        eprintln!("failed to shutdown tracing: {err}");
+    })?)
 }
