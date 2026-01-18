@@ -310,11 +310,13 @@ where
                     children.len() as u64
                 }
             },
-            mode: inode_data.as_fuse_type()
-                | match inode_data {
-                    InodeData::Regular(_, _, false) | InodeData::Symlink(_) => 0o444,
-                    InodeData::Regular(_, _, true) | InodeData::Directory(_) => 0o555,
-                },
+            mode: match inode_data {
+                InodeData::Regular(_, _, false) => libc::S_IFREG | 0o444,
+                // executable
+                InodeData::Regular(_, _, true) => libc::S_IFREG | 0o555,
+                InodeData::Symlink(_) => libc::S_IFLNK | 0o444,
+                InodeData::Directory(_) => libc::S_IFDIR | 0o555,
+            },
             mtime: 1, // Everything in /nix/store must have timestamp "1".
             ..Default::default()
         };
@@ -335,6 +337,21 @@ fn attr_to_fuse_entry(attr: Attr) -> Entry {
         entry_timeout: Duration::MAX,
         ..Default::default()
     }
+}
+
+/// Returns the u32 fuse type
+fn node_to_fuse_type(node: &Node) -> u32 {
+    #[allow(clippy::let_and_return)]
+    let ty = match node {
+        Node::Directory { .. } => libc::S_IFDIR,
+        Node::File { .. } => libc::S_IFREG,
+        Node::Symlink { .. } => libc::S_IFLNK,
+    };
+    // libc::S_IFDIR is u32 on Linux and u16 on MacOS
+    #[cfg(target_os = "macos")]
+    let ty = ty as u32;
+
+    ty
 }
 
 const XATTR_NAME_DIRECTORY_DIGEST: &[u8] = b"user.snix.castore.directory.digest";
@@ -531,13 +548,11 @@ where
                     io::Error::from_raw_os_error(libc::EIO)
                 })?;
 
-                let inode_data = InodeData::from_node(&node);
-
                 // obtain the inode, or allocate a new one.
                 let ino = self.get_inode_for_root_name(&name).unwrap_or_else(|| {
                     // insert the (sparse) inode data and register in
                     // self.root_nodes.
-                    let ino = self.inode_tracker.write().put(inode_data.clone());
+                    let ino = self.inode_tracker.write().put(InodeData::from_node(&node));
                     self.root_nodes.write().insert(name.clone(), ino);
                     ino
                 });
@@ -545,7 +560,7 @@ where
                 let written = add_entry(fuse_backend_rs::api::filesystem::DirEntry {
                     ino,
                     offset: offset + (i as u64) + 1,
-                    type_: inode_data.as_fuse_type(),
+                    type_: node_to_fuse_type(&node),
                     name: name.as_ref(),
                 })?;
                 // If the buffer is full, add_entry will return `Ok(0)`.
@@ -563,13 +578,11 @@ where
         for (i, (ino, child_name, child_node)) in
             children.into_iter().skip(offset as usize).enumerate()
         {
-            let inode_data = InodeData::from_node(&child_node);
-
             // the second parameter will become the "offset" parameter on the next call.
             let written = add_entry(fuse_backend_rs::api::filesystem::DirEntry {
                 ino,
                 offset: offset + (i as u64) + 1,
-                type_: inode_data.as_fuse_type(),
+                type_: node_to_fuse_type(&child_node),
                 name: child_name.as_ref(),
             })?;
             // If the buffer is full, add_entry will return `Ok(0)`.
@@ -633,7 +646,7 @@ where
                     fuse_backend_rs::api::filesystem::DirEntry {
                         ino,
                         offset: offset + (i as u64) + 1,
-                        type_: inode_data.as_fuse_type(),
+                        type_: node_to_fuse_type(&node),
                         name: name.as_ref(),
                     },
                     attr_to_fuse_entry(self.inode_data_to_attr(&inode_data, ino)),
@@ -658,7 +671,7 @@ where
                 fuse_backend_rs::api::filesystem::DirEntry {
                     ino,
                     offset: offset + (i as u64) + 1,
-                    type_: inode_data.as_fuse_type(),
+                    type_: node_to_fuse_type(&child_node),
                     name: name.as_ref(),
                 },
                 attr_to_fuse_entry(self.inode_data_to_attr(&inode_data, ino)),

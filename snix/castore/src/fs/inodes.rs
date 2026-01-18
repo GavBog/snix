@@ -34,19 +34,4 @@ impl InodeData {
             Node::Symlink { target } => Self::Symlink(target.clone().into()),
         }
     }
-
-    /// Returns the u32 fuse type
-    pub fn as_fuse_type(&self) -> u32 {
-        #[allow(clippy::let_and_return)]
-        let ty = match self {
-            InodeData::Regular(_, _, _) => libc::S_IFREG,
-            InodeData::Symlink(_) => libc::S_IFLNK,
-            InodeData::Directory(_) => libc::S_IFDIR,
-        };
-        // libc::S_IFDIR is u32 on Linux and u16 on MacOS
-        #[cfg(target_os = "macos")]
-        let ty = ty as u32;
-
-        ty
-    }
 }
