@@ -20,7 +20,7 @@ pub enum DirectoryInodeData {
 }
 
 impl InodeData {
-    /// Constructs a new InodeData by consuming a [Node].
+    /// Constructs a new InodeData from a `&Node`.
     pub fn from_node(node: &Node) -> Self {
         match node {
             Node::Directory { digest, size } => {
