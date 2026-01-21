@@ -164,6 +164,7 @@ mod test {
 
     #[rstest]
     #[case::empty(json!({}), "")]
+    #[case::empty_key(json!({"": "value"}), "")]
     #[case::null(json!({"k": null}), r#"declare k=''"#)]
     #[case::string(json!({"k":"v"}), r#"declare k='v'"#)]
     #[case::string_escaping(json!({"k":"v'"}), r#"declare k='v\''"#)]
