@@ -110,15 +110,28 @@ impl TracingHandle {
     /// If no tracing providers like otlp are attached then this will be a noop.
     ///
     /// This should only be called on a regular shutdown.
-    pub async fn shutdown(&self) -> Result<(), Error> {
+    pub async fn shutdown(&mut self) -> Result<(), Error> {
         self.flush().await?;
         #[cfg(feature = "otlp")]
         {
-            if let Some(tracer_provider) = &self.tracer_provider {
-                tracer_provider.shutdown()?;
+            use tokio::task::spawn_blocking;
+            if let Some(tracer_provider) = self.tracer_provider.take() {
+                spawn_blocking(move || tracer_provider.shutdown())
+                    .await
+                    .map_err(|err| {
+                        Error::OTEL(opentelemetry_sdk::error::OTelSdkError::InternalFailure(
+                            err.to_string(),
+                        ))
+                    })??;
             }
-            if let Some(meter_provider) = &self.meter_provider {
-                meter_provider.shutdown()?;
+            if let Some(meter_provider) = self.meter_provider.take() {
+                spawn_blocking(move || meter_provider.shutdown())
+                    .await
+                    .map_err(|err| {
+                        Error::OTEL(opentelemetry_sdk::error::OTelSdkError::InternalFailure(
+                            err.to_string(),
+                        ))
+                    })??;
             }
         }
 

@@ -48,7 +48,7 @@ struct Args {
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Args::parse();
 
-    let tracing_handle = snix_tracing::TracingBuilder::default()
+    let mut tracing_handle = snix_tracing::TracingBuilder::default()
         .handle_tracing_args(&args.tracing_args)
         .build()?;
 
