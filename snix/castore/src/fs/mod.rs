@@ -302,6 +302,16 @@ where
     /// Helper function, converting a [InodeData] to [Attr],
     /// applying uid/gid override if configured.
     fn inode_data_to_attr(&self, inode_data: &InodeData, ino: u64) -> Attr {
+        let mode = match inode_data {
+            InodeData::Regular(_, _, false) => libc::S_IFREG | 0o444,
+            // executable
+            InodeData::Regular(_, _, true) => libc::S_IFREG | 0o555,
+            InodeData::Symlink(_) => libc::S_IFLNK | 0o444,
+            InodeData::Directory(_) => libc::S_IFDIR | 0o555,
+        };
+        // libc::S_IFREG, libc::S_IFLNK & libc::S_IFDIR are u32 on Linux and u16 on MacOS
+        #[cfg(target_os = "macos")]
+        let mode = mode as u32;
         let mut attr = Attr {
             ino,
             // FUTUREWORK: play with this numbers, as it affects read sizes for client applications.
@@ -314,13 +324,7 @@ where
                     children.len() as u64
                 }
             },
-            mode: match inode_data {
-                InodeData::Regular(_, _, false) => libc::S_IFREG | 0o444,
-                // executable
-                InodeData::Regular(_, _, true) => libc::S_IFREG | 0o555,
-                InodeData::Symlink(_) => libc::S_IFLNK | 0o444,
-                InodeData::Directory(_) => libc::S_IFDIR | 0o555,
-            },
+            mode,
             mtime: 1, // Everything in /nix/store must have timestamp "1".
             ..Default::default()
         };
