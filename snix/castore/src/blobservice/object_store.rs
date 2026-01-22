@@ -18,7 +18,7 @@ use tracing::{Level, debug, instrument, trace};
 use url::Url;
 
 use crate::{
-    B3Digest, B3HashingReader, Error,
+    B3Digest, B3HashingReader,
     composition::{CompositionContext, ServiceBuilder},
     proto::{StatBlobResponse, stat_blob_response::ChunkMeta},
 };
@@ -274,7 +274,7 @@ impl TryFrom<url::Url> for ObjectStoreBlobServiceConfig {
             let s = url.to_string();
             let mut url = Url::parse(
                 s.strip_prefix("objectstore+")
-                    .ok_or(Error::StorageError("Missing objectstore uri".into()))?,
+                    .ok_or("Missing objectstore uri")?,
             )?;
             // trim the query pairs, they might contain credentials or local settings we don't want to send as-is.
             url.set_query(None);

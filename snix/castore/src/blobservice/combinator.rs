@@ -3,8 +3,8 @@ use std::sync::Arc;
 use tonic::async_trait;
 use tracing::instrument;
 
+use crate::B3Digest;
 use crate::composition::{CompositionContext, ServiceBuilder};
-use crate::{B3Digest, Error};
 
 use super::{BlobReader, BlobService, BlobWriter, ChunkedReader};
 
@@ -103,10 +103,7 @@ pub struct CombinedBlobServiceConfig {
 impl TryFrom<url::Url> for CombinedBlobServiceConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(_url: url::Url) -> Result<Self, Self::Error> {
-        Err(Error::StorageError(
-            "Instantiating a CombinedBlobService from a url is not supported".into(),
-        )
-        .into())
+        Err("Instantiating a CombinedBlobService from a url is not supported".into())
     }
 }
 

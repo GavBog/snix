@@ -553,7 +553,7 @@ where
 
             let mut stream = stream
                 .lock()
-                .map_err(|_| crate::Error::StorageError("mutex poisoned".into()))?;
+                .map_err(|_| io::Error::other("mutex poisoned"))?;
 
             while let Some((i, n)) = self.tokio_handle.block_on(async { stream.next().await }) {
                 let (name, node) = n.map_err(|e| {
@@ -636,7 +636,7 @@ where
 
             let mut stream = stream
                 .lock()
-                .map_err(|_| crate::Error::StorageError("mutex poisoned".into()))?;
+                .map_err(|_| io::Error::other("mutex poisoned"))?;
 
             while let Some((i, n)) = self.tokio_handle.block_on(async { stream.next().await }) {
                 let (name, node) = n.map_err(|e| {
@@ -829,7 +829,7 @@ where
 
         let mut blob_reader = blob_reader
             .lock()
-            .map_err(|_| crate::Error::StorageError("mutex poisoned".into()))?;
+            .map_err(|_| io::Error::other("mutex poisoned"))?;
 
         let buf = self.tokio_handle.block_on(async move {
             // seek to the offset specified, which is relative to the start of the file.

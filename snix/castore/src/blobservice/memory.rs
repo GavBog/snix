@@ -6,8 +6,8 @@ use tonic::async_trait;
 use tracing::{Level, instrument};
 
 use super::{BlobReader, BlobService, BlobWriter};
+use crate::B3Digest;
 use crate::composition::{CompositionContext, ServiceBuilder};
-use crate::{B3Digest, Error};
 
 #[derive(Clone, Default)]
 pub struct MemoryBlobService {
@@ -48,7 +48,7 @@ impl TryFrom<url::Url> for MemoryBlobServiceConfig {
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
         // memory doesn't support host or path in the URL.
         if url.has_host() || !url.path().is_empty() {
-            return Err(Error::StorageError("invalid url".to_string()).into());
+            return Err("invalid url".into());
         }
         Ok(MemoryBlobServiceConfig {})
     }
