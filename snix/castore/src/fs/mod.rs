@@ -1,7 +1,7 @@
 mod file_attr;
 mod inode_tracker;
 mod inodes;
-mod root_nodes;
+pub mod root_nodes;
 
 #[cfg(feature = "fuse")]
 pub mod fuse;
@@ -108,7 +108,12 @@ pub struct SnixStoreFs<BS, DS, RN> {
             (
                 Span,
                 Arc<
-                    Mutex<BoxStream<'static, (usize, Result<(PathComponent, Node), crate::Error>)>>,
+                    Mutex<
+                        BoxStream<
+                            'static,
+                            (usize, Result<(PathComponent, Node), root_nodes::Error>),
+                        >,
+                    >,
                 >,
             ),
         >,

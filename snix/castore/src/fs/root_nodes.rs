@@ -1,10 +1,12 @@
 use std::collections::BTreeMap;
 
 use crate::nodes::Directory;
-use crate::{Error, Node, path::PathComponent};
+use crate::{Node, path::PathComponent};
 use futures::StreamExt;
 use futures::stream::BoxStream;
 use tonic::async_trait;
+
+pub type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 /// Provides an interface for looking up root nodes  in snix-castore by given
 /// a lookup key (usually the basename), and optionally allow a listing.
