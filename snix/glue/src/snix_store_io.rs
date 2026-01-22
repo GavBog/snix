@@ -435,7 +435,8 @@ impl EvalIO for SnixStoreIO {
                         // fetch the Directory itself.
                         let directory = self
                             .tokio_handle
-                            .block_on(async { self.directory_service.as_ref().get(&digest).await })?
+                            .block_on(async { self.directory_service.as_ref().get(&digest).await })
+                            .map_err(std::io::Error::other)?
                             .ok_or_else(|| {
                                 // If we didn't get the directory node that's linked, that's a store inconsistency!
                                 error!(

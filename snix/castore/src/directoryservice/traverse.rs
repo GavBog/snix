@@ -1,5 +1,7 @@
-use crate::{Error, Node, Path, directoryservice::DirectoryService};
+use crate::{Node, Path, directoryservice::DirectoryService};
 use tracing::{instrument, warn};
+
+use super::utils::TraversalError;
 
 /// This descends from a (root) node to the given (sub)path, returning the Node
 /// at that path, or none, if there's nothing at that path.
@@ -8,7 +10,7 @@ pub async fn descend_to<DS>(
     directory_service: DS,
     root_node: Node,
     path: impl AsRef<Path> + std::fmt::Display,
-) -> Result<Option<Node>, Error>
+) -> Result<Option<Node>, TraversalError>
 where
     DS: DirectoryService,
 {
@@ -22,12 +24,16 @@ where
             }
             Node::Directory { digest, .. } => {
                 // fetch the linked node from the directory_service.
-                let directory = directory_service.get(&digest).await?.ok_or_else(|| {
-                    // If we didn't get the directory node that's linked, that's a store inconsistency, bail out!
-                    warn!(directory.digest = %digest, "directory does not exist");
+                let directory = directory_service
+                    .get(&digest)
+                    .await
+                    .map_err(|e| TraversalError::GetFailure(digest, e))?
+                    .ok_or_else(|| {
+                        // If we didn't get the directory node that's linked, that's a store inconsistency, bail out!
+                        warn!(directory.digest = %digest, "directory does not exist");
 
-                    Error::StorageError(format!("directory {digest} does not exist"))
-                })?;
+                        TraversalError::NotFound(digest)
+                    })?;
 
                 // look for the component in the [Directory].
                 if let Some((_child_name, child_node)) = directory

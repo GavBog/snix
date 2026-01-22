@@ -1,5 +1,5 @@
 use crate::composition::{Registry, ServiceBuilder};
-use crate::{B3Digest, Directory, Error};
+use crate::{B3Digest, Directory};
 
 use auto_impl::auto_impl;
 use futures::stream::BoxStream;
@@ -33,6 +33,8 @@ mod bigtable;
 
 #[cfg(feature = "cloud")]
 pub use self::bigtable::{BigtableDirectoryService, BigtableParameters};
+
+pub type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 /// The base trait all Directory services need to implement.
 /// This is a simple get and put of [Directory], returning their

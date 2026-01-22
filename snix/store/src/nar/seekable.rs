@@ -163,19 +163,17 @@ impl<B: BlobService + 'static> Reader<B> {
             while let Some(directory) = directories
                 .try_next()
                 .await
-                .map_err(|e| RenderError::StoreError(e.into()))?
+                .map_err(RenderError::DirectoryService)?
             {
-                builder.try_insert(directory).map_err(|e| {
-                    RenderError::StoreError(snix_castore::Error::StorageError(e.to_string()).into())
-                })?;
+                builder
+                    .try_insert(directory)
+                    .map_err(RenderError::OrderingError)?;
             }
 
             match builder.build() {
                 Ok(directory_graph) => Some(directory_graph),
                 Err(snix_castore::directoryservice::OrderingError::EmptySet) => None,
-                Err(e) => Err(RenderError::StoreError(
-                    snix_castore::Error::StorageError(e.to_string()).into(),
-                ))?,
+                Err(e) => Err(RenderError::OrderingError(e))?,
             }
         } else {
             // If the top-level node is a file or a symlink, just pass it on

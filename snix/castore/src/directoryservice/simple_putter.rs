@@ -2,7 +2,6 @@ use super::Directory;
 use super::DirectoryPutter;
 use super::DirectoryService;
 use crate::B3Digest;
-use crate::Error;
 use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
 use tonic::async_trait;
 use tracing::instrument;
@@ -32,11 +31,8 @@ where
 #[async_trait]
 impl<DS: DirectoryService + 'static> DirectoryPutter for SimplePutter<'_, DS> {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
-    async fn put(&mut self, directory: Directory) -> Result<(), Error> {
-        let builder = self
-            .builder
-            .as_mut()
-            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+    async fn put(&mut self, directory: Directory) -> Result<(), super::Error> {
+        let builder = self.builder.as_mut().ok_or_else(|| Error::AlreadyClosed)?;
 
         builder.try_insert(directory)?;
 
@@ -44,11 +40,8 @@ impl<DS: DirectoryService + 'static> DirectoryPutter for SimplePutter<'_, DS> {
     }
 
     #[instrument(level = "trace", skip_all, ret, err)]
-    async fn close(&mut self) -> Result<B3Digest, Error> {
-        let builder = self
-            .builder
-            .take()
-            .ok_or_else(|| Error::StorageError("already closed".to_string()))?;
+    async fn close(&mut self) -> Result<B3Digest, super::Error> {
+        let builder = self.builder.take().ok_or_else(|| Error::AlreadyClosed)?;
 
         // Retrieve the validated directories.
         let directory_graph = builder.build()?;
@@ -61,12 +54,26 @@ impl<DS: DirectoryService + 'static> DirectoryPutter for SimplePutter<'_, DS> {
             // ensure the digest the backend told us matches our expectations.
             if exp_digest != actual_digest {
                 warn!(directory.digest_expected=%exp_digest, directory.digest_actual=%actual_digest, "unexpected digest");
-                return Err(Error::StorageError(
-                    "got unexpected digest from backend during put".into(),
-                ));
+                Err(Error::UnexpectedDigest {
+                    expected: exp_digest,
+                    actual: actual_digest,
+                })?;
             }
         }
 
         Ok(root_digest)
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("DirectoryGraphBuilder already closed")]
+    AlreadyClosed,
+    #[error("got unexpected digest from backend, expected {expected}, actual {actual}")]
+    UnexpectedDigest {
+        expected: B3Digest,
+        actual: B3Digest,
+    },
+    #[error("failure during graph validation")]
+    GraphValidation(#[from] super::OrderingError),
 }

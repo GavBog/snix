@@ -106,12 +106,12 @@ impl DirectoryService for ObjectStoreDirectoryService {
     /// This is the same steps as for get_recursive anyways, so we just call get_recursive and
     /// return the first element of the stream and drop the request.
     #[instrument(level = "trace", skip_all, fields(directory.digest = %digest, instance_name = %self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, super::Error> {
         self.get_recursive(digest).take(1).next().await.transpose()
     }
 
     #[instrument(level = "trace", skip_all, fields(directory.digest = %directory.digest(), instance_name = %self.instance_name))]
-    async fn put(&self, directory: Directory) -> Result<B3Digest, crate::Error> {
+    async fn put(&self, directory: Directory) -> Result<B3Digest, super::Error> {
         // Ensure the directory doesn't contain other directory children
         if directory
             .nodes()
@@ -129,7 +129,7 @@ impl DirectoryService for ObjectStoreDirectoryService {
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'_, Result<Directory, crate::Error>> {
+    ) -> BoxStream<'_, Result<Directory, super::Error>> {
         // Check that we are not passing on bogus from the object store to the client, and that the
         // trust chain from the root digest to the leaves is intact.
         let dir_path = derive_dirs_path(&self.base_path, root_directory_digest);
@@ -207,12 +207,6 @@ enum Error {
 
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
-}
-
-impl From<Error> for crate::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 #[derive(serde::Deserialize)]
@@ -302,7 +296,7 @@ impl<'a> ObjectStoreDirectoryPutter<'a> {
 #[async_trait]
 impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
-    async fn put(&mut self, directory: Directory) -> Result<(), crate::Error> {
+    async fn put(&mut self, directory: Directory) -> Result<(), super::Error> {
         let builder = self
             .builder
             .as_mut()
@@ -314,7 +308,7 @@ impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
     }
 
     #[instrument(level = "trace", skip_all, ret, err)]
-    async fn close(&mut self) -> Result<B3Digest, crate::Error> {
+    async fn close(&mut self) -> Result<B3Digest, super::Error> {
         let builder = self
             .builder
             .take()

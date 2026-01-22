@@ -160,7 +160,7 @@ fn derive_directory_key(digest: &B3Digest) -> String {
 #[async_trait]
 impl DirectoryService for BigtableDirectoryService {
     #[instrument(skip(self, digest), err, fields(directory.digest = %digest, instance_name=%self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, super::Error> {
         let mut client = self.client.clone();
         let directory_key = derive_directory_key(digest);
 
@@ -253,7 +253,7 @@ impl DirectoryService for BigtableDirectoryService {
     }
 
     #[instrument(skip(self, directory), err, fields(directory.digest = %directory.digest(), instance_name=%self.instance_name))]
-    async fn put(&self, directory: Directory) -> Result<B3Digest, crate::Error> {
+    async fn put(&self, directory: Directory) -> Result<B3Digest, super::Error> {
         let directory_digest = directory.digest();
         let mut client = self.client.clone();
         let directory_key = derive_directory_key(&directory_digest);
@@ -308,7 +308,7 @@ impl DirectoryService for BigtableDirectoryService {
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, crate::Error>> {
+    ) -> BoxStream<'static, Result<Directory, super::Error>> {
         let svc = self.clone();
         traverse_directory(*root_directory_digest, move |digest| {
             let svc = svc.clone();
@@ -350,12 +350,6 @@ pub enum Error {
         #[source]
         source: bigtable::Error,
     },
-}
-
-impl From<Error> for crate::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 /// Represents configuration of [BigtableDirectoryService].

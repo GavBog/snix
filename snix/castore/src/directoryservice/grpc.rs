@@ -45,7 +45,7 @@ where
     T::Future: Send,
 {
     #[instrument(level = "trace", skip_all, fields(directory.digest = %digest, instance_name = %self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, super::Error> {
         // clone the client, as it takes a &mut.
         // We retrieve the first message only, then close the stream (we set recursive to false)
         match self
@@ -83,7 +83,7 @@ where
     }
 
     #[instrument(level = "trace", skip_all, fields(directory.digest = %directory.digest(), instance_name = %self.instance_name))]
-    async fn put(&self, directory: Directory) -> Result<B3Digest, crate::Error> {
+    async fn put(&self, directory: Directory) -> Result<B3Digest, super::Error> {
         let resp = self
             .grpc_client
             .clone()
@@ -104,7 +104,7 @@ where
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, crate::Error>> {
+    ) -> BoxStream<'static, Result<Directory, super::Error>> {
         let mut grpc_client = self.grpc_client.clone();
         let root_directory_digest = *root_directory_digest;
 
@@ -121,7 +121,7 @@ where
                 .map_err(Error::Tonic)?
                 .into_inner();
 
-            while let Some(proto_directory) = directories.message().await.map_err(|e| crate::Error::StorageError(e.to_string()))? {
+            while let Some(proto_directory) = directories.message().await? {
                 let directory = Directory::try_from(proto_directory).map_err(Error::DirectoryValidation)?;
                 order_validator.try_accept(&directory).map_err(Error::DirectoryOrdering)?;
 
@@ -171,7 +171,7 @@ pub struct GRPCPutter {
 #[async_trait]
 impl DirectoryPutter for GRPCPutter {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
-    async fn put(&mut self, directory: Directory) -> Result<(), crate::Error> {
+    async fn put(&mut self, directory: Directory) -> Result<(), super::Error> {
         let (_, directory_sender) = self
             .rq
             .as_ref()
@@ -188,7 +188,7 @@ impl DirectoryPutter for GRPCPutter {
 
     /// Closes the stream for sending, and returns the value.
     #[instrument(level = "trace", skip_all, ret, err)]
-    async fn close(&mut self) -> Result<B3Digest, crate::Error> {
+    async fn close(&mut self) -> Result<B3Digest, super::Error> {
         // get self.rq, and replace it with None.
         // This ensures we can only close it once.
         let (task, directory_sender) =
@@ -232,12 +232,6 @@ pub enum Error {
     TokioJoin(#[from] tokio::task::JoinError),
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
-}
-
-impl From<Error> for crate::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 #[derive(serde::Deserialize, Debug)]

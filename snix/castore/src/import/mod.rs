@@ -93,15 +93,10 @@ where
                 }
             }
             IngestionEntry::Symlink { path, target } => {
-                match bytes::Bytes::from(target).try_into() {
-                    Ok(target) => (path, Node::Symlink { target }),
-                    Err(e) => {
-                        return Err(IngestionError::UploadDirectoryError(
-                            path,
-                            crate::Error::StorageError(format!("invalid symlink target: {e}")),
-                        ));
-                    }
-                }
+                let target: crate::SymlinkTarget = bytes::Bytes::from(target)
+                    .try_into()
+                    .map_err(|err| IngestionError::InvalidSymlinkTarget(path.clone(), err))?;
+                (path, Node::Symlink { target })
             }
             IngestionEntry::Regular {
                 path,
@@ -134,12 +129,7 @@ where
                 .entry_ref(parent)
                 .or_default()
                 .add(name, node)
-                .map_err(|e| {
-                    IngestionError::UploadDirectoryError(
-                        path,
-                        crate::Error::StorageError(e.to_string()),
-                    )
-                })?;
+                .map_err(|e| IngestionError::UploadDirectoryError(path, Box::new(e)))?;
         }
     };
 

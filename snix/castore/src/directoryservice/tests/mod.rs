@@ -2,7 +2,7 @@
 //! We use [rstest] and [rstest_reuse] to provide all services we want to test
 //! against, and then apply this template to all test functions.
 
-use futures::StreamExt;
+use futures::TryStreamExt;
 use rstest::*;
 use rstest_reuse::{self, *};
 
@@ -33,15 +33,23 @@ pub fn directory_services(#[case] directory_service: impl DirectoryService) {}
 #[tokio::test]
 async fn test_non_exist(directory_service: impl DirectoryService) {
     // single get
-    assert_eq!(Ok(None), directory_service.get(&DIRECTORY_A.digest()).await);
+
+    assert_eq!(
+        None,
+        directory_service
+            .get(&DIRECTORY_A.digest())
+            .await
+            .expect("get to succeed")
+    );
 
     // recursive get
     assert_eq!(
-        Vec::<Result<Directory, crate::Error>>::new(),
+        Vec::<Directory>::new(),
         directory_service
             .get_recursive(&DIRECTORY_A.digest())
-            .collect::<Vec<Result<Directory, crate::Error>>>()
+            .try_collect::<Vec<_>>()
             .await
+            .expect("get_recursive to succeed")
     );
 }
 
@@ -51,22 +59,29 @@ async fn test_non_exist(directory_service: impl DirectoryService) {
 #[tokio::test]
 async fn put_get(directory_service: impl DirectoryService) {
     // Insert a Directory.
-    let digest = directory_service.put(DIRECTORY_A.clone()).await.unwrap();
+    let digest = directory_service
+        .put(DIRECTORY_A.clone())
+        .await
+        .expect("put to succeed");
     assert_eq!(DIRECTORY_A.digest(), digest, "returned digest must match");
 
     // single get
     assert_eq!(
         Some(DIRECTORY_A.clone()),
-        directory_service.get(&DIRECTORY_A.digest()).await.unwrap()
+        directory_service
+            .get(&DIRECTORY_A.digest())
+            .await
+            .expect("get to succeed")
     );
 
     // recursive get
     assert_eq!(
-        vec![Ok(DIRECTORY_A.clone())],
+        vec![DIRECTORY_A.clone()],
         directory_service
             .get_recursive(&DIRECTORY_A.digest())
-            .collect::<Vec<_>>()
+            .try_collect::<Vec<_>>()
             .await
+            .expect("get_recursive to succeed")
     );
 }
 
@@ -78,9 +93,15 @@ async fn put_get(directory_service: impl DirectoryService) {
 async fn put_get_multiple_success(directory_service: impl DirectoryService) {
     // Insert a Directory closure.
     let mut handle = directory_service.put_multiple_start();
-    handle.put(DIRECTORY_A.clone()).await.unwrap();
-    handle.put(DIRECTORY_C.clone()).await.unwrap();
-    let root_digest = handle.close().await.unwrap();
+    handle
+        .put(DIRECTORY_A.clone())
+        .await
+        .expect("put to succeed");
+    handle
+        .put(DIRECTORY_C.clone())
+        .await
+        .expect("put to succeed");
+    let root_digest = handle.close().await.expect("close to succeed");
     assert_eq!(
         DIRECTORY_C.digest(),
         root_digest,
@@ -95,11 +116,12 @@ async fn put_get_multiple_success(directory_service: impl DirectoryService) {
 
     // Get the closure. Ensure it's sent from the root to the leaves.
     assert_eq!(
-        vec![Ok(DIRECTORY_C.clone()), Ok(DIRECTORY_A.clone())],
+        vec![DIRECTORY_C.clone(), DIRECTORY_A.clone()],
         directory_service
             .get_recursive(&DIRECTORY_C.digest())
-            .collect::<Vec<_>>()
+            .try_collect::<Vec<_>>()
             .await
+            .expect("get_recursive to succeed")
     )
 }
 
@@ -110,10 +132,19 @@ async fn put_get_multiple_success(directory_service: impl DirectoryService) {
 async fn put_get_multiple_dedup(directory_service: impl DirectoryService) {
     // Insert a Directory closure.
     let mut handle = directory_service.put_multiple_start();
-    handle.put(DIRECTORY_A.clone()).await.unwrap();
-    handle.put(DIRECTORY_A.clone()).await.unwrap();
-    handle.put(DIRECTORY_C.clone()).await.unwrap();
-    let root_digest = handle.close().await.unwrap();
+    handle
+        .put(DIRECTORY_A.clone())
+        .await
+        .expect("put to succeed");
+    handle
+        .put(DIRECTORY_A.clone())
+        .await
+        .expect("put to succeed");
+    handle
+        .put(DIRECTORY_C.clone())
+        .await
+        .expect("put to succeed");
+    let root_digest = handle.close().await.expect("close to succeed");
     assert_eq!(
         DIRECTORY_C.digest(),
         root_digest,
@@ -122,11 +153,12 @@ async fn put_get_multiple_dedup(directory_service: impl DirectoryService) {
 
     // Ensure the returned closure only contains `DIRECTORY_A` once.
     assert_eq!(
-        vec![Ok(DIRECTORY_C.clone()), Ok(DIRECTORY_A.clone())],
+        vec![DIRECTORY_C.clone(), DIRECTORY_A.clone()],
         directory_service
             .get_recursive(&DIRECTORY_C.digest())
-            .collect::<Vec<_>>()
+            .try_collect::<Vec<_>>()
             .await
+            .expect("get_recursive to succeed")
     )
 }
 
@@ -150,19 +182,20 @@ async fn put_get_foo(directory_service: impl DirectoryService) {
     // (there are multiple valid possibilities)
     let retrieved_closure = directory_service
         .get_recursive(&DIRECTORY_D.digest())
-        .collect::<Vec<_>>()
-        .await;
+        .try_collect::<Vec<_>>()
+        .await
+        .expect("get_recursive to succeed");
 
     let valid_closures = [
         vec![
-            Ok(DIRECTORY_D.clone()),
-            Ok(DIRECTORY_B.clone()),
-            Ok(DIRECTORY_A.clone()),
+            DIRECTORY_D.clone(),
+            DIRECTORY_B.clone(),
+            DIRECTORY_A.clone(),
         ],
         vec![
-            Ok(DIRECTORY_D.clone()),
-            Ok(DIRECTORY_A.clone()),
-            Ok(DIRECTORY_B.clone()),
+            DIRECTORY_D.clone(),
+            DIRECTORY_A.clone(),
+            DIRECTORY_B.clone(),
         ],
     ];
     if !valid_closures.contains(&retrieved_closure) {
@@ -177,9 +210,18 @@ async fn put_get_foo(directory_service: impl DirectoryService) {
 async fn upload_reject_unconnected(directory_service: impl DirectoryService) {
     let mut handle = directory_service.put_multiple_start();
 
-    handle.put(DIRECTORY_A.clone()).await.unwrap();
-    handle.put(DIRECTORY_C.clone()).await.unwrap();
-    handle.put(DIRECTORY_B.clone()).await.unwrap();
+    handle
+        .put(DIRECTORY_A.clone())
+        .await
+        .expect("put to succeed");
+    handle
+        .put(DIRECTORY_C.clone())
+        .await
+        .expect("put to succeed");
+    handle
+        .put(DIRECTORY_B.clone())
+        .await
+        .expect("put to succeed");
 
     assert!(
         handle.close().await.is_err(),

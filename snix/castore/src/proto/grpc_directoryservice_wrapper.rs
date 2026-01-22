@@ -96,7 +96,10 @@ where
                 .try_accept(&directory)
                 .map_err(|e| tonic::Status::new(tonic::Code::Internal, e.to_string()))?;
 
-            directory_putter.put(directory).await?;
+            directory_putter
+                .put(directory)
+                .await
+                .map_err(|e| tonic::Status::new(tonic::Code::Internal, e.to_string()))?;
         }
 
         // Finalize validator, checks connectivity.
@@ -106,7 +109,11 @@ where
 
         Ok(Response::new(proto::PutDirectoryResponse {
             // Properly close the directory putter, returning any potential errors.
-            root_digest: directory_putter.close().await?.into(),
+            root_digest: directory_putter
+                .close()
+                .await
+                .map_err(|e| tonic::Status::new(tonic::Code::Internal, e.to_string()))?
+                .into(),
         }))
     }
 }
@@ -116,7 +123,7 @@ where
 fn get_recursive_owned<S>(
     svc: std::sync::Arc<S>,
     root_directory_digest: B3Digest,
-) -> BoxStream<'static, Result<crate::Directory, crate::Error>>
+) -> BoxStream<'static, Result<crate::Directory, crate::directoryservice::Error>>
 where
     S: DirectoryService + 'static,
 {

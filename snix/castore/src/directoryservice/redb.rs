@@ -144,7 +144,7 @@ fn create_schema(db: &redb::Database) -> Result<(), Error> {
 #[async_trait]
 impl DirectoryService for RedbDirectoryService {
     #[instrument(skip(self, digest), fields(directory.digest = %digest, instance_name = %self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, super::Error> {
         let db = self.db.clone();
         let digest = *digest;
         // Retrieves the protobuf-encoded Directory for the corresponding digest.
@@ -179,7 +179,7 @@ impl DirectoryService for RedbDirectoryService {
     }
 
     #[instrument(skip(self, directory), fields(directory.digest = %directory.digest(), instance_name = %self.instance_name))]
-    async fn put(&self, directory: Directory) -> Result<B3Digest, crate::Error> {
+    async fn put(&self, directory: Directory) -> Result<B3Digest, super::Error> {
         let db = self.db.clone();
         let digest = tokio::task::spawn_blocking(move || -> Result<_, Error> {
             let digest = directory.digest();
@@ -206,7 +206,7 @@ impl DirectoryService for RedbDirectoryService {
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'static, Result<Directory, crate::Error>> {
+    ) -> BoxStream<'static, Result<Directory, super::Error>> {
         // FUTUREWORK: Ideally we should have all of the directory traversing happen in a single
         // redb transaction to avoid constantly closing and opening new transactions for the
         // database.
@@ -239,7 +239,7 @@ pub struct RedbDirectoryPutter<'a> {
 #[async_trait]
 impl DirectoryPutter for RedbDirectoryPutter<'_> {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
-    async fn put(&mut self, directory: Directory) -> Result<(), crate::Error> {
+    async fn put(&mut self, directory: Directory) -> Result<(), super::Error> {
         let builder = self
             .builder
             .as_mut()
@@ -253,7 +253,7 @@ impl DirectoryPutter for RedbDirectoryPutter<'_> {
     }
 
     #[instrument(level = "trace", skip_all, ret, err)]
-    async fn close(&mut self) -> Result<B3Digest, crate::Error> {
+    async fn close(&mut self) -> Result<B3Digest, super::Error> {
         let builder = self
             .builder
             .take()
@@ -331,12 +331,6 @@ pub enum Error {
     TokioJoin(#[from] tokio::task::JoinError),
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
-}
-
-impl From<Error> for crate::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 #[derive(Clone, Default, serde::Deserialize)]

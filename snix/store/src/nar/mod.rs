@@ -1,4 +1,5 @@
 use snix_castore::B3Digest;
+use snix_castore::directoryservice::OrderingError;
 use tonic::async_trait;
 
 mod hashing_reader;
@@ -39,11 +40,17 @@ where
 /// Errors that can encounter while rendering NARs.
 #[derive(Debug, thiserror::Error)]
 pub enum RenderError {
-    #[error("failure talking to a backing store client: {0}")]
-    StoreError(#[source] std::io::Error),
+    #[error("failure talking to a backing directory service")]
+    DirectoryService(#[source] snix_castore::directoryservice::Error),
+
+    #[error("failure talking to a backing blob service")]
+    BlobService(#[source] std::io::Error),
 
     #[error("unable to find directory {0}, referred from {1:?}")]
     DirectoryNotFound(B3Digest, bytes::Bytes),
+
+    #[error("Invalid Ordering")]
+    OrderingError(#[source] OrderingError),
 
     #[error("unable to find blob {0}, referred from {1:?}")]
     BlobNotFound(B3Digest, bytes::Bytes),

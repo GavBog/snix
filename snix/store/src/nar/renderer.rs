@@ -130,7 +130,7 @@ where
             let mut blob_reader = match blob_service
                 .open_read(digest)
                 .await
-                .map_err(RenderError::StoreError)?
+                .map_err(RenderError::BlobService)?
             {
                 Some(blob_reader) => Ok(BufReader::new(blob_reader)),
                 None => Err(RenderError::NARWriterError(io::Error::new(
@@ -149,7 +149,7 @@ where
             match directory_service
                 .get(digest)
                 .await
-                .map_err(|e| RenderError::StoreError(e.into()))?
+                .map_err(RenderError::DirectoryService)?
             {
                 // if it's None, that's an error!
                 None => Err(RenderError::DirectoryNotFound(

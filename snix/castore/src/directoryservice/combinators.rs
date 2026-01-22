@@ -42,7 +42,7 @@ where
     DS2: DirectoryService + Clone + 'static,
 {
     #[instrument(skip(self, digest), fields(directory.digest = %digest, instance_name = %self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, crate::Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, super::Error> {
         // check near
         if let Some(directory) = self.near.get(digest).await.map_err(Error::NearGet)? {
             trace!("serving from cache");
@@ -84,7 +84,7 @@ where
     }
 
     #[instrument(skip_all, fields(instance_name = %self.instance_name))]
-    async fn put(&self, _directory: Directory) -> Result<B3Digest, crate::Error> {
+    async fn put(&self, _directory: Directory) -> Result<B3Digest, super::Error> {
         Err(Error::Unimplemented.into())
     }
 
@@ -92,7 +92,7 @@ where
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'_, Result<Directory, crate::Error>> {
+    ) -> BoxStream<'_, Result<Directory, super::Error>> {
         let near = &self.near;
         let far = &self.far;
         let digest = *root_directory_digest;
@@ -152,20 +152,14 @@ pub enum Error {
     SerdeQS(#[from] serde_qs::Error),
 
     #[error("getting from near: {0}")]
-    NearGet(#[source] crate::Error),
+    NearGet(#[source] super::Error),
     #[error("putting into near: {0}")]
-    NearPut(#[source] crate::Error),
+    NearPut(#[source] super::Error),
     #[error("getting from far: {0}")]
-    FarGet(#[source] crate::Error),
+    FarGet(#[source] super::Error),
 
     #[error("puts are unimplemented")]
     Unimplemented,
-}
-
-impl From<Error> for crate::Error {
-    fn from(value: Error) -> Self {
-        Self::StorageError(value.to_string())
-    }
 }
 
 #[derive(serde::Deserialize, Debug)]

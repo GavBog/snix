@@ -190,7 +190,11 @@ where
             InodeData::Directory(DirectoryInodeData::Sparse(parent_digest, _)) => {
                 let directory = self
                     .tokio_handle
-                    .block_on(async { self.directory_service.get(&parent_digest).await })?
+                    .block_on(async { self.directory_service.get(&parent_digest).await })
+                    .map_err(|err| {
+                        warn!(%err, "error from directory service");
+                        io::Error::other(err)
+                    })?
                     .ok_or_else(|| {
                         warn!(directory.digest=%parent_digest, "directory not found");
                         // If the Directory can't be found, this is a hole, bail out.
