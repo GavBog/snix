@@ -55,7 +55,7 @@ tower-http = { workspace = true, features = ["trace"] }
 snix-castore = { path = "../castore" }
 url.workspace = true
 walkdir.workspace = true
-reqwest = { workspace = true, features = ["rustls-tls-native-roots", "stream"] }
+reqwest = { workspace = true, features = ["stream"] }
 reqwest-middleware.workspace = true
 lru.workspace = true
 parking_lot.workspace = true

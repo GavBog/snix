@@ -2848,7 +2848,7 @@ dependencies = [
  "percent-encoding",
  "quick-xml",
  "rand 0.8.5",
- "reqwest",
+ "reqwest 0.12.24",
  "ring",
  "rustls-pemfile",
  "serde",
@@ -2924,7 +2924,7 @@ dependencies = [
  "bytes",
  "http 1.4.0",
  "opentelemetry",
- "reqwest",
+ "reqwest 0.12.24",
  "tracing",
 ]
 
@@ -2942,7 +2942,7 @@ dependencies = [
  "opentelemetry-proto",
  "opentelemetry_sdk",
  "prost",
- "reqwest",
+ "reqwest 0.12.24",
  "thiserror 2.0.17",
  "tokio",
  "tonic 0.12.3",
@@ -3718,25 +3718,56 @@ dependencies = [
 ]
 
 [[package]]
-name = "reqwest-middleware"
-version = "0.4.2"
+name = "reqwest"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57f17d28a6e6acfe1733fe24bcd30774d13bffa4b8a22535b4c8c98423088d4e"
+checksum = "04e9018c9d814e5f30cc16a0f03271aeab3571e609612d9fe78c1aa8d11c2f62"
+dependencies = [
+ "base64",
+ "bytes",
+ "futures-core",
+ "futures-util",
+ "http 1.4.0",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "js-sys",
+ "log",
+ "percent-encoding",
+ "pin-project-lite",
+ "sync_wrapper",
+ "tokio",
+ "tokio-util",
+ "tower 0.5.2",
+ "tower-http",
+ "tower-service",
+ "url",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "wasm-streams",
+ "web-sys",
+]
+
+[[package]]
+name = "reqwest-middleware"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f42e2f48018a33d679ee7f477a446b697663a14e91ab0b3a0206792a22dd3aa8"
 dependencies = [
  "anyhow",
  "async-trait",
  "http 1.4.0",
- "reqwest",
- "serde",
- "thiserror 1.0.69",
+ "reqwest 0.13.1",
+ "thiserror 2.0.17",
  "tower-service",
 ]
 
 [[package]]
 name = "reqwest-tracing"
-version = "0.5.8"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d70ea85f131b2ee9874f0b160ac5976f8af75f3c9badfe0d955880257d10bd83"
+checksum = "3bce5a3624f12d0f1eb94d352abdef80902e29a612c40d26147f0e236d049352"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3744,7 +3775,7 @@ dependencies = [
  "http 1.4.0",
  "matchit 0.8.4",
  "opentelemetry",
- "reqwest",
+ "reqwest 0.13.1",
  "reqwest-middleware",
  "tracing",
  "tracing-opentelemetry",
@@ -4650,7 +4681,7 @@ dependencies = [
  "pin-project",
  "pretty_assertions",
  "regex",
- "reqwest",
+ "reqwest 0.13.1",
  "rstest",
  "serde",
  "serde_json",
@@ -4710,7 +4741,7 @@ dependencies = [
  "prost",
  "prost-build",
  "redb",
- "reqwest",
+ "reqwest 0.13.1",
  "reqwest-middleware",
  "rstest",
  "rstest_reuse",
@@ -5493,9 +5524,9 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.6.7"
+version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cf146f99d442e8e68e585f5d798ccd3cad9a7835b917e09728880a862706456"
+checksum = "d4e6559d53cc268e5031cd8429d05415bc4cb4aefc4aa5d6cc35fbf5b924a1f8"
 dependencies = [
  "async-compression",
  "bitflags 2.10.0",

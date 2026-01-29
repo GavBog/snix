@@ -11515,7 +11515,7 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest";
+            packageId = "reqwest 0.12.24";
             optional = true;
             usesDefaultFeatures = false;
             features = [
@@ -11872,7 +11872,7 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest";
+            packageId = "reqwest 0.12.24";
             optional = true;
             usesDefaultFeatures = false;
             features = [ "blocking" ];
@@ -11963,7 +11963,7 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest";
+            packageId = "reqwest 0.12.24";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -15131,7 +15131,7 @@ rec {
         };
         resolvedDefaultFeatures = [ "default" ];
       };
-      "reqwest" = rec {
+      "reqwest 0.12.24" = rec {
         crateName = "reqwest";
         version = "0.12.24";
         edition = "2021";
@@ -15606,11 +15606,366 @@ rec {
           "stream"
         ];
       };
+      "reqwest 0.13.1" = rec {
+        crateName = "reqwest";
+        version = "0.13.1";
+        edition = "2021";
+        sha256 = "0qig3k8sh6lcwygjsq89wrqkbaxff4rg180nrhq5ykl1kn603s84";
+        authors = [
+          "Sean McArthur <sean@seanmonstar.com>"
+        ];
+        dependencies = [
+          {
+            name = "base64";
+            packageId = "base64";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "futures-core";
+            packageId = "futures-core";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+          }
+          {
+            name = "http-body-util";
+            packageId = "http-body-util";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+          }
+          {
+            name = "hyper";
+            packageId = "hyper";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [
+              "http1"
+              "client"
+            ];
+          }
+          {
+            name = "hyper-util";
+            packageId = "hyper-util";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [
+              "http1"
+              "client"
+              "client-legacy"
+              "client-proxy"
+              "tokio"
+            ];
+          }
+          {
+            name = "js-sys";
+            packageId = "js-sys";
+            target = { target, features }: ("wasm32" == target."arch" or null);
+          }
+          {
+            name = "log";
+            packageId = "log";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+          }
+          {
+            name = "percent-encoding";
+            packageId = "percent-encoding";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+          }
+          {
+            name = "sync_wrapper";
+            packageId = "sync_wrapper";
+            features = [ "futures" ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            usesDefaultFeatures = false;
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [
+              "net"
+              "time"
+            ];
+          }
+          {
+            name = "tokio-util";
+            packageId = "tokio-util";
+            optional = true;
+            usesDefaultFeatures = false;
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [ "io" ];
+          }
+          {
+            name = "tower";
+            packageId = "tower 0.5.2";
+            usesDefaultFeatures = false;
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [
+              "retry"
+              "timeout"
+              "util"
+            ];
+          }
+          {
+            name = "tower-http";
+            packageId = "tower-http";
+            usesDefaultFeatures = false;
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [ "follow-redirect" ];
+          }
+          {
+            name = "tower-service";
+            packageId = "tower-service";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+          }
+          {
+            name = "url";
+            packageId = "url";
+          }
+          {
+            name = "wasm-bindgen";
+            packageId = "wasm-bindgen";
+            target = { target, features }: ("wasm32" == target."arch" or null);
+          }
+          {
+            name = "wasm-bindgen-futures";
+            packageId = "wasm-bindgen-futures";
+            target = { target, features }: ("wasm32" == target."arch" or null);
+          }
+          {
+            name = "wasm-streams";
+            packageId = "wasm-streams";
+            optional = true;
+            target = { target, features }: ("wasm32" == target."arch" or null);
+          }
+          {
+            name = "web-sys";
+            packageId = "web-sys";
+            target = { target, features }: ("wasm32" == target."arch" or null);
+            features = [
+              "AbortController"
+              "AbortSignal"
+              "Headers"
+              "Request"
+              "RequestInit"
+              "RequestMode"
+              "Response"
+              "Window"
+              "FormData"
+              "Blob"
+              "BlobPropertyBag"
+              "ServiceWorkerGlobalScope"
+              "RequestCredentials"
+              "File"
+              "ReadableStream"
+              "RequestCache"
+            ];
+          }
+        ];
+        devDependencies = [
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [
+              "std"
+              "alloc"
+            ];
+          }
+          {
+            name = "hyper";
+            packageId = "hyper";
+            usesDefaultFeatures = false;
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [
+              "http1"
+              "http2"
+              "client"
+              "server"
+            ];
+          }
+          {
+            name = "hyper-util";
+            packageId = "hyper-util";
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [
+              "http1"
+              "http2"
+              "client"
+              "client-legacy"
+              "server-auto"
+              "server-graceful"
+              "tokio"
+            ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            usesDefaultFeatures = false;
+            target = { target, features }: (!("wasm32" == target."arch" or null));
+            features = [
+              "macros"
+              "rt-multi-thread"
+            ];
+          }
+          {
+            name = "tower";
+            packageId = "tower 0.5.2";
+            usesDefaultFeatures = false;
+            features = [ "limit" ];
+          }
+          {
+            name = "wasm-bindgen";
+            packageId = "wasm-bindgen";
+            target = { target, features }: ("wasm32" == target."arch" or null);
+            features = [ "serde-serialize" ];
+          }
+        ];
+        features = {
+          "__native-tls" = [
+            "dep:hyper-tls"
+            "dep:native-tls-crate"
+            "__tls"
+            "dep:tokio-native-tls"
+          ];
+          "__native-tls-alpn" = [
+            "native-tls-crate?/alpn"
+            "hyper-tls?/alpn"
+          ];
+          "__rustls" = [
+            "dep:hyper-rustls"
+            "dep:tokio-rustls"
+            "dep:rustls"
+            "__tls"
+          ];
+          "__rustls-aws-lc-rs" = [
+            "hyper-rustls?/aws-lc-rs"
+            "tokio-rustls?/aws-lc-rs"
+            "rustls?/aws-lc-rs"
+            "quinn?/rustls-aws-lc-rs"
+          ];
+          "__tls" = [
+            "dep:rustls-pki-types"
+            "tokio/io-util"
+          ];
+          "blocking" = [
+            "dep:futures-channel"
+            "futures-channel?/sink"
+            "dep:futures-util"
+            "futures-util?/io"
+            "futures-util?/sink"
+            "tokio/sync"
+          ];
+          "brotli" = [ "tower-http/decompression-br" ];
+          "charset" = [
+            "dep:encoding_rs"
+            "dep:mime"
+          ];
+          "cookies" = [
+            "dep:cookie_crate"
+            "dep:cookie_store"
+          ];
+          "default" = [
+            "default-tls"
+            "charset"
+            "http2"
+            "system-proxy"
+          ];
+          "default-tls" = [ "rustls" ];
+          "deflate" = [ "tower-http/decompression-deflate" ];
+          "form" = [
+            "dep:serde"
+            "dep:serde_urlencoded"
+          ];
+          "gzip" = [ "tower-http/decompression-gzip" ];
+          "hickory-dns" = [
+            "dep:hickory-resolver"
+            "dep:once_cell"
+          ];
+          "http2" = [
+            "dep:h2"
+            "hyper/http2"
+            "hyper-util/http2"
+            "hyper-rustls?/http2"
+          ];
+          "http3" = [
+            "rustls"
+            "dep:h3"
+            "dep:h3-quinn"
+            "dep:quinn"
+            "tokio/macros"
+          ];
+          "json" = [
+            "dep:serde"
+            "dep:serde_json"
+          ];
+          "multipart" = [
+            "dep:mime_guess"
+            "dep:futures-util"
+          ];
+          "native-tls" = [
+            "__native-tls"
+            "__native-tls-alpn"
+          ];
+          "native-tls-no-alpn" = [ "__native-tls" ];
+          "native-tls-vendored" = [
+            "__native-tls"
+            "native-tls-crate?/vendored"
+            "__native-tls-alpn"
+          ];
+          "native-tls-vendored-no-alpn" = [
+            "__native-tls"
+            "native-tls-crate?/vendored"
+          ];
+          "query" = [
+            "dep:serde"
+            "dep:serde_urlencoded"
+          ];
+          "rustls" = [
+            "__rustls-aws-lc-rs"
+            "dep:rustls-platform-verifier"
+            "__rustls"
+          ];
+          "rustls-native-certs" = [ "dep:rustls-native-certs" ];
+          "rustls-no-provider" = [
+            "dep:rustls-platform-verifier"
+            "__rustls"
+          ];
+          "stream" = [
+            "tokio/fs"
+            "dep:futures-util"
+            "dep:tokio-util"
+            "dep:wasm-streams"
+          ];
+          "system-proxy" = [ "hyper-util/client-proxy-system" ];
+          "webpki-roots" = [ "dep:webpki-roots" ];
+          "zstd" = [ "tower-http/decompression-zstd" ];
+        };
+        resolvedDefaultFeatures = [ "stream" ];
+      };
       "reqwest-middleware" = rec {
         crateName = "reqwest-middleware";
-        version = "0.4.2";
+        version = "0.5.0";
         edition = "2018";
-        sha256 = "0kld10iq9jf8nhsjb8mqlkzkplbl0z9vq97y6cbzxb76lql7vwap";
+        sha256 = "1a1svli2ly8608x0pawi9shn6xk9dd27livzxrwxccwa0542ybpl";
         libName = "reqwest_middleware";
         authors = [
           "Rodrigo Gryzinski <rodrigo.gryzinski@truelayer.com>"
@@ -15630,16 +15985,12 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest";
+            packageId = "reqwest 0.13.1";
             usesDefaultFeatures = false;
           }
           {
-            name = "serde";
-            packageId = "serde";
-          }
-          {
             name = "thiserror";
-            packageId = "thiserror 1.0.69";
+            packageId = "thiserror 2.0.17";
           }
           {
             name = "tower-service";
@@ -15649,23 +16000,34 @@ rec {
         devDependencies = [
           {
             name = "reqwest";
-            packageId = "reqwest";
-            features = [ "rustls-tls" ];
+            packageId = "reqwest 0.13.1";
+            features = [ "rustls" ];
           }
         ];
         features = {
           "charset" = [ "reqwest/charset" ];
+          "form" = [
+            "reqwest/form"
+            "dep:serde"
+          ];
           "http2" = [ "reqwest/http2" ];
-          "json" = [ "reqwest/json" ];
+          "json" = [
+            "reqwest/json"
+            "dep:serde"
+          ];
           "multipart" = [ "reqwest/multipart" ];
-          "rustls-tls" = [ "reqwest/rustls-tls" ];
+          "query" = [
+            "reqwest/query"
+            "dep:serde"
+          ];
+          "rustls" = [ "reqwest/rustls" ];
         };
       };
       "reqwest-tracing" = rec {
         crateName = "reqwest-tracing";
-        version = "0.5.8";
+        version = "0.6.0";
         edition = "2018";
-        sha256 = "10xx21yjb02qjl6zxbcv7igzg2kgjz2hl5hb9y3yjbhv2dgsh3np";
+        sha256 = "0llk0inj63kz2hk0vi0jlqljx440xyyjldadp4g0ybgi4hv5mkiv";
         libName = "reqwest_tracing";
         authors = [
           "Rodrigo Gryzinski <rodrigo.gryzinski@truelayer.com>"
@@ -15701,7 +16063,7 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest";
+            packageId = "reqwest 0.13.1";
             usesDefaultFeatures = false;
           }
           {
@@ -15722,8 +16084,8 @@ rec {
         devDependencies = [
           {
             name = "reqwest";
-            packageId = "reqwest";
-            features = [ "rustls-tls" ];
+            packageId = "reqwest 0.13.1";
+            features = [ "rustls" ];
           }
         ];
         features = {
@@ -19982,9 +20344,8 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest";
+            packageId = "reqwest 0.13.1";
             usesDefaultFeatures = false;
-            features = [ "rustls-tls-native-roots" ];
           }
           {
             name = "serde";
@@ -20251,12 +20612,9 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest";
+            packageId = "reqwest 0.13.1";
             usesDefaultFeatures = false;
-            features = [
-              "rustls-tls-native-roots"
-              "stream"
-            ];
+            features = [ "stream" ];
           }
           {
             name = "reqwest-middleware";
@@ -24057,9 +24415,9 @@ rec {
       };
       "tower-http" = rec {
         crateName = "tower-http";
-        version = "0.6.7";
+        version = "0.6.8";
         edition = "2018";
-        sha256 = "0mk4f1iai048f84px4avhfkxkjnkrjcdgxc5wml8wbj4kpwldwcw";
+        sha256 = "1y514jwzbyrmrkbaajpwmss4rg0mak82k16d6588w9ncaffmbrnl";
         libName = "tower_http";
         authors = [
           "Tower Maintainers <team@tower-rs.com>"

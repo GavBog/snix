@@ -19,7 +19,7 @@ futures.workspace = true
 nix-compat = { path = "../nix-compat", features = ["flakeref"] }
 pin-project.workspace = true
 regex.workspace = true
-reqwest = { workspace = true, features = ["rustls-tls-native-roots"] }
+reqwest = { workspace = true }
 snix-build = { path = "../build", default-features = false, features = [] }
 snix-eval = { path = "../eval" }
 snix-castore = { path = "../castore" }
