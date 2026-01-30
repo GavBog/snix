@@ -3227,7 +3227,7 @@ rec {
         dependencies = [
           {
             name = "heck";
-            packageId = "heck 0.5.0";
+            packageId = "heck";
           }
           {
             name = "proc-macro2";
@@ -4739,18 +4739,6 @@ rec {
           "David Tolnay <dtolnay@gmail.com>"
         ];
 
-      };
-      "doc-comment" = rec {
-        crateName = "doc-comment";
-        version = "0.3.4";
-        edition = "2015";
-        sha256 = "1j8jbrw8335hciwn3h2idkfc3kmx3pfn0sxcwjw1m8lmn6w5a2bq";
-        libName = "doc_comment";
-        authors = [
-          "Guillaume Gomez <guillaume1.gomez@gmail.com>"
-        ];
-        features = {
-        };
       };
       "document-features" = rec {
         crateName = "document-features";
@@ -7168,21 +7156,7 @@ rec {
         ];
 
       };
-      "heck 0.4.1" = rec {
-        crateName = "heck";
-        version = "0.4.1";
-        edition = "2018";
-        sha256 = "1a7mqsnycv5z4z5vnv1k34548jzmc0ajic7c1j8jsaspnhw5ql4m";
-        authors = [
-          "Without Boats <woboats@gmail.com>"
-        ];
-        features = {
-          "unicode" = [ "unicode-segmentation" ];
-          "unicode-segmentation" = [ "dep:unicode-segmentation" ];
-        };
-        resolvedDefaultFeatures = [ "default" ];
-      };
-      "heck 0.5.0" = rec {
+      "heck" = rec {
         crateName = "heck";
         version = "0.5.0";
         edition = "2021";
@@ -8810,34 +8784,6 @@ rec {
         version = "0.12.1";
         edition = "2018";
         sha256 = "0s95jbb3ndj1lvfxyq5wanc0fm0r6hg6q4ngb92qlfdxvci10ads";
-        authors = [
-          "bluss"
-        ];
-        dependencies = [
-          {
-            name = "either";
-            packageId = "either";
-            usesDefaultFeatures = false;
-          }
-        ];
-        features = {
-          "default" = [ "use_std" ];
-          "use_std" = [
-            "use_alloc"
-            "either/use_std"
-          ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "use_alloc"
-          "use_std"
-        ];
-      };
-      "itertools 0.13.0" = rec {
-        crateName = "itertools";
-        version = "0.13.0";
-        edition = "2018";
-        sha256 = "11hiy3qzl643zcigknclh446qb9zlg4dpdzfkjaa9q9fqpgyfgj1";
         authors = [
           "bluss"
         ];
@@ -11437,9 +11383,9 @@ rec {
       };
       "object_store" = rec {
         crateName = "object_store";
-        version = "0.10.2";
+        version = "0.12.5";
         edition = "2021";
-        sha256 = "1wz3m20hqs3v93dyxcqy7qpsbd4rqp6050hy49wcw5f740l4bnp6";
+        sha256 = "001a3rdd57fivhp2ym2w6fdk3x7cm1yba459r07b1jpc1bsgzyzv";
         dependencies = [
           {
             name = "async-trait";
@@ -11463,8 +11409,29 @@ rec {
             features = [ "clock" ];
           }
           {
+            name = "form_urlencoded";
+            packageId = "form_urlencoded";
+            optional = true;
+          }
+          {
             name = "futures";
             packageId = "futures";
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+          }
+          {
+            name = "http-body-util";
+            packageId = "http-body-util";
+            optional = true;
+          }
+          {
+            name = "httparse";
+            packageId = "httparse";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "std" ];
           }
           {
             name = "humantime";
@@ -11478,7 +11445,7 @@ rec {
           }
           {
             name = "itertools";
-            packageId = "itertools 0.13.0";
+            packageId = "itertools 0.14.0";
           }
           {
             name = "md-5";
@@ -11505,12 +11472,13 @@ rec {
           }
           {
             name = "rand";
-            packageId = "rand 0.8.5";
+            packageId = "rand 0.9.2";
             optional = true;
             usesDefaultFeatures = false;
             features = [
               "std"
               "std_rng"
+              "thread_rng"
             ];
           }
           {
@@ -11549,10 +11517,16 @@ rec {
             packageId = "serde_json";
             optional = true;
             usesDefaultFeatures = false;
+            features = [ "std" ];
           }
           {
-            name = "snafu";
-            packageId = "snafu";
+            name = "serde_urlencoded";
+            packageId = "serde_urlencoded";
+            optional = true;
+          }
+          {
+            name = "thiserror";
+            packageId = "thiserror 2.0.17";
           }
           {
             name = "tokio";
@@ -11576,6 +11550,19 @@ rec {
           {
             name = "walkdir";
             packageId = "walkdir";
+            optional = true;
+          }
+          {
+            name = "wasm-bindgen-futures";
+            packageId = "wasm-bindgen-futures";
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && ("unknown" == target."os" or null));
+          }
+          {
+            name = "web-time";
+            packageId = "web-time";
+            target =
+              { target, features }: (("wasm32" == target."arch" or null) && ("unknown" == target."os" or null));
           }
         ];
         devDependencies = [
@@ -11586,7 +11573,12 @@ rec {
           }
           {
             name = "rand";
-            packageId = "rand 0.8.5";
+            packageId = "rand 0.9.2";
+          }
+          {
+            name = "reqwest";
+            packageId = "reqwest 0.12.24";
+            features = [ "gzip" ];
           }
         ];
         features = {
@@ -11594,7 +11586,10 @@ rec {
             "cloud"
             "md-5"
           ];
-          "azure" = [ "cloud" ];
+          "azure" = [
+            "cloud"
+            "httparse"
+          ];
           "base64" = [ "dep:base64" ];
           "cloud" = [
             "serde"
@@ -11602,19 +11597,27 @@ rec {
             "quick-xml"
             "hyper"
             "reqwest"
-            "reqwest/json"
             "reqwest/stream"
             "chrono/serde"
             "base64"
             "rand"
             "ring"
+            "http-body-util"
+            "form_urlencoded"
+            "serde_urlencoded"
           ];
+          "default" = [ "fs" ];
+          "form_urlencoded" = [ "dep:form_urlencoded" ];
+          "fs" = [ "walkdir" ];
           "gcp" = [
             "cloud"
             "rustls-pemfile"
           ];
           "http" = [ "cloud" ];
+          "http-body-util" = [ "dep:http-body-util" ];
+          "httparse" = [ "dep:httparse" ];
           "hyper" = [ "dep:hyper" ];
+          "integration" = [ "rand" ];
           "md-5" = [ "dep:md-5" ];
           "quick-xml" = [ "dep:quick-xml" ];
           "rand" = [ "dep:rand" ];
@@ -11623,15 +11626,22 @@ rec {
           "rustls-pemfile" = [ "dep:rustls-pemfile" ];
           "serde" = [ "dep:serde" ];
           "serde_json" = [ "dep:serde_json" ];
+          "serde_urlencoded" = [ "dep:serde_urlencoded" ];
           "tls-webpki-roots" = [ "reqwest?/rustls-tls-webpki-roots" ];
+          "walkdir" = [ "dep:walkdir" ];
         };
         resolvedDefaultFeatures = [
           "aws"
           "azure"
           "base64"
           "cloud"
+          "default"
+          "form_urlencoded"
+          "fs"
           "gcp"
           "http"
+          "http-body-util"
+          "httparse"
           "hyper"
           "md-5"
           "quick-xml"
@@ -11641,6 +11651,8 @@ rec {
           "rustls-pemfile"
           "serde"
           "serde_json"
+          "serde_urlencoded"
+          "walkdir"
         ];
       };
       "oci-spec" = rec {
@@ -13541,7 +13553,7 @@ rec {
         dependencies = [
           {
             name = "heck";
-            packageId = "heck 0.5.0";
+            packageId = "heck";
           }
           {
             name = "itertools";
@@ -13753,7 +13765,7 @@ rec {
         dependencies = [
           {
             name = "heck";
-            packageId = "heck 0.5.0";
+            packageId = "heck";
           }
           {
             name = "prost";
@@ -13907,9 +13919,9 @@ rec {
       };
       "quick-xml" = rec {
         crateName = "quick-xml";
-        version = "0.36.2";
+        version = "0.38.4";
         edition = "2021";
-        sha256 = "1zj3sjcjk6sn544wb2wvhr1km5f9cy664vzclygfsnph9mxrlr7p";
+        sha256 = "0772siy4d9vlq77842012c8cycs3y0szxkv62rh9sh2sqmc20v5n";
         libName = "quick_xml";
         dependencies = [
           {
@@ -15600,7 +15612,6 @@ rec {
           "blocking"
           "h2"
           "http2"
-          "json"
           "rustls-tls-native-roots"
           "rustls-tls-native-roots-no-provider"
           "stream"
@@ -18514,102 +18525,6 @@ rec {
           "std"
         ];
       };
-      "snafu" = rec {
-        crateName = "snafu";
-        version = "0.7.5";
-        edition = "2018";
-        sha256 = "1mj2j2gfbf8mm1hr02zrbrqrh2zp01f61xgkx0lpln2w0ankgpp4";
-        authors = [
-          "Jake Goulding <jake.goulding@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "doc-comment";
-            packageId = "doc-comment";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "snafu-derive";
-            packageId = "snafu-derive";
-          }
-        ];
-        features = {
-          "backtrace" = [ "dep:backtrace" ];
-          "backtraces" = [
-            "std"
-            "backtrace"
-          ];
-          "backtraces-impl-backtrace-crate" = [ "backtraces" ];
-          "default" = [
-            "std"
-            "rust_1_46"
-          ];
-          "futures" = [
-            "futures-core-crate"
-            "pin-project"
-          ];
-          "futures-core-crate" = [ "dep:futures-core-crate" ];
-          "futures-crate" = [ "dep:futures-crate" ];
-          "internal-dev-dependencies" = [ "futures-crate" ];
-          "pin-project" = [ "dep:pin-project" ];
-          "rust_1_39" = [ "snafu-derive/rust_1_39" ];
-          "rust_1_46" = [
-            "rust_1_39"
-            "snafu-derive/rust_1_46"
-          ];
-          "rust_1_61" = [
-            "rust_1_46"
-            "snafu-derive/rust_1_61"
-          ];
-          "unstable-backtraces-impl-std" = [
-            "backtraces-impl-std"
-            "snafu-derive/unstable-backtraces-impl-std"
-          ];
-          "unstable-provider-api" = [ "snafu-derive/unstable-provider-api" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "rust_1_39"
-          "rust_1_46"
-          "std"
-        ];
-      };
-      "snafu-derive" = rec {
-        crateName = "snafu-derive";
-        version = "0.7.5";
-        edition = "2018";
-        sha256 = "1gzy9rzggs090zf7hfvgp4lm1glrmg9qzh796686jnq7bxk7j04r";
-        procMacro = true;
-        libName = "snafu_derive";
-        authors = [
-          "Jake Goulding <jake.goulding@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "heck";
-            packageId = "heck 0.4.1";
-          }
-          {
-            name = "proc-macro2";
-            packageId = "proc-macro2";
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-          }
-          {
-            name = "syn";
-            packageId = "syn 1.0.109";
-            features = [ "full" ];
-          }
-        ];
-        features = {
-        };
-        resolvedDefaultFeatures = [
-          "rust_1_39"
-          "rust_1_46"
-        ];
-      };
       "snix-build" = rec {
         crateName = "snix-build";
         version = "0.1.0";
@@ -21283,7 +21198,7 @@ rec {
         dependencies = [
           {
             name = "heck";
-            packageId = "heck 0.5.0";
+            packageId = "heck";
           }
           {
             name = "proc-macro2";
