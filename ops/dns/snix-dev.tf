@@ -20,13 +20,6 @@ resource "digitalocean_record" "snix_dev_infra_public01" {
   value    = var.public01_ipv6
 }
 
-resource "digitalocean_record" "snix_dev_infra_build01" {
-  domain   = digitalocean_domain.snix_dev.id
-  type     = "AAAA"
-  name     = "build01.infra"
-  value    = var.build01_ipv6
-}
-
 resource "digitalocean_record" "snix_dev_infra_build02_a" {
   domain   = digitalocean_domain.snix_dev.id
   type     = "A"

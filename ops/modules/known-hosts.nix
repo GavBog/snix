@@ -19,11 +19,6 @@
       publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN+RCLAExaM5EC70UsCPMtDT1Cfa80Ux/vex95fLk9S4";
     };
 
-    build01 = {
-      hostNames = [ "build01.infra.snix.dev" ];
-      publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEteVaeN/FEAY8yyGWdAbv6+X6yv2m8+4F5qZEAhxW9f";
-    };
-
     build02 = {
       hostNames = [ "build02.infra.snix.dev" ];
       publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFqyPTO8twiOxmM4Q8UjtMo678Dbkj33XWBKiSv9ML7c";

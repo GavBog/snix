@@ -54,7 +54,6 @@ rec {
 
   # Systems that should be built in CI
   archivistEC2System = (nixosFor depot.ops.machines.archivist-ec2).system;
-  build01System = (nixosFor depot.ops.machines.build01).system;
   build02System = (nixosFor depot.ops.machines.build02).system;
   gerrit01System = (nixosFor depot.ops.machines.gerrit01).system;
   meta01System = (nixosFor depot.ops.machines.meta01).system;
@@ -63,7 +62,6 @@ rec {
 
   meta.ci.targets = [
     "archivistEC2System"
-    "build01System"
     "build02System"
     "gerrit01System"
     "meta01System"
