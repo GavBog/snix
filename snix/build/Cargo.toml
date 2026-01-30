@@ -9,6 +9,7 @@ bytes.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 itertools.workspace = true
 prost.workspace = true
+tonic-prost.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["process"] }
 tonic.workspace = true
@@ -31,8 +32,7 @@ uuid = { version = "1.7.0", features = ["v4"] }
 typed-builder = "0.22.0"
 
 [build-dependencies]
-prost-build.workspace = true
-tonic-build.workspace = true
+tonic-prost-build.workspace = true
 
 [features]
 default = []

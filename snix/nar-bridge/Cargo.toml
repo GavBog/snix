@@ -13,6 +13,9 @@ futures.workspace = true
 lru.workspace = true
 nix-compat = { path = "../nix-compat", features = ["async"] }
 opentelemetry.workspace = true
+opentelemetry-instrumentation-tower = { workspace = true, features = [
+  "axum",
+], optional = true }
 parking_lot.workspace = true
 serde = { workspace = true, features = ["derive"] }
 snix-castore = { path = "../castore" }
@@ -21,14 +24,11 @@ tokio.workspace = true
 tokio-util = { workspace = true, features = ["io", "io-util", "compat"] }
 tower-http = { workspace = true, features = ["compression-zstd", "trace"] }
 tonic.workspace = true
-tower-otel-http-metrics = { workspace = true, features = [
-  "axum",
-], optional = true }
 tracing.workspace = true
 
 [features]
 default = []
-otlp = ["dep:tower-otel-http-metrics"]
+otlp = ["dep:opentelemetry-instrumentation-tower"]
 
 [dev-dependencies]
 axum-test = "19.0.0"

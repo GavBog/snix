@@ -27,8 +27,8 @@ libc = { workspace = true, optional = true }
 object_store = { workspace = true, features = ["http"] }
 parking_lot.workspace = true
 petgraph.workspace = true
-pin-project-lite.workspace = true
 prost.workspace = true
+pin-project-lite.workspace = true
 redb = { workspace = true, features = ["logging"] }
 serde = { workspace = true, features = ["derive"] }
 serde_qs.workspace = true
@@ -52,6 +52,7 @@ toml = { version = "0.8.19", optional = true }
 tonic.workspace = true
 tonic-health.workspace = true
 tonic-reflection = { workspace = true, optional = true }
+tonic-prost.workspace = true
 tower = { workspace = true, features = ["util"] }
 tower-http = { workspace = true, features = ["trace"] }
 tracing.workspace = true
@@ -68,8 +69,7 @@ wu-manber.workspace = true
 zstd.workspace = true
 
 [build-dependencies]
-prost-build.workspace = true
-tonic-build.workspace = true
+tonic-prost-build.workspace = true
 
 [dev-dependencies]
 async-process.workspace = true

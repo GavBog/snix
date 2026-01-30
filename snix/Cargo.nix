@@ -4020,9 +4020,9 @@ rec {
       };
       "bigtable_rs" = rec {
         crateName = "bigtable_rs";
-        version = "0.2.18";
+        version = "0.2.19";
         edition = "2021";
-        sha256 = "1q30n5qn3cyn6dq31b97ndnv12i0sgrks3wzw33yjqnyi2cfjb88";
+        sha256 = "11bhz477541harq7qi8cpwk8gzy7n75sb42a1ygsy2cwn96gkplm";
         authors = [
           "Fuyang Liu <liufuyang@users.noreply.github.com>"
         ];
@@ -4089,6 +4089,10 @@ rec {
             features = [ "transport" ];
           }
           {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+          }
+          {
             name = "tower";
             packageId = "tower 0.5.3";
             features = [ "util" ];
@@ -4104,9 +4108,23 @@ rec {
             packageId = "prost-wkt-build";
           }
           {
-            name = "tonic-build";
-            packageId = "tonic-build";
+            name = "tonic-prost-build";
+            packageId = "tonic-prost-build";
             features = [ "cleanup-markdown" ];
+          }
+        ];
+        devDependencies = [
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "rt-multi-thread"
+              "macros"
+            ];
           }
         ];
         features = {
@@ -12307,6 +12325,12 @@ rec {
             packageId = "opentelemetry";
           }
           {
+            name = "opentelemetry-instrumentation-tower";
+            packageId = "opentelemetry-instrumentation-tower";
+            optional = true;
+            features = [ "axum" ];
+          }
+          {
             name = "parking_lot";
             packageId = "parking_lot";
           }
@@ -12353,12 +12377,6 @@ rec {
             ];
           }
           {
-            name = "tower-otel-http-metrics";
-            packageId = "tower-otel-http-metrics";
-            optional = true;
-            features = [ "axum" ];
-          }
-          {
             name = "tracing";
             packageId = "tracing";
           }
@@ -12386,7 +12404,7 @@ rec {
           }
         ];
         features = {
-          "otlp" = [ "dep:tower-otel-http-metrics" ];
+          "otlp" = [ "dep:opentelemetry-instrumentation-tower" ];
         };
         resolvedDefaultFeatures = [
           "default"
@@ -14068,9 +14086,9 @@ rec {
       };
       "opentelemetry" = rec {
         crateName = "opentelemetry";
-        version = "0.30.0";
+        version = "0.31.0";
         edition = "2021";
-        sha256 = "1rjjwlvhr7h01kl0768v9i7ng77l1axxfzbg29ancxbjrgj1dx5a";
+        sha256 = "18629xsj4rsyiby9aj511q6wcw6s9m09gx3ymw1yjcvix1mcsjxq";
         dependencies = [
           {
             name = "futures-core";
@@ -14148,9 +14166,9 @@ rec {
       };
       "opentelemetry-http" = rec {
         crateName = "opentelemetry-http";
-        version = "0.30.0";
+        version = "0.31.0";
         edition = "2021";
-        sha256 = "0vf3d9p733ms312hcbhy14h32imf22bl7qw6i3mdp5rahjg67xjh";
+        sha256 = "0pc5nw1ds8v8w0nvyall39m92v8m1xl1p3vwvxk6nkhrffdd19np";
         libName = "opentelemetry_http";
         dependencies = [
           {
@@ -14170,6 +14188,7 @@ rec {
           {
             name = "opentelemetry";
             packageId = "opentelemetry";
+            usesDefaultFeatures = false;
             features = [ "trace" ];
           }
           {
@@ -14177,7 +14196,6 @@ rec {
             packageId = "reqwest 0.12.24";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "blocking" ];
           }
         ];
         features = {
@@ -14190,12 +14208,16 @@ rec {
           ];
           "internal-logs" = [ "opentelemetry/internal-logs" ];
           "reqwest" = [ "dep:reqwest" ];
+          "reqwest-blocking" = [
+            "dep:reqwest"
+            "reqwest/blocking"
+          ];
           "reqwest-rustls" = [
-            "reqwest"
+            "dep:reqwest"
             "reqwest/rustls-tls-native-roots"
           ];
           "reqwest-rustls-webpki-roots" = [
-            "reqwest"
+            "dep:reqwest"
             "reqwest/rustls-tls-webpki-roots"
           ];
         };
@@ -14203,13 +14225,87 @@ rec {
           "default"
           "internal-logs"
           "reqwest"
+          "reqwest-blocking"
+        ];
+      };
+      "opentelemetry-instrumentation-tower" = rec {
+        crateName = "opentelemetry-instrumentation-tower";
+        version = "0.17.0";
+        edition = "2021";
+        sha256 = "0lhf3dsfrcxljy1hkv5flwjcm2r96gwax8zrdn6a6ffkvsvl58sz";
+        libName = "opentelemetry_instrumentation_tower";
+        dependencies = [
+          {
+            name = "axum";
+            packageId = "axum";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [
+              "matched-path"
+              "macros"
+            ];
+          }
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            usesDefaultFeatures = false;
+            features = [ "std" ];
+          }
+          {
+            name = "http-body";
+            packageId = "http-body 1.0.1";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "opentelemetry";
+            packageId = "opentelemetry";
+            features = [
+              "futures"
+              "metrics"
+            ];
+          }
+          {
+            name = "opentelemetry-semantic-conventions";
+            packageId = "opentelemetry-semantic-conventions";
+            features = [
+              "semconv_experimental"
+              "semconv_experimental"
+            ];
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "tower-layer";
+            packageId = "tower-layer";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "tower-service";
+            packageId = "tower-service";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "axum" = [ "dep:axum" ];
+        };
+        resolvedDefaultFeatures = [
+          "axum"
+          "default"
         ];
       };
       "opentelemetry-otlp" = rec {
         crateName = "opentelemetry-otlp";
-        version = "0.30.0";
+        version = "0.31.0";
         edition = "2021";
-        sha256 = "0aw5amychdmwayfa0p724na1m7vd1jk9qlzw39riaxp08d56dvnv";
+        sha256 = "1gv3h75z8c0p9b85mbq7f1rgsi18wip1xlfa6g82lkfa5pdnc8vs";
         libName = "opentelemetry_otlp";
         dependencies = [
           {
@@ -14228,6 +14324,7 @@ rec {
             name = "opentelemetry-http";
             packageId = "opentelemetry-http";
             optional = true;
+            usesDefaultFeatures = false;
           }
           {
             name = "opentelemetry-proto";
@@ -14280,6 +14377,15 @@ rec {
         ];
         devDependencies = [
           {
+            name = "opentelemetry_sdk";
+            packageId = "opentelemetry_sdk";
+            usesDefaultFeatures = false;
+            features = [
+              "trace"
+              "testing"
+            ];
+          }
+          {
             name = "tokio";
             packageId = "tokio";
             usesDefaultFeatures = false;
@@ -14307,6 +14413,7 @@ rec {
             "logs"
             "internal-logs"
           ];
+          "flate2" = [ "dep:flate2" ];
           "grpc-tonic" = [
             "tonic"
             "prost"
@@ -14314,6 +14421,7 @@ rec {
             "tokio"
             "opentelemetry-proto/gen-tonic"
           ];
+          "gzip-http" = [ "flate2" ];
           "gzip-tonic" = [ "tonic/gzip" ];
           "http" = [ "dep:http" ];
           "http-json" = [
@@ -14344,7 +14452,8 @@ rec {
           ];
           "internal-logs" = [
             "tracing"
-            "opentelemetry/internal-logs"
+            "opentelemetry_sdk/internal-logs"
+            "opentelemetry-http/internal-logs"
           ];
           "logs" = [
             "opentelemetry/logs"
@@ -14361,7 +14470,7 @@ rec {
           "reqwest" = [ "dep:reqwest" ];
           "reqwest-blocking-client" = [
             "reqwest/blocking"
-            "opentelemetry-http/reqwest"
+            "opentelemetry-http/reqwest-blocking"
           ];
           "reqwest-client" = [
             "reqwest"
@@ -14398,6 +14507,8 @@ rec {
             "opentelemetry-proto/trace"
           ];
           "tracing" = [ "dep:tracing" ];
+          "zstd" = [ "dep:zstd" ];
+          "zstd-http" = [ "zstd" ];
           "zstd-tonic" = [ "tonic/zstd" ];
         };
         resolvedDefaultFeatures = [
@@ -14420,9 +14531,9 @@ rec {
       };
       "opentelemetry-proto" = rec {
         crateName = "opentelemetry-proto";
-        version = "0.30.0";
+        version = "0.31.0";
         edition = "2021";
-        sha256 = "1p4d1s7p4z5a9xy4x4dsjifc3385v5q8wx780mdgw407cvbny11f";
+        sha256 = "03xkjsjrsm7zkkx5gascqd9bg2z20wymm06l16cyxsp5dpq5s5x7";
         libName = "opentelemetry_proto";
         dependencies = [
           {
@@ -14445,14 +14556,25 @@ rec {
             packageId = "tonic";
             optional = true;
             usesDefaultFeatures = false;
-            features = [
-              "codegen"
-              "prost"
-            ];
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            optional = true;
+          }
+        ];
+        devDependencies = [
+          {
+            name = "opentelemetry";
+            packageId = "opentelemetry";
+            usesDefaultFeatures = false;
+            features = [ "testing" ];
           }
         ];
         features = {
           "base64" = [ "dep:base64" ];
+          "const-hex" = [ "dep:const-hex" ];
           "default" = [ "full" ];
           "full" = [
             "gen-tonic"
@@ -14469,9 +14591,9 @@ rec {
           ];
           "gen-tonic-messages" = [
             "tonic"
+            "tonic-prost"
             "prost"
           ];
-          "hex" = [ "dep:hex" ];
           "internal-logs" = [ "opentelemetry/internal-logs" ];
           "logs" = [
             "opentelemetry/logs"
@@ -14484,8 +14606,10 @@ rec {
           "prost" = [ "dep:prost" ];
           "schemars" = [ "dep:schemars" ];
           "serde" = [ "dep:serde" ];
+          "serde_json" = [ "dep:serde_json" ];
           "testing" = [ "opentelemetry/testing" ];
           "tonic" = [ "dep:tonic" ];
+          "tonic-prost" = [ "dep:tonic-prost" ];
           "trace" = [
             "opentelemetry/trace"
             "opentelemetry_sdk/trace"
@@ -14493,8 +14617,9 @@ rec {
           "with-schemars" = [ "schemars" ];
           "with-serde" = [
             "serde"
-            "hex"
+            "const-hex"
             "base64"
+            "serde_json"
           ];
           "zpages" = [ "trace" ];
         };
@@ -14505,24 +14630,28 @@ rec {
           "metrics"
           "prost"
           "tonic"
+          "tonic-prost"
           "trace"
         ];
       };
       "opentelemetry-semantic-conventions" = rec {
         crateName = "opentelemetry-semantic-conventions";
-        version = "0.30.0";
+        version = "0.31.0";
         edition = "2021";
-        sha256 = "1hns9n0sh89cqp7rav7gf2a5nw65wv2m78sphms3cx54jsi5kl43";
+        sha256 = "0in8plv2l2ar7anzi7lrbll0fjfvaymkg5vc5bnvibs1w3gjjbp6";
         libName = "opentelemetry_semantic_conventions";
         features = {
         };
-        resolvedDefaultFeatures = [ "default" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "semconv_experimental"
+        ];
       };
       "opentelemetry_sdk" = rec {
         crateName = "opentelemetry_sdk";
-        version = "0.30.0";
+        version = "0.31.0";
         edition = "2021";
-        sha256 = "0jvsqhdrka9ppyfr3y6rhj4ai61wgrfk0970jqcd2cayksm49xhi";
+        sha256 = "1gbjsggdxfpjbanjvaxa3nq32vfa37i3v13dvx4gsxhrk7sy8jp1";
         dependencies = [
           {
             name = "futures-channel";
@@ -14545,6 +14674,7 @@ rec {
           {
             name = "opentelemetry";
             packageId = "opentelemetry";
+            usesDefaultFeatures = false;
           }
           {
             name = "percent-encoding";
@@ -14565,11 +14695,6 @@ rec {
             ];
           }
           {
-            name = "serde_json";
-            packageId = "serde_json";
-            optional = true;
-          }
-          {
             name = "thiserror";
             packageId = "thiserror 2.0.17";
             usesDefaultFeatures = false;
@@ -14579,10 +14704,6 @@ rec {
             packageId = "tokio";
             optional = true;
             usesDefaultFeatures = false;
-            features = [
-              "rt"
-              "time"
-            ];
           }
           {
             name = "tokio-stream";
@@ -14609,6 +14730,7 @@ rec {
             "experimental_async_runtime"
           ];
           "experimental_trace_batch_span_processor_with_async_runtime" = [
+            "tokio/sync"
             "trace"
             "experimental_async_runtime"
           ];
@@ -14623,21 +14745,20 @@ rec {
             "url"
             "experimental_async_runtime"
           ];
-          "logs" = [
-            "opentelemetry/logs"
-            "serde_json"
-          ];
+          "logs" = [ "opentelemetry/logs" ];
           "metrics" = [ "opentelemetry/metrics" ];
           "opentelemetry-http" = [ "dep:opentelemetry-http" ];
           "percent-encoding" = [ "dep:percent-encoding" ];
           "rand" = [ "dep:rand" ];
           "rt-tokio" = [
-            "tokio"
+            "tokio/rt"
+            "tokio/time"
             "tokio-stream"
             "experimental_async_runtime"
           ];
           "rt-tokio-current-thread" = [
-            "tokio"
+            "tokio/rt"
+            "tokio/time"
             "tokio-stream"
             "experimental_async_runtime"
           ];
@@ -14676,7 +14797,6 @@ rec {
           "percent-encoding"
           "rand"
           "rt-tokio"
-          "serde_json"
           "tokio"
           "tokio-stream"
           "trace"
@@ -14890,11 +15010,11 @@ rec {
           "stable_graph"
         ];
       };
-      "petgraph 0.7.1" = rec {
+      "petgraph 0.8.3" = rec {
         crateName = "petgraph";
-        version = "0.7.1";
-        edition = "2018";
-        sha256 = "0wkpppwrfv1h197asz1p4yfb4li5b1kw0nqllil67n6vj1qb6win";
+        version = "0.8.3";
+        edition = "2021";
+        sha256 = "0mblnaqbx1y20h5y7pz6y11hk9jjk6k87lsmn7jxaq3hm67ba0c7";
         authors = [
           "bluss"
           "mitchmindtree"
@@ -14906,8 +15026,18 @@ rec {
             usesDefaultFeatures = false;
           }
           {
+            name = "hashbrown";
+            packageId = "hashbrown 0.15.5";
+            usesDefaultFeatures = false;
+            features = [
+              "default-hasher"
+              "inline-more"
+            ];
+          }
+          {
             name = "indexmap";
             packageId = "indexmap 2.12.1";
+            usesDefaultFeatures = false;
           }
         ];
         features = {
@@ -14918,16 +15048,30 @@ rec {
             "stable_graph"
             "graphmap"
             "rayon"
+            "dot_parser"
           ];
           "default" = [
+            "std"
             "graphmap"
             "stable_graph"
             "matrix_graph"
           ];
-          "quickcheck" = [ "dep:quickcheck" ];
+          "dot_parser" = [
+            "std"
+            "dep:dot-parser"
+            "dep:dot-parser-macros"
+          ];
+          "quickcheck" = [
+            "std"
+            "dep:quickcheck"
+            "graphmap"
+            "stable_graph"
+          ];
           "rayon" = [
+            "std"
             "dep:rayon"
             "indexmap/rayon"
+            "hashbrown/rayon"
           ];
           "serde" = [ "dep:serde" ];
           "serde-1" = [
@@ -14935,8 +15079,11 @@ rec {
             "serde_derive"
           ];
           "serde_derive" = [ "dep:serde_derive" ];
+          "stable_graph" = [ "serde?/alloc" ];
+          "std" = [ "indexmap/std" ];
           "unstable" = [ "generate" ];
         };
+        resolvedDefaultFeatures = [ "std" ];
       };
       "pin-project" = rec {
         crateName = "pin-project";
@@ -15770,9 +15917,9 @@ rec {
       };
       "prost" = rec {
         crateName = "prost";
-        version = "0.13.5";
+        version = "0.14.3";
         edition = "2021";
-        sha256 = "1r8yi6zxxwv9gq5ia9p55nspgwmchs94sqpp64x33v5k3njgm5i7";
+        sha256 = "0s057z9nzggzy7x4bbsiar852hg7zb81f4z4phcdb0ig99971snj";
         authors = [
           "Dan Burkert <dan@danburkert.com>"
           "Lucio Franco <luciofranco14@gmail.com>"
@@ -15797,20 +15944,18 @@ rec {
             "std"
           ];
           "derive" = [ "dep:prost-derive" ];
-          "prost-derive" = [ "derive" ];
         };
         resolvedDefaultFeatures = [
           "default"
           "derive"
-          "prost-derive"
           "std"
         ];
       };
       "prost-build" = rec {
         crateName = "prost-build";
-        version = "0.13.5";
+        version = "0.14.3";
         edition = "2021";
-        sha256 = "1gw1mr0rmv15fc2yvn9jmxbqaj8qh80w5nn5x5s1932y8ijr8xmy";
+        sha256 = "1rrf4rs74schd38jyaxglymi66vxzzg6hki00fdq7nkf0pbkng9l";
         libName = "prost_build";
         authors = [
           "Dan Burkert <dan@danburkert.com>"
@@ -15839,13 +15984,10 @@ rec {
             usesDefaultFeatures = false;
           }
           {
-            name = "once_cell";
-            packageId = "once_cell";
-          }
-          {
             name = "petgraph";
-            packageId = "petgraph 0.7.1";
+            packageId = "petgraph 0.8.3";
             usesDefaultFeatures = false;
+            features = [ "std" ];
           }
           {
             name = "prettyplease";
@@ -15912,9 +16054,9 @@ rec {
       };
       "prost-derive" = rec {
         crateName = "prost-derive";
-        version = "0.13.5";
+        version = "0.14.3";
         edition = "2021";
-        sha256 = "0kgc9gbzsa998xixblfi3kfydka64zqf6rmpm53b761cjxbxfmla";
+        sha256 = "02zvva6kb0pfvlyc4nac6gd37ncjrs8jq5scxcq4nbqkc8wh5ii7";
         procMacro = true;
         libName = "prost_derive";
         authors = [
@@ -15950,9 +16092,9 @@ rec {
       };
       "prost-types" = rec {
         crateName = "prost-types";
-        version = "0.13.5";
+        version = "0.14.3";
         edition = "2021";
-        sha256 = "05mx699wyg7cjil3hz7h8lp4dhi7xhy1lq5kjv1s3cfx6szw3hjj";
+        sha256 = "1mrxrciryfgi6a0vmrgyj3g27r9hdhlgwkq71cgv3icbvg5w94c9";
         libName = "prost_types";
         authors = [
           "Dan Burkert <dan@danburkert.com>"
@@ -15965,11 +16107,12 @@ rec {
             name = "prost";
             packageId = "prost";
             usesDefaultFeatures = false;
-            features = [ "prost-derive" ];
+            features = [ "derive" ];
           }
         ];
         features = {
           "arbitrary" = [ "dep:arbitrary" ];
+          "chrono" = [ "dep:chrono" ];
           "default" = [ "std" ];
           "std" = [ "prost/std" ];
         };
@@ -15980,9 +16123,9 @@ rec {
       };
       "prost-wkt" = rec {
         crateName = "prost-wkt";
-        version = "0.6.1";
+        version = "0.7.1";
         edition = "2021";
-        sha256 = "1qfavswn36raqv8ybfrgz3l06vh1nhvr9m71mfffy28ciy9iwzj9";
+        sha256 = "0i8lqqfv0av2svqpnxwcpjl1bri37ll8wjr0z9gcnkz8r7lyagfd";
         libName = "prost_wkt";
         authors = [
           "fdeantoni <fdeantoni@gmail.com>"
@@ -16023,9 +16166,9 @@ rec {
       };
       "prost-wkt-build" = rec {
         crateName = "prost-wkt-build";
-        version = "0.6.1";
+        version = "0.7.1";
         edition = "2021";
-        sha256 = "0jw8589qvqiqr5cfi1a7dv5rqbj932a6wpgxy5dam9vhbc8vzf07";
+        sha256 = "1kaih6sh1jvrhl2ivkjy22iznbfn93j90wpvx3hpaykm1v40sl7y";
         libName = "prost_wkt_build";
         authors = [
           "fdeantoni <fdeantoni@gmail.com>"
@@ -16056,9 +16199,9 @@ rec {
       };
       "prost-wkt-types" = rec {
         crateName = "prost-wkt-types";
-        version = "0.6.1";
+        version = "0.7.1";
         edition = "2021";
-        sha256 = "1r8gjxp37754qviv8qkaz12xbv5wy3ra4b1r774130x9y1nxxkf8";
+        sha256 = "0pj17zdhq4s91x4nsjyp276ws0b2j9qq604rx033v0qmgsm7x00k";
         libName = "prost_wkt_types";
         authors = [
           "fdeantoni <fdeantoni@gmail.com>"
@@ -16128,10 +16271,10 @@ rec {
       };
       "pulldown-cmark" = rec {
         crateName = "pulldown-cmark";
-        version = "0.12.2";
+        version = "0.13.0";
         edition = "2021";
         crateBin = [ ];
-        sha256 = "055v2bzzrkrbrc1s6l9mbkvpdkhkid5j7vdkpcnc9k7b582s4szq";
+        sha256 = "183fg8lrdhvydrx0dmg446n108rwrvnzci0sd1ig7lkbjqdbx2qy";
         libName = "pulldown_cmark";
         authors = [
           "Raph Levien <raph.levien@gmail.com>"
@@ -16165,9 +16308,9 @@ rec {
       };
       "pulldown-cmark-to-cmark" = rec {
         crateName = "pulldown-cmark-to-cmark";
-        version = "20.0.1";
+        version = "22.0.0";
         edition = "2018";
-        sha256 = "12wqasbaamk1fj4h4aikagi3i7sf0lssyxngbfkgvn6j24rk63vc";
+        sha256 = "141fi1gc7amzh415iv56qdfll8448d03k53h99i5c0lh3gpksyah";
         libName = "pulldown_cmark_to_cmark";
         authors = [
           "Sebastian Thiel <byronimo@gmail.com>"
@@ -18415,9 +18558,9 @@ rec {
       };
       "reqwest-tracing" = rec {
         crateName = "reqwest-tracing";
-        version = "0.6.0";
+        version = "0.7.0";
         edition = "2018";
-        sha256 = "0llk0inj63kz2hk0vi0jlqljx440xyyjldadp4g0ybgi4hv5mkiv";
+        sha256 = "0y550pxay4asyz7gkr23b872qxxqbpy0f34wkv73vm3p0r8s3hfm";
         libName = "reqwest_tracing";
         authors = [
           "Rodrigo Gryzinski <rodrigo.gryzinski@truelayer.com>"
@@ -18448,7 +18591,7 @@ rec {
           {
             name = "opentelemetry";
             packageId = "opentelemetry";
-            rename = "opentelemetry_0_30_pkg";
+            rename = "opentelemetry_0_31_pkg";
             optional = true;
           }
           {
@@ -18467,7 +18610,7 @@ rec {
           {
             name = "tracing-opentelemetry";
             packageId = "tracing-opentelemetry";
-            rename = "tracing-opentelemetry_0_31_pkg";
+            rename = "tracing-opentelemetry_0_32_pkg";
             optional = true;
           }
         ];
@@ -18534,6 +18677,11 @@ rec {
             "tracing-opentelemetry_0_31_pkg"
           ];
           "opentelemetry_0_30_pkg" = [ "dep:opentelemetry_0_30_pkg" ];
+          "opentelemetry_0_31" = [
+            "opentelemetry_0_31_pkg"
+            "tracing-opentelemetry_0_32_pkg"
+          ];
+          "opentelemetry_0_31_pkg" = [ "dep:opentelemetry_0_31_pkg" ];
           "tracing-opentelemetry_0_21_pkg" = [ "dep:tracing-opentelemetry_0_21_pkg" ];
           "tracing-opentelemetry_0_22_pkg" = [ "dep:tracing-opentelemetry_0_22_pkg" ];
           "tracing-opentelemetry_0_23_pkg" = [ "dep:tracing-opentelemetry_0_23_pkg" ];
@@ -18545,11 +18693,12 @@ rec {
           "tracing-opentelemetry_0_29_pkg" = [ "dep:tracing-opentelemetry_0_29_pkg" ];
           "tracing-opentelemetry_0_30_pkg" = [ "dep:tracing-opentelemetry_0_30_pkg" ];
           "tracing-opentelemetry_0_31_pkg" = [ "dep:tracing-opentelemetry_0_31_pkg" ];
+          "tracing-opentelemetry_0_32_pkg" = [ "dep:tracing-opentelemetry_0_32_pkg" ];
         };
         resolvedDefaultFeatures = [
-          "opentelemetry_0_30"
-          "opentelemetry_0_30_pkg"
-          "tracing-opentelemetry_0_31_pkg"
+          "opentelemetry_0_31"
+          "opentelemetry_0_31_pkg"
+          "tracing-opentelemetry_0_32_pkg"
         ];
       };
       "reserve-port" = rec {
@@ -21147,6 +21296,10 @@ rec {
             ];
           }
           {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+          }
+          {
             name = "tonic-reflection";
             packageId = "tonic-reflection";
             optional = true;
@@ -21171,12 +21324,8 @@ rec {
         ];
         buildDependencies = [
           {
-            name = "prost-build";
-            packageId = "prost-build";
-          }
-          {
-            name = "tonic-build";
-            packageId = "tonic-build";
+            name = "tonic-prost-build";
+            packageId = "tonic-prost-build";
           }
         ];
         devDependencies = [
@@ -21420,6 +21569,10 @@ rec {
             usesDefaultFeatures = false;
           }
           {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+          }
+          {
             name = "tonic-reflection";
             packageId = "tonic-reflection";
             optional = true;
@@ -21491,12 +21644,8 @@ rec {
         ];
         buildDependencies = [
           {
-            name = "prost-build";
-            packageId = "prost-build";
-          }
-          {
-            name = "tonic-build";
-            packageId = "tonic-build";
+            name = "tonic-prost-build";
+            packageId = "tonic-prost-build";
           }
         ];
         devDependencies = [
@@ -21771,7 +21920,7 @@ rec {
           {
             name = "tokio-listener";
             packageId = "tokio-listener";
-            features = [ "tonic013" ];
+            features = [ "tonic014" ];
           }
           {
             name = "tonic";
@@ -21866,7 +22015,7 @@ rec {
               "clap"
               "multi-listener"
               "sd_listen"
-              "tonic013"
+              "tonic014"
             ];
           }
           {
@@ -22450,7 +22599,7 @@ rec {
               "clap"
               "multi-listener"
               "sd_listen"
-              "tonic013"
+              "tonic014"
             ];
           }
           {
@@ -23199,6 +23348,10 @@ rec {
             usesDefaultFeatures = false;
           }
           {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+          }
+          {
             name = "tonic-reflection";
             packageId = "tonic-reflection";
             optional = true;
@@ -23232,12 +23385,8 @@ rec {
         ];
         buildDependencies = [
           {
-            name = "prost-build";
-            packageId = "prost-build";
-          }
-          {
-            name = "tonic-build";
-            packageId = "tonic-build";
+            name = "tonic-prost-build";
+            packageId = "tonic-prost-build";
           }
         ];
         devDependencies = [
@@ -23457,7 +23606,7 @@ rec {
             "dep:opentelemetry_sdk"
             "dep:opentelemetry-http"
             "dep:opentelemetry-semantic-conventions"
-            "reqwest-tracing?/opentelemetry_0_30"
+            "reqwest-tracing?/opentelemetry_0_31"
           ];
           "reqwest" = [ "dep:reqwest-tracing" ];
           "tonic" = [
@@ -24828,7 +24977,7 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            rename = "tonic_013";
+            rename = "tonic_014";
             optional = true;
           }
           {
@@ -24932,7 +25081,7 @@ rec {
           "socket2"
           "socket_options"
           "tokio-util"
-          "tonic013"
+          "tonic014"
           "unix"
           "unix_path_tools"
           "user_facing_default"
@@ -25286,7 +25435,7 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            rename = "tonic013";
+            rename = "tonic014";
             optional = true;
           }
           {
@@ -25318,7 +25467,7 @@ rec {
           "tonic08" = [ "dep:tonic08" ];
           "tonic09" = [ "dep:tonic09" ];
         };
-        resolvedDefaultFeatures = [ "tonic013" ];
+        resolvedDefaultFeatures = [ "tonic014" ];
       };
       "toml 0.6.0" = rec {
         crateName = "toml";
@@ -25819,9 +25968,9 @@ rec {
       };
       "tonic" = rec {
         crateName = "tonic";
-        version = "0.13.1";
+        version = "0.14.5";
         edition = "2021";
-        sha256 = "1acvnjzh61y0m829mijj6z2nzqnwshdsnmbcl2g4spw3bahinn3y";
+        sha256 = "1v4k7aa28m7722gz9qak2jiy7lis1ycm4fdmq63iip4m0qdcdizy";
         authors = [
           "Lucio Franco <luciofranco14@gmail.com>"
         ];
@@ -25891,22 +26040,19 @@ rec {
             packageId = "pin-project";
           }
           {
-            name = "prost";
-            packageId = "prost";
-            optional = true;
-            usesDefaultFeatures = false;
-            features = [ "std" ];
-          }
-          {
             name = "rustls-native-certs";
             packageId = "rustls-native-certs";
             optional = true;
           }
           {
             name = "socket2";
-            packageId = "socket2 0.5.10";
+            packageId = "socket2 0.6.1";
             optional = true;
             features = [ "all" ];
+          }
+          {
+            name = "sync_wrapper";
+            packageId = "sync_wrapper";
           }
           {
             name = "tokio";
@@ -25955,20 +26101,24 @@ rec {
             features = [
               "rt-multi-thread"
               "macros"
+              "test-util"
             ];
           }
           {
             name = "tower";
             packageId = "tower 0.5.3";
-            features = [ "full" ];
+            features = [
+              "load-shed"
+              "timeout"
+            ];
           }
         ];
         features = {
           "_tls-any" = [
-            "dep:tokio-rustls"
             "dep:tokio"
             "tokio?/rt"
             "tokio?/macros"
+            "tls-connect-info"
           ];
           "channel" = [
             "dep:hyper"
@@ -25980,6 +26130,7 @@ rec {
             "tower?/buffer"
             "tower?/discover"
             "tower?/limit"
+            "tower?/load-shed"
             "tower?/util"
             "dep:tokio"
             "tokio?/time"
@@ -25990,11 +26141,9 @@ rec {
             "router"
             "transport"
             "codegen"
-            "prost"
           ];
           "deflate" = [ "dep:flate2" ];
           "gzip" = [ "dep:flate2" ];
-          "prost" = [ "dep:prost" ];
           "router" = [
             "dep:axum"
             "dep:tower"
@@ -26016,11 +26165,13 @@ rec {
             "dep:tower"
             "tower?/util"
             "tower?/limit"
+            "tower?/load-shed"
           ];
           "tls-aws-lc" = [
             "_tls-any"
             "tokio-rustls/aws-lc-rs"
           ];
+          "tls-connect-info" = [ "dep:tokio-rustls" ];
           "tls-native-roots" = [
             "_tls-any"
             "channel"
@@ -26046,19 +26197,19 @@ rec {
           "channel"
           "codegen"
           "default"
-          "prost"
           "router"
           "server"
           "tls-aws-lc"
+          "tls-connect-info"
           "tls-native-roots"
           "transport"
         ];
       };
       "tonic-build" = rec {
         crateName = "tonic-build";
-        version = "0.13.1";
+        version = "0.14.3";
         edition = "2021";
-        sha256 = "0iz8g4i9rkaigp5v8149bmj5f1qdgq9v739j845jzl8jwxxzdipa";
+        sha256 = "1z5njzxk1wsgx63h1zsvi9mqay6h2ir3ddkx5lg782znxl4wiai7";
         libName = "tonic_build";
         authors = [
           "Lucio Franco <luciofranco14@gmail.com>"
@@ -26073,16 +26224,6 @@ rec {
             packageId = "proc-macro2";
           }
           {
-            name = "prost-build";
-            packageId = "prost-build";
-            optional = true;
-          }
-          {
-            name = "prost-types";
-            packageId = "prost-types";
-            optional = true;
-          }
-          {
             name = "quote";
             packageId = "quote";
           }
@@ -26092,30 +26233,15 @@ rec {
           }
         ];
         features = {
-          "cleanup-markdown" = [ "prost-build?/cleanup-markdown" ];
-          "default" = [
-            "transport"
-            "prost"
-          ];
-          "prost" = [
-            "prost-build"
-            "dep:prost-types"
-          ];
-          "prost-build" = [ "dep:prost-build" ];
+          "default" = [ "transport" ];
         };
-        resolvedDefaultFeatures = [
-          "cleanup-markdown"
-          "default"
-          "prost"
-          "prost-build"
-          "transport"
-        ];
+        resolvedDefaultFeatures = [ "transport" ];
       };
       "tonic-health" = rec {
         crateName = "tonic-health";
-        version = "0.13.1";
+        version = "0.14.5";
         edition = "2021";
-        sha256 = "0jya3573wclwr4lk4llv0dgnva249mwn0viva7xgw4q36i6k71yb";
+        sha256 = "1dwf5whxd2z1mnp8d8ynp6mvhxs3xfyga618q0zgnyplzqv0dzzl";
         libName = "tonic_health";
         authors = [
           "James Nugent <james@jen20.com>"
@@ -26140,10 +26266,12 @@ rec {
             name = "tonic";
             packageId = "tonic";
             usesDefaultFeatures = false;
-            features = [
-              "codegen"
-              "prost"
-            ];
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
           }
         ];
         devDependencies = [
@@ -26158,11 +26286,95 @@ rec {
         ];
 
       };
+      "tonic-prost" = rec {
+        crateName = "tonic-prost";
+        version = "0.14.5";
+        edition = "2021";
+        sha256 = "02fkg2bv87q0yds2wz3w0s7i1x6qcgbrl00dy6ipajdapfh7clx5";
+        libName = "tonic_prost";
+        authors = [
+          "Lucio Franco <luciofranco14@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+          }
+        ];
+
+      };
+      "tonic-prost-build" = rec {
+        crateName = "tonic-prost-build";
+        version = "0.14.5";
+        edition = "2021";
+        sha256 = "0nprp0dpa0aivxlccjap6289zi6ygrnzbl4k5rkp8xci6vv4s57k";
+        libName = "tonic_prost_build";
+        authors = [
+          "Lucio Franco <luciofranco14@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "prettyplease";
+            packageId = "prettyplease";
+          }
+          {
+            name = "proc-macro2";
+            packageId = "proc-macro2";
+          }
+          {
+            name = "prost-build";
+            packageId = "prost-build";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "quote";
+            packageId = "quote";
+          }
+          {
+            name = "syn";
+            packageId = "syn 2.0.117";
+          }
+          {
+            name = "tempfile";
+            packageId = "tempfile";
+          }
+          {
+            name = "tonic-build";
+            packageId = "tonic-build";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "cleanup-markdown" = [ "prost-build/cleanup-markdown" ];
+          "default" = [
+            "transport"
+            "cleanup-markdown"
+          ];
+          "transport" = [ "tonic-build/transport" ];
+        };
+        resolvedDefaultFeatures = [
+          "cleanup-markdown"
+          "default"
+          "transport"
+        ];
+      };
       "tonic-reflection" = rec {
         crateName = "tonic-reflection";
-        version = "0.13.1";
+        version = "0.14.5";
         edition = "2021";
-        sha256 = "1qdgkbh0cd15qhvra41j1dpj5a5vg3r50s9msbgbvzpapzapns7r";
+        sha256 = "19zwlfzzzdi594ixj4zd582g7dv6ww140xm05d82pl76a5d6iw5a";
         libName = "tonic_reflection";
         authors = [
           "James Nugent <james@jen20.com>"
@@ -26197,10 +26409,12 @@ rec {
             name = "tonic";
             packageId = "tonic";
             usesDefaultFeatures = false;
-            features = [
-              "codegen"
-              "prost"
-            ];
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
           }
         ];
         devDependencies = [
@@ -26626,6 +26840,7 @@ rec {
           "indexmap"
           "limit"
           "load"
+          "load-shed"
           "log"
           "make"
           "pin-project-lite"
@@ -26948,74 +27163,6 @@ rec {
         ];
 
       };
-      "tower-otel-http-metrics" = rec {
-        crateName = "tower-otel-http-metrics";
-        version = "0.16.0";
-        edition = "2021";
-        sha256 = "13i47nrgy7qr6ivsgqfmr46c7p6ikpb15crk368k27nm2hidw7cc";
-        libName = "tower_otel_http_metrics";
-        dependencies = [
-          {
-            name = "axum";
-            packageId = "axum";
-            optional = true;
-            usesDefaultFeatures = false;
-            features = [
-              "matched-path"
-              "macros"
-            ];
-          }
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "http";
-            packageId = "http 1.4.0";
-            usesDefaultFeatures = false;
-            features = [ "std" ];
-          }
-          {
-            name = "http-body";
-            packageId = "http-body 1.0.1";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "opentelemetry";
-            packageId = "opentelemetry";
-            usesDefaultFeatures = false;
-            features = [
-              "futures-core"
-              "futures-sink"
-              "pin-project-lite"
-              "metrics"
-            ];
-          }
-          {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "tower-layer";
-            packageId = "tower-layer";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "tower-service";
-            packageId = "tower-service";
-            usesDefaultFeatures = false;
-          }
-        ];
-        features = {
-          "axum" = [ "dep:axum" ];
-        };
-        resolvedDefaultFeatures = [
-          "axum"
-          "default"
-        ];
-      };
       "tower-service" = rec {
         crateName = "tower-service";
         version = "0.3.3";
@@ -27310,9 +27457,9 @@ rec {
       };
       "tracing-opentelemetry" = rec {
         crateName = "tracing-opentelemetry";
-        version = "0.31.0";
+        version = "0.32.1";
         edition = "2021";
-        sha256 = "171scb8d5ynxvnyvq7lm9wzn4fzk0jf124v49p8d01wmydcmkkyx";
+        sha256 = "1z2jjmxbkm1qawlb3bm99x8xwf4g8wjkbcknm9z4fv1w14nqzhhs";
         libName = "tracing_opentelemetry";
         dependencies = [
           {
@@ -27322,18 +27469,8 @@ rec {
               { target, features }: (("wasm32" == target."arch" or null) && (!("wasi" == target."os" or null)));
           }
           {
-            name = "once_cell";
-            packageId = "once_cell";
-          }
-          {
             name = "opentelemetry";
             packageId = "opentelemetry";
-            usesDefaultFeatures = false;
-            features = [ "trace" ];
-          }
-          {
-            name = "opentelemetry_sdk";
-            packageId = "opentelemetry_sdk";
             usesDefaultFeatures = false;
             features = [ "trace" ];
           }
@@ -27384,16 +27521,6 @@ rec {
             ];
           }
           {
-            name = "opentelemetry_sdk";
-            packageId = "opentelemetry_sdk";
-            usesDefaultFeatures = false;
-            features = [
-              "trace"
-              "rt-tokio"
-              "experimental_metrics_custom_reader"
-            ];
-          }
-          {
             name = "tracing";
             packageId = "tracing";
             usesDefaultFeatures = false;
@@ -27414,21 +27541,16 @@ rec {
           }
         ];
         features = {
-          "async-trait" = [ "dep:async-trait" ];
           "default" = [
             "tracing-log"
             "metrics"
           ];
-          "futures-util" = [ "dep:futures-util" ];
           "lazy_static" = [ "dep:lazy_static" ];
           "metrics" = [
             "opentelemetry/metrics"
-            "opentelemetry_sdk/metrics"
             "smallvec"
           ];
           "smallvec" = [ "dep:smallvec" ];
-          "thiserror" = [ "dep:thiserror" ];
-          "thiserror-1" = [ "dep:thiserror-1" ];
           "tracing-log" = [ "dep:tracing-log" ];
         };
         resolvedDefaultFeatures = [

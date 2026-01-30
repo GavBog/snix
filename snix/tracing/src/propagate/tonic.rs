@@ -16,7 +16,10 @@ pub fn accept_trace<B>(request: http::Request<B>) -> http::Request<B> {
         let parent_context = global::get_text_map_propagator(|propagator| {
             propagator.extract(&HeaderExtractor(request.headers()))
         });
-        tracing::Span::current().set_parent(parent_context);
+
+        if let Err(err) = tracing::Span::current().set_parent(parent_context) {
+            tracing::warn!(%err,"unable to set trace parent")
+        }
     }
     request
 }

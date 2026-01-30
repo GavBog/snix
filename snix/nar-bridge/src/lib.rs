@@ -47,9 +47,8 @@ impl AppState {
 pub fn gen_router(priority: u64) -> Router<AppState> {
     #[cfg(feature = "otlp")]
     let metrics_meter = opentelemetry::global::meter("nar-bridge");
-
     #[cfg(feature = "otlp")]
-    let metrics_layer = tower_otel_http_metrics::HTTPMetricsLayerBuilder::builder()
+    let metrics_layer = opentelemetry_instrumentation_tower::HTTPMetricsLayerBuilder::builder()
         .with_meter(metrics_meter)
         .build()
         .unwrap();
