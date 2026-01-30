@@ -528,15 +528,24 @@ impl Compiler<'_, '_> {
     fn compile_binop(&mut self, slot: LocalIdx, op: &ast::BinOp) {
         use ast::BinOpKind;
 
-        // Short-circuiting and other strange operators, which are
-        // under the same node type as NODE_BIN_OP, but need to be
-        // handled separately (i.e. before compiling the expressions
-        // used for standard binary operators).
-
         match op.operator().unwrap() {
+            // Short-circuiting and other strange operators, which are
+            // under the same node type as NODE_BIN_OP, but need to be
+            // handled separately (i.e. before compiling the expressions
+            // used for standard binary operators).
             BinOpKind::And => return self.compile_and(slot, op),
             BinOpKind::Or => return self.compile_or(slot, op),
             BinOpKind::Implication => return self.compile_implication(slot, op),
+
+            // Pipe operators. Any introduction should be properly
+            // feature-flagged, due to its experimental status.
+            BinOpKind::PipeRight | BinOpKind::PipeLeft => {
+                return self.emit_error(
+                    op,
+                    ErrorKind::NotImplemented("pipe operators not implemented"),
+                );
+            }
+
             _ => {}
         };
 
@@ -561,14 +570,15 @@ impl Compiler<'_, '_> {
             BinOpKind::More => self.push_op(Op::More, op),
             BinOpKind::MoreOrEq => self.push_op(Op::MoreOrEq, op),
             BinOpKind::Concat => self.push_op(Op::Concat, op),
-
             BinOpKind::NotEqual => {
                 self.push_op(Op::Equal, op);
                 self.push_op(Op::Invert, op)
             }
-
-            // Handled by separate branch above.
-            BinOpKind::And | BinOpKind::Implication | BinOpKind::Or => {
+            BinOpKind::And
+            | BinOpKind::Implication
+            | BinOpKind::Or
+            | BinOpKind::PipeRight
+            | BinOpKind::PipeLeft => {
                 unreachable!()
             }
         };

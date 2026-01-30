@@ -15919,9 +15919,9 @@ rec {
       };
       "rnix" = rec {
         crateName = "rnix";
-        version = "0.11.0";
+        version = "0.12.0";
         edition = "2021";
-        sha256 = "0pybq9gp4b7lp0066236jpqi9lgb1bzvqc9axymwrq3hxgdwwddv";
+        sha256 = "1a8vpirp369mdkxcvmzxnzwjh0194788qvqbsmqbsfml185y05bg";
         authors = [
           "jD91mZM2 <me@krake.one>"
         ];

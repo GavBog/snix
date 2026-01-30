@@ -277,6 +277,8 @@ impl Serialize for SerializeAST<&ast::BinOp> {
                 ast::BinOpKind::MoreOrEq => "more_or_eq",
                 ast::BinOpKind::NotEqual => "not_equal",
                 ast::BinOpKind::Or => "or",
+                ast::BinOpKind::PipeRight => "pipe_right",
+                ast::BinOpKind::PipeLeft => "pipe_left",
             },
         )?;
 
