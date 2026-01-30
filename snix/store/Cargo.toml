@@ -41,12 +41,6 @@ tokio = { workspace = true, features = [
   "rt",
   "rt-multi-thread",
 ] }
-tokio-listener = { workspace = true, features = [
-  "clap",
-  "multi-listener",
-  "sd_listen",
-  "tonic013",
-] }
 tokio-stream = { workspace = true, features = ["fs"] }
 tokio-util = { workspace = true, features = ["io", "io-util", "compat"] }
 tonic = { workspace = true, features = ["tls-aws-lc"] }

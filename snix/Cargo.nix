@@ -18603,11 +18603,6 @@ rec {
             features = [ "process" ];
           }
           {
-            name = "tokio-listener";
-            packageId = "tokio-listener";
-            features = [ "tonic013" ];
-          }
-          {
             name = "tonic";
             packageId = "tonic";
             features = [ "tls-native-roots" ];
@@ -19756,6 +19751,10 @@ rec {
           {
             name = "tokio-listener";
             packageId = "tokio-listener";
+            features = [
+              "clap"
+              "sd_listen"
+            ];
           }
           {
             name = "tracing";
@@ -20573,16 +20572,6 @@ rec {
               "net"
               "rt"
               "rt-multi-thread"
-            ];
-          }
-          {
-            name = "tokio-listener";
-            packageId = "tokio-listener";
-            features = [
-              "clap"
-              "multi-listener"
-              "sd_listen"
-              "tonic013"
             ];
           }
           {

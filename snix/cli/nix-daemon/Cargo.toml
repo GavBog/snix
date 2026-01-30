@@ -24,7 +24,7 @@ tokio = { workspace = true, features = [
   "rt-multi-thread",
   "signal",
 ] }
-tokio-listener.workspace = true
+tokio-listener = { workspace = true, features = ["clap", "sd_listen"] }
 tracing.workspace = true
 
 [features]
