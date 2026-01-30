@@ -538,6 +538,7 @@ fn name_for_syntax(syntax: &rnix::SyntaxKind) -> &'static str {
         rnix::SyntaxKind::TOKEN_STRING_CONTENT => "content of a string",
         rnix::SyntaxKind::TOKEN_STRING_END => "\"",
         rnix::SyntaxKind::TOKEN_STRING_START => "\"",
+        rnix::SyntaxKind::TOKEN_ERROR => "unexpected token",
 
         rnix::SyntaxKind::NODE_APPLY => "a function application",
         rnix::SyntaxKind::NODE_ASSERT => "an assertion",
@@ -570,9 +571,8 @@ fn name_for_syntax(syntax: &rnix::SyntaxKind) -> &'static str {
         rnix::SyntaxKind::NODE_PATH => "a path",
         rnix::SyntaxKind::NODE_HAS_ATTR => "`?`-operator",
 
-        // TODO(tazjin): unsure what these variants are, lets crash!
-        rnix::SyntaxKind::NODE_ERROR => todo!("NODE_ERROR found, tell tazjin!"),
-        rnix::SyntaxKind::TOKEN_ERROR => todo!("TOKEN_ERROR found, tell tazjin!"),
+        // TODO: unsure about this variant, lets crash!
+        rnix::SyntaxKind::NODE_ERROR => todo!("NODE_ERROR found, open a bug with a reproducer"),
         _ => todo!(),
     }
 }
