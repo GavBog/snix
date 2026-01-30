@@ -11383,9 +11383,9 @@ rec {
       };
       "object_store" = rec {
         crateName = "object_store";
-        version = "0.12.5";
-        edition = "2021";
-        sha256 = "001a3rdd57fivhp2ym2w6fdk3x7cm1yba459r07b1jpc1bsgzyzv";
+        version = "0.13.1";
+        edition = "2024";
+        sha256 = "1yqd7i76ymllf0whi8a1vgd8wid91wxswflz98lqs52wwmjq11f2";
         dependencies = [
           {
             name = "async-trait";
@@ -11499,8 +11499,8 @@ rec {
             features = [ "std" ];
           }
           {
-            name = "rustls-pemfile";
-            packageId = "rustls-pemfile";
+            name = "rustls-pki-types";
+            packageId = "rustls-pki-types";
             optional = true;
             usesDefaultFeatures = false;
             features = [ "std" ];
@@ -11578,6 +11578,7 @@ rec {
           {
             name = "reqwest";
             packageId = "reqwest 0.12.24";
+            usesDefaultFeatures = false;
             features = [ "gzip" ];
           }
         ];
@@ -11611,7 +11612,7 @@ rec {
           "fs" = [ "walkdir" ];
           "gcp" = [
             "cloud"
-            "rustls-pemfile"
+            "rustls-pki-types"
           ];
           "http" = [ "cloud" ];
           "http-body-util" = [ "dep:http-body-util" ];
@@ -11623,7 +11624,7 @@ rec {
           "rand" = [ "dep:rand" ];
           "reqwest" = [ "dep:reqwest" ];
           "ring" = [ "dep:ring" ];
-          "rustls-pemfile" = [ "dep:rustls-pemfile" ];
+          "rustls-pki-types" = [ "dep:rustls-pki-types" ];
           "serde" = [ "dep:serde" ];
           "serde_json" = [ "dep:serde_json" ];
           "serde_urlencoded" = [ "dep:serde_urlencoded" ];
@@ -11648,7 +11649,7 @@ rec {
           "rand"
           "reqwest"
           "ring"
-          "rustls-pemfile"
+          "rustls-pki-types"
           "serde"
           "serde_json"
           "serde_urlencoded"

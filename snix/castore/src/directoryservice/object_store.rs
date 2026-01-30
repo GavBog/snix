@@ -7,6 +7,7 @@ use futures::SinkExt;
 use futures::StreamExt;
 use futures::TryStreamExt;
 use futures::stream::BoxStream;
+use object_store::ObjectStoreExt;
 use object_store::{ObjectStore, path::Path};
 use prost::Message;
 use tokio::io::AsyncWriteExt;

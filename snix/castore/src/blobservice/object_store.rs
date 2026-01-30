@@ -9,7 +9,7 @@ use std::{
 use data_encoding::HEXLOWER;
 use fastcdc::v2020::AsyncStreamCDC;
 use futures::{Future, TryStreamExt};
-use object_store::{ObjectStore, path::Path};
+use object_store::{ObjectStore, ObjectStoreExt, path::Path};
 use pin_project_lite::pin_project;
 use prost::Message;
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
