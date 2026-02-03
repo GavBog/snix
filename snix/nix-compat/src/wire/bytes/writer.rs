@@ -253,7 +253,7 @@ mod tests {
     }
 
     /// Write an empty bytes packet.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_empty() {
         let payload = &[];
         let mut mock = Builder::new()
@@ -266,7 +266,7 @@ mod tests {
     }
 
     /// Write an empty bytes packet, not calling write.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_empty_only_flush() {
         let payload = &[];
         let mut mock = Builder::new()
@@ -278,7 +278,7 @@ mod tests {
     }
 
     /// Write an empty bytes packet, not calling write or flush, only shutdown.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_empty_only_shutdown() {
         let payload = &[];
         let mut mock = Builder::new()
@@ -290,7 +290,7 @@ mod tests {
     }
 
     /// Write a 1 bytes packet
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_1b() {
         let payload = &[0xff];
 
@@ -304,7 +304,7 @@ mod tests {
     }
 
     /// Write a 8 bytes payload (no padding)
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_8b() {
         let payload = &hex!("0001020304050607");
 
@@ -318,7 +318,7 @@ mod tests {
     }
 
     /// Write a 9 bytes payload (7 bytes padding)
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_9b() {
         let payload = &hex!("000102030405060708");
 
@@ -333,7 +333,7 @@ mod tests {
 
     /// Write a 9 bytes packet very granularly, with a lot of flushing in between,
     /// and a shutdown at the end.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_9b_flush() {
         let payload = &hex!("000102030405060708");
         let exp_bytes = produce_exp_bytes(payload).await;
@@ -359,7 +359,7 @@ mod tests {
     /// padding, ensuring we correctly write (only) the rest of the padding later.
     /// We write another 2 bytes of "bait", where a faulty implementation (pre
     /// cl/11384) would put too many null bytes.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_9b_write_padding_2steps() {
         let payload = &hex!("000102030405060708");
         let exp_bytes = produce_exp_bytes(payload).await;
@@ -381,7 +381,7 @@ mod tests {
     }
 
     /// Write a larger bytes packet
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_1m() {
         let payload = LARGE_PAYLOAD.as_slice();
         let exp_bytes = produce_exp_bytes(payload).await;
@@ -395,7 +395,7 @@ mod tests {
 
     /// Not calling flush at the end, but shutdown is also ok if we wrote all
     /// bytes we promised to write (as shutdown implies flush)
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_shutdown_without_flush_end() {
         let payload = &[0xf0, 0xff];
         let exp_bytes = produce_exp_bytes(payload).await;
@@ -414,7 +414,7 @@ mod tests {
     }
 
     /// Writing more bytes than previously signalled should fail.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_more_than_signalled_fail() {
         let mut buf = Vec::new();
         let mut w = BytesWriter::new(&mut buf, 2);
@@ -422,7 +422,7 @@ mod tests {
         assert_err!(w.write_all(&hex!("000102")).await);
     }
     /// Writing more bytes than previously signalled, but in two parts
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_more_than_signalled_split_fail() {
         let mut buf = Vec::new();
         let mut w = BytesWriter::new(&mut buf, 2);
@@ -436,7 +436,7 @@ mod tests {
 
     /// Writing more bytes than previously signalled, but flushing after the
     /// signalled amount should fail.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn write_more_than_signalled_flush_fail() {
         let mut buf = Vec::new();
         let mut w = BytesWriter::new(&mut buf, 2);
@@ -453,7 +453,7 @@ mod tests {
     /// returns an error.
     /// Note there's still cases of silent corruption if the user doesn't call
     /// shutdown explicitly (only drops).
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn premature_shutdown() {
         let payload = &[0xf0, 0xff];
         let mut buf = Vec::new();
@@ -471,7 +471,7 @@ mod tests {
 
     /// Write to a Writer that fails to write during the size packet (after 4 bytes).
     /// Ensure this error gets propagated on the first call to write.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn inner_writer_fail_during_size_firstwrite() {
         let payload = &[0xf0];
 
@@ -486,7 +486,7 @@ mod tests {
 
     /// Write to a Writer that fails to write during the size packet (after 4 bytes).
     /// Ensure this error gets propagated during an initial flush
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn inner_writer_fail_during_size_initial_flush() {
         let payload = &[0xf0];
 
@@ -501,7 +501,7 @@ mod tests {
 
     /// Write to a writer that fails to write during the payload (after 9 bytes).
     /// Ensure this error gets propagated when we're writing this byte.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn inner_writer_fail_during_write() {
         let payload = &hex!("f0ff");
 
@@ -518,7 +518,7 @@ mod tests {
 
     /// Write to a writer that fails to write during the padding (after 10 bytes).
     /// Ensure this error gets propagated during a flush.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn inner_writer_fail_during_padding_flush() {
         let payload = &hex!("f0");
 

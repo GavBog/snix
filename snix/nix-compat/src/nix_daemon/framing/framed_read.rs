@@ -189,7 +189,7 @@ mod nix_framed_tests {
 
     use crate::nix_daemon::framing::NixFramedReader;
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_unexpected_eof_after_frame() {
         let mut mock = Builder::new()
             // The client sends len
@@ -210,7 +210,7 @@ mod nix_framed_tests {
         assert_eq!(err.kind(), io::ErrorKind::UnexpectedEof);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_unexpected_eof_in_frame() {
         let mut mock = Builder::new()
             // The client sends len
@@ -234,7 +234,7 @@ mod nix_framed_tests {
         ));
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_unexpected_eof_in_length() {
         let mut mock = Builder::new()
             // The client sends len
@@ -253,7 +253,7 @@ mod nix_framed_tests {
         assert_eq!(err.kind(), io::ErrorKind::UnexpectedEof);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_hello_world_in_two_frames() {
         let mut mock = Builder::new()
             // The client sends len

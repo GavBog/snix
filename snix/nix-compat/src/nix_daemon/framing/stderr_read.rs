@@ -269,7 +269,7 @@ mod tests {
 
     use crate::{nix_daemon::framing::StderrReadFramedReader, worker_protocol::STDERR_READ};
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_single_two_byte_read_with_desired_size_ten() {
         let mock = Builder::new()
             // The reader should first write STDERR_READ and requested number of bytes into the writer
@@ -293,7 +293,7 @@ mod tests {
         assert_eq!("hi".as_bytes(), result);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_single_read_with_padding_delayed() {
         let mock = Builder::new()
             // The reader should first write STDERR_READ and requested number of bytes into the writer
@@ -318,7 +318,7 @@ mod tests {
         assert_eq!(hex!("0202 0104 ffff ffaa 00"), result);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_multiple_consecutive_reads_with_arbitrary_delays() {
         let mock = Builder::new()
             // The reader should first write STDERR_READ and requested number of bytes into the writer
@@ -358,7 +358,7 @@ mod tests {
         assert_eq!("hello racerunners", &res);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_single_read_where_writing_stderr_and_desired_size_take_more_than_one_write() {
         let stderr_bytes = STDERR_READ.to_le_bytes();
         let length_bytes = 10u64.to_le_bytes();
@@ -388,6 +388,6 @@ mod tests {
         assert_eq!("hi".as_bytes(), result);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn hello() {}
 }

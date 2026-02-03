@@ -271,7 +271,7 @@ mod test {
     use super::*;
     use crate::wire::de::NixRead;
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_u64() {
         let mock = Builder::new().read(&hex!("0100 0000 0000 0000")).build();
         let mut reader = NixReader::new(mock);
@@ -284,7 +284,7 @@ mod test {
         assert_eq!(hex!(""), &buf[..]);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_u64_rest() {
         let mock = Builder::new()
             .read(&hex!("0100 0000 0000 0000 0123 4567 89AB CDEF"))
@@ -299,7 +299,7 @@ mod test {
         assert_eq!(hex!("0123 4567 89AB CDEF"), &buf[..]);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_u64_partial() {
         let mock = Builder::new()
             .read(&hex!("0100 0000"))
@@ -318,7 +318,7 @@ mod test {
         assert_eq!(hex!("0123 4567 89AB CDEF 0100 0000"), &buf[..]);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_u64_eof() {
         let mock = Builder::new().build();
         let mut reader = NixReader::new(mock);
@@ -329,7 +329,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_try_read_u64_none() {
         let mock = Builder::new().build();
         let mut reader = NixReader::new(mock);
@@ -337,7 +337,7 @@ mod test {
         assert_eq!(None, reader.try_read_number().await.unwrap());
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_try_read_u64_eof() {
         let mock = Builder::new().read(&hex!("0100 0000 0000")).build();
         let mut reader = NixReader::new(mock);
@@ -348,7 +348,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_try_read_u64_eof2() {
         let mock = Builder::new()
             .read(&hex!("0100"))
@@ -374,7 +374,7 @@ mod test {
     #[case::seven(b"where's", &hex!("0700 0000 0000 0000 7768 6572 6527 7300"))]
     #[case::aligned(b"read_tea", &hex!("0800 0000 0000 0000 7265 6164 5F74 6561"))]
     #[case::more_bytes(b"read_tess", &hex!("0900 0000 0000 0000 7265 6164 5F74 6573 7300 0000 0000 0000"))]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_bytes(#[case] expected: &[u8], #[case] data: &[u8]) {
         let mock = Builder::new().read(data).build();
         let mut reader = NixReader::new(mock);
@@ -382,7 +382,7 @@ mod test {
         assert_eq!(&actual[..], expected);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_bytes_empty() {
         let mock = Builder::new().build();
         let mut reader = NixReader::new(mock);
@@ -393,7 +393,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_try_read_bytes_none() {
         let mock = Builder::new().build();
         let mut reader = NixReader::new(mock);
@@ -401,7 +401,7 @@ mod test {
         assert_eq!(None, reader.try_read_bytes().await.unwrap());
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_try_read_bytes_missing_data() {
         let mock = Builder::new()
             .read(&hex!("0500"))
@@ -416,7 +416,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_try_read_bytes_missing_padding() {
         let mock = Builder::new()
             .read(&hex!("0200 0000 0000 0000"))
@@ -431,7 +431,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_bytes_bad_padding() {
         let mock = Builder::new()
             .read(&hex!("0200 0000 0000 0000"))
@@ -446,7 +446,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_bytes_limited_out_of_range() {
         let mock = Builder::new().read(&hex!("FFFF 0000 0000 0000")).build();
         let mut reader = NixReader::new(mock);
@@ -457,7 +457,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_read_bytes_length_overflow() {
         let mock = Builder::new().read(&hex!("F9FF FFFF FFFF FFFF")).build();
         let mut reader = NixReader::builder()
@@ -475,7 +475,7 @@ mod test {
     }
 
     // FUTUREWORK: Test this on supported hardware
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     #[cfg(any(target_pointer_width = "16", target_pointer_width = "32"))]
     async fn test_bytes_length_conversion_overflow() {
         let len = (usize::MAX as u64) + 1;
@@ -488,7 +488,7 @@ mod test {
     }
 
     // FUTUREWORK: Test this on supported hardware
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     #[cfg(any(target_pointer_width = "16", target_pointer_width = "32"))]
     async fn test_bytes_aligned_length_conversion_overflow() {
         let len = (usize::MAX - 6) as u64;
@@ -500,7 +500,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_buffer_resize() {
         let mock = Builder::new()
             .read(&hex!("0100"))

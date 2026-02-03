@@ -339,7 +339,7 @@ mod tests {
     #[case::size_8b(&hex!("0001020304050607"))] // 8 bytes payload (no padding)
     #[case::size_9b(&hex!("000102030405060708"))] // 9 bytes payload (7 bytes padding)
     #[case::size_1m(LARGE_PAYLOAD.as_slice())] // larger bytes packet
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_payload_correct(#[case] payload: &[u8]) {
         let mut mock = Builder::new()
             .read(&produce_packet_bytes(payload).await)
@@ -362,7 +362,7 @@ mod tests {
     #[case::size_8b(&hex!("0001020304050607"))] // 8 bytes payload (no padding)
     #[case::size_9b(&hex!("000102030405060708"))] // 9 bytes payload (7 bytes padding)
     #[case::size_1m(LARGE_PAYLOAD.as_slice())] // larger bytes packet
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_payload_correct_readbuf(#[case] payload: &[u8]) {
         let mut mock = BufReader::new(
             Builder::new()
@@ -383,7 +383,7 @@ mod tests {
     }
 
     /// Fail if the bytes packet is larger than allowed
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_bigger_than_allowed_fail() {
         let payload = LARGE_PAYLOAD.as_slice();
         let mut mock = Builder::new()
@@ -400,7 +400,7 @@ mod tests {
     }
 
     /// Fail if the bytes packet is smaller than allowed
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_smaller_than_allowed_fail() {
         let payload = &[0x00, 0x01, 0x02];
         let mut mock = Builder::new()
@@ -418,7 +418,7 @@ mod tests {
 
     /// Read the trailer immediately if there is no payload.
     #[cfg(feature = "async")]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_trailer_immediately() {
         use crate::nar::wire::PadPar;
 
@@ -436,7 +436,7 @@ mod tests {
 
     /// Read the trailer even if we only read the exact payload size.
     #[cfg(feature = "async")]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_exact_trailer() {
         use crate::nar::wire::PadPar;
 
@@ -458,7 +458,7 @@ mod tests {
     }
 
     /// Fail if the padding is not all zeroes
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_fail_if_nonzero_padding() {
         let payload = &[0x00, 0x01, 0x02];
         let mut packet_bytes = produce_packet_bytes(payload).await;
@@ -476,7 +476,7 @@ mod tests {
     /// EOF in the middle of the size packet (after 4 bytes).
     /// We should get an unexpected EOF error, already when trying to read the
     /// first byte (of payload)
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_9b_eof_during_size() {
         let payload = &hex!("FF0102030405060708");
         let mut mock = Builder::new()
@@ -496,7 +496,7 @@ mod tests {
     /// EOF in the middle of the payload (4 bytes into the payload).
     /// We should get an unexpected EOF error, after reading the first 4 bytes
     /// (successfully).
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_9b_eof_during_payload() {
         let payload = &hex!("FF0102030405060708");
         let mut mock = Builder::new()
@@ -523,7 +523,7 @@ mod tests {
     #[case::before_padding(8 + 9)]
     #[case::during_padding(8 + 9 + 2)]
     #[case::after_padding(8 + 9 + padding_len(9) as usize - 1)]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_9b_eof_after_payload(#[case] offset: usize) {
         let payload = &hex!("FF0102030405060708");
         let mut mock = Builder::new()
@@ -549,7 +549,7 @@ mod tests {
     #[case::during_payload(8 + 4)]
     #[case::before_padding(8 + 4)]
     #[case::during_padding(8 + 9 + 2)]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn propagate_error_from_reader(#[case] offset: usize) {
         let payload = &hex!("FF0102030405060708");
         let mut mock = Builder::new()
@@ -590,7 +590,7 @@ mod tests {
     #[case::during_payload(8 + 4)]
     #[case::before_padding(8 + 4)]
     #[case::during_padding(8 + 9 + 2)]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn propagate_error_from_reader_buffered(#[case] offset: usize) {
         let payload = &hex!("FF0102030405060708");
         let mock = Builder::new()
@@ -626,7 +626,7 @@ mod tests {
 
     /// If there's an error right after the padding, we don't propagate it, as
     /// we're done reading. We just return EOF.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn no_error_after_eof() {
         let payload = &hex!("FF0102030405060708");
         let mut mock = Builder::new()
@@ -643,7 +643,7 @@ mod tests {
 
     /// If there's an error right after the padding, we don't propagate it, as
     /// we're done reading. We just return EOF.
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn no_error_after_eof_buffered() {
         let payload = &hex!("FF0102030405060708");
         let mock = Builder::new()
@@ -669,7 +669,7 @@ mod tests {
     #[case::during_payload(8 + 4)]
     #[case::before_padding(8 + 4)]
     #[case::during_padding(8 + 9 + 2)]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn read_payload_correct_pending(#[case] offset: usize) {
         let payload = &hex!("FF0102030405060708");
         let mut mock = Builder::new()

@@ -253,7 +253,7 @@ mod test {
     #[case::seven(b"where's", &hex!("0700 0000 0000 0000 7768 6572 6527 7300"))]
     #[case::aligned(b"read_tea", &hex!("0800 0000 0000 0000 7265 6164 5F74 6561"))]
     #[case::more_bytes(b"read_tess", &hex!("0900 0000 0000 0000 7265 6164 5F74 6573 7300 0000 0000 0000"))]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_write_slice(
         #[case] value: &[u8],
         #[case] buf: &[u8],
@@ -284,7 +284,7 @@ mod test {
     #[case::seven("where's", &hex!("0700 0000 0000 0000 7768 6572 6527 7300"))]
     #[case::aligned("read_tea", &hex!("0800 0000 0000 0000 7265 6164 5F74 6561"))]
     #[case::more_bytes("read_tess", &hex!("0900 0000 0000 0000 7265 6164 5F74 6573 7300 0000 0000 0000"))]
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn test_write_display(
         #[case] value: &str,
         #[case] buf: &[u8],

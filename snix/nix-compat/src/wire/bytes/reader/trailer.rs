@@ -142,7 +142,7 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn unexpected_eof() {
         let reader = tokio_test::io::Builder::new()
             .read(&[0xed])
@@ -156,7 +156,7 @@ mod tests {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn invalid_padding() {
         let reader = tokio_test::io::Builder::new()
             .read(&[0xed])
@@ -171,7 +171,7 @@ mod tests {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn success() {
         let reader = tokio_test::io::Builder::new()
             .read(&[0xed])
@@ -187,7 +187,7 @@ mod tests {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn no_padding() {
         assert!(
             read_trailer::<_, Pad>(io::empty(), 0)
