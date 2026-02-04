@@ -398,7 +398,7 @@ impl ServiceBuilder for BigtableParameters {
         &'a self,
         instance_name: &str,
         _context: &CompositionContext,
-    ) -> Result<Arc<dyn DirectoryService>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(Arc::new(
             BigtableDirectoryService::connect(instance_name.to_string(), self.clone()).await?,
         ))

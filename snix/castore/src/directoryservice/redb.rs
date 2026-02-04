@@ -389,7 +389,7 @@ impl ServiceBuilder for RedbDirectoryServiceConfig {
         &'a self,
         instance_name: &str,
         _context: &CompositionContext,
-    ) -> Result<Arc<dyn DirectoryService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(Arc::new(
             RedbDirectoryService::new(instance_name.to_string(), self.to_owned()).await?,
         ))

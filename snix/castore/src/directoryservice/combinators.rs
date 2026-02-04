@@ -187,7 +187,7 @@ impl ServiceBuilder for CacheConfig {
         &'a self,
         instance_name: &str,
         context: &CompositionContext,
-    ) -> Result<Arc<dyn DirectoryService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         let (near, far) = futures::join!(
             context.resolve::<Self::Output>(&self.near),
             context.resolve::<Self::Output>(&self.far)

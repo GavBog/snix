@@ -61,7 +61,7 @@ impl ServiceBuilder for MemoryBlobServiceConfig {
         &'a self,
         instance_name: &str,
         _context: &CompositionContext,
-    ) -> Result<Arc<dyn BlobService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(Arc::new(MemoryBlobService {
             instance_name: instance_name.to_string(),
             db: Default::default(),

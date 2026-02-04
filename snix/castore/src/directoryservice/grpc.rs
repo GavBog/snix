@@ -260,7 +260,7 @@ impl ServiceBuilder for GRPCDirectoryServiceConfig {
         &'a self,
         instance_name: &str,
         _context: &CompositionContext,
-    ) -> Result<Arc<dyn DirectoryService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         let client = proto::directory_service_client::DirectoryServiceClient::with_interceptor(
             crate::tonic::channel_from_url(&self.url.parse()?).await?,
             // tonic::service::Interceptor wants an unboxed Status as return type.
