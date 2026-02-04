@@ -75,7 +75,7 @@ use tracing::{Span, debug, error, instrument, warn};
 /// allocation", aka reserve Directory.size inodes for each directory node we
 /// explore.
 /// Tests for this live in the snix-store crate.
-pub struct SnixStoreFs<BS, DS, RN> {
+pub struct SnixStoreFs<BS, DS, RN: RootNodes> {
     blob_service: BS,
     directory_service: DS,
     root_nodes_provider: RN,
@@ -107,14 +107,7 @@ pub struct SnixStoreFs<BS, DS, RN> {
             u64,
             (
                 Span,
-                Arc<
-                    Mutex<
-                        BoxStream<
-                            'static,
-                            (usize, Result<(PathComponent, Node), root_nodes::Error>),
-                        >,
-                    >,
-                >,
+                Arc<Mutex<BoxStream<'static, (usize, Result<(PathComponent, Node), RN::Error>)>>>,
             ),
         >,
     >,
