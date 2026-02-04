@@ -1,4 +1,6 @@
+use auto_impl::auto_impl;
 use snix_castore::B3Digest;
+use snix_castore::Node;
 use snix_castore::directoryservice::OrderingError;
 use tonic::async_trait;
 
@@ -10,11 +12,11 @@ pub use import::{NarIngestionError, ingest_nar, ingest_nar_and_hash};
 pub use renderer::SimpleRenderer;
 pub use renderer::calculate_size_and_sha256;
 pub use renderer::write_nar;
-use snix_castore::Node;
 
 use crate::pathinfoservice;
 
 #[async_trait]
+#[auto_impl(&, &mut, Arc, Box)]
 pub trait NarCalculationService: Send + Sync {
     /// Return the nar size and nar sha256 digest for a given root node.
     /// This can be used to calculate NAR-based output paths.
@@ -22,19 +24,6 @@ pub trait NarCalculationService: Send + Sync {
         &self,
         root_node: &Node,
     ) -> Result<(u64, [u8; 32]), pathinfoservice::Error>;
-}
-
-#[async_trait]
-impl<A> NarCalculationService for A
-where
-    A: AsRef<dyn NarCalculationService> + Send + Sync,
-{
-    async fn calculate_nar(
-        &self,
-        root_node: &Node,
-    ) -> Result<(u64, [u8; 32]), pathinfoservice::Error> {
-        self.as_ref().calculate_nar(root_node).await
-    }
 }
 
 /// Errors that can encounter while rendering NARs.
