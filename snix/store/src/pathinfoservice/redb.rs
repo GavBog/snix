@@ -310,7 +310,7 @@ impl ServiceBuilder for RedbPathInfoServiceConfig {
         &'a self,
         instance_name: &str,
         _context: &CompositionContext,
-    ) -> Result<Arc<dyn PathInfoService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(Arc::new(
             RedbPathInfoService::new(instance_name.to_string(), self.to_owned()).await?,
         ))

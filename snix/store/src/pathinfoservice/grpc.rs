@@ -180,7 +180,7 @@ impl ServiceBuilder for GRPCPathInfoServiceConfig {
         &'a self,
         instance_name: &str,
         _context: &CompositionContext,
-    ) -> Result<Arc<dyn PathInfoService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         let client = proto::path_info_service_client::PathInfoServiceClient::with_interceptor(
             snix_castore::tonic::channel_from_url(&self.url.parse()?).await?,
             // tonic::service::Interceptor wants an unboxed Status as return type.

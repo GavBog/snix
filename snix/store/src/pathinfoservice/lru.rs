@@ -84,7 +84,7 @@ impl ServiceBuilder for LruPathInfoServiceConfig {
         &'a self,
         instance_name: &str,
         _context: &CompositionContext,
-    ) -> Result<Arc<dyn PathInfoService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(Arc::new(LruPathInfoService::with_capacity(
             instance_name.to_string(),
             self.capacity,

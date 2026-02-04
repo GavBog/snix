@@ -114,7 +114,7 @@ impl ServiceBuilder for KeyFileSigningPathInfoServiceConfig {
         &'a self,
         instance_name: &str,
         context: &CompositionContext,
-    ) -> Result<Arc<dyn PathInfoService>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         let inner = context.resolve::<Self::Output>(&self.inner).await?;
         let signing_key = parse_keypair(tokio::fs::read_to_string(&self.keyfile).await?.trim())
             .map_err(Error::ParsingSigningKey)?
