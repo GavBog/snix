@@ -76,21 +76,17 @@ fn walk_node(
     node: &Node,
     // Includes a reference to the current segment's buffer
     nar_node: nar_writer::Node<'_, Vec<u8>>,
-) -> Result<(), RenderError> {
+) -> Result<(), std::io::Error> {
     match node {
         snix_castore::Node::Symlink { target } => {
-            nar_node
-                .symlink(target.as_ref())
-                .map_err(RenderError::NARWriterError)?;
+            nar_node.symlink(target.as_ref())?;
         }
         snix_castore::Node::File {
             digest,
             size,
             executable,
         } => {
-            let (cur_segment, skip) = nar_node
-                .file_manual_write(*executable, *size)
-                .map_err(RenderError::NARWriterError)?;
+            let (cur_segment, skip) = nar_node.file_manual_write(*executable, *size)?;
 
             // Flush the segment up until the beginning of the blob
             flush_segment(segments, offset, std::mem::take(cur_segment));
@@ -110,8 +106,7 @@ fn walk_node(
             // Instead we have stored the blob reference in a Data::Blob segment,
             // and the poll_read implementation will take care of serving the
             // appropriate blob at this offset.
-            skip.close(cur_segment)
-                .map_err(RenderError::NARWriterError)?;
+            skip.close(cur_segment)?;
         }
         snix_castore::Node::Directory { digest, .. } => {
             let directory = directories
@@ -119,23 +114,18 @@ fn walk_node(
                 .expect("Snix bug: directory not found");
 
             // start a directory node
-            let mut nar_node_directory =
-                nar_node.directory().map_err(RenderError::NARWriterError)?;
+            let mut nar_node_directory = nar_node.directory()?;
 
             // for each node in the directory, create a new entry with its name,
             // and then recurse on that entry.
             for (name, node) in directory.nodes() {
-                let child_node = nar_node_directory
-                    .entry(name.as_ref())
-                    .map_err(RenderError::NARWriterError)?;
+                let child_node = nar_node_directory.entry(name.as_ref())?;
 
                 walk_node(segments, offset, directories, node, child_node)?;
             }
 
             // close the directory
-            nar_node_directory
-                .close()
-                .map_err(RenderError::NARWriterError)?;
+            nar_node_directory.close()?;
         }
     }
     Ok(())
@@ -181,6 +171,7 @@ impl<B: BlobService + 'static> Reader<B> {
         };
 
         Self::new_with_directory_graph(root_node, blob_service, maybe_directory_graph)
+            .map_err(RenderError::NARWriterError)
     }
 
     /// Creates a new seekable NAR renderer for the given castore root node.
@@ -192,7 +183,7 @@ impl<B: BlobService + 'static> Reader<B> {
         root_node: Node,
         blob_service: B,
         directory_closure: Option<DirectoryGraph>,
-    ) -> Result<Self, RenderError> {
+    ) -> Result<Self, std::io::Error> {
         let directories: HashMap<B3Digest, Directory> = directory_closure
             .map(|directory_graph| {
                 // We don't really care about the drain order
@@ -208,7 +199,7 @@ impl<B: BlobService + 'static> Reader<B> {
         let mut cur_segment: Vec<u8> = vec![];
         let mut offset = 0;
 
-        let nar_node = nar_writer::open(&mut cur_segment).map_err(RenderError::NARWriterError)?;
+        let nar_node = nar_writer::open(&mut cur_segment)?;
 
         walk_node(
             &mut segments,
