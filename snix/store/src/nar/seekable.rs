@@ -179,7 +179,7 @@ impl<B: BlobService + 'static> Reader<B> {
     /// However it requires all directories to be passed as a [DirectoryGraph].
     ///
     /// panics if the directory closure is not the closure of the root node
-    pub fn new_with_directory_graph(
+    fn new_with_directory_graph(
         root_node: Node,
         blob_service: B,
         directory_closure: Option<DirectoryGraph>,
