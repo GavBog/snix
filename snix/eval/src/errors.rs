@@ -493,6 +493,7 @@ fn name_for_syntax(syntax: &rnix::SyntaxKind) -> &'static str {
         rnix::SyntaxKind::TOKEN_IN => "`in`-keyword",
         rnix::SyntaxKind::TOKEN_IF => "`if`-keyword",
         rnix::SyntaxKind::TOKEN_INHERIT => "`inherit`-keyword",
+        rnix::SyntaxKind::TOKEN_CUR_POS => "`__curPos`-symbol",
         rnix::SyntaxKind::TOKEN_LET => "`let`-keyword",
         rnix::SyntaxKind::TOKEN_OR => "`or`-keyword",
         rnix::SyntaxKind::TOKEN_REC => "`rec`-keyword",
@@ -576,6 +577,7 @@ fn name_for_syntax(syntax: &rnix::SyntaxKind) -> &'static str {
         rnix::SyntaxKind::NODE_PATH_REL => "a relative path",
         rnix::SyntaxKind::NODE_PATH_SEARCH => "a path search",
         rnix::SyntaxKind::NODE_HAS_ATTR => "`?`-operator",
+        rnix::SyntaxKind::NODE_CUR_POS => "`__curPos`",
 
         // TODO: unsure about this variant, lets crash!
         rnix::SyntaxKind::NODE_ERROR => todo!("NODE_ERROR found, open a bug with a reproducer"),

@@ -61,6 +61,8 @@ use smol_str::SmolStr;
 
 pub use crate::value::{Builtin, CoercionKind, NixAttrs, NixList, NixString, Value};
 
+pub(crate) const REPL_LOCATION: &str = "[code]";
+
 #[cfg(feature = "impure")]
 pub use crate::io::StdIO;
 
@@ -448,7 +450,7 @@ where
         let location_str = location
             .as_ref()
             .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or_else(|| "[code]".into());
+            .unwrap_or_else(|| REPL_LOCATION.into());
 
         let file = source.add_file(location_str, code.as_ref().to_string());
 
@@ -483,7 +485,7 @@ where
         let location_str = location
             .as_ref()
             .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or_else(|| "[code]".into());
+            .unwrap_or_else(|| REPL_LOCATION.into());
 
         let file = source.add_file(location_str, code.as_ref().to_string());
 

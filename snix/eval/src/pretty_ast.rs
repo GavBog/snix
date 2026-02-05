@@ -436,6 +436,14 @@ impl Serialize for SerializeAST<&ast::HasAttr> {
     }
 }
 
+impl Serialize for SerializeAST<&ast::CurPos> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(Some(1))?;
+        map.serialize_entry("kind", "cur_pos")?;
+        map.end()
+    }
+}
+
 impl Serialize for SerializeAST<&ast::Expr> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self.0 {
@@ -471,7 +479,7 @@ impl Serialize for SerializeAST<&ast::Expr> {
             ast::Expr::Ident(node) => Serialize::serialize(&SerializeAST(node), serializer),
             ast::Expr::With(node) => Serialize::serialize(&SerializeAST(node), serializer),
             ast::Expr::HasAttr(node) => Serialize::serialize(&SerializeAST(node), serializer),
-            ast::Expr::CurPos(_) => todo!(),
+            ast::Expr::CurPos(node) => Serialize::serialize(&SerializeAST(node), serializer),
         }
     }
 }

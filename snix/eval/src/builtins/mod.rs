@@ -1602,18 +1602,6 @@ pub fn pure_builtins() -> Vec<(&'static str, Value)> {
         crate::systems::llvm_triple_to_nix_double(CURRENT_PLATFORM).into(),
     ));
 
-    result.push((
-        "__curPos",
-        Value::Thunk(Thunk::new_suspended_native(Box::new(move || {
-            // TODO: implement for nixpkgs compatibility
-            Ok(Value::attrs(NixAttrs::from_iter([
-                ("line", 42.into()),
-                ("column", 42.into()),
-                ("file", Value::String("/deep/thought".into())),
-            ])))
-        }))),
-    ));
-
     result
 }
 

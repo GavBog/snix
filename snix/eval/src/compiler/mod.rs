@@ -26,7 +26,6 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 
-use crate::CoercionKind;
 use crate::SourceCode;
 use crate::chunk::Chunk;
 use crate::errors::{Error, ErrorKind, EvalResult};
@@ -35,6 +34,7 @@ use crate::opcode::{CodeIdx, Op, Position, UpvalueIdx};
 use crate::spans::ToSpan;
 use crate::value::{Closure, Formals, Lambda, NixAttrs, Thunk, Value};
 use crate::warnings::{EvalWarning, WarningKind};
+use crate::{CoercionKind, NixString};
 
 use self::scope::{LocalIdx, LocalPosition, Scope, Upvalue, UpvalueKind};
 
@@ -401,7 +401,7 @@ impl Compiler<'_, '_> {
                 c.compile_legacy_let(s, legacy_let)
             }),
 
-            ast::Expr::CurPos(curpos) => self.compile_cur_pos(slot, curpos),
+            ast::Expr::CurPos(curpos) => self.compile_cur_pos(curpos),
 
             ast::Expr::Root(_) => unreachable!("there cannot be more than one root"),
             ast::Expr::Error(_) => unreachable!("compile is only called on validated trees"),
@@ -1407,19 +1407,6 @@ impl Compiler<'_, '_> {
         }
     }
 
-    fn compile_cur_pos(&mut self, slot: LocalIdx, node: &ast::CurPos) {
-        self.thunk(slot, node, move |c, _s| {
-            c.emit_constant(
-                Value::attrs(NixAttrs::from_iter([
-                    ("line", 42.into()),
-                    ("column", 42.into()),
-                    ("file", Value::String("/deep/thought".into())),
-                ])),
-                node,
-            );
-        });
-    }
-
     fn compile_apply(&mut self, slot: LocalIdx, node: &ast::Apply) {
         // To call a function, we leave its arguments on the stack,
         // followed by the function expression itself, and then emit a
@@ -1473,6 +1460,28 @@ impl Compiler<'_, '_> {
                 }
             };
         }
+    }
+
+    pub fn compile_cur_pos(&mut self, node: &ast::CurPos) {
+        let value = match self.file.name() {
+            crate::REPL_LOCATION => Value::Null,
+            _ => {
+                let span = self.span_for(node);
+                let pos = self.file.find_line_col(span.low());
+                let abs_path = std::fs::canonicalize(self.file.name())
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string();
+                let attrs = NixAttrs::from_iter([
+                    ("line", Value::Integer((pos.line + 1) as i64)),
+                    ("column", Value::Integer((pos.column + 1) as i64)),
+                    ("file", Value::String(NixString::from(abs_path))),
+                ]);
+                Value::Attrs(Box::new(attrs))
+            }
+        };
+
+        self.emit_constant(value, node);
     }
 
     /// Emit the literal string value of an identifier. Required for
