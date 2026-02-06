@@ -43,13 +43,6 @@ pub struct ServiceUrls {
 
     #[arg(long, env, default_value = "redb:///var/lib/snix-store/pathinfo.redb")]
     pub path_info_service_addr: String,
-
-    /// Path to a TOML file describing the way the services should be composed
-    /// Experimental because the format is not final.
-    /// If specified, the other service addrs are ignored.
-    #[cfg(feature = "xp-composition-cli")]
-    #[arg(long, env)]
-    pub experimental_store_composition: Option<String>,
 }
 
 /// Provides a set of clap arguments to configure snix-\[ca\]store services.
@@ -64,10 +57,6 @@ pub struct ServiceUrlsGrpc {
 
     #[arg(long, env, default_value = "grpc+http://[::1]:8000")]
     path_info_service_addr: String,
-
-    #[cfg(feature = "xp-composition-cli")]
-    #[arg(long, env)]
-    experimental_store_composition: Option<String>,
 }
 
 /// Provides a set of clap arguments to configure snix-\[ca\]store services.
@@ -85,10 +74,6 @@ pub struct ServiceUrlsMemory {
 
     #[arg(long, env, default_value = "redb+memory:")]
     path_info_service_addr: String,
-
-    #[cfg(feature = "xp-composition-cli")]
-    #[arg(long, env)]
-    experimental_store_composition: Option<String>,
 }
 
 impl From<ServiceUrlsGrpc> for ServiceUrls {
@@ -96,8 +81,6 @@ impl From<ServiceUrlsGrpc> for ServiceUrls {
         ServiceUrls {
             castore_service_addrs: urls.castore_service_addrs.into(),
             path_info_service_addr: urls.path_info_service_addr,
-            #[cfg(feature = "xp-composition-cli")]
-            experimental_store_composition: urls.experimental_store_composition,
         }
     }
 }
@@ -107,8 +90,6 @@ impl From<ServiceUrlsMemory> for ServiceUrls {
         ServiceUrls {
             castore_service_addrs: urls.castore_service_addrs.into(),
             path_info_service_addr: urls.path_info_service_addr,
-            #[cfg(feature = "xp-composition-cli")]
-            experimental_store_composition: urls.experimental_store_composition,
         }
     }
 }
@@ -123,7 +104,7 @@ pub async fn addrs_to_configs(
     let urls: ServiceUrls = urls.into();
 
     #[cfg(feature = "xp-composition-cli")]
-    if let Some(conf_path) = urls.experimental_store_composition {
+    if let Some(conf_path) = urls.castore_service_addrs.experimental_store_composition {
         let conf_text = tokio::fs::read_to_string(conf_path).await?;
         return Ok(with_registry(&REG, || toml::from_str(&conf_text))?);
     }

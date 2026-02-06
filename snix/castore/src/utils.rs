@@ -44,7 +44,7 @@ pub struct ServiceUrls {
     /// If specified, the other service addrs are ignored.
     #[cfg(feature = "xp-composition-cli")]
     #[arg(long, env)]
-    experimental_store_composition: Option<String>,
+    pub experimental_store_composition: Option<String>,
 }
 
 /// Provides a set of clap arguments to configure snix-castore services.
