@@ -87,7 +87,11 @@ tonic-reflection = ["dep:tonic-reflection", "snix-castore/tonic-reflection"]
 tracing-chrome = ["snix-tracing/chrome"]
 tracy = ["snix-tracing/tracy"]
 virtiofs = ["snix-castore/virtiofs"]
-xp-composition-cli = ["toml", "snix-castore/xp-composition-url-refs"]
+xp-composition-cli = [
+  "toml",
+  "snix-castore/xp-composition-url-refs",
+  "snix-castore/xp-composition-cli",
+]
 # Whether to run the integration tests.
 # Requires the following packages in $PATH:
 # cbtemulator, google-cloud-bigtable-tool

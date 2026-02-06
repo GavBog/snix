@@ -46,7 +46,7 @@ tonic-reflection = ["dep:tonic-reflection", "snix-castore/tonic-reflection"]
 otlp = ["snix-tracing/otlp"]
 tracing-chrome = ["snix-tracing/chrome"]
 tracing-tracy = ["snix-tracing/tracy"]
-xp-composition-cli = [
+xp-store-composition-cli = [
   "snix-store/xp-composition-cli",
   "snix-castore/xp-composition-cli",
 ]

@@ -29,3 +29,4 @@ tonic-reflection = [
   "snix-build/tonic-reflection",
   "snix-castore/tonic-reflection",
 ]
+xp-store-composition-cli = ["snix-castore/xp-composition-cli"]

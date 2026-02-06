@@ -32,4 +32,4 @@ tracing.workspace = true
 virtiofs = ["snix-castore/virtiofs"]
 fuse = ["snix-castore/fuse"]
 tonic-reflection = ["snix-castore/tonic-reflection", "dep:tonic-reflection"]
-xp-composition-cli = ["snix-castore/xp-composition-cli"]
+xp-store-composition-cli = ["snix-castore/xp-composition-cli"]

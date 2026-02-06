@@ -19694,12 +19694,14 @@ rec {
             "snix-castore/tonic-reflection"
           ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
+          "xp-store-composition-cli" = [ "snix-castore/xp-composition-cli" ];
         };
         resolvedDefaultFeatures = [
           "default"
           "otlp"
           "tonic-reflection"
           "tracing-chrome"
+          "xp-store-composition-cli"
         ];
       };
       "snix-cli-castore" = rec {
@@ -19796,13 +19798,13 @@ rec {
             "dep:tonic-reflection"
           ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
-          "xp-composition-cli" = [ "snix-castore/xp-composition-cli" ];
+          "xp-store-composition-cli" = [ "snix-castore/xp-composition-cli" ];
         };
         resolvedDefaultFeatures = [
           "fuse"
           "tonic-reflection"
           "virtiofs"
-          "xp-composition-cli"
+          "xp-store-composition-cli"
         ];
       };
       "snix-cli-castore-http" = rec {
@@ -19863,7 +19865,10 @@ rec {
             ];
           }
         ];
-
+        features = {
+          "xp-store-composition-cli" = [ "snix-castore/xp-composition-cli" ];
+        };
+        resolvedDefaultFeatures = [ "xp-store-composition-cli" ];
       };
       "snix-cli-derivation-show" = rec {
         crateName = "snix-cli-derivation-show";
@@ -20366,7 +20371,7 @@ rec {
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracing-tracy" = [ "snix-tracing/tracy" ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
-          "xp-composition-cli" = [
+          "xp-store-composition-cli" = [
             "snix-store/xp-composition-cli"
             "snix-castore/xp-composition-cli"
           ];
@@ -20379,7 +20384,7 @@ rec {
           "tracing-chrome"
           "tracing-tracy"
           "virtiofs"
-          "xp-composition-cli"
+          "xp-store-composition-cli"
         ];
       };
       "snix-eval" = rec {
@@ -21146,6 +21151,7 @@ rec {
           "xp-composition-cli" = [
             "toml"
             "snix-castore/xp-composition-url-refs"
+            "snix-castore/xp-composition-cli"
           ];
         };
         resolvedDefaultFeatures = [

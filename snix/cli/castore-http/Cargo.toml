@@ -25,3 +25,6 @@ tokio-listener = { workspace = true, features = [
   "multi-listener",
   "sd_listen",
 ] }
+
+[features]
+xp-store-composition-cli = ["snix-castore/xp-composition-cli"]
