@@ -8,7 +8,7 @@
 (depot.snix.crates.workspaceMembers.snix-cli-eval.build.override {
   runTests = true;
   testPreRun = ''
-    export SSL_CERT_FILE=/dev/null
+    export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
   '';
 }).overrideAttrs
   (
@@ -40,7 +40,7 @@
           name = "snix-cli-eval-benchmark-${description}";
         in
         (pkgs.runCommand name { } ''
-          export SSL_CERT_FILE=/dev/null
+          export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
           ${lib.escapeShellArgs [
             "${pkgs.time}/bin/time"
             "--format"
@@ -75,7 +75,7 @@
           }";
         in
         (pkgs.runCommand name { } ''
-          export SSL_CERT_FILE=/dev/null
+          export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
           SNIX_OUTPUT=$(${snix-cli}/bin/snix-eval --no-warnings -E '${
             if expr != null then expr else "(import ${pkgs.path} {}).${attrPath}"
           }')

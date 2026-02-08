@@ -65,7 +65,7 @@ let
           set -eou pipefail
           touch $out
           # Ensure we can construct http clients.
-          export SSL_CERT_FILE=/dev/null
+          export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
 
           ${preStart}
 

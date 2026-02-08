@@ -8,7 +8,7 @@
 (depot.snix.crates.workspaceMembers.snix-store.build.override (old: {
   runTests = true;
   testPreRun = ''
-    export SSL_CERT_FILE=/dev/null
+    export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
   '';
   features =
     old.features
@@ -38,14 +38,14 @@
           ++ lib.optional pkgs.stdenv.isLinux "virtiofs"
         );
         override.testPreRun = ''
-          export SSL_CERT_FILE=/dev/null
+          export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
         '';
       })
       // {
         integration-tests = depot.snix.crates.workspaceMembers.${old.crateName}.build.override (old: {
           runTests = true;
           testPreRun = ''
-            export SSL_CERT_FILE=/dev/null
+            export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
             export PATH="$PATH:${
               pkgs.lib.makeBinPath [
                 pkgs.cbtemulator

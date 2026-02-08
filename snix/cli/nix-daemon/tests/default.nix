@@ -29,7 +29,7 @@ let
         (''
           touch $out
           # Ensure we can construct http clients.
-          export SSL_CERT_FILE=/dev/null
+          export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
 
           # Start the snix daemon, listening on a unix socket.
           BLOB_SERVICE_ADDR=${lib.escapeShellArg blobServiceAddr} \

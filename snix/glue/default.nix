@@ -1,9 +1,14 @@
-{ depot, lib, ... }:
+{
+  depot,
+  lib,
+  pkgs,
+  ...
+}:
 
 (depot.snix.crates.workspaceMembers.snix-glue.build.override {
   runTests = true;
   testPreRun = ''
-    export SSL_CERT_FILE=/dev/null
+    export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
   '';
 }).overrideAttrs
   (old: rec {
@@ -16,7 +21,7 @@
         inherit (old) crateName;
         features = [ "nix_tests" ];
         override.testPreRun = ''
-          export SSL_CERT_FILE=/dev/null
+          export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
         '';
       });
   })
