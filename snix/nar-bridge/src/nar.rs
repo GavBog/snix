@@ -237,6 +237,7 @@ mod tests {
     });
 
     /// Accepts a router without state, and returns a [axum_test::TestServer].
+    /// Also returns the underlying services, so they can be poked with during testing.
     fn gen_server(
         router: axum::Router<AppState>,
     ) -> (
