@@ -80,7 +80,7 @@ impl NixDaemonIO for SnixDaemon {
     {
         let (root_node, nar_sha256, nar_size) = ingest_nar_and_hash(
             self.blob_service.clone(),
-            self.directory_service.clone(),
+            &self.directory_service,
             reader,
             &request.ca,
         )
