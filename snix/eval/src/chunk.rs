@@ -157,6 +157,25 @@ impl Chunk {
     /// Write the disassembler representation of the operation at
     /// `idx` to the specified writer, and return how many bytes in the code to
     /// skip for the next op.
+    ///
+    /// # Format
+    ///
+    /// The format of the disassembly is shown in the diagram below.
+    ///
+    /// ```text
+    /// 0x0  1  OpClosure(BP @ 0, 1 upvalues)
+    /// ^    ^  ^        ^
+    /// |    |  |        |
+    /// |    |  |        \ One of the following, depending on the operation:
+    /// |    |  |          * Nothing
+    /// |    |  |          * Single argument
+    /// |    |  |          * Blueprint's index, whether `with`
+    /// |    |  |            was captured and number of upvalues
+    /// |    |  |
+    /// |    |  \ Operation identifier
+    /// |    \ Line number in source code, or continuation character (`|`)
+    /// \ Index of the instruction in the code chunk
+    /// ```
     pub fn disassemble_op<W: Write>(
         &self,
         writer: &mut W,
@@ -206,7 +225,7 @@ impl Chunk {
                 Ok(1 + size)
             }
 
-            _ => match op {
+            OpArg::Custom => match op {
                 Op::CoerceToString => {
                     let kind: CoercionKind = self.code[idx.0 + 1].into();
                     writeln!(writer, "Op{op:?}({kind:?})")?;

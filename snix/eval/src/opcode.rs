@@ -76,7 +76,7 @@ pub enum Op {
     /// Sum up the two numbers at the top of the stack.
     Add,
 
-    /// Subtract the number at {1} from the number at {2}.
+    /// Subtract the number at `{1}` from the number at `{2}`.
     Sub,
 
     /// Multiply the two numbers at the top of the stack.
@@ -88,16 +88,16 @@ pub enum Op {
     /// Check the two values at the top of the stack for Nix-equality.
     Equal,
 
-    /// Check whether the value at {2} is less than {1}.
+    /// Check whether the value at `{2}` is less than `{1}`.
     Less,
 
-    /// Check whether the value at {2} is less than or equal to {1}.
+    /// Check whether the value at `{2}` is less than or equal to `{1}`.
     LessOrEq,
 
-    /// Check whether the value at {2} is greater than {1}.
+    /// Check whether the value at `{2}` is greater than `{1}`.
     More,
 
-    /// Check whether the value at {2} is greater than or equal to {1}.
+    /// Check whether the value at `{2}` is greater than or equal to `{1}`.
     MoreOrEq,
 
     /// Jump forward in the bytecode specified by the number of
@@ -117,7 +117,7 @@ pub enum Op {
     /// Pop one stack item and jump forward in the bytecode
     /// specified by the number of instructions in its usize
     /// operand, *if* the value at the top of the stack is a
-    /// Value::Catchable.
+    /// [`Value::Catchable`](crate::Value::Catchable).
     JumpIfCatchable,
 
     /// Jump forward in the bytecode specified by the number of
@@ -138,20 +138,20 @@ pub enum Op {
     /// stack will be twice the argument to this op.
     Attrs,
 
-    /// Merge the attribute set at {2} into the attribute set at {1},
+    /// Merge the attribute set at `{2}` into the attribute set at `{1}`,
     /// and leave the new set at the top of the stack.
     AttrsUpdate,
 
-    /// Select the attribute with the name at {1} from the set at {2}.
+    /// Select the attribute with the name at `{1}` from the set at `{2}`.
     AttrsSelect,
 
-    /// Select the attribute with the name at {1} from the set at {2}, but leave
-    /// a `Value::AttrNotFound` in the stack instead of failing if it is
-    /// missing.
+    /// Select the attribute with the name at `{1}` from the set at `{2}`, but leave
+    /// a [`Value::AttrNotFound`](crate::Value::AttrNotFound) in the stack instead of failing
+    /// if it is missing.
     AttrsTrySelect,
 
-    /// Check for the presence of the attribute with the name at {1} in the set
-    /// at {2}.
+    /// Check for the presence of the attribute with the name at `{1}` in the set
+    /// at `{2}`.
     HasAttr,
 
     /// Throw an error if the attribute set at the top of the stack has any attributes
@@ -168,7 +168,7 @@ pub enum Op {
     /// Pop the last runtime `with`-stack element.
     PopWith,
 
-    /// Dynamically resolve an identifier with the name at {1} from the runtime
+    /// Dynamically resolve an identifier with the name at `{1}` from the runtime
     /// `with`-stack.
     ResolveWith,
 
@@ -177,7 +177,7 @@ pub enum Op {
     /// stack.
     List,
 
-    /// Concatenate the lists at {2} and {1}.
+    /// Concatenate the lists at `{2}` and `{1}`.
     Concat,
 
     // Strings
@@ -200,9 +200,11 @@ pub enum Op {
     InterpolatePath,
 
     // Type assertion operators
-    /// Assert that the value at {1} is a boolean, and fail with a runtime error
+    /// Assert that the value at `{1}` is a boolean, and fail with a runtime error
     /// otherwise.
     AssertBool,
+    /// Assert that the value at `{1}` is an attribute set, and fail with a runtime error
+    /// otherwise.
     AssertAttrs,
 
     /// Access local identifiers with statically known positions.
@@ -215,7 +217,7 @@ pub enum Op {
     AssertFail,
 
     // Lambdas & closures
-    /// Call the value at {1} in a new VM callframe
+    /// Call the value at `{1}` in a new VM callframe
     Call,
 
     /// Retrieve the upvalue at the given index from the closure or thunk
@@ -231,11 +233,11 @@ pub enum Op {
     /// Construct a suspended thunk, used to delay a computation for laziness.
     ThunkSuspended,
 
-    /// Force the value at {1} until it is a `Thunk::Evaluated`.
+    /// Force the value at `{1}` until it is a `Thunk::Evaluated`.
     Force,
 
     /// Finalise initialisation of the upvalues of the value in the given stack
-    /// index (which must be a Value::Thunk) after the scope is fully bound.
+    /// index (which must be a [`Value::Thunk`](crate::Value::Thunk)) after the scope is fully bound.
     Finalise,
 
     /// Final instruction emitted in a chunk. Does not have an
@@ -266,10 +268,15 @@ impl From<u8> for Op {
     }
 }
 
+/// Type of an [`Op`]'s argument.
 pub enum OpArg {
+    /// No arguments.
     None,
+    /// Unsigned variable-length integer.
     Uvarint,
+    /// [`u16`] argument as two bytes.
     Fixed,
+    /// Operation-dependent type.
     Custom,
 }
 
