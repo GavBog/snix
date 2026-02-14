@@ -24,7 +24,7 @@ use self::utils::make_grpc_blob_service_client;
 #[rstest]
 #[case::grpc(make_grpc_blob_service_client().await)]
 #[case::memory(blobservice::from_addr("memory:").await.unwrap())]
-#[case::objectstore_memory(blobservice::from_addr("objectstore+memory://").await.unwrap())]
+#[case::objectstore_memory(blobservice::from_addr("objectstore+memory:").await.unwrap())]
 pub fn blob_services(#[case] blob_service: impl BlobService) {}
 
 /// Using [BlobService::has] on a non-existing blob should return false.

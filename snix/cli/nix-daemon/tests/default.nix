@@ -9,7 +9,7 @@ let
   mkTest =
     {
       closure,
-      blobServiceAddr ? "objectstore+file:///tmp/blobs",
+      blobServiceAddr ? "objectstore+file:/tmp/blobs",
       directoryServiceAddr ? "redb:/tmp/directories.redb",
       pathInfoServiceAddr ? "redb:/tmp/pathinfo.redb",
       testScript, # FUTUREWORK: make overlay setup configurable for non-local-overlay tests?

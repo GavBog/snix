@@ -28,7 +28,7 @@ pub struct ServiceUrls {
     #[arg(
         long,
         env,
-        default_value = "objectstore+file:///var/lib/snix-castore/blobs"
+        default_value = "objectstore+file:/var/lib/snix-castore/blobs"
     )]
     pub blob_service_addr: String,
 

@@ -193,7 +193,7 @@ depot.nix.readTree.drvTargets {
   website-persistent = (
     mkBootTest {
       name = "website-persistent";
-      blobServiceAddr = "objectstore+file:///build/blobs";
+      blobServiceAddr = "objectstore+file:/build/blobs";
       directoryServiceAddr = "redb:/build/directories.redb";
       pathInfoServiceAddr = "redb:/build/pathinfo.redb";
       path = ../../../web/content;
@@ -204,7 +204,7 @@ depot.nix.readTree.drvTargets {
   closure-snix = (
     mkBootTest {
       name = "closure-snix";
-      blobServiceAddr = "objectstore+file:///build/blobs";
+      blobServiceAddr = "objectstore+file:/build/blobs";
       path = depot.snix.store;
       isClosure = true;
     }
@@ -213,7 +213,7 @@ depot.nix.readTree.drvTargets {
   closure-nixos = (
     mkBootTest {
       name = "closure-nixos";
-      blobServiceAddr = "objectstore+file:///build/blobs";
+      blobServiceAddr = "objectstore+file:/build/blobs";
       directoryServiceAddr = "redb:/build/directories.redb";
       pathInfoServiceAddr = "redb:/build/pathinfo.redb";
       path = testSystem;
@@ -226,7 +226,7 @@ depot.nix.readTree.drvTargets {
   closure-nixos-bigtable = (
     mkBootTest {
       name = "closure-nixos-bigtable";
-      blobServiceAddr = "objectstore+file:///build/blobs";
+      blobServiceAddr = "objectstore+file:/build/blobs";
       directoryServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=directories&family_name=cf1";
       pathInfoServiceAddr = "bigtable://instance-1?project_id=project-1&table_name=pathinfos&family_name=cf1";
       path = testSystem;
@@ -273,7 +273,7 @@ depot.nix.readTree.drvTargets {
   closure-nixos-nar-bridge = (
     mkBootTest {
       name = "closure-nixos-nar-bridge";
-      blobServiceAddr = "objectstore+file:///build/blobs";
+      blobServiceAddr = "objectstore+file:/build/blobs";
       path = testSystem;
       useNarBridge = true;
       isClosure = true;
