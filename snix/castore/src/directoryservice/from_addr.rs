@@ -71,17 +71,19 @@ mod tests {
     #[case::redb_memory_invalid_authority("redb+memory://", false)]
     /// This configures redb in-memory, but wrongly adds a path (with authority).
     #[case::redb_memory_invalid_authority_path("redb+memory:///foo/bar", false)]
-    /// Correct scheme to connect to a unix socket.
-    #[case::grpc_valid_unix_socket("grpc+unix:///path/to/somewhere", true)]
-    /// Correct scheme for unix socket, but setting a host too, which is invalid.
+    /// Scheme to connect to a unix socket.
+    #[case::grpc_valid_unix_socket("grpc+unix:/path/to/somewhere", true)]
+    /// Scheme for unix socket, but using authority, which is invalid.
+    #[case::grpc_invalid_unix_socket_and_authority("grpc+unix:///path/to/somewhere", false)]
+    /// Scheme for unix socket, but setting a host too, which is invalid.
     #[case::grpc_invalid_unix_socket_and_host("grpc+unix://host.example/path/to/somewhere", false)]
-    /// Correct scheme to connect to localhost, with port 12345
+    /// Scheme to connect to localhost, with port 12345.
     #[case::grpc_valid_ipv6_localhost_port_12345("grpc+http://[::1]:12345", true)]
-    /// Correct scheme to connect to localhost over http, without specifying a port.
+    /// Scheme to connect to localhost over http, without specifying a port.
     #[case::grpc_valid_http_host_without_port("grpc+http://localhost", true)]
-    /// Correct scheme to connect to localhost over http, without specifying a port.
+    /// Scheme to connect to localhost over http, without specifying a port.
     #[case::grpc_valid_https_host_without_port("grpc+https://localhost", true)]
-    /// Correct scheme to connect to localhost over http, but with additional path, which is invalid.
+    /// Scheme to connect to localhost over http, but with additional path, which is invalid.
     #[case::grpc_invalid_host_and_path("grpc+http://localhost/some-path", false)]
     /// A valid example for store composition using anonymous urls
     #[cfg_attr(

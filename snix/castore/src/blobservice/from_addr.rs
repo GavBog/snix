@@ -49,7 +49,9 @@ mod tests {
     /// This sets a memory url path to "/foo", which is invalid.
     #[case::memory_invalid_root_path_foo("memory:///foo", false)]
     /// Correct scheme to connect to a unix socket.
-    #[case::grpc_valid_unix_socket("grpc+unix:///path/to/somewhere", true)]
+    #[case::grpc_valid_unix_socket("grpc+unix:/path/to/somewhere", true)]
+    /// Correct scheme for unix socket, but setting authority, which is invalid.
+    #[case::grpc_invalid_unix_socket_and_authority("grpc+unix:///path/to/somewhere", false)]
     /// Correct scheme for unix socket, but setting a host too, which is invalid.
     #[case::grpc_invalid_unix_socket_and_host("grpc+unix://host.example/path/to/somewhere", false)]
     /// Correct scheme to connect to localhost, with port 12345

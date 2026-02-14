@@ -106,7 +106,7 @@ mod tests {
     /// This configures dummy
     #[case::valid_dummy("dummy://", true)]
     /// Correct scheme to connect to a unix socket.
-    #[case::grpc_valid_unix_socket("grpc+unix:///path/to/somewhere", true)]
+    #[case::grpc_valid_unix_socket("grpc+unix:/path/to/somewhere", true)]
     /// Correct scheme for unix socket, but setting a host too, which is invalid.
     #[case::grpc_invalid_unix_socket_and_host("grpc+unix://host.example/path/to/somewhere", false)]
     /// Correct scheme to connect to localhost, with port 12345

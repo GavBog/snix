@@ -328,7 +328,7 @@ mod tests {
         // prepare a client
         let grpc_client = {
             let url = url::Url::parse(&format!(
-                "grpc+unix://{}?wait-connect=1",
+                "grpc+unix:{}?wait-connect=1",
                 socket_path.display()
             ))
             .expect("must parse");

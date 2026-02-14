@@ -20,8 +20,8 @@ fn url_wants_wait_connect(url: &url::Url) -> bool {
 pub async fn channel_from_url(url: &url::Url) -> Result<Channel, self::Error> {
     match url.scheme() {
         "grpc+unix" => {
-            if url.host_str().is_some() {
-                return Err(Error::HostSetForUnixSocket());
+            if url.has_authority() {
+                return Err(Error::AuthorityDisallowed());
             }
 
             let connector = tower::service_fn({
@@ -72,8 +72,8 @@ pub enum Error {
     #[error("grpc+ prefix is missing from URL")]
     MissingGRPCPrefix(),
 
-    #[error("host may not be set for unix domain sockets")]
-    HostSetForUnixSocket(),
+    #[error("unix domain sockets URLs should not have authority")]
+    AuthorityDisallowed(),
 
     #[error("path may not be set")]
     PathMayNotBeSet(),
@@ -96,14 +96,13 @@ mod tests {
 
     #[rstest]
     /// Correct scheme to connect to a unix socket.
-    #[case::valid_unix_socket("grpc+unix:///path/to/somewhere", true)]
+    #[case::valid_unix_socket("grpc+unix:/path/to/somewhere", true)]
     /// Connecting with wait-connect set to 0 succeeds, as that's the default.
-    #[case::valid_unix_socket_wait_connect_0("grpc+unix:///path/to/somewhere?wait-connect=0", true)]
+    #[case::valid_unix_socket_wait_connect_0("grpc+unix:/path/to/somewhere?wait-connect=0", true)]
     /// Connecting with wait-connect set to 1 fails, as the path doesn't exist.
-    #[case::valid_unix_socket_wait_connect_1(
-        "grpc+unix:///path/to/somewhere?wait-connect=1",
-        false
-    )]
+    #[case::valid_unix_socket_wait_connect_1("grpc+unix:/path/to/somewhere?wait-connect=1", false)]
+    /// Correct scheme for unix socket, but setting authority, which is invalid.
+    #[case::invalid_unix_socket_with_authority("grpc+unix:///path/to/somewhere", false)]
     /// Correct scheme for unix socket, but setting a host too, which is invalid.
     #[case::invalid_unix_socket_and_host("grpc+unix://host.example/path/to/somewhere", false)]
     /// Correct scheme to connect to localhost, with port 12345

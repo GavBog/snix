@@ -80,9 +80,9 @@ let
 
           # Export env vars so that subsequent snix-store commands will talk to
           # our snix store daemon over the unix socket.
-          export BLOB_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
-          export DIRECTORY_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
-          export PATH_INFO_SERVICE_ADDR=grpc+unix://$PWD/snix-store.sock
+          export BLOB_SERVICE_ADDR=grpc+unix:$PWD/snix-store.sock
+          export DIRECTORY_SERVICE_ADDR=grpc+unix:$PWD/snix-store.sock
+          export PATH_INFO_SERVICE_ADDR=grpc+unix:$PWD/snix-store.sock
         ''
         + lib.optionalString (!isClosure) ''
           echo "Importing ${path} into snix-store with name ${importPathName}…"
