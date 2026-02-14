@@ -41,7 +41,7 @@ pub struct ServiceUrls {
     #[clap(flatten)]
     pub castore_service_addrs: castore_utils::ServiceUrls,
 
-    #[arg(long, env, default_value = "redb:///var/lib/snix-store/pathinfo.redb")]
+    #[arg(long, env, default_value = "redb:/var/lib/snix-store/pathinfo.redb")]
     pub path_info_service_addr: String,
 }
 

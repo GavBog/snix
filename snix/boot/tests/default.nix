@@ -195,7 +195,7 @@ depot.nix.readTree.drvTargets {
       name = "website-persistent";
       blobServiceAddr = "objectstore+file:///build/blobs";
       directoryServiceAddr = "redb:///build/directories.redb";
-      pathInfoServiceAddr = "redb:///build/pathinfo.redb";
+      pathInfoServiceAddr = "redb:/build/pathinfo.redb";
       path = ../../../web/content;
       importPathName = "content";
     }
@@ -214,8 +214,8 @@ depot.nix.readTree.drvTargets {
     mkBootTest {
       name = "closure-nixos";
       blobServiceAddr = "objectstore+file:///build/blobs";
-      pathInfoServiceAddr = "redb:///build/pathinfo.redb";
       directoryServiceAddr = "redb:///build/directories.redb";
+      pathInfoServiceAddr = "redb:/build/pathinfo.redb";
       path = testSystem;
       isClosure = true;
       vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
