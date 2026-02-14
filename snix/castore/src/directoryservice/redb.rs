@@ -369,7 +369,8 @@ impl TryFrom<url::Url> for RedbDirectoryServiceConfig {
             ("redb", _, "") => Err(Box::new(Error::WrongConfig(
                 "redb without path is disallowed, use redb+memory if you want in-memory",
             )))?,
-            ("redb", _, path) => Some(path.into()),
+            ("redb", true, _path) => Err(Box::new(Error::WrongConfig("authority disallowed")))?,
+            ("redb", false, path) => Some(path.into()),
             (_scheme, _, _) => Err(Box::new(Error::WrongConfig("unrecognized scheme")))?,
         };
 

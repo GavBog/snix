@@ -35,7 +35,7 @@ pub struct ServiceUrls {
     #[arg(
         long,
         env,
-        default_value = "redb:///var/lib/snix-castore/directories.redb"
+        default_value = "redb:/var/lib/snix-castore/directories.redb"
     )]
     pub directory_service_addr: String,
 
