@@ -173,8 +173,8 @@ impl TryFrom<url::Url> for CacheConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
         // cache doesn't support host or path in the URL.
-        if url.has_host() || !url.path().is_empty() {
-            return Err(Error::WrongConfig("no host or path allowed").into());
+        if url.has_authority() || !url.path().is_empty() {
+            return Err(Error::WrongConfig("no authority or path allowed").into());
         }
         Ok(serde_qs::from_str(url.query().unwrap_or_default())?)
     }

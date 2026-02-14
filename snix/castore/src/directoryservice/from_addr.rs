@@ -88,12 +88,12 @@ mod tests {
     /// A valid example for store composition using anonymous urls
     #[cfg_attr(
         feature = "xp-composition-url-refs",
-        case::anonymous_url_composition("cache://?near=redb%2bmemory:&far=redb%2bmemory:", true)
+        case::anonymous_url_composition("cache:?near=redb%2bmemory:&far=redb%2bmemory:", true)
     )]
     /// Store composition with anonymous urls should fail if the feature is disabled
     #[cfg_attr(
         not(feature = "xp-composition-url-refs"),
-        case::anonymous_url_composition("cache://?near=redb%2bmemory:&far=redb%2bmemory:", false)
+        case::anonymous_url_composition("cache:?near=redb%2bmemory:&far=redb%2bmemory:", false)
     )]
     /// A valid example for Bigtable
     #[cfg_attr(
