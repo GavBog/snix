@@ -15,7 +15,7 @@ let
       # Test name.
       name,
 
-      blobServiceAddr ? "memory://",
+      blobServiceAddr ? "memory:",
       directoryServiceAddr ? "redb+memory:",
       pathInfoServiceAddr ? "redb+memory:",
 

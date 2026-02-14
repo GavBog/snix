@@ -46,8 +46,8 @@ pub struct MemoryBlobServiceConfig {}
 impl TryFrom<url::Url> for MemoryBlobServiceConfig {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
-        // memory doesn't support host or path in the URL.
-        if url.has_host() || !url.path().is_empty() {
+        // memory doesn't support authority or path in the URL.
+        if url.has_authority() || !url.path().is_empty() {
             return Err("invalid url".into());
         }
         Ok(MemoryBlobServiceConfig {})

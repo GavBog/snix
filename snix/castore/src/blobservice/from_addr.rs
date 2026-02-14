@@ -41,13 +41,13 @@ mod tests {
     /// This uses an unsupported scheme.
     #[case::unsupported_scheme("http://foo.example/test", false)]
     /// This correctly sets the scheme, and doesn't set a path.
-    #[case::memory_valid("memory://", true)]
+    #[case::memory_valid("memory:", true)]
     /// This sets a memory url host to `foo`
     #[case::memory_invalid_host("memory://foo", false)]
     /// This sets a memory url path to "/", which is invalid.
-    #[case::memory_invalid_root_path("memory:///", false)]
+    #[case::memory_invalid_root_path("memory:/", false)]
     /// This sets a memory url path to "/foo", which is invalid.
-    #[case::memory_invalid_root_path_foo("memory:///foo", false)]
+    #[case::memory_invalid_root_path_foo("memory:/foo", false)]
     /// Correct scheme to connect to a unix socket.
     #[case::grpc_valid_unix_socket("grpc+unix:/path/to/somewhere", true)]
     /// Correct scheme for unix socket, but setting authority, which is invalid.

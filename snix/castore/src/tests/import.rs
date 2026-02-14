@@ -9,7 +9,7 @@ use tempfile::TempDir;
 #[cfg(target_family = "unix")]
 #[tokio::test]
 async fn symlink() {
-    let blob_service = blobservice::from_addr("memory://").await.unwrap();
+    let blob_service = blobservice::from_addr("memory:").await.unwrap();
     let directory_service = gen_test_directory_service();
 
     let tmpdir = TempDir::new().unwrap();
@@ -40,7 +40,7 @@ async fn symlink() {
 
 #[tokio::test]
 async fn single_file() {
-    let blob_service = blobservice::from_addr("memory://").await.unwrap();
+    let blob_service = blobservice::from_addr("memory:").await.unwrap();
     let directory_service = gen_test_directory_service();
 
     let tmpdir = TempDir::new().unwrap();
@@ -74,7 +74,7 @@ async fn single_file() {
 async fn complicated() {
     use crate::directoryservice::DirectoryService;
 
-    let blob_service = blobservice::from_addr("memory://").await.unwrap();
+    let blob_service = blobservice::from_addr("memory:").await.unwrap();
     let directory_service = gen_test_directory_service();
 
     let tmpdir = TempDir::new().unwrap();

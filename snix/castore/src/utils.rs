@@ -75,7 +75,7 @@ pub struct ServiceUrlsGrpc {
 #[derive(clap::Parser, Clone)]
 #[group(id = "CastoreServiceUrlsMemory")]
 pub struct ServiceUrlsMemory {
-    #[arg(long, env, default_value = "memory://")]
+    #[arg(long, env, default_value = "memory:")]
     blob_service_addr: String,
 
     #[arg(long, env, default_value = "redb+memory:")]
