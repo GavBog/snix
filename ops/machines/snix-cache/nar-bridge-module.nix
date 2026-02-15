@@ -21,7 +21,10 @@ let
     "--experimental-store-composition"
     storeCompositionFile
   ]
-  ++ lib.optionals cfg.enableOTLP [ "--otlp" ];
+  ++ lib.optionals cfg.enableOTLP [
+    "--tracer"
+    "otlp"
+  ];
 in
 {
   options = {
