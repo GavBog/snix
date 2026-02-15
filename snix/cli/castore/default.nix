@@ -19,7 +19,7 @@
           [
             "fuse"
             "tonic-reflection"
-            "xp-composition-cli"
+            "xp-store-composition-cli"
           ]
           # virtiofs feature currently fails to build on Darwin
           ++ lib.optional pkgs.stdenv.isLinux "virtiofs"
