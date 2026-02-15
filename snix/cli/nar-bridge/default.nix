@@ -11,6 +11,9 @@
       old.passthru
       // (depot.snix.utils.mkFeaturePowerset {
         inherit (old) crateName;
-        features = [ "otlp" ];
+        features = [
+          "otlp"
+          "xp-store-composition-cli"
+        ];
       });
   })
