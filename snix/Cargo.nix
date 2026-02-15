@@ -31559,64 +31559,62 @@ rec {
           {
             name = "windows_aarch64_gnullvm";
             packageId = "windows_aarch64_gnullvm 0.42.2";
-            target =
-              { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "aarch64-pc-windows-gnullvm");
+            target = { target, features }: (target.name == "aarch64-pc-windows-gnullvm");
           }
           {
             name = "windows_aarch64_msvc";
             packageId = "windows_aarch64_msvc 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "aarch64-pc-windows-msvc");
+            target = { target, features }: (target.name == "aarch64-pc-windows-msvc");
           }
           {
             name = "windows_aarch64_msvc";
             packageId = "windows_aarch64_msvc 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "aarch64-uwp-windows-msvc");
+            target = { target, features }: (target.name == "aarch64-uwp-windows-msvc");
           }
           {
             name = "windows_i686_gnu";
             packageId = "windows_i686_gnu 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "i686-pc-windows-gnu");
+            target = { target, features }: (target.name == "i686-pc-windows-gnu");
           }
           {
             name = "windows_i686_gnu";
             packageId = "windows_i686_gnu 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "i686-uwp-windows-gnu");
+            target = { target, features }: (target.name == "i686-uwp-windows-gnu");
           }
           {
             name = "windows_i686_msvc";
             packageId = "windows_i686_msvc 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "i686-pc-windows-msvc");
+            target = { target, features }: (target.name == "i686-pc-windows-msvc");
           }
           {
             name = "windows_i686_msvc";
             packageId = "windows_i686_msvc 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "i686-uwp-windows-msvc");
+            target = { target, features }: (target.name == "i686-uwp-windows-msvc");
           }
           {
             name = "windows_x86_64_gnu";
             packageId = "windows_x86_64_gnu 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-pc-windows-gnu");
+            target = { target, features }: (target.name == "x86_64-pc-windows-gnu");
           }
           {
             name = "windows_x86_64_gnu";
             packageId = "windows_x86_64_gnu 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-uwp-windows-gnu");
+            target = { target, features }: (target.name == "x86_64-uwp-windows-gnu");
           }
           {
             name = "windows_x86_64_gnullvm";
             packageId = "windows_x86_64_gnullvm 0.42.2";
-            target =
-              { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-pc-windows-gnullvm");
+            target = { target, features }: (target.name == "x86_64-pc-windows-gnullvm");
           }
           {
             name = "windows_x86_64_msvc";
             packageId = "windows_x86_64_msvc 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-pc-windows-msvc");
+            target = { target, features }: (target.name == "x86_64-pc-windows-msvc");
           }
           {
             name = "windows_x86_64_msvc";
             packageId = "windows_x86_64_msvc 0.42.2";
-            target = { target, features }: (stdenv.hostPlatform.rust.rustcTarget == "x86_64-uwp-windows-msvc");
+            target = { target, features }: (target.name == "x86_64-uwp-windows-msvc");
           }
         ];
 
