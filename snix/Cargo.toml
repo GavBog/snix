@@ -148,7 +148,7 @@ tokio-stream = "0.1.15"
 tokio-tar = { package = "astral-tokio-tar", version = "0.5.6" }
 tokio-test = "0.4.4"
 tokio-util = "0.7.11"
-tonic = "0.13.1"
+tonic = { version = "0.13.1", features = ["tls-aws-lc", "tls-native-roots"] }
 tonic-build = "0.13.1"
 tonic-health = { version = "0.13.1", default-features = false }
 tonic-reflection = "0.13.1"

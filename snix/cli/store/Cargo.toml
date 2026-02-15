@@ -30,7 +30,7 @@ tokio-listener = { workspace = true, features = [
   "sd_listen",
   "tonic013",
 ] }
-tonic = { workspace = true, features = ["tls-native-roots"] }
+tonic.workspace = true
 tonic-health.workspace = true
 tonic-reflection = { workspace = true, optional = true }
 tower.workspace = true

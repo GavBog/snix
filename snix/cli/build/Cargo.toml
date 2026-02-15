@@ -16,7 +16,7 @@ snix-castore.path = "../../castore"
 snix-tracing = { path = "../../tracing", features = ["clap"] }
 tokio = { workspace = true, features = ["process"] }
 tokio-listener = { workspace = true, features = ["tonic013"] }
-tonic = { workspace = true, features = ["tls-native-roots"] }
+tonic.workspace = true
 tonic-reflection = { workspace = true, optional = true }
 tracing.workspace = true
 

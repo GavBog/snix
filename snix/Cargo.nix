@@ -10462,7 +10462,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls-aws-lc" ];
+            features = [
+              "tls-aws-lc"
+              "tls-native-roots"
+            ];
           }
           {
             name = "tower-http";
@@ -19231,7 +19234,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls-native-roots" ];
+            features = [
+              "tls-aws-lc"
+              "tls-native-roots"
+            ];
           }
           {
             name = "tonic-reflection";
@@ -19487,6 +19493,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
+            features = [
+              "tls-aws-lc"
+              "tls-native-roots"
+            ];
           }
           {
             name = "tonic-health";
@@ -19847,7 +19857,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls-native-roots" ];
+            features = [
+              "tls-aws-lc"
+              "tls-native-roots"
+            ];
           }
           {
             name = "tonic-reflection";
@@ -19940,6 +19953,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
+            features = [
+              "tls-aws-lc"
+              "tls-native-roots"
+            ];
           }
           {
             name = "tonic-health";
@@ -20504,7 +20521,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls-native-roots" ];
+            features = [
+              "tls-aws-lc"
+              "tls-native-roots"
+            ];
           }
           {
             name = "tonic-health";
@@ -21226,7 +21246,10 @@ rec {
           {
             name = "tonic";
             packageId = "tonic";
-            features = [ "tls-aws-lc" ];
+            features = [
+              "tls-aws-lc"
+              "tls-native-roots"
+            ];
           }
           {
             name = "tonic-health";
@@ -21432,6 +21455,10 @@ rec {
             name = "tonic";
             packageId = "tonic";
             optional = true;
+            features = [
+              "tls-aws-lc"
+              "tls-native-roots"
+            ];
           }
           {
             name = "tracing";

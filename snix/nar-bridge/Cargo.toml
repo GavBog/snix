@@ -20,7 +20,7 @@ snix-store = { path = "../store" }
 tokio.workspace = true
 tokio-util = { workspace = true, features = ["io", "io-util", "compat"] }
 tower-http = { workspace = true, features = ["compression-zstd", "trace"] }
-tonic = { workspace = true, features = ["tls-aws-lc"] }
+tonic.workspace = true
 tower-otel-http-metrics = { workspace = true, features = [
   "axum",
 ], optional = true }
