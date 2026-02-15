@@ -57,6 +57,14 @@ pub async fn channel_from_url(url: &url::Url) -> Result<Channel, self::Error> {
             // Use the regular tonic transport::Endpoint logic, but unprefixed_url_str,
             // as tonic doesn't know about grpc+http[s].
             let endpoint = Endpoint::try_from(unprefixed_url_str)?;
+
+            let endpoint = if url.scheme() == "grpc+https" {
+                let tls_config = tonic::transport::ClientTlsConfig::new().with_enabled_roots();
+                endpoint.tls_config(tls_config)?
+            } else {
+                endpoint
+            };
+
             if url_wants_wait_connect(url) {
                 Ok(endpoint.connect().await?)
             } else {
