@@ -15,7 +15,6 @@ let
 
   gerrit01 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN+RCLAExaM5EC70UsCPMtDT1Cfa80Ux/vex95fLk9S4 root@gerrit01";
   public01 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICzB7bqXWcv+sVokySvj1d74zRlVLSNqBw7/OY3c7QYd root@public01";
-  build02 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFqyPTO8twiOxmM4Q8UjtMo678Dbkj33XWBKiSv9ML7c root@build02";
   build03 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG8G+x82sCebiH35kmWjWT7js3rOMiJoUNu7DjYL6B6j root@build03";
 
   meta01 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINj2csTShq5PsmB/T0596TASyf7VImD4592HEqaYHgKh root@meta01";
@@ -25,7 +24,6 @@ let
   allDefault.publicKeys = superadmins ++ [
     gerrit01
     public01
-    build02
     build03
     meta01
   ];
@@ -33,13 +31,11 @@ let
   gerrit01Default.publicKeys = superadmins ++ [ gerrit01 ];
   public01Default.publicKeys = superadmins ++ [ public01 ];
   builderDefault.publicKeys = superadmins ++ [
-    build02
     build03
   ];
   meta01Default.publicKeys = superadmins ++ [ meta01 ];
   ciDefault.publicKeys = superadmins ++ [
     gerrit01
-    build02
     build03
   ];
 in

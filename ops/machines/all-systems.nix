@@ -8,7 +8,6 @@
   # Public-facing services
   public01
   # Build machines
-  build02
   build03
   # Observability stack and internal software
   meta01

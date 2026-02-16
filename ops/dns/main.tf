@@ -47,16 +47,6 @@ variable "gerrit01_ipv4" {
   default = "138.199.144.184"
 }
 
-variable "build02_ipv4" {
-  type    = string
-  default = "65.108.45.222"
-}
-
-variable "build02_ipv6" {
-  type    = string
-  default = "2a01:4f9:6b:5184::1"
-}
-
 variable "build03_ipv4" {
   type    = string
   default = "116.202.234.220"
