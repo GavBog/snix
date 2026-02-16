@@ -20,17 +20,30 @@ resource "digitalocean_record" "snix_dev_infra_public01" {
   value    = var.public01_ipv6
 }
 
-resource "digitalocean_record" "snix_dev_infra_build02_a" {
+resource "digitalocean_record" "snix_dev_infra_build02_v4" {
   domain   = digitalocean_domain.snix_dev.id
   type     = "A"
   name     = "build02.infra"
   value    = var.build02_ipv4
 }
-resource "digitalocean_record" "snix_dev_infra_build02" {
+resource "digitalocean_record" "snix_dev_infra_build02_v6" {
   domain   = digitalocean_domain.snix_dev.id
   type     = "AAAA"
   name     = "build02.infra"
   value    = var.build02_ipv6
+}
+
+resource "digitalocean_record" "snix_dev_infra_build03_v4" {
+  domain   = digitalocean_domain.snix_dev.id
+  type     = "A"
+  name     = "build03.infra"
+  value    = var.build03_ipv4
+}
+resource "digitalocean_record" "snix_dev_infra_build03_v6" {
+  domain   = digitalocean_domain.snix_dev.id
+  type     = "AAAA"
+  name     = "build03.infra"
+  value    = var.build03_ipv6
 }
 
 resource "digitalocean_record" "snix_dev_infra_meta01_v4" {

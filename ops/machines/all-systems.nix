@@ -9,6 +9,7 @@
   public01
   # Build machines
   build02
+  build03
   # Observability stack and internal software
   meta01
   # fetch-through cache for cache.nixos.org

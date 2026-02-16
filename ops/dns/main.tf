@@ -57,6 +57,16 @@ variable "build02_ipv6" {
   default = "2a01:4f9:6b:5184::1"
 }
 
+variable "build03_ipv4" {
+  type    = string
+  default = "116.202.234.220"
+}
+
+variable "build03_ipv6" {
+  type    = string
+  default = "2a01:4f8:241:4de7::1"
+}
+
 variable "meta01_ipv4" {
   type    = string
   default = "142.132.184.228"
