@@ -63,6 +63,10 @@ in
           hooks.environment = ''
             export PATH=$PATH:/run/wrappers/bin
           '';
+          extraConfig = ''
+            git-fetch-flags="-v --depth=10"
+            git-clone-flags="-v --depth=10"
+          '';
 
           tags = {
             # all agents support small jobs
