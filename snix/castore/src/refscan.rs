@@ -10,7 +10,7 @@ use pin_project_lite::pin_project;
 use std::collections::BTreeSet;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering, fence};
 use std::task::{Poll, ready};
 use tokio::io::{AsyncBufRead, AsyncRead, ReadBuf};
 use wu_manber::TwoByteWM;
@@ -99,8 +99,9 @@ impl<P: AsRef<[u8]>> ReferenceScanner<P> {
 
         if let Some(searcher) = &self.pattern.inner.searcher {
             for m in searcher.find(haystack) {
-                self.matches[m.pat_idx].store(true, Ordering::Release);
+                self.matches[m.pat_idx].store(true, Ordering::Relaxed);
             }
+            fence(Ordering::Release);
         }
     }
 
@@ -109,16 +110,18 @@ impl<P: AsRef<[u8]>> ReferenceScanner<P> {
     }
 
     pub fn matches(&self) -> Vec<bool> {
+        fence(Ordering::Acquire);
         self.matches
             .iter()
-            .map(|m| m.load(Ordering::Acquire))
+            .map(|m| m.load(Ordering::Relaxed))
             .collect()
     }
 
     pub fn candidate_matches(&self) -> impl Iterator<Item = &P> {
         let candidates = self.pattern.candidates();
+        fence(Ordering::Acquire);
         self.matches.iter().enumerate().filter_map(|(idx, found)| {
-            if found.load(Ordering::Acquire) {
+            if found.load(Ordering::Relaxed) {
                 Some(&candidates[idx])
             } else {
                 None
