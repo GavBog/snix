@@ -120,13 +120,8 @@ impl<P: AsRef<[u8]>> ReferenceScanner<P> {
     pub fn candidate_matches(&self) -> impl Iterator<Item = &P> {
         let candidates = self.pattern.candidates();
         fence(Ordering::Acquire);
-        self.matches.iter().enumerate().filter_map(|(idx, found)| {
-            if found.load(Ordering::Relaxed) {
-                Some(&candidates[idx])
-            } else {
-                None
-            }
-        })
+        Iterator::zip(candidates.iter(), self.matches.iter())
+            .filter_map(|(candidate, found)| found.load(Ordering::Relaxed).then_some(candidate))
     }
 }
 
