@@ -25,6 +25,9 @@
 
     npmConfigHook = pkgs.importNpmLock.npmConfigHook;
 
-    installPhase = "cp -r public/. $out";
+    installPhase = ''
+      cp -r public/. $out
+      grep -q "Composable and Modular by Design" $out/index.html
+    '';
   };
 }
