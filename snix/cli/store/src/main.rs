@@ -93,8 +93,7 @@ enum Commands {
         ///
         /// ```notrust
         /// nix path-info --json --closure-size --recursive <some-path> | \
-        ///   jq -s '{closure: add}' | \
-        ///   snix-store copy -
+        ///   jq -s '{closure: add}'
         /// ```
         ///
         /// This can be used to invoke snix-store inside a Nix derivation
