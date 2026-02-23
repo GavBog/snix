@@ -1,5 +1,4 @@
-use rnix::{Root, SyntaxKind, SyntaxNode};
-use rowan::ast::AstNode;
+use rnix::SyntaxKind;
 
 /// An assignment of an identifier to a value in the context of a REPL.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,7 +15,7 @@ impl<'a> Assignment<'a> {
     /// any reason, since the intent is for us to fall-back to trying to parse the input as a
     /// regular expression or other REPL command.
     pub fn parse(input: &'a str) -> Option<Self> {
-        let mut tt = rnix::tokenizer::Tokenizer::new(input);
+        let mut tt = rnix::tokenize(input);
         macro_rules! next {
             ($kind:ident) => {{
                 loop {
@@ -33,11 +32,14 @@ impl<'a> Assignment<'a> {
         }
 
         let ident = next!(TOKEN_IDENT);
-        let _equal = next!(TOKEN_ASSIGN);
-        let (green, errs) = rnix::parser::parse(tt);
-        let value = Root::cast(SyntaxNode::new_root(green))?.expr()?;
+        let equal = next!(TOKEN_ASSIGN);
 
-        if !errs.is_empty() {
+        let value_start = equal.as_ptr() as usize + equal.len() - input.as_ptr() as usize;
+        let value_expr = &input[value_start..];
+        let root = rnix::Root::parse(value_expr);
+        let value = root.tree().expr()?;
+
+        if !root.errors().is_empty() {
             return None;
         }
 

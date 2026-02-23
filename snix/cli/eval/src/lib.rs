@@ -153,7 +153,7 @@ pub fn evaluate<E: std::io::Write + Clone + Send>(
             matches!(
                 &err.kind,
                 ErrorKind::ParseErrors(pes)
-                    if pes.iter().any(|pe| matches!(pe, rnix::parser::ParseError::UnexpectedEOF))
+                    if pes.iter().any(|pe| matches!(pe, rnix::ParseError::UnexpectedEOF))
             )
         })
     {

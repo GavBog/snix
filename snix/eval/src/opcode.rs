@@ -196,6 +196,9 @@ pub enum Op {
     /// Attempt to resolve a path literal relative to the home dir
     ResolveHomePath,
 
+    /// Interpolate the given number of path fragments into a single path
+    InterpolatePath,
+
     // Type assertion operators
     /// Assert that the value at {1} is a boolean, and fail with a runtime error
     /// otherwise.
@@ -278,6 +281,7 @@ impl Op {
             | Op::PushWith
             | Op::List
             | Op::Interpolate
+            | Op::InterpolatePath
             | Op::GetLocal
             | Op::CloseScope
             | Op::GetUpvalue

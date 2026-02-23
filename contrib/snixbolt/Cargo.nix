@@ -359,44 +359,6 @@ rec {
         features = {
         };
       };
-      "bitflags 1.3.2" = rec {
-        crateName = "bitflags";
-        version = "1.3.2";
-        edition = "2018";
-        sha256 = "12ki6w8gn1ldq7yz9y680llwk5gmrhrzszaa17g1sbrw2r2qvwxy";
-        authors = [
-          "The Rust Project Developers"
-        ];
-        features = {
-          "compiler_builtins" = [ "dep:compiler_builtins" ];
-          "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [
-            "core"
-            "compiler_builtins"
-          ];
-        };
-        resolvedDefaultFeatures = [ "default" ];
-      };
-      "bitflags 2.4.1" = rec {
-        crateName = "bitflags";
-        version = "2.4.1";
-        edition = "2021";
-        sha256 = "01ryy3kd671b0ll4bhdvhsz67vwz1lz53fz504injrd7wpv64xrj";
-        authors = [
-          "The Rust Project Developers"
-        ];
-        features = {
-          "arbitrary" = [ "dep:arbitrary" ];
-          "bytemuck" = [ "dep:bytemuck" ];
-          "compiler_builtins" = [ "dep:compiler_builtins" ];
-          "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [
-            "core"
-            "compiler_builtins"
-          ];
-          "serde" = [ "dep:serde" ];
-        };
-      };
       "block-buffer" = rec {
         crateName = "block-buffer";
         version = "0.10.4";
@@ -738,58 +700,6 @@ rec {
           "default"
           "std"
         ];
-      };
-      "dirs" = rec {
-        crateName = "dirs";
-        version = "4.0.0";
-        edition = "2015";
-        sha256 = "0n8020zl4f0frfnzvgb9agvk4a14i1kjz4daqnxkgslndwmaffna";
-        authors = [
-          "Simon Ochsenreither <simon@ochsenreither.de>"
-        ];
-        dependencies = [
-          {
-            name = "dirs-sys";
-            packageId = "dirs-sys";
-          }
-        ];
-
-      };
-      "dirs-sys" = rec {
-        crateName = "dirs-sys";
-        version = "0.3.7";
-        edition = "2015";
-        sha256 = "19md1cnkazham8a6kh22v12d8hh3raqahfk6yb043vrjr68is78v";
-        libName = "dirs_sys";
-        authors = [
-          "Simon Ochsenreither <simon@ochsenreither.de>"
-        ];
-        dependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-            target = { target, features }: (target."unix" or false);
-          }
-          {
-            name = "redox_users";
-            packageId = "redox_users";
-            usesDefaultFeatures = false;
-            target = { target, features }: ("redox" == target."os" or null);
-          }
-          {
-            name = "winapi";
-            packageId = "winapi";
-            target = { target, features }: (target."windows" or false);
-            features = [
-              "knownfolders"
-              "objbase"
-              "shlobj"
-              "winbase"
-              "winerror"
-            ];
-          }
-        ];
-
       };
       "either" = rec {
         crateName = "either";
@@ -1356,7 +1266,6 @@ rec {
         resolvedDefaultFeatures = [
           "js"
           "js-sys"
-          "std"
           "wasm-bindgen"
         ];
       };
@@ -3729,37 +3638,6 @@ rec {
           "std"
         ];
       };
-      "libredox" = rec {
-        crateName = "libredox";
-        version = "0.0.1";
-        edition = "2021";
-        sha256 = "1s2fh4ikpp9xl0lsl01pi0n8pw1q9s3ld452vd8qh1v63v537j45";
-        authors = [
-          "4lDO2 <4lDO2@protonmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "bitflags";
-            packageId = "bitflags 2.4.1";
-          }
-          {
-            name = "libc";
-            packageId = "libc";
-          }
-          {
-            name = "redox_syscall";
-            packageId = "redox_syscall";
-          }
-        ];
-        features = {
-          "default" = [
-            "scheme"
-            "call"
-          ];
-          "scheme" = [ "call" ];
-        };
-        resolvedDefaultFeatures = [ "call" ];
-      };
       "log" = rec {
         crateName = "log";
         version = "0.4.28";
@@ -3871,24 +3749,6 @@ rec {
           "default"
           "std"
         ];
-      };
-      "memoffset" = rec {
-        crateName = "memoffset";
-        version = "0.9.0";
-        edition = "2015";
-        sha256 = "0v20ihhdzkfw1jx00a7zjpk2dcp5qjq6lz302nyqamd9c4f4nqss";
-        authors = [
-          "Gilad Naaman <gilad.naaman@gmail.com>"
-        ];
-        buildDependencies = [
-          {
-            name = "autocfg";
-            packageId = "autocfg";
-          }
-        ];
-        features = {
-        };
-        resolvedDefaultFeatures = [ "default" ];
       };
       "miniz_oxide" = rec {
         crateName = "miniz_oxide";
@@ -4515,65 +4375,6 @@ rec {
           "proc-macro"
         ];
       };
-      "redox_syscall" = rec {
-        crateName = "redox_syscall";
-        version = "0.4.1";
-        edition = "2018";
-        sha256 = "1aiifyz5dnybfvkk4cdab9p2kmphag1yad6iknc7aszlxxldf8j7";
-        libName = "syscall";
-        authors = [
-          "Jeremy Soller <jackpot51@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "bitflags";
-            packageId = "bitflags 1.3.2";
-          }
-        ];
-        features = {
-          "core" = [ "dep:core" ];
-          "rustc-dep-of-std" = [
-            "core"
-            "bitflags/rustc-dep-of-std"
-          ];
-        };
-      };
-      "redox_users" = rec {
-        crateName = "redox_users";
-        version = "0.4.4";
-        edition = "2021";
-        sha256 = "1d1c7dhbb62sh8jrq9dhvqcyxqsh3wg8qknsi94iwq3r0wh7k151";
-        authors = [
-          "Jose Narvaez <goyox86@gmail.com>"
-          "Wesley Hershberger <mggmugginsmc@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "getrandom";
-            packageId = "getrandom";
-            features = [ "std" ];
-          }
-          {
-            name = "libredox";
-            packageId = "libredox";
-            usesDefaultFeatures = false;
-            features = [ "call" ];
-          }
-          {
-            name = "thiserror";
-            packageId = "thiserror 1.0.63";
-          }
-        ];
-        features = {
-          "auth" = [
-            "rust-argon2"
-            "zeroize"
-          ];
-          "default" = [ "auth" ];
-          "rust-argon2" = [ "dep:rust-argon2" ];
-          "zeroize" = [ "dep:zeroize" ];
-        };
-      };
       "regex" = rec {
         crateName = "regex";
         version = "1.10.6";
@@ -4904,9 +4705,9 @@ rec {
       };
       "rnix" = rec {
         crateName = "rnix";
-        version = "0.12.0";
+        version = "0.14.0";
         edition = "2021";
-        sha256 = "1a8vpirp369mdkxcvmzxnzwjh0194788qvqbsmqbsfml185y05bg";
+        sha256 = "16sp7zzagxdk7wps74jfpqrilz6yny24bhsisc8dzv1f6wbvsqy1";
         authors = [
           "jD91mZM2 <me@krake.one>"
         ];
@@ -4932,9 +4733,9 @@ rec {
       };
       "rowan" = rec {
         crateName = "rowan";
-        version = "0.15.15";
+        version = "0.16.1";
         edition = "2021";
-        sha256 = "0j9b340gsyf2h7v1q9xb4mqyqp4qbyzlbk1r9zn2mzyclyl8z99j";
+        sha256 = "08azddgq9f9nir996h0y46j8va0wsz4112hv0ls9hd1fb2gklyj1";
         authors = [
           "Aleksey Kladov <aleksey.kladov@gmail.com>"
         ];
@@ -4948,10 +4749,6 @@ rec {
             packageId = "hashbrown 0.14.5";
             usesDefaultFeatures = false;
             features = [ "inline-more" ];
-          }
-          {
-            name = "memoffset";
-            packageId = "memoffset";
           }
           {
             name = "rustc-hash";
@@ -5470,10 +5267,6 @@ rec {
           {
             name = "data-encoding";
             packageId = "data-encoding";
-          }
-          {
-            name = "dirs";
-            packageId = "dirs";
           }
           {
             name = "genawaiter";
@@ -8288,11 +8081,8 @@ rec {
           "consoleapi"
           "errhandlingapi"
           "fileapi"
-          "knownfolders"
           "minwindef"
-          "objbase"
           "processenv"
-          "shlobj"
           "std"
           "sysinfoapi"
           "winbase"

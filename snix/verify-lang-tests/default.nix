@@ -104,9 +104,8 @@ let
     "eval-okay-builtins-map-function-strictness.nix" = [ nix_latest_verified ];
     "eval-okay-builtins-genList-function-strictness.nix" = [ nix_latest_verified ];
 
-    # TODO(sterni): support diffing working directory and home relative paths
-    # like C++ Nix test suite (using string replacement).
-    "eval-okay-path-antiquotation.nix" = true;
+    # interpolation in paths was added in 2.4
+    "eval-okay-path-string-interpolation.nix" = [ nix_2_3 ];
 
     # The output of dirOf (and maybe other filesystem builtins) have changed in Nix 2.23
     # when they switched to using std::filesystem, https://github.com/NixOS/nix/pull/10658.
@@ -185,6 +184,7 @@ let
             fi
           ''
           + lib.optionalString (expFile != null) ''
+            sed -i "s!$(pwd)/nix_tests!/pwd/lang!g;s!$(pwd)/snix_tests!/pwd/lang!g" '${outFile}'
             if ! diff --color=always -u '${outFile}' '${expFile}'; then
               thisTestPassed=false
             fi
@@ -219,6 +219,7 @@ let
         # Make nix-instantiate happy in the sandbox
         export NIX_STORE_DIR="$(realpath "$(mktemp -d store.XXXXXXXXXX)")"
         export NIX_STATE_DIR="$(realpath "$(mktemp -d state.XXXXXXXXXX)")"
+        export HOME=/fake-home
 
         # Helper function to check expected exit code
         expect() {

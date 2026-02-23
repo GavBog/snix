@@ -16,7 +16,7 @@ use bstr::{BString, ByteSlice, ByteVec};
 use codemap::Span;
 use rustc_hash::FxHashMap;
 use serde_json::json;
-use std::{cmp::Ordering, ops::DerefMut, path::PathBuf, rc::Rc};
+use std::{cmp::Ordering, ffi::OsStr, ops::DerefMut, path::PathBuf, rc::Rc};
 
 use crate::{
     NixString, SourceCode, arithmetic_op,
@@ -32,7 +32,7 @@ use crate::{
     upvalues::Upvalues,
     value::{
         Builtin, BuiltinResult, Closure, CoercionKind, Lambda, NixAttrs, NixContext, NixList,
-        PointerEquality, Thunk, Value,
+        PointerEquality, Thunk, Value, canon_path,
     },
     vm::generators::GenCo,
     warnings::{EvalWarning, WarningKind},
@@ -935,7 +935,15 @@ where
 
                 Op::ResolveHomePath => match self.stack_pop() {
                     Value::UnresolvedPath(path) => {
-                        match dirs::home_dir() {
+                        // FUTUREWORK: this only works on Linux and Darwin. Other platforms?
+                        let home_dir = self
+                            .io_handle
+                            .as_ref()
+                            .get_env(OsStr::new("HOME"))
+                            .and_then(|h| if h.is_empty() { None } else { Some(h) })
+                            .map(PathBuf::from);
+
+                        match home_dir {
                             None => {
                                 return frame.error(
                                     self,
@@ -955,6 +963,8 @@ where
                         panic!("Snix bug: OpResolveHomePath called on non-UnresolvedPath")
                     }
                 },
+
+                Op::InterpolatePath => self.run_interpolate_path(frame.read_uvarint(), &frame)?,
 
                 Op::PushWith => self
                     .with_stack
@@ -1053,6 +1063,51 @@ where
 
         self.stack
             .push(Value::String(NixString::new_context_from(context, out)));
+        Ok(())
+    }
+
+    /// Interpolate path fragments by popping the specified number of
+    /// fragments off the stack, evaluating them into a single path,
+    /// and pushing a Path value back on the stack.
+    fn run_interpolate_path(&mut self, count: u64, frame: &CallFrame) -> EvalResult<()> {
+        // Similar pattern to run_interpolate for strings but simpler
+        let mut path_str = String::new();
+
+        for i in 0..count {
+            let val = self.stack_pop();
+            if val.is_catchable() {
+                // If we encounter an error, discard remaining parts and propagate the error
+                for _ in (i + 1)..count {
+                    self.stack.pop();
+                }
+                self.stack.push(val);
+                return Ok(());
+            }
+
+            // For path interpolation, we only accept string and path values
+            match val {
+                Value::String(s) => {
+                    path_str.push_str(&s.as_bytes().to_str_lossy());
+                }
+                Value::Path(p) => {
+                    path_str.push_str(&p.to_string_lossy());
+                }
+                _ => {
+                    return frame.error(
+                        self,
+                        ErrorKind::TypeError {
+                            expected: "string or path",
+                            actual: val.type_of(),
+                        },
+                    );
+                }
+            }
+        }
+
+        // Create a canonical path from the concatenated string
+        let path = canon_path(PathBuf::from(path_str));
+        self.stack.push(Value::Path(Box::new(path)));
+
         Ok(())
     }
 

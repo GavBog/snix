@@ -19,17 +19,17 @@ mod optimiser;
 mod scope;
 
 use codemap::Span;
-use rnix::ast::{self, AstToken};
+use rnix::ast::{self, AstToken, InterpolPart, PathContent};
 use rustc_hash::FxHashMap;
 use smol_str::SmolStr;
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 
 use crate::CoercionKind;
 use crate::SourceCode;
 use crate::chunk::Chunk;
-use crate::errors::{CatchableErrorKind, Error, ErrorKind, EvalResult};
+use crate::errors::{Error, ErrorKind, EvalResult};
 use crate::observer::CompilerObserver;
 use crate::opcode::{CodeIdx, Op, Position, UpvalueIdx};
 use crate::spans::ToSpan;
@@ -310,6 +310,34 @@ impl Compiler<'_, '_> {
         self.push_op(Op::Constant, node);
         self.push_uvarint(idx.0 as u64);
     }
+
+    /// Emit bytecode for path interpolation parts in reverse order.
+    /// Literals become string constants, interpolations are compiled
+    /// and coerced to strings.
+    pub(super) fn emit_path_ipol_parts<T: ToSpan>(
+        &mut self,
+        slot: LocalIdx,
+        node: &T,
+        parts: impl DoubleEndedIterator<Item = InterpolPart<PathContent>>,
+    ) {
+        for part in parts.rev() {
+            match part {
+                InterpolPart::Interpolation(ipol) => {
+                    self.compile(slot, ipol.expr().unwrap());
+                    self.push_op(Op::CoerceToString, &ipol);
+                    let encoded: u8 = CoercionKind {
+                        strong: false,
+                        import_paths: true,
+                    }
+                    .into();
+                    self.push_u8(encoded);
+                }
+                InterpolPart::Literal(content) => {
+                    self.emit_constant(Value::String(content.text().into()), node);
+                }
+            }
+        }
+    }
 }
 
 // Actual code-emitting AST traversal methods.
@@ -319,7 +347,10 @@ impl Compiler<'_, '_> {
 
         match &expr {
             ast::Expr::Literal(literal) => self.compile_literal(literal),
-            ast::Expr::Path(path) => self.compile_path(slot, path),
+            ast::Expr::PathAbs(path) => self.compile_abs_path(slot, path),
+            ast::Expr::PathHome(path) => self.compile_home_path(slot, path),
+            ast::Expr::PathRel(path) => self.compile_rel_path(slot, path),
+            ast::Expr::PathSearch(path) => self.compile_search_path(slot, path),
             ast::Expr::Str(s) => self.compile_str(slot, s),
 
             ast::Expr::UnaryOp(op) => self.thunk(slot, op, move |c, s| c.compile_unary_op(s, op)),
@@ -370,6 +401,8 @@ impl Compiler<'_, '_> {
                 c.compile_legacy_let(s, legacy_let)
             }),
 
+            ast::Expr::CurPos(curpos) => self.compile_cur_pos(slot, curpos),
+
             ast::Expr::Root(_) => unreachable!("there cannot be more than one root"),
             ast::Expr::Error(_) => unreachable!("compile is only called on validated trees"),
         }
@@ -404,51 +437,87 @@ impl Compiler<'_, '_> {
         self.emit_constant(value, node);
     }
 
-    fn compile_path(&mut self, slot: LocalIdx, node: &ast::Path) {
-        // TODO(tazjin): placeholder implementation while waiting for
-        // https://github.com/nix-community/rnix-parser/pull/96
+    fn compile_abs_path(&mut self, slot: LocalIdx, node: &ast::PathAbs) {
+        let parts = node.parts();
 
-        let raw_path = node.to_string();
-        let path = if raw_path.starts_with('/') {
-            Path::new(&raw_path).to_owned()
-        } else if raw_path.starts_with('~') {
-            // We assume that home paths start with ~/ or fail to parse
-            // TODO: this should be checked using a parse-fail test.
-            debug_assert!(raw_path.len() > 2 && raw_path.starts_with("~/"));
-
-            let home_relative_path = &raw_path[2..(raw_path.len())];
-            self.emit_constant(
-                Value::UnresolvedPath(Box::new(home_relative_path.into())),
-                node,
-            );
-            self.push_op(Op::ResolveHomePath, node);
-            return;
-        } else if raw_path.starts_with('<') {
-            // TODO: decide what to do with findFile
-            if raw_path.len() == 2 {
-                return self.emit_constant(
-                    Value::Catchable(Box::new(CatchableErrorKind::NixPathResolution(
-                        "Empty <> path not allowed".into(),
-                    ))),
-                    node,
-                );
-            }
-            let path = &raw_path[1..(raw_path.len() - 1)];
-            // Make a thunk to resolve the path (without using `findFile`, at least for now?)
-            return self.thunk(slot, node, move |c, _| {
-                c.emit_constant(Value::UnresolvedPath(Box::new(path.into())), node);
-                c.push_op(Op::FindFile, node);
+        if is_interpolated_path(&parts) {
+            self.thunk(slot, node, move |c, s| {
+                let len = parts.len();
+                c.emit_path_ipol_parts(s, node, parts.into_iter());
+                c.push_op(Op::InterpolatePath, node);
+                c.push_uvarint(len as u64);
             });
-        } else {
-            let mut buf = self.root_dir.clone();
-            buf.push(&raw_path);
-            buf
-        };
+            return;
+        }
 
         // TODO: Use https://github.com/rust-lang/rfcs/issues/2208
         // once it is available
+        let path = PathBuf::from(node.to_string());
         let value = Value::Path(Box::new(crate::value::canon_path(path)));
         self.emit_constant(value, node);
+    }
+
+    fn compile_home_path(&mut self, slot: LocalIdx, node: &ast::PathHome) {
+        let parts = node.parts();
+        let home_subpath = match &parts[0] {
+            ast::InterpolPart::Literal(part) => &part.text()[2..].to_string(),
+            _ => {
+                // It can't because it always starts with `~/` and rnix
+                // returns it as a literal
+                unreachable!("a home path can't start with interpolation")
+            }
+        };
+
+        if is_interpolated_path(&parts) {
+            self.thunk(slot, node, move |c, s| {
+                let len = parts.len();
+                c.emit_path_ipol_parts(s, node, parts.into_iter().skip(1));
+                c.emit_constant(Value::UnresolvedPath(Box::new(home_subpath.into())), node);
+                c.push_op(Op::ResolveHomePath, node);
+
+                c.push_op(Op::InterpolatePath, node);
+                c.push_uvarint(len as u64);
+            });
+            return;
+        }
+
+        self.emit_constant(Value::UnresolvedPath(Box::new(home_subpath.into())), node);
+        self.push_op(Op::ResolveHomePath, node);
+    }
+
+    fn compile_rel_path(&mut self, slot: LocalIdx, node: &ast::PathRel) {
+        let parts = node.parts();
+        let abs = match &parts[0] {
+            ast::InterpolPart::Literal(part) => self.root_dir.join(part.text()),
+            _ => {
+                unreachable!("a relative path can't start with interpolation");
+            }
+        };
+
+        if is_interpolated_path(&parts) {
+            self.thunk(slot, node, move |c, s| {
+                let len = parts.len();
+                c.emit_path_ipol_parts(s, node, parts.into_iter().skip(1));
+                c.emit_constant(Value::Path(abs.into()), node);
+
+                c.push_op(Op::InterpolatePath, node);
+                c.push_uvarint(len as u64);
+            });
+            return;
+        }
+
+        let value = Value::Path(Box::new(crate::value::canon_path(abs)));
+        self.emit_constant(value, node);
+    }
+
+    fn compile_search_path(&mut self, slot: LocalIdx, node: &ast::PathSearch) {
+        let raw_path = node.to_string();
+        let path = &raw_path[1..(raw_path.len() - 1)];
+        // Make a thunk to resolve the path (without using `findFile`, at least for now?)
+        self.thunk(slot, node, move |c, _| {
+            c.emit_constant(Value::UnresolvedPath(Box::new(path.into())), node);
+            c.push_op(Op::FindFile, node);
+        });
     }
 
     /// Helper that compiles the given string parts strictly. The caller
@@ -1338,6 +1407,19 @@ impl Compiler<'_, '_> {
         }
     }
 
+    fn compile_cur_pos(&mut self, slot: LocalIdx, node: &ast::CurPos) {
+        self.thunk(slot, node, move |c, _s| {
+            c.emit_constant(
+                Value::attrs(NixAttrs::from_iter([
+                    ("line", 42.into()),
+                    ("column", 42.into()),
+                    ("file", Value::String("/deep/thought".into())),
+                ])),
+                node,
+            );
+        });
+    }
+
     fn compile_apply(&mut self, slot: LocalIdx, node: &ast::Apply) {
         // To call a function, we leave its arguments on the stack,
         // followed by the function expression itself, and then emit a
@@ -1528,6 +1610,13 @@ fn expr_static_attr_str(node: &ast::Attr) -> Option<SmolStr> {
             _ => None,
         },
     }
+}
+
+/// Check whether a path contains any interpolated expressions.
+fn is_interpolated_path(parts: &[InterpolPart<PathContent>]) -> bool {
+    parts
+        .iter()
+        .any(|part| matches!(part, ast::InterpolPart::Interpolation(_)))
 }
 
 /// Create a delayed source-only builtin compilation, for a builtin

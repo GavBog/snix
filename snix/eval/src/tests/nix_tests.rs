@@ -83,6 +83,10 @@ where
         // for eval-okay-getenv.nix
         if key == "TEST_VAR" {
             return Some(OsString::from_str("foo").expect("This conversion is infallible."));
+        };
+        // for path interpolation cases
+        if key == "HOME" {
+            return Some(OsString::from_str("/fake-home").expect("This conversion is infallible."));
         }
 
         self.actual.as_ref().get_env(key)
@@ -135,7 +139,15 @@ fn eval_test(code_path: PathBuf, expect_success: bool) {
     // evaluation didn't fail.
 
     let value = result.value.unwrap();
-    let result_str = value.to_string();
+    let result_str = {
+        // replace absolute path to `/pwd/lang` for CppNix tests compatibility.
+        let pwd = code_path
+            .parent()
+            .expect("unable to get code file's dir")
+            .to_str()
+            .unwrap();
+        value.to_string().replace(pwd, "/pwd/lang")
+    };
 
     let exp_path = code_path.with_extension("exp");
     if exp_path.exists() {

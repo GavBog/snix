@@ -16582,9 +16582,9 @@ rec {
       };
       "rnix" = rec {
         crateName = "rnix";
-        version = "0.12.0";
+        version = "0.14.0";
         edition = "2021";
-        sha256 = "1a8vpirp369mdkxcvmzxnzwjh0194788qvqbsmqbsfml185y05bg";
+        sha256 = "16sp7zzagxdk7wps74jfpqrilz6yny24bhsisc8dzv1f6wbvsqy1";
         authors = [
           "jD91mZM2 <me@krake.one>"
         ];
@@ -16598,9 +16598,9 @@ rec {
       };
       "rowan" = rec {
         crateName = "rowan";
-        version = "0.15.17";
+        version = "0.16.1";
         edition = "2021";
-        sha256 = "16vpzfx41xpy7smss3dm7mrmnv9m9g1s1rnhm0gg8qzq06hf9wfl";
+        sha256 = "08azddgq9f9nir996h0y46j8va0wsz4112hv0ls9hd1fb2gklyj1";
         authors = [
           "Aleksey Kladov <aleksey.kladov@gmail.com>"
         ];
@@ -16614,10 +16614,6 @@ rec {
             packageId = "hashbrown 0.14.5";
             usesDefaultFeatures = false;
             features = [ "inline-more" ];
-          }
-          {
-            name = "memoffset";
-            packageId = "memoffset 0.9.1";
           }
           {
             name = "rustc-hash";
@@ -17519,7 +17515,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.61.2";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -20423,10 +20419,6 @@ rec {
           {
             name = "data-encoding";
             packageId = "data-encoding";
-          }
-          {
-            name = "dirs";
-            packageId = "dirs";
           }
           {
             name = "genawaiter";
@@ -30690,8 +30682,6 @@ rec {
           "Win32_Foundation"
           "Win32_Networking"
           "Win32_Networking_WinSock"
-          "Win32_Security"
-          "Win32_Security_Cryptography"
           "Win32_System"
           "Win32_System_IO"
           "Win32_System_Threading"

@@ -13,7 +13,6 @@ bytes.workspace = true
 bstr = { workspace = true, features = ["serde"] }
 codemap.workspace = true
 codemap-diagnostic.workspace = true
-dirs.workspace = true
 genawaiter.workspace = true
 hashbrown.workspace = true
 itertools.workspace = true

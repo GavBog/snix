@@ -210,7 +210,7 @@ to a missing value in the attribute set(s) included via `with`."#
 
     // Errors themselves ignored here & handled in Self::spans instead
     #[error("failed to parse Nix code:")]
-    ParseErrors(Vec<rnix::parser::ParseError>),
+    ParseErrors(Vec<rnix::ParseError>),
 
     /// An error occured while executing some native code (e.g. a
     /// builtin), and needs to be chained up.
@@ -263,7 +263,7 @@ to a missing value in the attribute set(s) included via `with`."#
     ImportParseError {
         path: PathBuf,
         file: Arc<File>,
-        errors: Vec<rnix::parser::ParseError>,
+        errors: Vec<rnix::ParseError>,
     },
 
     /// Compilation errors occured while importing a file.
@@ -533,7 +533,10 @@ fn name_for_syntax(syntax: &rnix::SyntaxKind) -> &'static str {
         rnix::SyntaxKind::TOKEN_INTEGER => "an integer",
         rnix::SyntaxKind::TOKEN_INTERPOL_END => "}",
         rnix::SyntaxKind::TOKEN_INTERPOL_START => "${",
-        rnix::SyntaxKind::TOKEN_PATH => "a path",
+        rnix::SyntaxKind::TOKEN_PATH_ABS => "an absolute path",
+        rnix::SyntaxKind::TOKEN_PATH_HOME => "a path relative to home",
+        rnix::SyntaxKind::TOKEN_PATH_REL => "a relative path",
+        rnix::SyntaxKind::TOKEN_PATH_SEARCH => "a path search",
         rnix::SyntaxKind::TOKEN_URI => "a literal URI",
         rnix::SyntaxKind::TOKEN_STRING_CONTENT => "content of a string",
         rnix::SyntaxKind::TOKEN_STRING_END => "\"",
@@ -568,7 +571,10 @@ fn name_for_syntax(syntax: &rnix::SyntaxKind) -> &'static str {
         rnix::SyntaxKind::NODE_UNARY_OP => "a unary operator",
         rnix::SyntaxKind::NODE_LITERAL => "a literal value",
         rnix::SyntaxKind::NODE_WITH => "a `with`-expression",
-        rnix::SyntaxKind::NODE_PATH => "a path",
+        rnix::SyntaxKind::NODE_PATH_ABS => "an absolute path",
+        rnix::SyntaxKind::NODE_PATH_HOME => "a path relative to home",
+        rnix::SyntaxKind::NODE_PATH_REL => "a relative path",
+        rnix::SyntaxKind::NODE_PATH_SEARCH => "a path search",
         rnix::SyntaxKind::NODE_HAS_ATTR => "`?`-operator",
 
         // TODO: unsure about this variant, lets crash!
@@ -603,7 +609,7 @@ fn expected_syntax(one_of: &[rnix::SyntaxKind]) -> String {
 
 /// Process a list of parse errors into a set of span labels, annotating parse
 /// errors.
-fn spans_for_parse_errors(file: &File, errors: &[rnix::parser::ParseError]) -> Vec<SpanLabel> {
+fn spans_for_parse_errors(file: &File, errors: &[rnix::ParseError]) -> Vec<SpanLabel> {
     // rnix has a tendency to emit some identical errors more than once, but
     // they do not enhance the user experience necessarily, so we filter them
     // out
@@ -614,17 +620,17 @@ fn spans_for_parse_errors(file: &File, errors: &[rnix::parser::ParseError]) -> V
         .enumerate()
         .filter_map(|(idx, err)| {
             let (span, label): (Span, String) = match err {
-                rnix::parser::ParseError::Unexpected(range) => (
+                rnix::ParseError::Unexpected(range) => (
                     range.span_for(file),
                     "found an unexpected syntax element here".into(),
                 ),
 
-                rnix::parser::ParseError::UnexpectedExtra(range) => (
+                rnix::ParseError::UnexpectedExtra(range) => (
                     range.span_for(file),
                     "found unexpected extra elements at the root of the expression".into(),
                 ),
 
-                rnix::parser::ParseError::UnexpectedWanted(found, range, wanted) => {
+                rnix::ParseError::UnexpectedWanted(found, range, wanted) => {
                     let span = range.span_for(file);
                     (
                         span,
@@ -636,7 +642,7 @@ fn spans_for_parse_errors(file: &File, errors: &[rnix::parser::ParseError]) -> V
                     )
                 }
 
-                rnix::parser::ParseError::UnexpectedEOF => {
+                rnix::ParseError::UnexpectedEOF => {
                     if had_eof {
                         return None;
                     }
@@ -649,7 +655,7 @@ fn spans_for_parse_errors(file: &File, errors: &[rnix::parser::ParseError]) -> V
                     )
                 }
 
-                rnix::parser::ParseError::UnexpectedEOFWanted(wanted) => {
+                rnix::ParseError::UnexpectedEOFWanted(wanted) => {
                     had_eof = true;
 
                     (
@@ -661,19 +667,19 @@ fn spans_for_parse_errors(file: &File, errors: &[rnix::parser::ParseError]) -> V
                     )
                 }
 
-                rnix::parser::ParseError::DuplicatedArgs(range, name) => (
+                rnix::ParseError::DuplicatedArgs(range, name) => (
                     range.span_for(file),
                     format!("the function argument pattern '{name}' was bound more than once"),
                 ),
 
-                rnix::parser::ParseError::RecursionLimitExceeded => (
+                rnix::ParseError::RecursionLimitExceeded => (
                     file.span,
                     "this code exceeds the parser's recursion limit, please report a Snix bug"
                         .to_string(),
                 ),
 
                 // TODO: can rnix even still throw this? it's semantic!
-                rnix::parser::ParseError::UnexpectedDoubleBind(range) => (
+                rnix::ParseError::UnexpectedDoubleBind(range) => (
                     range.span_for(file),
                     "this pattern was bound more than once".into(),
                 ),

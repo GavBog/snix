@@ -1,0 +1,1 @@
+{ normalized = /pwd/lang/path/foo; normalized_abs = /path/foo; normalized_home = /fake-home/path/foo; notfirst_abs = /bar/foo; }

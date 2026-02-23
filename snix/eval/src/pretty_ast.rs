@@ -3,7 +3,7 @@
 //! The AST is serialised into a JSON structure that can then be
 //! printed in either minimised or well-formatted style.
 
-use rnix::ast::{self, AstToken, HasEntry};
+use rnix::ast::{self, AstToken, HasEntry, PathContent};
 use serde::{Serialize, Serializer, ser::SerializeMap};
 
 pub fn pretty_print_expr(expr: &ast::Expr) -> String {
@@ -104,7 +104,7 @@ impl Serialize for SerializeAST<&ast::Str> {
     }
 }
 
-impl Serialize for SerializeAST<ast::InterpolPart<ast::PathContent>> {
+impl Serialize for SerializeAST<&ast::InterpolPart<ast::PathContent>> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match &self.0 {
             ast::InterpolPart::Literal(p) => Serialize::serialize(p.syntax().text(), serializer),
@@ -115,14 +115,14 @@ impl Serialize for SerializeAST<ast::InterpolPart<ast::PathContent>> {
     }
 }
 
-impl Serialize for SerializeAST<&ast::Path> {
+impl Serialize for SerializeAST<Vec<ast::InterpolPart<PathContent>>> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(Some(2))?;
         map.serialize_entry("kind", "path")?;
 
         map.serialize_entry(
             "parts",
-            &self.0.parts().map(SerializeAST).collect::<Vec<_>>(),
+            &self.0.iter().map(SerializeAST).collect::<Vec<_>>(),
         )?;
 
         map.end()
@@ -445,7 +445,19 @@ impl Serialize for SerializeAST<&ast::Expr> {
             ast::Expr::IfElse(node) => Serialize::serialize(&SerializeAST(node), serializer),
             ast::Expr::Select(node) => Serialize::serialize(&SerializeAST(node), serializer),
             ast::Expr::Str(node) => Serialize::serialize(&SerializeAST(node), serializer),
-            ast::Expr::Path(node) => Serialize::serialize(&SerializeAST(node), serializer),
+            ast::Expr::PathAbs(path) => {
+                Serialize::serialize(&SerializeAST(path.parts()), serializer)
+            }
+            ast::Expr::PathHome(path) => {
+                Serialize::serialize(&SerializeAST(path.parts()), serializer)
+            }
+            ast::Expr::PathRel(path) => {
+                Serialize::serialize(&SerializeAST(path.parts()), serializer)
+            }
+            ast::Expr::PathSearch(path) => {
+                let part = ast::InterpolPart::Literal(path.content().unwrap());
+                Serialize::serialize(&SerializeAST(&part), serializer)
+            }
             ast::Expr::Literal(node) => Serialize::serialize(&SerializeAST(node), serializer),
             ast::Expr::Lambda(node) => Serialize::serialize(&SerializeAST(node), serializer),
             ast::Expr::LegacyLet(node) => Serialize::serialize(&SerializeAST(node), serializer),
@@ -459,6 +471,7 @@ impl Serialize for SerializeAST<&ast::Expr> {
             ast::Expr::Ident(node) => Serialize::serialize(&SerializeAST(node), serializer),
             ast::Expr::With(node) => Serialize::serialize(&SerializeAST(node), serializer),
             ast::Expr::HasAttr(node) => Serialize::serialize(&SerializeAST(node), serializer),
+            ast::Expr::CurPos(_) => todo!(),
         }
     }
 }
