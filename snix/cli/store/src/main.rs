@@ -3,10 +3,11 @@ use clap::Subcommand;
 
 use futures::StreamExt;
 use futures::TryStreamExt;
+use nix_compat::narinfo::SignatureRef;
 use nix_compat::nixhash::CAHash;
 use nix_compat::nixhash::NixHash;
+use nix_compat::store_path::{StorePath, StorePathRef};
 use nix_compat::wire::de::Error;
-use nix_compat::{path_info::ExportedPathInfo, store_path::StorePath};
 use snix_castore::import::fs::ingest_path;
 use snix_cli::shutdown_signal;
 use snix_store::import::path_to_name;
@@ -84,6 +85,9 @@ enum Commands {
         service_addrs: ServiceUrlsGrpc,
 
         /// A path pointing to a JSON file(or '-' for stdin) containing store path metadata.
+        /// Needs to be a list of objects with `narHash`, `narSize`, `path`, `references` fields;
+        /// optionally `deriver`, `signatures`.
+        ///
         /// Usually provided by the `exportReferencesGraph` feature.
         ///
         /// Can also be provided by the following Nix<2.23/Lix command:
@@ -374,7 +378,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 tokio::fs::read(&reference_graph_path).await?
             };
 
-            let reference_graph: Vec<ExportedPathInfo<'_>> =
+            /// Ad-hoc definition for the fields expected in the JSON.
+            /// It is less strict than `ExportedPathInfo` (no `closureSize` field).
+            #[derive(serde::Deserialize)]
+            struct PathMetadata<'a> {
+                #[serde(
+                    rename = "narHash",
+                    deserialize_with = "nix_compat::nixhash::serde::from_nix_nixbase32_or_sri"
+                )]
+                nar_sha256: [u8; 32],
+
+                #[serde(rename = "narSize")]
+                nar_size: u64,
+
+                #[serde(borrow)]
+                pub path: StorePathRef<'a>,
+
+                #[serde(borrow, skip_serializing_if = "Option::is_none")]
+                pub deriver: Option<StorePathRef<'a>>,
+
+                pub references: Vec<StorePathRef<'a>>,
+                #[serde(default, skip_serializing_if = "Vec::is_empty")]
+                pub signatures: Vec<SignatureRef<'a>>,
+            }
+
+            let reference_graph: Vec<PathMetadata<'_>> =
                 serde_json::from_slice(reference_graph_json.as_slice())?;
 
             let lookups_span = info_span!(
