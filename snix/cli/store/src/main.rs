@@ -7,8 +7,6 @@ use nix_compat::nixhash::CAHash;
 use nix_compat::nixhash::NixHash;
 use nix_compat::wire::de::Error;
 use nix_compat::{path_info::ExportedPathInfo, store_path::StorePath};
-use serde::Deserialize;
-use serde::Serialize;
 use snix_castore::import::fs::ingest_path;
 use snix_cli::shutdown_signal;
 use snix_store::import::path_to_name;
@@ -85,23 +83,14 @@ enum Commands {
         #[clap(flatten)]
         service_addrs: ServiceUrlsGrpc,
 
-        /// A path pointing to a JSON file(or '-' for stdin) produced by the Nix
-        /// `__structuredAttrs` containing reference graph information provided
-        /// by the `exportReferencesGraph` feature.
+        /// A path pointing to a JSON file(or '-' for stdin) containing store path metadata.
+        /// Usually provided by the `exportReferencesGraph` feature.
         ///
-        /// Additionally supports the output from the following nix command:
+        /// Can also be provided by the following Nix<2.23/Lix command:
         ///
         /// ```notrust
-        /// nix path-info --json --closure-size --recursive <some-path> | \
-        ///   jq -s '{closure: add}'
+        /// nix path-info --json --closure-size --recursive <some-path>
         /// ```
-        ///
-        /// This can be used to invoke snix-store inside a Nix derivation
-        /// copying to a Snix store (or outside, if the JSON file is copied
-        /// out).
-        ///
-        /// Currently limited to the `closure` key inside that JSON file.
-        #[arg(value_name = "NIX_ATTRS_JSON_FILE", env = "NIX_ATTRS_JSON_FILE")]
         reference_graph_path: PathBuf,
     },
     /// Mounts a snix-store at the given mountpoint
@@ -385,25 +374,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 tokio::fs::read(&reference_graph_path).await?
             };
 
-            #[derive(Deserialize, Serialize)]
-            struct ReferenceGraph<'a> {
-                #[serde(borrow)]
-                closure: Vec<ExportedPathInfo<'a>>,
-            }
-
-            let reference_graph: ReferenceGraph<'_> =
+            let reference_graph: Vec<ExportedPathInfo<'_>> =
                 serde_json::from_slice(reference_graph_json.as_slice())?;
 
             let lookups_span = info_span!(
                 "lookup pathinfos",
                 "indicatif.pb_show" = tracing::field::Empty
             );
-            lookups_span.pb_set_length(reference_graph.closure.len() as u64);
+            lookups_span.pb_set_length(reference_graph.len() as u64);
             lookups_span.pb_set_style(&snix_tracing::PB_PROGRESS_STYLE);
             lookups_span.pb_start();
 
             // From our reference graph, lookup all pathinfos that might exist.
-            let elems: Vec<_> = futures::stream::iter(reference_graph.closure)
+            let elems: Vec<_> = futures::stream::iter(reference_graph)
                 .map(|elem| {
                     let path_info_service = path_info_service.clone();
                     async move {

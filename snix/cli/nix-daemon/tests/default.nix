@@ -19,6 +19,7 @@ let
       (pkgs.runCommand "test-script"
         {
           nativeBuildInputs = [
+            pkgs.jq
             pkgs.util-linux # mount, mountpoint
             depot.third_party.nixpkgs.nixVersions.stable
             depot.snix.cli.default-cli
@@ -47,8 +48,7 @@ let
           export PATH_INFO_SERVICE_ADDR=grpc+unix:$PWD/snix-store.sock
 
           echo "Copying closure ${closure}…"
-          # This picks up the `closure` key in `$NIX_ATTRS_JSON_FILE` automatically.
-          snix store -qqq copy 2> /dev/null # noisy progress bars
+          jq .closure < $NIX_ATTRS_JSON_FILE | snix store copy -qqq -
 
           # Create mountpoints
           # For this test, we overlay a (treated read-only) snix-provided mountpoint

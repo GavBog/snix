@@ -55,6 +55,9 @@ let
           depot.snix.cli.default-cli
           depot.snix.boot.runVM
         ]
+        ++ lib.optionals (isClosure && !useNarBridge) [
+          pkgs.jq
+        ]
         ++ lib.optionals (isClosure && useNarBridge) [
           pkgs.curl
           pkgs.rush-parallel
@@ -93,8 +96,7 @@ let
         ''
         + lib.optionalString (isClosure && !useNarBridge) ''
           echo "Copying closure ${path}…"
-          # This picks up the `closure` key in `$NIX_ATTRS_JSON_FILE` automatically.
-          snix store copy -qqq
+          jq .closure < $NIX_ATTRS_JSON_FILE | snix store copy -qqq -
         ''
         + lib.optionalString (isClosure && useNarBridge) ''
           echo "Starting nar-bridge…"
