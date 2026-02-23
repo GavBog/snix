@@ -21,6 +21,7 @@ use tracing::warn;
 use crate::builder::structured_attrs::handle_structured_attrs;
 use crate::known_paths::KnownPaths;
 
+pub mod export_reference_graph;
 pub mod structured_attrs;
 
 /// These are the environment variables that Nix sets in its sandbox for every
