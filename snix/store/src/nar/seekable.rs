@@ -374,13 +374,11 @@ impl<B: BlobService + 'static> tokio::io::AsyncRead for Reader<B> {
         this.position_bytes += (new_read_buf_pos - prev_read_buf_pos) as u64;
 
         let prev_position_index = this.position_index;
-        while {
-            if let Some(&(offset, ref segment)) = this.segments.get(this.position_index) {
-                (this.position_bytes - offset) >= segment.len()
-            } else {
-                false
-            }
-        } {
+        while this
+            .segments
+            .get(this.position_index)
+            .is_some_and(|&(offset, ref segment)| (this.position_bytes - offset) >= segment.len())
+        {
             this.position_index += 1;
         }
         if prev_position_index != this.position_index {
