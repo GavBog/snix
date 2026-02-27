@@ -35,20 +35,31 @@ let
         hash = "sha256-OS8pT/YGKhfNGaIngU+EwnbVZCkZbnRWaTTYI+q0gpg=";
         stripRoot = false;
       };
-      dragn = pkgs.fetchFromGitHub {
-        owner = "chr-1x";
-        repo = "dragn-emoji";
-        rev = "969543d9918ce2f0794ccd1e41b276d1ab22f0d5";
-        hash = "sha256-+40e9nKaIpQYZUiXh3Qe5jp2uvRbAQYDdXMGLEWHJio=";
-        postFetch = ''
-          for i in $out/*.svg; do
-            ${pkgs.librsvg}/bin/rsvg-convert -h 256 $i > a.png;
-            mv a.png $(echo $i | sed -E "s/svg$/png/");
-            rm $i
-          done
-          ${pkgs.oxipng}/bin/oxipng -o max $out/*.png
-        '';
-      };
+      dragn =
+        pkgs.runCommand "dragn"
+          {
+            src = pkgs.fetchFromGitHub {
+              owner = "chr-1x";
+              repo = "dragn-emoji";
+              rev = "969543d9918ce2f0794ccd1e41b276d1ab22f0d5";
+              hash = "sha256-xIhjQKW/kJP/1O1J+zP5qvsomc1YGgZ7s6OqzDKYrtg=";
+            };
+
+            nativeBuildInputs = [
+              pkgs.librsvg
+              pkgs.oxipng
+            ];
+          }
+          ''
+            mkdir "$out"
+            cp "$src/LICENSE.md/LICENSE" "$out"
+
+            for svg in "$src"/*.svg; do
+              base=$(basename "$svg" .svg)
+              rsvg-convert --height=256 --output="$out/$base.png" "$svg"
+            done
+            oxipng -o max $out/*.png
+          '';
     in
     pkgs.symlinkJoin {
       name = "emojo";
