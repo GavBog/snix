@@ -85,7 +85,7 @@ mod tests {
         }));
 
         (
-            axum_test::TestServer::new(app).unwrap(),
+            axum_test::TestServer::new(app),
             blob_service,
             directory_service,
         )
@@ -218,7 +218,7 @@ mod tests {
             .get("/nested")
             .expect_success()
             .await
-            .assert_text_contains("<!DOCTYPE html><html><body><li><a href=\"/nested/dot\">dot</a></li><li><a href=\"/nested/dot_symlink\">dot_symlink</a></li><li><a href=\"/nested/dotdot_same_symlink\">dotdot_same_symlink</a></li><li><a href=\"/nested/dotdot_symlink\">dotdot_symlink</a></li><li><a href=\"/nested/index.html\">index.html</a></li><li><a href=\"/nested/symlink\">symlink</a></li></body></html>")
+            .assert_text_contains("<!DOCTYPE html><html><body><li><a href=\"/nested/dot\">dot</a></li><li><a href=\"/nested/dot_symlink\">dot_symlink</a></li><li><a href=\"/nested/dotdot_same_symlink\">dotdot_same_symlink</a></li><li><a href=\"/nested/dotdot_symlink\">dotdot_symlink</a></li><li><a href=\"/nested/index.html\">index.html</a></li><li><a href=\"/nested/symlink\">symlink</a></li></body></html>");
     }
 
     #[traced_test]

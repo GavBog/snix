@@ -527,14 +527,13 @@ rec {
       };
       "anyhow" = rec {
         crateName = "anyhow";
-        version = "1.0.100";
-        edition = "2018";
-        sha256 = "0qbfmw4hhv2ampza1csyvf1jqjs2dgrj29cv3h3sh623c6qvcgm2";
+        version = "1.0.102";
+        edition = "2021";
+        sha256 = "0b447dra1v12z474c6z4jmicdmc5yxz5bakympdnij44ckw2s83z";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
         features = {
-          "backtrace" = [ "dep:backtrace" ];
           "default" = [ "std" ];
         };
         resolvedDefaultFeatures = [
@@ -579,34 +578,6 @@ rec {
           "serde" = [ "dep:serde" ];
           "zeroize" = [ "dep:zeroize" ];
         };
-      };
-      "assert-json-diff" = rec {
-        crateName = "assert-json-diff";
-        version = "2.0.2";
-        edition = "2018";
-        sha256 = "04mg3w0rh3schpla51l18362hsirl23q93aisws2irrj32wg5r27";
-        libName = "assert_json_diff";
-        authors = [
-          "David Pedersen <david.pdrsn@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "serde";
-            packageId = "serde";
-          }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
-          }
-        ];
-        devDependencies = [
-          {
-            name = "serde";
-            packageId = "serde";
-            features = [ "derive" ];
-          }
-        ];
-
       };
       "astral-tokio-tar" = rec {
         crateName = "astral-tokio-tar";
@@ -1132,7 +1103,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "visit-mut"
@@ -1180,7 +1151,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [
               "clone-impls"
@@ -1208,17 +1179,6 @@ rec {
           "portable-atomic" = [ "dep:portable-atomic" ];
         };
       };
-      "auto-future" = rec {
-        crateName = "auto-future";
-        version = "1.0.0";
-        edition = "2021";
-        sha256 = "0wykbakzh227vz6frx9p48zsq0wpswgmb7v3917m53m7gr2pw7iw";
-        libName = "auto_future";
-        authors = [
-          "Joseph Lenton <josephlenton@gmail.com>"
-        ];
-
-      };
       "auto_impl" = rec {
         crateName = "auto_impl";
         version = "1.3.0";
@@ -1240,7 +1200,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "visit"
@@ -1349,23 +1309,29 @@ rec {
         };
         resolvedDefaultFeatures = [ "prebuilt-nasm" ];
       };
-      "axum 0.7.9" = rec {
+      "axum" = rec {
         crateName = "axum";
-        version = "0.7.9";
+        version = "0.8.8";
         edition = "2021";
-        sha256 = "07z7wqczi9i8xb4460rvn39p4wjqwr32hx907crd1vwb2fy8ijpd";
+        sha256 = "1f4p0m04mgwpn8b40i9r5mgqxk6w11sv4yri6xfqk305nhyayllb";
         dependencies = [
           {
-            name = "async-trait";
-            packageId = "async-trait";
+            name = "axum-core";
+            packageId = "axum-core";
           }
           {
-            name = "axum-core";
-            packageId = "axum-core 0.4.5";
+            name = "axum-macros";
+            packageId = "axum-macros";
+            optional = true;
           }
           {
             name = "bytes";
             packageId = "bytes";
+          }
+          {
+            name = "form_urlencoded";
+            packageId = "form_urlencoded";
+            optional = true;
           }
           {
             name = "futures-util";
@@ -1375,7 +1341,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -1406,7 +1372,7 @@ rec {
           }
           {
             name = "matchit";
-            packageId = "matchit 0.7.3";
+            packageId = "matchit";
           }
           {
             name = "memchr";
@@ -1425,12 +1391,8 @@ rec {
             packageId = "pin-project-lite";
           }
           {
-            name = "rustversion";
-            packageId = "rustversion";
-          }
-          {
-            name = "serde";
-            packageId = "serde";
+            name = "serde_core";
+            packageId = "serde_core";
           }
           {
             name = "serde_json";
@@ -1461,7 +1423,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             usesDefaultFeatures = false;
             features = [ "util" ];
           }
@@ -1482,9 +1444,9 @@ rec {
         ];
         devDependencies = [
           {
-            name = "serde";
-            packageId = "serde";
-            features = [ "derive" ];
+            name = "hyper";
+            packageId = "hyper";
+            features = [ "client" ];
           }
           {
             name = "serde_json";
@@ -1505,7 +1467,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             rename = "tower";
             features = [
               "util"
@@ -1519,175 +1481,6 @@ rec {
           {
             name = "tracing";
             packageId = "tracing";
-          }
-        ];
-        features = {
-          "__private_docs" = [
-            "axum-core/__private_docs"
-            "tower/full"
-            "dep:tower-http"
-          ];
-          "default" = [
-            "form"
-            "http1"
-            "json"
-            "matched-path"
-            "original-uri"
-            "query"
-            "tokio"
-            "tower-log"
-            "tracing"
-          ];
-          "form" = [ "dep:serde_urlencoded" ];
-          "http1" = [
-            "dep:hyper"
-            "hyper?/http1"
-            "hyper-util?/http1"
-          ];
-          "http2" = [
-            "dep:hyper"
-            "hyper?/http2"
-            "hyper-util?/http2"
-          ];
-          "json" = [
-            "dep:serde_json"
-            "dep:serde_path_to_error"
-          ];
-          "macros" = [ "dep:axum-macros" ];
-          "multipart" = [ "dep:multer" ];
-          "query" = [ "dep:serde_urlencoded" ];
-          "tokio" = [
-            "dep:hyper-util"
-            "dep:tokio"
-            "tokio/net"
-            "tokio/rt"
-            "tower/make"
-            "tokio/macros"
-          ];
-          "tower-log" = [ "tower/log" ];
-          "tracing" = [
-            "dep:tracing"
-            "axum-core/tracing"
-          ];
-          "ws" = [
-            "dep:hyper"
-            "tokio"
-            "dep:tokio-tungstenite"
-            "dep:sha1"
-            "dep:base64"
-          ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "form"
-          "http1"
-          "http2"
-          "json"
-          "matched-path"
-          "original-uri"
-          "query"
-          "tokio"
-          "tower-log"
-          "tracing"
-        ];
-      };
-      "axum 0.8.7" = rec {
-        crateName = "axum";
-        version = "0.8.7";
-        edition = "2021";
-        sha256 = "09fl42x9j3h2kgw9ddznpvnl8vhscd4jgwy79z8vcz77xdsqa2av";
-        dependencies = [
-          {
-            name = "axum-core";
-            packageId = "axum-core 0.5.5";
-          }
-          {
-            name = "axum-macros";
-            packageId = "axum-macros";
-            optional = true;
-          }
-          {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            usesDefaultFeatures = false;
-            features = [ "alloc" ];
-          }
-          {
-            name = "http";
-            packageId = "http 1.4.0";
-          }
-          {
-            name = "http-body";
-            packageId = "http-body";
-          }
-          {
-            name = "http-body-util";
-            packageId = "http-body-util";
-          }
-          {
-            name = "itoa";
-            packageId = "itoa";
-          }
-          {
-            name = "matchit";
-            packageId = "matchit 0.8.4";
-          }
-          {
-            name = "memchr";
-            packageId = "memchr";
-          }
-          {
-            name = "mime";
-            packageId = "mime";
-          }
-          {
-            name = "percent-encoding";
-            packageId = "percent-encoding";
-          }
-          {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
-          }
-          {
-            name = "serde_core";
-            packageId = "serde_core";
-          }
-          {
-            name = "sync_wrapper";
-            packageId = "sync_wrapper";
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.5.2";
-            usesDefaultFeatures = false;
-            features = [ "util" ];
-          }
-          {
-            name = "tower-layer";
-            packageId = "tower-layer";
-          }
-          {
-            name = "tower-service";
-            packageId = "tower-service";
-          }
-        ];
-        devDependencies = [
-          {
-            name = "tower";
-            packageId = "tower 0.5.2";
-            rename = "tower";
-            features = [
-              "util"
-              "timeout"
-              "limit"
-              "load-shed"
-              "steer"
-              "filter"
-            ];
           }
         ];
         features = {
@@ -1761,20 +1554,96 @@ rec {
           ];
         };
         resolvedDefaultFeatures = [
+          "default"
+          "form"
+          "http1"
+          "http2"
+          "json"
           "macros"
           "matched-path"
+          "original-uri"
+          "query"
+          "tokio"
+          "tower-log"
+          "tracing"
         ];
       };
-      "axum-core 0.4.5" = rec {
+      "axum-core" = rec {
         crateName = "axum-core";
-        version = "0.4.5";
+        version = "0.5.5";
         edition = "2021";
-        sha256 = "16b1496c4gm387q20hkv5ic3k5bd6xmnvk50kwsy6ymr8rhvvwh9";
+        sha256 = "08pa4752h96pai7j5avr2hnq35xh7qgv6vl57y1zhhnikkhnqi2r";
         libName = "axum_core";
         dependencies = [
           {
-            name = "async-trait";
-            packageId = "async-trait";
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "futures-core";
+            packageId = "futures-core";
+          }
+          {
+            name = "http";
+            packageId = "http";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body";
+          }
+          {
+            name = "http-body-util";
+            packageId = "http-body-util";
+          }
+          {
+            name = "mime";
+            packageId = "mime";
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "sync_wrapper";
+            packageId = "sync_wrapper";
+          }
+          {
+            name = "tower-layer";
+            packageId = "tower-layer";
+          }
+          {
+            name = "tower-service";
+            packageId = "tower-service";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "__private_docs" = [ "dep:tower-http" ];
+          "tracing" = [ "dep:tracing" ];
+        };
+        resolvedDefaultFeatures = [ "tracing" ];
+      };
+      "axum-extra 0.10.3" = rec {
+        crateName = "axum-extra";
+        version = "0.10.3";
+        edition = "2021";
+        sha256 = "15mb28f49y4g434ry9c7gnamh3ac0130mvsncz3h4q8cyhczyqwr";
+        libName = "axum_extra";
+        dependencies = [
+          {
+            name = "axum";
+            packageId = "axum";
+            usesDefaultFeatures = false;
+            features = [ "original-uri" ];
+          }
+          {
+            name = "axum-core";
+            packageId = "axum-core";
           }
           {
             name = "bytes";
@@ -1787,8 +1656,13 @@ rec {
             features = [ "alloc" ];
           }
           {
+            name = "headers";
+            packageId = "headers";
+            optional = true;
+          }
+          {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -1811,8 +1685,8 @@ rec {
             packageId = "rustversion";
           }
           {
-            name = "sync_wrapper";
-            packageId = "sync_wrapper";
+            name = "serde_core";
+            packageId = "serde_core";
           }
           {
             name = "tower-layer";
@@ -1829,167 +1703,12 @@ rec {
             usesDefaultFeatures = false;
           }
         ];
-        devDependencies = [
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            usesDefaultFeatures = false;
-            features = [ "alloc" ];
-          }
-        ];
         features = {
-          "__private_docs" = [ "dep:tower-http" ];
-          "tracing" = [ "dep:tracing" ];
-        };
-        resolvedDefaultFeatures = [ "tracing" ];
-      };
-      "axum-core 0.5.5" = rec {
-        crateName = "axum-core";
-        version = "0.5.5";
-        edition = "2021";
-        sha256 = "08pa4752h96pai7j5avr2hnq35xh7qgv6vl57y1zhhnikkhnqi2r";
-        libName = "axum_core";
-        dependencies = [
-          {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
-            name = "futures-core";
-            packageId = "futures-core";
-          }
-          {
-            name = "http";
-            packageId = "http 1.4.0";
-          }
-          {
-            name = "http-body";
-            packageId = "http-body";
-          }
-          {
-            name = "http-body-util";
-            packageId = "http-body-util";
-          }
-          {
-            name = "mime";
-            packageId = "mime";
-          }
-          {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
-          }
-          {
-            name = "sync_wrapper";
-            packageId = "sync_wrapper";
-          }
-          {
-            name = "tower-layer";
-            packageId = "tower-layer";
-          }
-          {
-            name = "tower-service";
-            packageId = "tower-service";
-          }
-        ];
-        features = {
-          "__private_docs" = [ "dep:tower-http" ];
-          "tracing" = [ "dep:tracing" ];
-        };
-      };
-      "axum-extra" = rec {
-        crateName = "axum-extra";
-        version = "0.9.6";
-        edition = "2021";
-        sha256 = "011gr9fkxild2yv7rxgn9shzlbcpyzvps3vlnwpiq2jgj06b7567";
-        libName = "axum_extra";
-        dependencies = [
-          {
-            name = "axum";
-            packageId = "axum 0.7.9";
-            usesDefaultFeatures = false;
-            features = [ "original-uri" ];
-          }
-          {
-            name = "axum-core";
-            packageId = "axum-core 0.4.5";
-          }
-          {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
-            name = "fastrand";
-            packageId = "fastrand";
-            optional = true;
-          }
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            usesDefaultFeatures = false;
-            features = [ "alloc" ];
-          }
-          {
-            name = "headers";
-            packageId = "headers";
-            optional = true;
-          }
-          {
-            name = "http";
-            packageId = "http 1.4.0";
-          }
-          {
-            name = "http-body";
-            packageId = "http-body";
-          }
-          {
-            name = "http-body-util";
-            packageId = "http-body-util";
-          }
-          {
-            name = "mime";
-            packageId = "mime";
-          }
-          {
-            name = "multer";
-            packageId = "multer";
-            optional = true;
-          }
-          {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.5.2";
-            usesDefaultFeatures = false;
-            features = [ "util" ];
-          }
-          {
-            name = "tower-layer";
-            packageId = "tower-layer";
-          }
-          {
-            name = "tower-service";
-            packageId = "tower-service";
-          }
-        ];
-        devDependencies = [
-          {
-            name = "serde";
-            packageId = "serde";
-            features = [ "derive" ];
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.5.2";
-            features = [ "util" ];
-          }
-        ];
-        features = {
+          "__private_docs" = [
+            "axum/json"
+            "dep:serde"
+            "dep:tower"
+          ];
           "async-read-body" = [
             "dep:tokio-util"
             "tokio-util?/io"
@@ -2009,15 +1728,27 @@ rec {
             "cookie"
             "cookie?/signed"
           ];
-          "default" = [
-            "tracing"
-            "multipart"
-          ];
+          "default" = [ "tracing" ];
           "erased-json" = [
             "dep:serde_json"
             "dep:typed-json"
           ];
-          "form" = [ "dep:serde_html_form" ];
+          "error-response" = [
+            "dep:tracing"
+            "tracing/std"
+          ];
+          "file-stream" = [
+            "dep:tokio-util"
+            "tokio-util?/io"
+            "dep:tokio"
+            "tokio?/fs"
+            "tokio?/io-util"
+          ];
+          "form" = [
+            "dep:form_urlencoded"
+            "dep:serde_html_form"
+            "dep:serde_path_to_error"
+          ];
           "json-deserializer" = [
             "dep:serde_json"
             "dep:serde_path_to_error"
@@ -2035,10 +1766,15 @@ rec {
             "dep:fastrand"
           ];
           "protobuf" = [ "dep:prost" ];
-          "query" = [ "dep:serde_html_form" ];
+          "query" = [
+            "dep:form_urlencoded"
+            "dep:serde_html_form"
+            "dep:serde_path_to_error"
+          ];
           "tracing" = [
             "axum-core/tracing"
             "axum/tracing"
+            "dep:tracing"
           ];
           "typed-header" = [ "dep:headers" ];
           "typed-routing" = [
@@ -2050,7 +1786,184 @@ rec {
         };
         resolvedDefaultFeatures = [
           "default"
-          "multipart"
+          "tracing"
+          "typed-header"
+        ];
+      };
+      "axum-extra 0.12.5" = rec {
+        crateName = "axum-extra";
+        version = "0.12.5";
+        edition = "2021";
+        sha256 = "0xlwripql5hck5l9nx7mhv5rl4mq0wryxwndpdbbmp96zznm5wpy";
+        libName = "axum_extra";
+        dependencies = [
+          {
+            name = "axum";
+            packageId = "axum";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "axum-core";
+            packageId = "axum-core";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "futures-core";
+            packageId = "futures-core";
+          }
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+            features = [ "alloc" ];
+          }
+          {
+            name = "headers";
+            packageId = "headers";
+            optional = true;
+          }
+          {
+            name = "http";
+            packageId = "http";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body";
+          }
+          {
+            name = "http-body-util";
+            packageId = "http-body-util";
+          }
+          {
+            name = "mime";
+            packageId = "mime";
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "tower-layer";
+            packageId = "tower-layer";
+          }
+          {
+            name = "tower-service";
+            packageId = "tower-service";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "__private_docs" = [
+            "axum/json"
+            "dep:serde"
+            "dep:tower"
+          ];
+          "async-read-body" = [
+            "dep:tokio-util"
+            "tokio-util?/io"
+            "dep:tokio"
+          ];
+          "attachment" = [ "dep:tracing" ];
+          "cached" = [ "dep:axum" ];
+          "cookie" = [ "dep:cookie" ];
+          "cookie-key-expansion" = [
+            "cookie"
+            "cookie?/key-expansion"
+          ];
+          "cookie-private" = [
+            "cookie"
+            "cookie?/private"
+          ];
+          "cookie-signed" = [
+            "cookie"
+            "cookie?/signed"
+          ];
+          "default" = [ "tracing" ];
+          "erased-json" = [
+            "dep:serde_core"
+            "dep:serde_json"
+            "dep:typed-json"
+          ];
+          "error-response" = [
+            "dep:tracing"
+            "tracing/std"
+          ];
+          "file-stream" = [
+            "dep:tokio-util"
+            "tokio-util?/io"
+            "dep:tokio"
+            "tokio?/fs"
+            "tokio?/io-util"
+          ];
+          "form" = [
+            "dep:axum"
+            "dep:form_urlencoded"
+            "dep:serde_core"
+            "dep:serde_html_form"
+            "dep:serde_path_to_error"
+          ];
+          "handler" = [ "dep:axum" ];
+          "json-deserializer" = [
+            "dep:serde_core"
+            "dep:serde_json"
+            "dep:serde_path_to_error"
+          ];
+          "json-lines" = [
+            "dep:serde_core"
+            "dep:serde_json"
+            "dep:tokio-util"
+            "dep:tokio-stream"
+            "tokio-util?/io"
+            "tokio-stream?/io-util"
+            "dep:tokio"
+          ];
+          "middleware" = [ "dep:axum" ];
+          "multipart" = [
+            "dep:multer"
+            "dep:fastrand"
+          ];
+          "optional-path" = [
+            "dep:axum"
+            "dep:serde_core"
+          ];
+          "protobuf" = [ "dep:prost" ];
+          "query" = [
+            "dep:form_urlencoded"
+            "dep:serde_core"
+            "dep:serde_html_form"
+            "dep:serde_path_to_error"
+          ];
+          "routing" = [
+            "axum/original-uri"
+            "dep:rustversion"
+          ];
+          "tracing" = [
+            "axum-core/tracing"
+            "axum/tracing"
+            "dep:tracing"
+          ];
+          "typed-header" = [ "dep:headers" ];
+          "typed-routing" = [
+            "routing"
+            "dep:axum-macros"
+            "dep:percent-encoding"
+            "dep:serde_core"
+            "dep:serde_html_form"
+            "dep:form_urlencoded"
+          ];
+          "with-rejection" = [ "dep:axum" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
           "tracing"
           "typed-header"
         ];
@@ -2073,7 +1986,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "parsing"
@@ -2084,7 +1997,7 @@ rec {
         devDependencies = [
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "extra-traits"
@@ -2098,19 +2011,19 @@ rec {
       };
       "axum-range" = rec {
         crateName = "axum-range";
-        version = "0.4.0";
+        version = "1.0.0";
         edition = "2021";
-        sha256 = "1gb4r3x00yiaggapy002w0q8mx3dg9x4z2iwgzfyn5pplyc07hxi";
+        sha256 = "0nwzzr4jhm94l14xnhfsv13vq8r81xk4gf5ifhd555ndlixp2c3a";
         libName = "axum_range";
         dependencies = [
           {
             name = "axum";
-            packageId = "axum 0.7.9";
+            packageId = "axum";
             usesDefaultFeatures = false;
           }
           {
             name = "axum-extra";
-            packageId = "axum-extra";
+            packageId = "axum-extra 0.10.3";
             features = [ "typed-header" ];
           }
           {
@@ -2143,7 +2056,7 @@ rec {
         devDependencies = [
           {
             name = "axum";
-            packageId = "axum 0.7.9";
+            packageId = "axum";
             features = [ "macros" ];
           }
           {
@@ -2161,9 +2074,9 @@ rec {
       };
       "axum-test" = rec {
         crateName = "axum-test";
-        version = "16.4.1";
-        edition = "2021";
-        sha256 = "1p5qxacvxsagnqq30nr2wznjyhgb8svsfb925ah3d2b0s91s9qv3";
+        version = "19.0.0";
+        edition = "2024";
+        sha256 = "13f4kjm7pgv9mrip5z1w2d7q1mfyzsvg6rzdf7f4hcm03j2s3kqa";
         libName = "axum_test";
         authors = [
           "Joseph Lenton <josephlenton@gmail.com>"
@@ -2174,16 +2087,8 @@ rec {
             packageId = "anyhow";
           }
           {
-            name = "assert-json-diff";
-            packageId = "assert-json-diff";
-          }
-          {
-            name = "auto-future";
-            packageId = "auto-future";
-          }
-          {
             name = "axum";
-            packageId = "axum 0.7.9";
+            packageId = "axum";
           }
           {
             name = "bytes";
@@ -2198,8 +2103,12 @@ rec {
             packageId = "cookie";
           }
           {
+            name = "expect-json";
+            packageId = "expect-json";
+          }
+          {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body-util";
@@ -2249,17 +2158,13 @@ rec {
             packageId = "serde_urlencoded";
           }
           {
-            name = "smallvec";
-            packageId = "smallvec";
-          }
-          {
             name = "tokio";
             packageId = "tokio";
             features = [ "rt" ];
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             features = [
               "util"
               "make"
@@ -2273,7 +2178,7 @@ rec {
         devDependencies = [
           {
             name = "axum";
-            packageId = "axum 0.7.9";
+            packageId = "axum";
             features = [
               "multipart"
               "tokio"
@@ -2298,15 +2203,14 @@ rec {
             "yaml"
             "msgpack"
             "reqwest"
-            "shuttle"
             "typed-routing"
             "ws"
           ];
+          "assert-json-diff" = [ "dep:assert-json-diff" ];
           "default" = [ "pretty-assertions" ];
           "msgpack" = [ "dep:rmp-serde" ];
           "pretty-assertions" = [ "dep:pretty_assertions" ];
           "reqwest" = [ "dep:reqwest" ];
-          "shuttle" = [ "dep:shuttle-axum" ];
           "typed-routing" = [ "dep:axum-extra" ];
           "ws" = [
             "axum/ws"
@@ -2373,7 +2277,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "hyper-util";
@@ -2426,7 +2330,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             features = [ "util" ];
           }
         ];
@@ -2690,9 +2594,9 @@ rec {
       };
       "bytes" = rec {
         crateName = "bytes";
-        version = "1.11.0";
+        version = "1.11.1";
         edition = "2021";
-        sha256 = "1cww1ybcvisyj8pbzl4m36bni2jaz0narhczp1348gqbvkxh8lmk";
+        sha256 = "0czwlhbq8z29wq0ia87yass2mzy1y0jcasjb8ghriiybnwrqfx0y";
         authors = [
           "Carl Lerche <me@carllerche.com>"
           "Sean McArthur <sean@seanmonstar.com>"
@@ -2709,16 +2613,23 @@ rec {
       };
       "bytesize" = rec {
         crateName = "bytesize";
-        version = "1.3.3";
-        edition = "2015";
-        sha256 = "0nb645ma48nwsv1piylzcza0avjp435sl8krhyws3q18kv5ap4rf";
+        version = "2.3.1";
+        edition = "2021";
+        sha256 = "18vjp7wfik0xi54l3z2314s7zxjyywa4vvwhilawnas2nbkixnbb";
         authors = [
           "Hyunsik Choi <hyunsik.choi@gmail.com>"
+          "MrCroxx <mrcroxx@outlook.com>"
+          "Rob Ede <robjtede@icloud.com>"
         ];
         features = {
-          "serde" = [ "dep:serde" ];
+          "arbitrary" = [ "dep:arbitrary" ];
+          "default" = [ "std" ];
+          "serde" = [ "dep:serde_core" ];
         };
-        resolvedDefaultFeatures = [ "default" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
       };
       "bzip2" = rec {
         crateName = "bzip2";
@@ -3254,7 +3165,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "full" ];
           }
         ];
@@ -4298,7 +4209,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "full" ];
           }
         ];
@@ -4393,7 +4304,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "extra-traits"
@@ -4441,7 +4352,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "extra-traits"
@@ -4478,7 +4389,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
 
@@ -4503,7 +4414,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
 
@@ -4676,7 +4587,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "extra-traits"
@@ -4706,7 +4617,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "extra-traits"
@@ -4853,7 +4764,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
         features = {
@@ -5106,6 +5017,32 @@ rec {
           "use_std"
         ];
       };
+      "email_address" = rec {
+        crateName = "email_address";
+        version = "0.2.9";
+        edition = "2018";
+        sha256 = "0jf4v3npa524c7npy7w3jl0a6gng26f51a4bgzs3jqna12dz2yg0";
+        authors = [
+          "Simon Johnston <johnstonskj@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "serde";
+            packageId = "serde";
+            optional = true;
+          }
+        ];
+        features = {
+          "default" = [ "serde_support" ];
+          "serde" = [ "dep:serde" ];
+          "serde_support" = [ "serde" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "serde"
+          "serde_support"
+        ];
+      };
       "encode_unicode" = rec {
         crateName = "encode_unicode";
         version = "1.0.0";
@@ -5217,7 +5154,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
         features = {
@@ -5424,6 +5361,89 @@ rec {
           "std" = [ "event-listener/std" ];
         };
         resolvedDefaultFeatures = [ "std" ];
+      };
+      "expect-json" = rec {
+        crateName = "expect-json";
+        version = "1.9.0";
+        edition = "2024";
+        sha256 = "1wqr64j41cfkva143zpzzycd1pp9vafx1p817wx2dhl68a9f69ak";
+        libName = "expect_json";
+        authors = [
+          "Joseph Lenton <josephlenton@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "chrono";
+            packageId = "chrono";
+          }
+          {
+            name = "email_address";
+            packageId = "email_address";
+          }
+          {
+            name = "expect-json-macros";
+            packageId = "expect-json-macros";
+          }
+          {
+            name = "num";
+            packageId = "num";
+          }
+          {
+            name = "regex";
+            packageId = "regex";
+          }
+          {
+            name = "serde";
+            packageId = "serde";
+            features = [ "derive" ];
+          }
+          {
+            name = "serde_json";
+            packageId = "serde_json";
+          }
+          {
+            name = "thiserror";
+            packageId = "thiserror 2.0.17";
+          }
+          {
+            name = "typetag";
+            packageId = "typetag";
+          }
+          {
+            name = "uuid";
+            packageId = "uuid";
+          }
+        ];
+        features = {
+        };
+        resolvedDefaultFeatures = [ "default" ];
+      };
+      "expect-json-macros" = rec {
+        crateName = "expect-json-macros";
+        version = "1.9.0";
+        edition = "2024";
+        sha256 = "0n843l6093x527xy3133yfjdvxsdg08q8xchjmsad5xw33jy2r7l";
+        procMacro = true;
+        libName = "expect_json_macros";
+        authors = [
+          "Joseph Lenton <josephlenton@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "proc-macro2";
+            packageId = "proc-macro2";
+          }
+          {
+            name = "quote";
+            packageId = "quote";
+          }
+          {
+            name = "syn";
+            packageId = "syn 2.0.117";
+            features = [ "full" ];
+          }
+        ];
+
       };
       "expect-test" = rec {
         crateName = "expect-test";
@@ -6254,7 +6274,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "full" ];
           }
         ];
@@ -6449,7 +6469,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body-util";
@@ -6918,7 +6938,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
 
@@ -6967,7 +6987,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "indexmap";
@@ -7251,7 +7271,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "httpdate";
@@ -7281,7 +7301,7 @@ rec {
         dependencies = [
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
         ];
 
@@ -7360,33 +7380,7 @@ rec {
         ];
 
       };
-      "http 0.2.12" = rec {
-        crateName = "http";
-        version = "0.2.12";
-        edition = "2018";
-        sha256 = "1w81s4bcbmcj9bjp7mllm8jlz6b31wzvirz8bgpzbqkpwmbvn730";
-        authors = [
-          "Alex Crichton <alex@alexcrichton.com>"
-          "Carl Lerche <me@carllerche.com>"
-          "Sean McArthur <sean@seanmonstar.com>"
-        ];
-        dependencies = [
-          {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
-            name = "fnv";
-            packageId = "fnv";
-          }
-          {
-            name = "itoa";
-            packageId = "itoa";
-          }
-        ];
-
-      };
-      "http 1.4.0" = rec {
+      "http" = rec {
         crateName = "http";
         version = "1.4.0";
         edition = "2021";
@@ -7432,7 +7426,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
         ];
 
@@ -7460,7 +7454,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -7546,7 +7540,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -7677,7 +7671,7 @@ rec {
         dependencies = [
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "hyper";
@@ -7853,9 +7847,9 @@ rec {
       };
       "hyper-util" = rec {
         crateName = "hyper-util";
-        version = "0.1.19";
+        version = "0.1.20";
         edition = "2021";
-        sha256 = "0pyzc8378baf996l5ycl4y0s3skhxc4z4vkah9mvff3r1vb0ay3j";
+        sha256 = "186zdc58hmm663csmjvrzgkr6jdh93sfmi3q2pxi57gcaqjpqm4n";
         libName = "hyper_util";
         authors = [
           "Sean McArthur <sean@seanmonstar.com>"
@@ -7876,10 +7870,6 @@ rec {
             optional = true;
           }
           {
-            name = "futures-core";
-            packageId = "futures-core";
-          }
-          {
             name = "futures-util";
             packageId = "futures-util";
             optional = true;
@@ -7887,7 +7877,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -9958,19 +9948,7 @@ rec {
           "unicode" = [ "regex-automata/unicode" ];
         };
       };
-      "matchit 0.7.3" = rec {
-        crateName = "matchit";
-        version = "0.7.3";
-        edition = "2021";
-        sha256 = "156bgdmmlv4crib31qhgg49nsjk88dxkdqp80ha2pk2rk6n6ax0f";
-        authors = [
-          "Ibraheem Ahmed <ibraheem@ibraheem.ca>"
-        ];
-        features = {
-        };
-        resolvedDefaultFeatures = [ "default" ];
-      };
-      "matchit 0.8.4" = rec {
+      "matchit" = rec {
         crateName = "matchit";
         version = "0.8.4";
         edition = "2021";
@@ -10381,7 +10359,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "extra-traits"
               "full"
@@ -10391,75 +10369,6 @@ rec {
         features = {
           "nightly_derive" = [ "proc-macro2/nightly" ];
         };
-      };
-      "multer" = rec {
-        crateName = "multer";
-        version = "3.1.0";
-        edition = "2018";
-        sha256 = "0jr2snfay5fjz50yvdja4vbnddlj1iriiqjym88pbj3daiv7gs43";
-        authors = [
-          "Rousan Ali <hello@rousan.io>"
-        ];
-        dependencies = [
-          {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
-            name = "encoding_rs";
-            packageId = "encoding_rs";
-          }
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "http";
-            packageId = "http 1.4.0";
-          }
-          {
-            name = "httparse";
-            packageId = "httparse";
-          }
-          {
-            name = "memchr";
-            packageId = "memchr";
-          }
-          {
-            name = "mime";
-            packageId = "mime";
-          }
-          {
-            name = "spin";
-            packageId = "spin";
-            usesDefaultFeatures = false;
-            features = [ "spin_mutex" ];
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "version_check";
-            packageId = "version_check";
-          }
-        ];
-        features = {
-          "all" = [ "json" ];
-          "json" = [
-            "serde"
-            "serde_json"
-          ];
-          "log" = [ "dep:log" ];
-          "serde" = [ "dep:serde" ];
-          "serde_json" = [ "dep:serde_json" ];
-          "tokio" = [ "dep:tokio" ];
-          "tokio-io" = [
-            "tokio"
-            "tokio-util"
-          ];
-          "tokio-util" = [ "dep:tokio-util" ];
-        };
-        resolvedDefaultFeatures = [ "default" ];
       };
       "multimap" = rec {
         crateName = "multimap";
@@ -10487,12 +10396,13 @@ rec {
         dependencies = [
           {
             name = "axum";
-            packageId = "axum 0.7.9";
+            packageId = "axum";
             features = [ "http2" ];
           }
           {
             name = "axum-extra";
-            packageId = "axum-extra";
+            packageId = "axum-extra 0.12.5";
+            features = [ "typed-header" ];
           }
           {
             name = "axum-range";
@@ -11224,7 +11134,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "extra-traits"
@@ -11460,6 +11370,152 @@ rec {
           "std"
         ];
       };
+      "num" = rec {
+        crateName = "num";
+        version = "0.4.3";
+        edition = "2021";
+        sha256 = "08yb2fc1psig7pkzaplm495yp7c30m4pykpkwmi5bxrgid705g9m";
+        authors = [
+          "The Rust Project Developers"
+        ];
+        dependencies = [
+          {
+            name = "num-bigint";
+            packageId = "num-bigint";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "num-complex";
+            packageId = "num-complex";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "num-integer";
+            packageId = "num-integer";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+          {
+            name = "num-iter";
+            packageId = "num-iter";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+          {
+            name = "num-rational";
+            packageId = "num-rational";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "num-traits";
+            packageId = "num-traits";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+        ];
+        features = {
+          "alloc" = [
+            "dep:num-bigint"
+            "num-rational/num-bigint"
+          ];
+          "default" = [ "std" ];
+          "libm" = [
+            "num-complex/libm"
+            "num-traits/libm"
+          ];
+          "num-bigint" = [ "dep:num-bigint" ];
+          "rand" = [
+            "num-bigint/rand"
+            "num-complex/rand"
+          ];
+          "serde" = [
+            "num-bigint/serde"
+            "num-complex/serde"
+            "num-rational/serde"
+          ];
+          "std" = [
+            "dep:num-bigint"
+            "num-bigint/std"
+            "num-complex/std"
+            "num-integer/std"
+            "num-iter/std"
+            "num-rational/std"
+            "num-rational/num-bigint-std"
+            "num-traits/std"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "num-bigint"
+          "std"
+        ];
+      };
+      "num-bigint" = rec {
+        crateName = "num-bigint";
+        version = "0.4.6";
+        edition = "2021";
+        sha256 = "1f903zd33i6hkjpsgwhqwi2wffnvkxbn6rv4mkgcjcqi7xr4zr55";
+        libName = "num_bigint";
+        authors = [
+          "The Rust Project Developers"
+        ];
+        dependencies = [
+          {
+            name = "num-integer";
+            packageId = "num-integer";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+          {
+            name = "num-traits";
+            packageId = "num-traits";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+        ];
+        features = {
+          "arbitrary" = [ "dep:arbitrary" ];
+          "default" = [ "std" ];
+          "quickcheck" = [ "dep:quickcheck" ];
+          "rand" = [ "dep:rand" ];
+          "serde" = [ "dep:serde" ];
+          "std" = [
+            "num-integer/std"
+            "num-traits/std"
+          ];
+        };
+        resolvedDefaultFeatures = [ "std" ];
+      };
+      "num-complex" = rec {
+        crateName = "num-complex";
+        version = "0.4.6";
+        edition = "2021";
+        sha256 = "15cla16mnw12xzf5g041nxbjjm9m85hdgadd5dl5d0b30w9qmy3k";
+        libName = "num_complex";
+        authors = [
+          "The Rust Project Developers"
+        ];
+        dependencies = [
+          {
+            name = "num-traits";
+            packageId = "num-traits";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+        ];
+        features = {
+          "bytecheck" = [ "dep:bytecheck" ];
+          "bytemuck" = [ "dep:bytemuck" ];
+          "default" = [ "std" ];
+          "libm" = [ "num-traits/libm" ];
+          "rand" = [ "dep:rand" ];
+          "rkyv" = [ "dep:rkyv" ];
+          "serde" = [ "dep:serde" ];
+          "std" = [ "num-traits/std" ];
+        };
+        resolvedDefaultFeatures = [ "std" ];
+      };
       "num-conv" = rec {
         crateName = "num-conv";
         version = "0.1.0";
@@ -11470,6 +11526,122 @@ rec {
           "Jacob Pratt <jacob@jhpratt.dev>"
         ];
 
+      };
+      "num-integer" = rec {
+        crateName = "num-integer";
+        version = "0.1.46";
+        edition = "2018";
+        sha256 = "13w5g54a9184cqlbsq80rnxw4jj4s0d8wv75jsq5r2lms8gncsbr";
+        libName = "num_integer";
+        authors = [
+          "The Rust Project Developers"
+        ];
+        dependencies = [
+          {
+            name = "num-traits";
+            packageId = "num-traits";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+        ];
+        features = {
+          "default" = [ "std" ];
+          "std" = [ "num-traits/std" ];
+        };
+        resolvedDefaultFeatures = [
+          "i128"
+          "std"
+        ];
+      };
+      "num-iter" = rec {
+        crateName = "num-iter";
+        version = "0.1.45";
+        edition = "2018";
+        sha256 = "1gzm7vc5g9qsjjl3bqk9rz1h6raxhygbrcpbfl04swlh0i506a8l";
+        libName = "num_iter";
+        authors = [
+          "The Rust Project Developers"
+        ];
+        dependencies = [
+          {
+            name = "num-integer";
+            packageId = "num-integer";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+          {
+            name = "num-traits";
+            packageId = "num-traits";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+        ];
+        buildDependencies = [
+          {
+            name = "autocfg";
+            packageId = "autocfg";
+          }
+        ];
+        features = {
+          "default" = [ "std" ];
+          "std" = [
+            "num-integer/std"
+            "num-traits/std"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "i128"
+          "std"
+        ];
+      };
+      "num-rational" = rec {
+        crateName = "num-rational";
+        version = "0.4.2";
+        edition = "2021";
+        sha256 = "093qndy02817vpgcqjnj139im3jl7vkq4h68kykdqqh577d18ggq";
+        libName = "num_rational";
+        authors = [
+          "The Rust Project Developers"
+        ];
+        dependencies = [
+          {
+            name = "num-bigint";
+            packageId = "num-bigint";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "num-integer";
+            packageId = "num-integer";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+          {
+            name = "num-traits";
+            packageId = "num-traits";
+            usesDefaultFeatures = false;
+            features = [ "i128" ];
+          }
+        ];
+        features = {
+          "default" = [
+            "num-bigint"
+            "std"
+          ];
+          "num-bigint" = [ "dep:num-bigint" ];
+          "num-bigint-std" = [ "num-bigint/std" ];
+          "serde" = [ "dep:serde" ];
+          "std" = [
+            "num-bigint?/std"
+            "num-integer/std"
+            "num-traits/std"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "num-bigint"
+          "num-bigint-std"
+          "std"
+        ];
       };
       "num-traits" = rec {
         crateName = "num-traits";
@@ -11492,6 +11664,7 @@ rec {
         };
         resolvedDefaultFeatures = [
           "default"
+          "i128"
           "std"
         ];
       };
@@ -11575,7 +11748,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "derive"
               "extra-traits"
@@ -11586,7 +11759,7 @@ rec {
         devDependencies = [
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "extra-traits"
               "parsing"
@@ -11642,7 +11815,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body-util";
@@ -12102,7 +12275,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
             usesDefaultFeatures = false;
             features = [ "std" ];
           }
@@ -12153,7 +12326,7 @@ rec {
         dependencies = [
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
             optional = true;
             usesDefaultFeatures = false;
             features = [ "std" ];
@@ -12902,7 +13075,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [
               "parsing"
@@ -13463,7 +13636,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [ "full" ];
           }
@@ -13476,7 +13649,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [
               "clone-impls"
@@ -13558,7 +13731,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -13566,7 +13739,7 @@ rec {
         devDependencies = [
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "full" ];
           }
         ];
@@ -13581,9 +13754,9 @@ rec {
       };
       "proc-macro2" = rec {
         crateName = "proc-macro2";
-        version = "1.0.103";
+        version = "1.0.106";
         edition = "2021";
-        sha256 = "1s29bz20xl2qk5ffs2mbdqknaj43ri673dz86axdbf47xz25psay";
+        sha256 = "0d09nczyaj67x4ihqr5p7gxbkz38gxhk4asc0k8q23g9n85hzl4g";
         libName = "proc_macro2";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
@@ -13816,7 +13989,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             optional = true;
             features = [ "full" ];
           }
@@ -13874,7 +14047,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "extra-traits" ];
           }
         ];
@@ -14506,9 +14679,9 @@ rec {
       };
       "quote" = rec {
         crateName = "quote";
-        version = "1.0.42";
-        edition = "2018";
-        sha256 = "0zq6yc7dhpap669m27rb4qfbiywxfah17z6fwvfccv3ys90wqf53";
+        version = "1.0.44";
+        edition = "2021";
+        sha256 = "1r7c7hxl66vz3q9qizgjhy77pdrrypqgk4ghc7260xvvfb7ypci1";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -14622,7 +14795,6 @@ rec {
           "getrandom"
           "libc"
           "rand_chacha"
-          "small_rng"
           "std"
           "std_rng"
         ];
@@ -15008,7 +15180,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
 
@@ -15395,7 +15567,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -15548,7 +15720,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
             features = [
@@ -15668,7 +15840,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             usesDefaultFeatures = false;
             features = [ "limit" ];
           }
@@ -15869,7 +16041,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -16004,7 +16176,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             usesDefaultFeatures = false;
             target = { target, features }: (!("wasm32" == target."arch" or null));
             features = [
@@ -16118,7 +16290,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             usesDefaultFeatures = false;
             features = [ "limit" ];
           }
@@ -16282,7 +16454,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "reqwest";
@@ -16350,11 +16522,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "matchit";
-            packageId = "matchit 0.8.4";
+            packageId = "matchit";
           }
           {
             name = "opentelemetry";
@@ -16696,7 +16868,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "parsing"
@@ -16744,7 +16916,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "extra-traits"
@@ -16755,9 +16927,9 @@ rec {
       };
       "rust-multipart-rfc7578_2" = rec {
         crateName = "rust-multipart-rfc7578_2";
-        version = "0.6.1";
+        version = "0.8.0";
         edition = "2021";
-        sha256 = "0mwd3i2mk91n6diaxnkw28vyjbifhrm5ls73pcpfzz8a1i0lidq3";
+        sha256 = "0hgaprssrq9p2w2lf936dqx0dnczzxkay1g3f6jhdg2y2lvx0ff8";
         libName = "rust_multipart_rfc7578_2";
         authors = [
           "Joseph Lenton <josephlenton@gmail.com>"
@@ -16780,24 +16952,23 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 0.2.12";
+            packageId = "http";
           }
           {
             name = "mime";
             packageId = "mime";
           }
           {
-            name = "mime_guess";
-            packageId = "mime_guess";
-          }
-          {
             name = "rand";
-            packageId = "rand 0.8.5";
-            features = [ "small_rng" ];
+            packageId = "rand 0.9.2";
+            features = [
+              "os_rng"
+              "small_rng"
+            ];
           }
           {
             name = "thiserror";
-            packageId = "thiserror 1.0.69";
+            packageId = "thiserror 2.0.17";
           }
         ];
         devDependencies = [
@@ -18182,7 +18353,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [
               "clone-impls"
@@ -18199,9 +18370,9 @@ rec {
       };
       "serde_json" = rec {
         crateName = "serde_json";
-        version = "1.0.145";
+        version = "1.0.149";
         edition = "2021";
-        sha256 = "1767y6kxjf7gwpbv8bkhgwc50nhg46mqwm9gy9n122f7v1k6yaj0";
+        sha256 = "11jdx4vilzrjjd1dpgy67x5lgzr0laplz30dhv75lnf5ffa07z43";
         authors = [
           "Erick Tryzelaar <erick.tryzelaar@gmail.com>"
           "David Tolnay <dtolnay@gmail.com>"
@@ -18217,10 +18388,6 @@ rec {
             usesDefaultFeatures = false;
           }
           {
-            name = "ryu";
-            packageId = "ryu";
-          }
-          {
             name = "serde";
             packageId = "serde";
             usesDefaultFeatures = false;
@@ -18230,6 +18397,10 @@ rec {
             name = "serde_core";
             packageId = "serde_core";
             usesDefaultFeatures = false;
+          }
+          {
+            name = "zmij";
+            packageId = "zmij";
           }
         ];
         devDependencies = [
@@ -18679,7 +18850,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "extra-traits"
               "full"
@@ -19502,12 +19673,13 @@ rec {
           }
           {
             name = "axum";
-            packageId = "axum 0.7.9";
+            packageId = "axum";
             features = [ "tracing" ];
           }
           {
             name = "axum-extra";
-            packageId = "axum-extra";
+            packageId = "axum-extra 0.12.5";
+            features = [ "typed-header" ];
           }
           {
             name = "axum-range";
@@ -19533,7 +19705,7 @@ rec {
             name = "tokio-listener";
             packageId = "tokio-listener";
             features = [
-              "axum07"
+              "axum08"
               "clap"
               "multi-listener"
               "sd_listen"
@@ -19860,7 +20032,7 @@ rec {
             name = "tokio-listener";
             packageId = "tokio-listener";
             features = [
-              "axum07"
+              "axum08"
               "clap"
               "multi-listener"
               "sd_listen"
@@ -20064,6 +20236,10 @@ rec {
         };
         dependencies = [
           {
+            name = "axum";
+            packageId = "axum";
+          }
+          {
             name = "clap";
             packageId = "clap";
             features = [
@@ -20103,7 +20279,7 @@ rec {
             name = "tokio-listener";
             packageId = "tokio-listener";
             features = [
-              "axum07"
+              "axum08"
               "clap"
               "multi-listener"
               "sd_listen"
@@ -21082,6 +21258,7 @@ rec {
           {
             name = "url";
             packageId = "url";
+            features = [ "serde" ];
           }
           {
             name = "walkdir";
@@ -21178,7 +21355,7 @@ rec {
         dependencies = [
           {
             name = "axum";
-            packageId = "axum 0.7.9";
+            packageId = "axum";
             optional = true;
           }
           {
@@ -21201,7 +21378,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
             optional = true;
           }
           {
@@ -21394,45 +21571,6 @@ rec {
         features = {
         };
         resolvedDefaultFeatures = [ "all" ];
-      };
-      "spin" = rec {
-        crateName = "spin";
-        version = "0.9.8";
-        edition = "2015";
-        sha256 = "0rvam5r0p3a6qhc18scqpvpgb3ckzyqxpgdfyjnghh8ja7byi039";
-        authors = [
-          "Mathijs van de Nes <git@mathijs.vd-nes.nl>"
-          "John Ericson <git@JohnEricson.me>"
-          "Joshua Barretto <joshua.s.barretto@gmail.com>"
-        ];
-        features = {
-          "barrier" = [ "mutex" ];
-          "default" = [
-            "lock_api"
-            "mutex"
-            "spin_mutex"
-            "rwlock"
-            "once"
-            "lazy"
-            "barrier"
-          ];
-          "fair_mutex" = [ "mutex" ];
-          "lazy" = [ "once" ];
-          "lock_api" = [ "lock_api_crate" ];
-          "lock_api_crate" = [ "dep:lock_api_crate" ];
-          "portable-atomic" = [ "dep:portable-atomic" ];
-          "portable_atomic" = [ "portable-atomic" ];
-          "spin_mutex" = [ "mutex" ];
-          "ticket_mutex" = [ "mutex" ];
-          "use_ticket_mutex" = [
-            "mutex"
-            "ticket_mutex"
-          ];
-        };
-        resolvedDefaultFeatures = [
-          "mutex"
-          "spin_mutex"
-        ];
       };
       "spki" = rec {
         crateName = "spki";
@@ -21635,7 +21773,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "parsing"
               "extra-traits"
@@ -21715,11 +21853,11 @@ rec {
           "visit-mut"
         ];
       };
-      "syn 2.0.111" = rec {
+      "syn 2.0.117" = rec {
         crateName = "syn";
-        version = "2.0.111";
+        version = "2.0.117";
         edition = "2021";
-        sha256 = "11rf9l6435w525vhqmnngcnwsly7x4xx369fmaqvswdbjjicj31r";
+        sha256 = "16cv7c0wbn8amxc54n4w15kxlx5ypdmla8s0gxr2l7bv7s0bhrg6";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -21815,7 +21953,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [
               "derive"
@@ -21842,9 +21980,9 @@ rec {
       };
       "system-configuration" = rec {
         crateName = "system-configuration";
-        version = "0.6.1";
+        version = "0.7.0";
         edition = "2021";
-        sha256 = "0sxslml567zm0v8g732314vd2gk9sd3k4xj22xk6p64xir29v1rw";
+        sha256 = "12rwilylzc625qnxl30h5kf8wj5ka61zjrwpmb034cd0mc6ksgx1";
         libName = "system_configuration";
         authors = [
           "Mullvad VPN"
@@ -22102,7 +22240,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
 
@@ -22128,7 +22266,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
 
@@ -22429,9 +22567,9 @@ rec {
       };
       "tokio" = rec {
         crateName = "tokio";
-        version = "1.48.0";
+        version = "1.49.0";
         edition = "2021";
-        sha256 = "0244qva5pksy8gam6llf7bd6wbk2vkab9lx26yyf08dix810wdpz";
+        sha256 = "11ix3pl03s0bp71q3wddrbf8xr0cpn47d7fzr6m42r3kswy918kj";
         authors = [
           "Tokio Contributors <team@tokio.rs>"
         ];
@@ -22636,8 +22774,8 @@ rec {
         dependencies = [
           {
             name = "axum";
-            packageId = "axum 0.7.9";
-            rename = "axum07";
+            packageId = "axum";
+            rename = "axum08";
             optional = true;
           }
           {
@@ -22662,22 +22800,6 @@ rec {
             name = "futures-util";
             packageId = "futures-util";
             optional = true;
-          }
-          {
-            name = "hyper";
-            packageId = "hyper";
-            rename = "hyper1";
-            optional = true;
-            features = [ "server" ];
-          }
-          {
-            name = "hyper-util";
-            packageId = "hyper-util";
-            optional = true;
-            features = [
-              "server"
-              "server-auto"
-            ];
           }
           {
             name = "nix";
@@ -22734,17 +22856,6 @@ rec {
             name = "tonic";
             packageId = "tonic";
             rename = "tonic_013";
-            optional = true;
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.4.13";
-            optional = true;
-            features = [ "util" ];
-          }
-          {
-            name = "tower-service";
-            packageId = "tower-service";
             optional = true;
           }
           {
@@ -22838,7 +22949,7 @@ rec {
           "vsock" = [ "dep:tokio-vsock" ];
         };
         resolvedDefaultFeatures = [
-          "axum07"
+          "axum08"
           "clap"
           "default"
           "inetd"
@@ -22875,7 +22986,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "full" ];
           }
         ];
@@ -23749,7 +23860,7 @@ rec {
           }
           {
             name = "axum";
-            packageId = "axum 0.8.7";
+            packageId = "axum";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -23768,7 +23879,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -23847,7 +23958,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -23875,7 +23986,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             features = [ "full" ];
           }
         ];
@@ -24004,7 +24115,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
           }
         ];
         features = {
@@ -24329,11 +24440,11 @@ rec {
           "util"
         ];
       };
-      "tower 0.5.2" = rec {
+      "tower 0.5.3" = rec {
         crateName = "tower";
-        version = "0.5.2";
+        version = "0.5.3";
         edition = "2018";
-        sha256 = "1ybmd59nm4abl9bsvy6rx31m4zvzp5rja2slzpn712y9b68ssffh";
+        sha256 = "1m5i3a2z1sgs8nnz1hgfq2nr4clpdmizlp1d9qsg358ma5iyzrgb";
         authors = [
           "Tower Maintainers <team@tower-rs.com>"
         ];
@@ -24374,7 +24485,6 @@ rec {
             name = "tokio";
             packageId = "tokio";
             optional = true;
-            features = [ "sync" ];
           }
           {
             name = "tokio-util";
@@ -24400,8 +24510,10 @@ rec {
         ];
         devDependencies = [
           {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+            features = [ "async-await-macro" ];
           }
           {
             name = "tokio";
@@ -24421,10 +24533,6 @@ rec {
           }
         ];
         features = {
-          "__common" = [
-            "futures-core"
-            "pin-project-lite"
-          ];
           "balance" = [
             "discover"
             "load"
@@ -24434,16 +24542,19 @@ rec {
             "util"
           ];
           "buffer" = [
-            "__common"
             "tokio/sync"
             "tokio/rt"
             "tokio-util"
             "tracing"
+            "pin-project-lite"
           ];
-          "discover" = [ "__common" ];
+          "discover" = [
+            "futures-core"
+            "pin-project-lite"
+          ];
           "filter" = [
-            "__common"
             "futures-util"
+            "pin-project-lite"
           ];
           "full" = [
             "balance"
@@ -24476,23 +24587,22 @@ rec {
           ];
           "indexmap" = [ "dep:indexmap" ];
           "limit" = [
-            "__common"
             "tokio/time"
             "tokio/sync"
             "tokio-util"
             "tracing"
+            "pin-project-lite"
           ];
           "load" = [
-            "__common"
             "tokio/time"
             "tracing"
+            "pin-project-lite"
           ];
-          "load-shed" = [ "__common" ];
+          "load-shed" = [ "pin-project-lite" ];
           "log" = [ "tracing/log" ];
           "make" = [
-            "futures-util"
             "pin-project-lite"
-            "tokio/io-std"
+            "tokio"
           ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
           "ready-cache" = [
@@ -24505,17 +24615,14 @@ rec {
           ];
           "reconnect" = [
             "make"
-            "tokio/io-std"
             "tracing"
           ];
           "retry" = [
-            "__common"
             "tokio/time"
             "util"
           ];
           "slab" = [ "dep:slab" ];
           "spawn-ready" = [
-            "__common"
             "futures-util"
             "tokio/sync"
             "tokio/rt"
@@ -24528,18 +24635,16 @@ rec {
             "tokio/time"
           ];
           "tokio" = [ "dep:tokio" ];
-          "tokio-stream" = [ "dep:tokio-stream" ];
           "tokio-util" = [ "dep:tokio-util" ];
           "tracing" = [ "dep:tracing" ];
           "util" = [
-            "__common"
+            "futures-core"
             "futures-util"
             "pin-project-lite"
             "sync_wrapper"
           ];
         };
         resolvedDefaultFeatures = [
-          "__common"
           "balance"
           "buffer"
           "discover"
@@ -24600,7 +24705,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
           }
           {
             name = "http-body";
@@ -24631,7 +24736,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             optional = true;
           }
           {
@@ -24669,7 +24774,7 @@ rec {
           }
           {
             name = "tower";
-            packageId = "tower 0.5.2";
+            packageId = "tower 0.5.3";
             features = [
               "buffer"
               "util"
@@ -24879,7 +24984,7 @@ rec {
         dependencies = [
           {
             name = "axum";
-            packageId = "axum 0.8.7";
+            packageId = "axum";
             optional = true;
             usesDefaultFeatures = false;
             features = [
@@ -24894,7 +24999,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http 1.4.0";
+            packageId = "http";
             usesDefaultFeatures = false;
             features = [ "std" ];
           }
@@ -25030,7 +25135,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [
               "full"
@@ -25566,7 +25671,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "full" ];
           }
         ];
@@ -25852,7 +25957,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "full"
               "extra-traits"
@@ -25947,7 +26052,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "full" ];
           }
         ];
@@ -26049,9 +26154,9 @@ rec {
       };
       "url" = rec {
         crateName = "url";
-        version = "2.5.7";
+        version = "2.5.8";
         edition = "2018";
-        sha256 = "0nzghdv0kcksyvri0npxbjzyx2ihprks5k590y77bld355m17g08";
+        sha256 = "1v8f7nx3hpr1qh76if0a04sj08k86amsq4h8cvpw6wvk76jahrzz";
         authors = [
           "The rust-url developers"
         ];
@@ -26082,24 +26187,35 @@ rec {
             packageId = "serde";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "derive" ];
+          }
+          {
+            name = "serde_derive";
+            packageId = "serde_derive";
+            optional = true;
+            usesDefaultFeatures = false;
           }
         ];
         devDependencies = [
           {
             name = "serde";
             packageId = "serde";
-            features = [ "derive" ];
+          }
+          {
+            name = "serde_derive";
+            packageId = "serde_derive";
           }
         ];
         features = {
           "default" = [ "std" ];
-          "serde" = [ "dep:serde" ];
+          "serde" = [
+            "dep:serde"
+            "dep:serde_derive"
+          ];
           "std" = [
             "idna/std"
             "percent-encoding/std"
             "form_urlencoded/std"
-            "serde/std"
+            "serde?/std"
           ];
         };
         resolvedDefaultFeatures = [
@@ -26865,7 +26981,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [
               "visit"
               "visit-mut"
@@ -29633,7 +29749,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [
               "parsing"
@@ -29666,7 +29782,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             usesDefaultFeatures = false;
             features = [
               "parsing"
@@ -32423,7 +32539,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "fold" ];
           }
           {
@@ -32500,7 +32616,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "full" ];
           }
         ];
@@ -32549,7 +32665,7 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "fold" ];
           }
           {
@@ -32696,11 +32812,23 @@ rec {
           }
           {
             name = "syn";
-            packageId = "syn 2.0.111";
+            packageId = "syn 2.0.117";
             features = [ "extra-traits" ];
           }
         ];
 
+      };
+      "zmij" = rec {
+        crateName = "zmij";
+        version = "1.0.21";
+        edition = "2021";
+        sha256 = "1amb5i6gz7yjb0dnmz5y669674pqmwbj44p4yfxfv2ncgvk8x15q";
+        authors = [
+          "David Tolnay <dtolnay@gmail.com>"
+        ];
+        features = {
+          "no-panic" = [ "dep:no-panic" ];
+        };
       };
       "zstd" = rec {
         crateName = "zstd";

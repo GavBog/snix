@@ -258,7 +258,7 @@ mod tests {
         ));
 
         (
-            axum_test::TestServer::new(app).unwrap(),
+            axum_test::TestServer::new(app),
             blob_service,
             directory_service,
             path_info_service,
@@ -270,7 +270,7 @@ mod tests {
     async fn test_get_head() {
         let (server, _blob_service, _directory_service, _path_info_service) =
             gen_server(Router::new().route(
-                "/nar/snix-castore/:root_node_enc",
+                "/nar/snix-castore/{root_node_enc}",
                 axum::routing::get(super::get_head),
             ));
 
@@ -342,7 +342,7 @@ mod tests {
     #[tokio::test]
     async fn test_put_wrong_narhash() {
         let (server, _blob_service, _directory_service, _path_info_service) =
-            gen_server(Router::new().route("/nar/:nar_str", axum::routing::put(super::put)));
+            gen_server(Router::new().route("/nar/{nar_str}", axum::routing::put(super::put)));
 
         server
             .put("/nar/0000000000000000000000000000000000000000000000000000.nar")
@@ -356,7 +356,7 @@ mod tests {
     #[tokio::test]
     async fn test_put_with_compression_fail() {
         let (server, _blob_service, _directory_service, _path_info_service) =
-            gen_server(Router::new().route("/nar/:nar_str", axum::routing::put(super::put)));
+            gen_server(Router::new().route("/nar/{nar_str}", axum::routing::put(super::put)));
 
         let nar_sha256: [u8; 32] = sha2::Sha256::digest(NAR_CONTENTS_SYMLINK.as_slice()).into();
 
@@ -375,7 +375,7 @@ mod tests {
     #[tokio::test]
     async fn test_put_success() {
         let (server, blob_service, _directory_service, _path_info_service) =
-            gen_server(Router::new().route("/nar/:nar_str", axum::routing::put(super::put)));
+            gen_server(Router::new().route("/nar/{nar_str}", axum::routing::put(super::put)));
 
         let nar_sha256: [u8; 32] = sha2::Sha256::digest(NAR_CONTENTS_HELLOWORLD.as_slice()).into();
         let nar_url = format!("/nar/{}.nar", nixbase32::encode(&nar_sha256));
@@ -401,7 +401,7 @@ mod tests {
     #[tokio::test]
     async fn test_put_success2() {
         let (server, blob_service, directory_service, _path_info_service) =
-            gen_server(Router::new().route("/nar/:nar_str", axum::routing::put(super::put)));
+            gen_server(Router::new().route("/nar/{nar_str}", axum::routing::put(super::put)));
 
         let nar_sha256: [u8; 32] = sha2::Sha256::digest(NAR_CONTENTS_COMPLICATED.as_slice()).into();
         let nar_url = format!("/nar/{}.nar", nixbase32::encode(&nar_sha256));
@@ -431,8 +431,8 @@ mod tests {
     async fn test_put_root_nodes() {
         let (server, _blob_service, _directory_servicee, _path_info_service) = gen_server(
             Router::new()
-                .route("/nar/:nar_str", axum::routing::put(super::put))
-                .route("/nar/:nar_str", axum::routing::get(super::head_root_nodes)),
+                .route("/nar/{nar_str}", axum::routing::put(super::put))
+                .route("/nar/{nar_str}", axum::routing::get(super::head_root_nodes)),
         );
 
         let nar_sha256: [u8; 32] = sha2::Sha256::digest(NAR_CONTENTS_COMPLICATED.as_slice()).into();

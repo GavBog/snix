@@ -56,14 +56,14 @@ pub fn gen_router(priority: u64) -> Router<AppState> {
 
     let router = Router::new()
         .route("/", get(root))
-        .route("/nar/:nar_str", get(StatusCode::NOT_FOUND))
-        .route("/nar/:nar_str", head(nar::head_root_nodes))
-        .route("/nar/:nar_str", put(nar::put))
-        .route("/nar/snix-castore/:root_node_enc", get(nar::get_head))
-        .route("/nar/snix-castore/:root_node_enc", head(nar::get_head))
-        .route("/:narinfo_str", get(narinfo::get))
-        .route("/:narinfo_str", head(narinfo::head))
-        .route("/:narinfo_str", put(narinfo::put))
+        .route("/nar/{nar_str}", get(StatusCode::NOT_FOUND))
+        .route("/nar/{nar_str}", head(nar::head_root_nodes))
+        .route("/nar/{nar_str}", put(nar::put))
+        .route("/nar/snix-castore/{root_node_enc}", get(nar::get_head))
+        .route("/nar/snix-castore/{root_node_enc}", head(nar::get_head))
+        .route("/{narinfo_str}", get(narinfo::get))
+        .route("/{narinfo_str}", head(narinfo::head))
+        .route("/{narinfo_str}", put(narinfo::put))
         .route("/nix-cache-info", get(move || nix_cache_info(priority)));
 
     let router = router.layer(tower_http::compression::CompressionLayer::new());

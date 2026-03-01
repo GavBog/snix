@@ -16,8 +16,9 @@ snix-cli.path = "../base"
 snix-store.path = "../../store"
 snix-tracing = { path = "../../tracing", features = ["tonic", "axum"] }
 tokio.workspace = true
+axum.workspace = true
 tokio-listener = { workspace = true, features = [
-  "axum07",
+  "axum08",
   "clap",
   "multi-listener",
   "sd_listen",

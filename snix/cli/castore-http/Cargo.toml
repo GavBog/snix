@@ -20,7 +20,7 @@ snix-tracing = { path = "../../tracing", features = [
 ] }
 tokio = { workspace = true, features = ["tracing"] }
 tokio-listener = { workspace = true, features = [
-  "axum07",
+  "axum08",
   "clap",
   "multi-listener",
   "sd_listen",

@@ -92,12 +92,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     info!(listen_address=%listen_address, "starting daemon");
 
-    tokio_listener::axum07::serve(
-        listener,
-        app.into_make_service_with_connect_info::<tokio_listener::SomeSocketAddrClonable>(),
-    )
-    .with_graceful_shutdown(shutdown_signal())
-    .await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
 
     Ok(tracing_handle.shutdown().await.inspect_err(|err| {
         eprintln!("failed to shutdown tracing: {err}");

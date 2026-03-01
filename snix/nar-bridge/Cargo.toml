@@ -6,7 +6,7 @@ rust-version.workspace = true
 
 [dependencies]
 axum = { workspace = true, features = ["http2"] }
-axum-extra.workspace = true
+axum-extra = { workspace = true, features = ["typed-header"] }
 axum-range.workspace = true
 bytes.workspace = true
 futures.workspace = true
@@ -31,7 +31,7 @@ default = ["otlp"]
 otlp = ["dep:tower-otel-http-metrics"]
 
 [dev-dependencies]
-axum-test = "16.4.0"
+axum-test = "19.0.0"
 data-encoding.workspace = true
 prost.workspace = true
 sha2.workspace = true

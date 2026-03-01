@@ -15,9 +15,9 @@ use snix_castore::{
 use axum::{
     body::Body,
     http::{StatusCode, header},
-    response::{AppendHeaders, IntoResponse, Redirect, Response},
+    response::{AppendHeaders, Html, IntoResponse, Redirect, Response},
 };
-use axum_extra::{TypedHeader, headers::Range, response::Html};
+use axum_extra::{TypedHeader, headers::Range};
 use axum_range::{KnownSize, Ranged};
 use path_clean::PathClean;
 use std::ffi::OsStr;

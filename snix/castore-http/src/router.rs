@@ -46,17 +46,13 @@ pub async fn gen_router(
 
     info!(listen_address=%listen_address, "starting daemon");
 
-    tokio_listener::axum07::serve(
-        listener,
-        app.into_make_service_with_connect_info::<tokio_listener::SomeSocketAddrClonable>(),
-    )
-    .await?;
+    axum::serve(listener, app).await?;
     Ok(())
 }
 
 pub fn app(app_state: AppState) -> Router {
     Router::new()
-        .route("/*path", get(routes::root_node_contents))
+        .route("/{*path}", get(routes::root_node_contents))
         .route("/", get(routes::root_node_contents))
         .with_state(app_state)
 }

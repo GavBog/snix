@@ -192,7 +192,7 @@ mod tests {
         ));
 
         (
-            axum_test::TestServer::new(app).unwrap(),
+            axum_test::TestServer::new(app),
             blob_service,
             directory_service,
             path_info_service,

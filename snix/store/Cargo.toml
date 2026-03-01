@@ -47,7 +47,7 @@ tonic = { workspace = true, features = ["tls-aws-lc"] }
 tower.workspace = true
 tower-http = { workspace = true, features = ["trace"] }
 snix-castore = { path = "../castore" }
-url.workspace = true
+url = { workspace = true, features = ["serde"] }
 walkdir.workspace = true
 reqwest = { workspace = true, features = ["stream"] }
 reqwest-middleware.workspace = true
