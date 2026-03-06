@@ -340,10 +340,12 @@ impl TracingBuilder {
     #[cfg(feature = "clap")]
     /// Configure with verbosity flags.
     pub fn handle_verbosity_flags<L: LogLevel>(mut self, args: &Verbosity<L>) -> Self {
-        if let Some(level) = args.tracing_level() {
-            self = self.with_max_level(level)
-        } else {
-            self = self.quiet_output()
+        if args.is_present() {
+            if let Some(level) = args.tracing_level() {
+                self = self.with_max_level(level)
+            } else {
+                self = self.quiet_output()
+            }
         }
 
         self
