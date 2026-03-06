@@ -198,7 +198,11 @@ impl Chunk {
 
             OpArg::Uvarint => {
                 let (arg, size) = self.read_uvarint(idx.0 + 1);
-                writeln!(writer, "Op{op:?}({arg})")?;
+                write!(writer, "Op{op:?}({arg})")?;
+                if let Op::Constant = &op {
+                    write!(writer, " (={})", self.constants[arg as usize])?;
+                }
+                writeln!(writer)?;
                 Ok(1 + size)
             }
 
