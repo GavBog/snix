@@ -19,6 +19,12 @@ Snix currently has three language test suites for snix-eval:
 * `nix_tests` and `snix_tests` are based on the same mechanism
   borrowed from the C++ Nix implementation. They consist of
   Nix files as well as expected output (if applicable).
+
+  These test suites are split between `snix-eval` and `snix-glue`.
+  Tests in `snix-eval` run against a lightweight `MockIO` wrapper.
+  Tests that need store-aware IO (e.g. actual path importing,
+  derivation creation, or fetchers) live in `snix-glue`.
+
   The test cases are split into four categories:
   `eval-okay` (evaluates successfully with the expected output),
   `eval-fail` (fails to evaluate, no expected output),

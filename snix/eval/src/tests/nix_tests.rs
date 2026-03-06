@@ -40,6 +40,11 @@ mod mock_builtins {
     }
 }
 
+/// Thin wrapper around the StdIO implementation that overrides some methods to provide
+/// deterministic environment for tests.
+///
+/// Tests that need store-aware IO (e.g. actual path importing, derivation
+/// creation, or fetchers) should be put in //snix/glue.
 struct MockIo<T> {
     // Actual underlying [EvalIO] implementation.
     actual: T,
