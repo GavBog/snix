@@ -1,3 +1,3 @@
 { depot, pkgs, ... }:
 
-pkgs.callPackage depot.third_party.sources.naersk { }
+pkgs.callPackage (import depot.third_party.sources.naersk) { }

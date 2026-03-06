@@ -8,7 +8,7 @@ depot.nix.lazy-deps {
   depotfmt.attr = "tools.depotfmt";
   gerrit.attr = "tools.gerrit-cli";
   mg.attr = "tools.magrathea";
-  niv.attr = "third_party.nixpkgs.niv";
+  npins.attr = "third_party.nixpkgs.npins";
   nixfmt.attr = "third_party.nixpkgs.nixfmt";
 
   tf-buildkite = {
