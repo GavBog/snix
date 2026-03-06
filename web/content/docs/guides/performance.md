@@ -25,7 +25,9 @@ might already be a known issue, or there a design proposal on how to solve it.
 Snix supports emitting traces in Chrome's trace event format that can be viewed
 with `chrome://tracing` or [ui.perfetto.dev](https://ui.perfetto.dev).
 
-Compile and run Snix with the `tracing-chrome` feature flag enabled.
+Compile and run Snix with the `tracing-chrome` feature flag enabled,
+and run it with the `--tracer=chrome-style` command line arg.
+
 After stopping the binary, a file named like `trace-1668480819035032.json` will
 be written to your current working directory, which you can drag & drop into the
 above web interface.
