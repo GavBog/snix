@@ -37,9 +37,9 @@ pkgs.mkShell {
       pkgs.rustfmt
       pkgs.plantuml
       pkgs.protobuf
-      perf
     ]
     ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+      perf
       pkgs.runc
       pkgs.cbtemulator
       pkgs.google-cloud-bigtable-tool
