@@ -252,19 +252,21 @@ depot.nix.readTree.drvTargets {
   closure-nixos-s3 = (
     mkBootTest {
       name = "closure-nixos-s3";
-      blobServiceAddr = "objectstore+s3://mybucket/blobs?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&aws_endpoint_url=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
+      blobServiceAddr = "objectstore+s3://mybucket/blobs?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&aws_endpoint_url=http%3A%2F%2Flocalhost%3A8333&aws_allow_http=1";
       # we cannot use s3 here yet without any caching layer, as we don't allow "deeper" access to directories (non-root nodes)
-      # directoryServiceAddr = "objectstore+s3://mybucket/directories?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&endpoint=http%3A%2F%2Flocalhost%3A9000&aws_allow_http=1";
+      # directoryServiceAddr = "objectstore+s3://mybucket/directories?aws_access_key_id=myaccesskey&aws_secret_access_key=supersecret&endpoint=http%3A%2F%2Flocalhost%3A8333&aws_allow_http=1";
       directoryServiceAddr = "redb+memory:";
       pathInfoServiceAddr = "redb+memory:";
       path = testSystem;
       useNarBridge = true;
       preStart = ''
-        MINIO_ACCESS_KEY=myaccesskey MINIO_SECRET_KEY=supersecret MINIO_ADDRESS=127.0.0.1:9000 ${pkgs.minio}/bin/minio server $(mktemp -d) &
-        timeout 22 sh -c 'until ${pkgs.netcat}/bin/nc -z $0 $1; do sleep 1; done' localhost 9000
-        mc_config_dir=$(mktemp -d)
-        ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir alias set 'myminio' 'http://127.0.0.1:9000' 'myaccesskey' 'supersecret'
-        ${pkgs.minio-client}/bin/mc --config-dir $mc_config_dir mb myminio/mybucket
+        # start seaweedfs and wait for it to be ready
+        AWS_ACCESS_KEY_ID=myaccesskey AWS_SECRET_ACCESS_KEY=supersecret S3_ENDPOINT=http://localhost:8333 ${pkgs.seaweedfs}/bin/weed mini -dir=$(mktemp -d) -s3 &
+        timeout 22 sh -c "until ${pkgs.curl}/bin/curl --silent 127.0.0.1:8333/healthz; do sleep 1; done"
+
+        # create our bucket
+        AWS_ACCESS_KEY_ID=myaccesskey AWS_SECRET_ACCESS_KEY=supersecret ${pkgs.awscli2}/bin/aws --endpoint-url http://localhost:8333 s3 mb s3://my-bucket
+        echo "healthy, bucket created"
       '';
       isClosure = true;
       vmCmdline = "init=${testSystem}/init panic=-1"; # reboot immediately on panic
