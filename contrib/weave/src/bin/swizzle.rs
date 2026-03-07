@@ -43,9 +43,7 @@ use weave::{INDEX_NULL, as_fixed_binary, hash64, leak, load_ph_array};
 
 #[tracing::instrument]
 fn main() -> Result<()> {
-    let _tracing = snix_tracing::TracingBuilder::default()
-        .enable_progressbar()
-        .build()?;
+    let _tracing = snix_tracing::TracingBuilder::default().build()?;
 
     let ph_array: &'static [[u8; 20]] = leak(load_ph_array()?);
 

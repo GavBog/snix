@@ -29,9 +29,7 @@ use weave::{INDEX_NULL, as_fixed_binary, hash64};
 
 #[tracing::instrument]
 fn main() -> Result<()> {
-    let _tracing = snix_tracing::TracingBuilder::default()
-        .enable_progressbar()
-        .build()?;
+    let _tracing = snix_tracing::TracingBuilder::default().build()?;
 
     let roots: PathSet32 = {
         let span = info_span!("parse_roots", indicatif.pb_show = tracing::field::Empty).entered();

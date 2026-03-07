@@ -71,7 +71,6 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let (mut stdout, mut stderr, io_handle) = tokio_runtime.block_on(async {
         let tracing_handle = snix_tracing::TracingBuilder::default()
             .handle_tracing_args(&args.tracing_args)
-            .enable_progressbar()
             .build()?;
 
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>((

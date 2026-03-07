@@ -5,7 +5,7 @@ use clap_verbosity_flag::{InfoLevel, LogLevel, Verbosity};
 #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
 use enumset::EnumSet;
 use std::sync::LazyLock;
-use tracing::{Level, level_filters::LevelFilter};
+use tracing::Level;
 use tracing_indicatif::{
     IndicatifLayer, IndicatifWriter, filter::IndicatifFilter, style::ProgressStyle,
     util::FilteredFormatFields, writer,
@@ -151,16 +151,39 @@ pub enum Tracer {
     ChromeStyle,
 }
 
+/// Encodes the verbosity level chosen by the user through CLI arguments.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum ChosenLevel {
+    /// Not set. We still store the default level passed as a type argument in Verbosity
+    Unset(Level),
+    /// No output at all requested (quiet mode)
+    NoOutput,
+    /// Specific log level selected
+    Level(Level),
+}
+
 #[must_use = "Don't forget to call build() to enable tracing."]
-#[derive(Default)]
 pub struct TracingBuilder {
-    progess_bar: bool,
+    // Can be used to disable progress bars entirely,
+    // even though they would still match the chosen level
+    disable_progress_bars: bool,
 
     #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
     tracers: EnumSet<Tracer>,
 
-    quiet: bool,
-    verbosity: Option<Level>,
+    // The desired verbosity level
+    level: ChosenLevel,
+}
+
+impl Default for TracingBuilder {
+    fn default() -> Self {
+        Self {
+            #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
+            tracers: Default::default(),
+            level: ChosenLevel::Unset(Level::INFO),
+            disable_progress_bars: false,
+        }
+    }
 }
 
 impl TracingBuilder {
@@ -181,21 +204,9 @@ impl TracingBuilder {
         self
     }
 
-    /// Enable progress bar layer, default is disabled
-    pub fn enable_progressbar(mut self) -> TracingBuilder {
-        self.progess_bar = true;
-        self
-    }
-
-    /// Supress log and progress bar output to stderr
-    pub fn quiet_output(mut self) -> TracingBuilder {
-        self.quiet = true;
-        self
-    }
-
-    /// Sets the verbosity level, default is INFO
-    pub fn with_max_level(mut self, level: Level) -> TracingBuilder {
-        self.verbosity = Some(level);
+    /// Disable progress bars explicitly, even though they would still match the chosen log level.
+    pub fn disable_progress_bars(mut self) -> TracingBuilder {
+        self.disable_progress_bars = true;
         self
     }
 
@@ -232,25 +243,20 @@ impl TracingBuilder {
         let stdout_writer = indicatif_layer.get_stdout_writer();
         let stderr_writer = indicatif_layer.get_stderr_writer();
 
-        let layered = if !self.quiet {
-            Some(
-                tracing_subscriber::fmt::Layer::new()
-                    .fmt_fields(FilteredFormatFields::new(
-                        tracing_subscriber::fmt::format::DefaultFields::new(),
-                        |field| field.name() != "indicatif.pb_show",
-                    ))
-                    .with_writer(indicatif_layer.get_stderr_writer())
-                    .compact()
-                    .and_then((self.progess_bar).then(|| {
-                        indicatif_layer.with_filter(
-                            // only show progress for spans with indicatif.pb_show field being set
-                            IndicatifFilter::new(false),
-                        )
-                    })),
-            )
-        } else {
-            None
-        };
+        let layered = tracing_subscriber::fmt::Layer::new()
+            .fmt_fields(FilteredFormatFields::new(
+                tracing_subscriber::fmt::format::DefaultFields::new(),
+                |field| field.name() != "indicatif.pb_show",
+            ))
+            .with_writer(indicatif_layer.get_stderr_writer())
+            .compact()
+            .and_then((!self.disable_progress_bars).then(|| {
+                indicatif_layer.with_filter(
+                    // only show progress for spans with indicatif.pb_show field being set
+                    IndicatifFilter::new(false),
+                )
+            }));
+
         #[cfg(feature = "chrome")]
         let (layered, chrome_guard) = if self.tracers.contains(Tracer::ChromeStyle) {
             let (chrome_layer, guard) = tracing_chrome::ChromeLayerBuilder::new()
@@ -305,17 +311,7 @@ impl TracingBuilder {
                 .then(TracyLayer::default),
         );
 
-        let layered = layered.with_filter({
-            let b = EnvFilter::builder()
-                .with_default_directive(LevelFilter::INFO.into())
-                .from_env()
-                .expect("invalid RUST_LOG");
-            if let Some(level) = self.verbosity {
-                b.add_directive(level.into())
-            } else {
-                b
-            }
-        });
+        let layered = layered.with_filter(construct_filter(self.level.to_owned()));
 
         tracing_subscriber::registry()
             // TODO: if additional_layer has global filters, there is a risk that it will disable the "default" ones,
@@ -340,12 +336,21 @@ impl TracingBuilder {
     #[cfg(feature = "clap")]
     /// Configure with verbosity flags.
     pub fn handle_verbosity_flags<L: LogLevel>(mut self, args: &Verbosity<L>) -> Self {
+        if args.is_silent() {
+            self.level = ChosenLevel::NoOutput;
+            self.disable_progress_bars = true;
+            return self;
+        }
+
+        use std::io::IsTerminal;
+        if !std::io::stderr().is_terminal() {
+            self.disable_progress_bars = true
+        }
+
         if args.is_present() {
-            if let Some(level) = args.tracing_level() {
-                self = self.with_max_level(level)
-            } else {
-                self = self.quiet_output()
-            }
+            self.level = ChosenLevel::Level(args.tracing_level().expect("not silent"));
+        } else {
+            self.level = ChosenLevel::Unset(args.tracing_level().expect("not silent"))
         }
 
         self
@@ -361,6 +366,7 @@ impl TracingBuilder {
         {
             self = self.enable_tracers(args.tracers());
         }
+
         self.handle_verbosity_flags(&args.verbosity)
     }
 }
@@ -459,4 +465,17 @@ impl<L: LogLevel> TracingArgs<L> {
     pub fn tracers(&self) -> EnumSet<Tracer> {
         self.tracer.iter().cloned().collect()
     }
+}
+
+/// Helper assembling a filter filtering events for the [ChosenLevel].
+fn construct_filter<S>(level: ChosenLevel) -> impl tracing_subscriber::layer::Filter<S> {
+    let mut b = EnvFilter::builder();
+    if let ChosenLevel::Unset(level) = level {
+        b = b.with_default_directive(level.to_owned().into());
+    }
+    let mut f = b.from_env().expect("invalid RUST_LOG");
+    if let ChosenLevel::Level(level) = level {
+        f = f.add_directive(level.to_owned().into());
+    }
+    f
 }
