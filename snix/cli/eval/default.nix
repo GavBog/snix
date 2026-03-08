@@ -46,6 +46,7 @@
             "--format"
             "${benchmark-gnutime-format-string description}"
             "${snix-cli}/bin/snix-eval"
+            "-qqqq"
             "--no-warnings"
             "-E"
             expr
@@ -76,7 +77,7 @@
         in
         (pkgs.runCommand name { } ''
           export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
-          SNIX_OUTPUT=$(${snix-cli}/bin/snix-eval --no-warnings -E '${
+          SNIX_OUTPUT=$(${snix-cli}/bin/snix-eval --no-warnings -qqq -E '${
             if expr != null then expr else "(import ${pkgs.path} {}).${attrPath}"
           }')
           EXPECTED='${
