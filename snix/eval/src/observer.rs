@@ -82,6 +82,103 @@ pub struct NoOpObserver {}
 impl CompilerObserver for NoOpObserver {}
 impl RuntimeObserver for NoOpObserver {}
 
+/// Runtime observer that is optimised for the case where no observer is being used.
+///
+/// The trait RuntimeObserver is implemented on the Optional<dyn
+/// RuntimeObserver>. This removes the dynamic dispatch overhead when
+/// no observer is being used.
+pub struct OptionalRuntimeObserver<'o>(pub Option<&'o mut dyn RuntimeObserver>);
+
+impl<'o> From<&'o mut dyn RuntimeObserver> for OptionalRuntimeObserver<'o> {
+    fn from(val: &'o mut dyn RuntimeObserver) -> Self {
+        OptionalRuntimeObserver(Some(val))
+    }
+}
+
+impl<'o> RuntimeObserver for OptionalRuntimeObserver<'o> {
+    #[inline(always)]
+    fn observe_enter_call_frame(
+        &mut self,
+        arg_count: usize,
+        lambda: &Rc<Lambda>,
+        call_depth: usize,
+    ) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_enter_call_frame(arg_count, lambda, call_depth);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_exit_call_frame(&mut self, frame_at: usize, stack: &[Value]) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_exit_call_frame(frame_at, stack);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_suspend_call_frame(&mut self, frame_at: usize, stack: &[Value]) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_suspend_call_frame(frame_at, stack);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_enter_generator(&mut self, frame_at: usize, name: &str, stack: &[Value]) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_enter_generator(frame_at, name, stack);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_exit_generator(&mut self, frame_at: usize, name: &str, stack: &[Value]) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_exit_generator(frame_at, name, stack);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_suspend_generator(&mut self, frame_at: usize, name: &str, stack: &[Value]) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_suspend_generator(frame_at, name, stack);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_generator_request(&mut self, name: &str, msg: &VMRequest) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_generator_request(name, msg);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_tail_call(&mut self, frame_at: usize, lambda: &Rc<Lambda>) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_tail_call(frame_at, lambda);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_enter_builtin(&mut self, name: &'static str) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_enter_builtin(name);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_exit_builtin(&mut self, name: &'static str, stack: &[Value]) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_exit_builtin(name, stack);
+        }
+    }
+
+    #[inline(always)]
+    fn observe_execute_op(&mut self, ip: CodeIdx, op: &Op, stack: &[Value]) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_execute_op(ip, op, stack);
+        }
+    }
+}
+
 /// An observer that prints disassembled chunk information to its
 /// internal writer whenwever the compiler emits a toplevel function,
 /// closure or thunk.

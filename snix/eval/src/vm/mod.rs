@@ -32,7 +32,7 @@ use crate::{
     io::EvalIO,
     lifted_pop,
     nix_search_path::NixSearchPath,
-    observer::RuntimeObserver,
+    observer::{OptionalRuntimeObserver, RuntimeObserver},
     opcode::{CodeIdx, Op, Position, UpvalueIdx},
     upvalues::{UpvalueData, Upvalues},
     value::{
@@ -329,7 +329,7 @@ struct VM<'o, IO> {
     io_handle: IO,
 
     /// Runtime observer which can print traces of runtime operations.
-    observer: &'o mut dyn RuntimeObserver,
+    observer: OptionalRuntimeObserver<'o>,
 
     /// Strong reference to the globals, guaranteeing that they are
     /// kept alive for the duration of evaluation.
@@ -377,7 +377,7 @@ where
     pub fn new(
         nix_search_path: NixSearchPath,
         io_handle: IO,
-        observer: &'o mut dyn RuntimeObserver,
+        observer: OptionalRuntimeObserver<'o>,
         source: SourceCode,
         globals: Rc<GlobalsMap>,
         reasonable_span: Span,
@@ -417,11 +417,13 @@ where
                         .observe_enter_call_frame(0, &call_frame.lambda, frame_id);
 
                     match self.execute_bytecode(span, call_frame) {
-                        Ok(true) => self.observer.observe_exit_call_frame(frame_id, &self.stack),
-                        Ok(false) => self
-                            .observer
-                            .observe_suspend_call_frame(frame_id, &self.stack),
-
+                        Ok(true) => {
+                            self.observer.observe_exit_call_frame(frame_id, &self.stack);
+                        }
+                        Ok(false) => {
+                            self.observer
+                                .observe_suspend_call_frame(frame_id, &self.stack);
+                        }
                         Err(err) => return Err(err),
                     };
                 }
@@ -1450,7 +1452,7 @@ pub enum EvalMode {
 pub fn run_lambda<IO>(
     nix_search_path: NixSearchPath,
     io_handle: IO,
-    observer: &mut dyn RuntimeObserver,
+    observer: Option<&mut dyn RuntimeObserver>,
     source: SourceCode,
     globals: Rc<GlobalsMap>,
     lambda: Rc<Lambda>,
@@ -1470,7 +1472,7 @@ where
     let mut vm = VM::new(
         nix_search_path,
         io_handle,
-        observer,
+        OptionalRuntimeObserver(observer),
         source,
         globals,
         root_span,

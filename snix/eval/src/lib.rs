@@ -524,7 +524,7 @@ where
             })
             .unwrap_or_default();
 
-        let runtime_observer = self.runtime_observer.take().unwrap_or(&mut noop_observer);
+        let runtime_observer = self.runtime_observer.take();
 
         let vm_result = run_lambda(
             nix_path,
