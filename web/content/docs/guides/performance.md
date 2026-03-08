@@ -42,7 +42,8 @@ be available.
 
 ## OTLP
 Snix comes with [OpenTelemetry][] support [^opentelemetry].
-It can be enabled by runnig Snix with the `--otlp` command line argument.
+It can be enabled by running Snix with the `--tracer=otlp` command line
+argument.
 You need to have an OTLP collector running, which will collect these traces.
 
 It will give you "callgraphs" of various Snix components, alongside with
@@ -91,9 +92,9 @@ applications".
 Refer to the [Important Information][tracy-important-information] and only
 proceed when you understood the implications.
 
-If you compile it with the `tracy` feature flag enabled, the process will
-collect data while running and wait for the Tracy tool itself to collect
-the trace.
+If you compile it with the `tracy` feature flag enabled, and run with the
+`--tracer=tracy` command line argument, the process will collect data while
+running and wait for the Tracy tool itself to collect the trace.
 
 This can be done by running `tracy -a 127.0.0.1` in a separate Terminal before
 running Snix with this feature enabled. If Tracy does not run, Snix will block
