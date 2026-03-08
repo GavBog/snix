@@ -14,7 +14,9 @@ let
     includes = [ "*.nix" ]
     excludes = [
       "snix/eval/src/tests/nix_tests/*",
-      "snix/eval/src/tests/snix_tests/*"
+      "snix/eval/src/tests/snix_tests/*",
+      "snix/glue/src/tests/nix_tests/*",
+      "snix/glue/src/tests/snix_tests/*"
     ]
 
     [formatter.rust]
