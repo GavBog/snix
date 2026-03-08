@@ -122,8 +122,8 @@ We also have a few Macrobenchmarks, running various Snix binaries to do a longer
 task.
 
 These currently mostly evaluate various attrpaths in nixpkgs, and measure the
-time. They can be accessed by building the `snix.cli.benchmark-*` attrsets
-(in `snix/cli/default.nix`), currently emit a very simple JSON, logging the time
+time. They can be accessed by building the `snix.cli.eval.benchmark-*` attrsets
+(in `snix/cli/eval/default.nix`), currently emit a very simple JSON, logging the time
 and memory used.
 
 ### Continuous Benchmarking
