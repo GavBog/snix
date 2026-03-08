@@ -30,7 +30,7 @@
 
       # You can run the benchmark with a simple `nix run`, like:
       #
-      #  nix-build -A snix.cli.meta.ci.extraSteps.benchmark-nixpkgs-cross-hello-outpath
+      #  nix-build -A snix.cli.eval.benchmark-cross-firefox
       #
       # TODO(amjoseph): store these results someplace more durable, like git trailers
       #
