@@ -84,8 +84,6 @@ cloud = ["dep:bigtable_rs", "snix-castore/cloud"]
 fuse = ["snix-castore/fuse"]
 otlp = ["snix-tracing/otlp"]
 tonic-reflection = ["dep:tonic-reflection", "snix-castore/tonic-reflection"]
-tracing-chrome = ["snix-tracing/chrome"]
-tracy = ["snix-tracing/tracy"]
 virtiofs = ["snix-castore/virtiofs"]
 xp-composition-cli = [
   "toml",
@@ -99,12 +97,4 @@ integration = []
 
 [package.metadata.docs.rs]
 # Everything but virtiofs since that doesn't build on MacOS
-features = [
-  "cloud",
-  "fuse",
-  "otlp",
-  "tonic-reflection",
-  "tracing-chrome",
-  "tracy",
-  "xp-composition-cli",
-]
+features = ["cloud", "fuse", "otlp", "tonic-reflection", "xp-composition-cli"]

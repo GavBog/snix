@@ -21343,8 +21343,6 @@ rec {
             "dep:tonic-reflection"
             "snix-castore/tonic-reflection"
           ];
-          "tracing-chrome" = [ "snix-tracing/chrome" ];
-          "tracy" = [ "snix-tracing/tracy" ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
           "xp-composition-cli" = [
             "toml"
@@ -21360,8 +21358,6 @@ rec {
           "otlp"
           "toml"
           "tonic-reflection"
-          "tracing-chrome"
-          "tracy"
           "virtiofs"
           "xp-composition-cli"
         ];
