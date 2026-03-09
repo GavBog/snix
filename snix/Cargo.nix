@@ -487,7 +487,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.60.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_System_Console"
@@ -515,7 +515,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.60.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_System_Console"
@@ -5254,7 +5254,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -8858,7 +8858,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -11351,7 +11351,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             rename = "windows";
             target = { target, features }: (target."windows" or false);
             features = [
@@ -17276,7 +17276,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -17688,7 +17688,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -22112,7 +22112,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -25774,9 +25774,9 @@ rec {
       };
       "tracy-client" = rec {
         crateName = "tracy-client";
-        version = "0.17.6";
+        version = "0.18.4";
         edition = "2021";
-        sha256 = "0zkwz9aq97znyal3hz9wmxya97pj01ddpv92ha7l39a6fdw2s83k";
+        sha256 = "19g6g3s5x891k419ahl6y4xnbz100viyjwn7j2mqcpdcmqxzrxm4";
         libName = "tracy_client";
         authors = [
           "Simonas Kazlauskas <tracy-client@kazlauskas.me>"
@@ -25803,6 +25803,7 @@ rec {
           "callstack-inlines" = [ "sys/callstack-inlines" ];
           "code-transfer" = [ "sys/code-transfer" ];
           "context-switch-tracing" = [ "sys/context-switch-tracing" ];
+          "crash-handler" = [ "sys/crash-handler" ];
           "debuginfod" = [ "sys/debuginfod" ];
           "default" = [
             "enable"
@@ -25812,6 +25813,7 @@ rec {
             "code-transfer"
             "broadcast"
             "callstack-inlines"
+            "crash-handler"
           ];
           "delayed-init" = [ "sys/delayed-init" ];
           "demangle" = [
@@ -25844,9 +25846,9 @@ rec {
       };
       "tracy-client-sys" = rec {
         crateName = "tracy-client-sys";
-        version = "0.24.3";
+        version = "0.28.0";
         edition = "2021";
-        sha256 = "0ps3iwb7q1fzs9pir6b0nqi8n7i67lci4jp6z4xrq8s8lmyz7zv9";
+        sha256 = "1gxc1lb3yvbzb8n5069x1gis6vpfdly7n5bj7n8iq37j919wkxy5";
         libName = "tracy_client_sys";
         authors = [
           "Simonas Kazlauskas <tracy-client-sys@kazlauskas.me>"
@@ -25874,6 +25876,7 @@ rec {
             "code-transfer"
             "broadcast"
             "callstack-inlines"
+            "crash-handler"
           ];
           "manual-lifetime" = [ "delayed-init" ];
         };
@@ -28856,7 +28859,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.48.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -30567,8 +30570,10 @@ rec {
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Pipes"
+          "Win32_System_SystemInformation"
           "Win32_System_WindowsProgramming"
           "default"
         ];
@@ -30824,7 +30829,14 @@ rec {
           "Win32_Foundation"
           "Win32_Networking"
           "Win32_Networking_WinSock"
+          "Win32_Security"
+          "Win32_Security_Cryptography"
+          "Win32_Storage"
+          "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_Threading"
           "Win32_System_WindowsProgramming"
@@ -31091,9 +31103,11 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
+          "Win32_Security"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
           "Win32_System_IO"
           "default"
         ];
@@ -31661,8 +31675,6 @@ rec {
           "Win32_System"
           "Win32_System_Com"
           "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_LibraryLoader"
           "Win32_System_Memory"

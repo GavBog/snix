@@ -37,7 +37,7 @@ pkgs.mkShell {
       pkgs.rustfmt
       pkgs.plantuml
       pkgs.protobuf
-      pkgs.tracy_0_11
+      pkgs.tracy_0_13
     ]
     ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
       perf
