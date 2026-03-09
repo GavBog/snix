@@ -15053,9 +15053,9 @@ rec {
       };
       "redb" = rec {
         crateName = "redb";
-        version = "3.1.0";
+        version = "3.1.1";
         edition = "2024";
-        sha256 = "01kaj29526w8pq6iww9lqn9mkffyjsxm7ix2v9lkg6jphsq3wcmf";
+        sha256 = "04c6k2fngjr4y66rpsbl53hr1fy3cimk0fmd753am0n734ikd6gg";
         authors = [
           "Christopher Berner <me@cberner.com>"
         ];
