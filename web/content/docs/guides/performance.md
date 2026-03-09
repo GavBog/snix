@@ -98,6 +98,9 @@ running and wait for the Tracy tool itself to collect the trace.
 
 This can be done by running `tracy -a 127.0.0.1` in a separate terminal.
 
+As different versions of the SDK require different versions of Tracy, we provide
+a compatible version in the devshell.
+
 You can either run Tracy before starting the binary, or mid-way - in any case,
 Snix will block indefinitely during shutdown is Tracy was enabled and nothing
 picked up the trace yet.

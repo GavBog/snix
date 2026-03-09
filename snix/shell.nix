@@ -37,13 +37,14 @@ pkgs.mkShell {
       pkgs.rustfmt
       pkgs.plantuml
       pkgs.protobuf
+      pkgs.tracy
     ]
     ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
       perf
-      pkgs.runc
+      pkgs.bubblewrap
       pkgs.cbtemulator
       pkgs.google-cloud-bigtable-tool
-      pkgs.bubblewrap
+      pkgs.runc
     ];
 
   # Set SNIX_BENCH_NIX_PATH to a somewhat pinned nixpkgs path.
