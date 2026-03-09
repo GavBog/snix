@@ -21324,11 +21324,9 @@ rec {
           "default" = [
             "cloud"
             "fuse"
-            "otlp"
             "tonic-reflection"
           ];
           "fuse" = [ "snix-castore/fuse" ];
-          "otlp" = [ "snix-tracing/otlp" ];
           "toml" = [ "dep:toml" ];
           "tonic-reflection" = [
             "dep:tonic-reflection"
@@ -21346,7 +21344,6 @@ rec {
           "default"
           "fuse"
           "integration"
-          "otlp"
           "toml"
           "tonic-reflection"
           "virtiofs"

@@ -79,10 +79,9 @@ tokio-retry.workspace = true
 hex-literal.workspace = true
 
 [features]
-default = ["cloud", "fuse", "otlp", "tonic-reflection"]
+default = ["cloud", "fuse", "tonic-reflection"]
 cloud = ["dep:bigtable_rs", "snix-castore/cloud"]
 fuse = ["snix-castore/fuse"]
-otlp = ["snix-tracing/otlp"]
 tonic-reflection = ["dep:tonic-reflection", "snix-castore/tonic-reflection"]
 virtiofs = ["snix-castore/virtiofs"]
 xp-composition-cli = [
@@ -97,4 +96,4 @@ integration = []
 
 [package.metadata.docs.rs]
 # Everything but virtiofs since that doesn't build on MacOS
-features = ["cloud", "fuse", "otlp", "tonic-reflection", "xp-composition-cli"]
+features = ["cloud", "fuse", "tonic-reflection", "xp-composition-cli"]
