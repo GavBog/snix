@@ -92,9 +92,10 @@ applications".
 Refer to the [Important Information][tracy-important-information] and only
 proceed when you understood the implications.
 
-If you compile it with the `tracy` feature flag enabled, and run with the
-`--tracer=tracy` command line argument, the process will collect data while
-running and wait for the Tracy tool itself to collect the trace.
+If you compile it with the `tracing-tracy` feature flag enabled,
+and run with the `--tracer=tracy` command line argument, the process will
+collect data while running and wait for the Tracy tool itself to collect the
+trace.
 
 This can be done by running `tracy -a 127.0.0.1` in a separate terminal.
 

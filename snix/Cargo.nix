@@ -20225,14 +20225,14 @@ rec {
           "default" = [ "otlp" ];
           "otlp" = [ "snix-tracing/otlp" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
-          "tracy" = [ "snix-tracing/tracy" ];
+          "tracing-tracy" = [ "snix-tracing/tracy" ];
           "xp-store-composition-cli" = [ "snix-store/xp-composition-cli" ];
         };
         resolvedDefaultFeatures = [
           "default"
           "otlp"
           "tracing-chrome"
-          "tracy"
+          "tracing-tracy"
           "xp-store-composition-cli"
         ];
       };

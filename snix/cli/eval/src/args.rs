@@ -15,9 +15,9 @@ fn make_version() -> String {
     {
         features.push_str("+tracing-chrome");
     }
-    #[cfg(feature = "tracy")]
+    #[cfg(feature = "tracing-tracy")]
     {
-        features.push_str("+tracy");
+        features.push_str("+tracing-tracy");
     }
     #[cfg(feature = "xp-store-composition-cli")]
     {
