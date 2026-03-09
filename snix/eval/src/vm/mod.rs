@@ -16,7 +16,13 @@ use bstr::{BString, ByteSlice, ByteVec};
 use codemap::Span;
 use rustc_hash::FxHashMap;
 use serde_json::json;
-use std::{cmp::Ordering, ffi::OsStr, ops::DerefMut, path::PathBuf, rc::Rc};
+use std::{
+    cmp::Ordering,
+    ffi::OsStr,
+    ops::DerefMut,
+    path::{Path, PathBuf},
+    rc::Rc,
+};
 
 use crate::{
     NixString, SourceCode, arithmetic_op,
@@ -233,8 +239,6 @@ impl Frame {
 }
 
 #[derive(Default)]
-struct ImportCache(FxHashMap<PathBuf, Value>);
-
 /// The `ImportCache` holds the `Value` resulting from `import`ing a certain
 /// file, so that the same file doesn't need to be re-evaluated multiple times.
 /// Currently the real path of the imported file (determined using
@@ -248,11 +252,14 @@ struct ImportCache(FxHashMap<PathBuf, Value>);
 /// In the future, we could use something more sophisticated, like file hashes.
 /// However, a consideration is that the eval cache is observable via impurities
 /// like pointer equality and `builtins.trace`.
+struct ImportCache(FxHashMap<PathBuf, Value>);
+
 impl ImportCache {
-    fn get(&self, path: PathBuf) -> Option<&Value> {
-        let path = match std::fs::canonicalize(path.as_path()).map_err(ErrorKind::from) {
+    fn get(&self, path: impl AsRef<Path>) -> Option<&Value> {
+        let path = path.as_ref();
+        let path = match std::fs::canonicalize(path).map_err(ErrorKind::from) {
             Ok(path) => path,
-            Err(_) => path,
+            Err(_) => path.to_owned(),
         };
         self.0.get(&path)
     }

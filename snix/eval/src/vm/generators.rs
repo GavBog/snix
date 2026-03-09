@@ -413,7 +413,7 @@ where
                         }
 
                         VMRequest::ImportCacheLookup(path) => {
-                            if let Some(cached) = self.import_cache.get(path) {
+                            if let Some(cached) = self.import_cache.get(&path) {
                                 message = VMResponse::Value(cached.clone());
                             } else {
                                 message = VMResponse::Empty;
