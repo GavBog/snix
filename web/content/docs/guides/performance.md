@@ -96,9 +96,11 @@ If you compile it with the `tracy` feature flag enabled, and run with the
 `--tracer=tracy` command line argument, the process will collect data while
 running and wait for the Tracy tool itself to collect the trace.
 
-This can be done by running `tracy -a 127.0.0.1` in a separate Terminal before
-running Snix with this feature enabled. If Tracy does not run, Snix will block
-indefinitely after termination, waiting for Tracy to pick up the trace.
+This can be done by running `tracy -a 127.0.0.1` in a separate terminal.
+
+You can either run Tracy before starting the binary, or mid-way - in any case,
+Snix will block indefinitely during shutdown is Tracy was enabled and nothing
+picked up the trace yet.
 
 {{< callout context="caution" title="Caution" icon="outline/alert-triangle" >}}
 Unfortunately, while it seems to be a very powerful tool, Tracy doesn't seem to
