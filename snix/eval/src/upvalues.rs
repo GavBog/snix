@@ -55,6 +55,16 @@ impl Upvalues {
         self.with_stack = Some(with_stack);
     }
 
+    /// Retrieve a single value from the `with_stack`. Returns `None`
+    /// if the stack doesn't exist or the value isn't in range.
+    pub fn get_from_with_stack(&self, index: usize) -> Option<Value> {
+        if let Some(with_stack) = &self.with_stack {
+            with_stack.get(index).cloned()
+        } else {
+            None
+        }
+    }
+
     pub fn with_stack(&self) -> Option<&Vec<Value>> {
         self.with_stack.as_ref()
     }

@@ -351,7 +351,10 @@ where
                             let call_frame = self.last_call_frame()
                                 .expect("Snix bug: generator requested captured with-value, but there is no call frame");
 
-                            let value = call_frame.upvalues.with_stack().unwrap()[idx].clone();
+                            let value = call_frame
+                                .upvalues
+                                .get_from_with_stack(idx)
+                                .expect("Snix bug: upvalue not found on stack");
                             self.enqueue_generator("force", span, |co| {
                                 value.force_owned_genco(co, span)
                             });
