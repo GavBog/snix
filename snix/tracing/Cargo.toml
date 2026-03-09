@@ -27,6 +27,7 @@ opentelemetry_sdk = { workspace = true, features = [
 ], optional = true }
 tracing-tracy = { workspace = true, features = [
   "flush-on-exit",
+  "manual-lifetime",
 ], optional = true }
 opentelemetry-http = { workspace = true, optional = true }
 opentelemetry-semantic-conventions = { workspace = true, optional = true }

@@ -134,6 +134,12 @@ impl TracingHandle {
                     })??;
             }
         }
+        #[cfg(feature = "tracy")]
+        {
+            if tracing_tracy::client::Client::is_running() {
+                unsafe { tracing_tracy::client::sys::___tracy_shutdown_profiler() }
+            }
+        }
 
         Ok(())
     }
@@ -306,9 +312,10 @@ impl TracingBuilder {
         #[cfg(feature = "tracy")]
         let layered = Layer::and_then(
             layered,
-            self.tracers
-                .contains(Tracer::Tracy)
-                .then(TracyLayer::default),
+            self.tracers.contains(Tracer::Tracy).then(|| {
+                let _client = tracing_tracy::client::Client::start();
+                TracyLayer::default()
+            }),
         );
 
         let layered = layered.with_filter(construct_filter(self.level.to_owned()));

@@ -162,7 +162,7 @@ tracing-opentelemetry = "0.31.0"
 tracing-subscriber = "0.3.18"
 tracing-test = "0.2.5"
 # https://github.com/NixOS/nixpkgs/pull/428369, tracy from nixpkgs can't open more recent traces
-tracing-tracy = "=0.11.1"
+tracing-tracy = "=0.11.4"
 trybuild = "1.0.99"
 url = "2.5.2"
 vhost = "=0.6.1"

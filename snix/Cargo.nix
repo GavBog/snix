@@ -21491,7 +21491,10 @@ rec {
             name = "tracing-tracy";
             packageId = "tracing-tracy";
             optional = true;
-            features = [ "flush-on-exit" ];
+            features = [
+              "flush-on-exit"
+              "manual-lifetime"
+            ];
           }
         ];
         features = {
@@ -25707,9 +25710,9 @@ rec {
       };
       "tracing-tracy" = rec {
         crateName = "tracing-tracy";
-        version = "0.11.1";
+        version = "0.11.4";
         edition = "2021";
-        sha256 = "1ziz1msy34h1xak7v72xg7d5n2fmvr7chx4q7wkf8f349n3zirwv";
+        sha256 = "1fp4asppg1kzz44ww4961xgd1nfj1gf57ajcwklhyvm9mx91iahf";
         libName = "tracing_tracy";
         authors = [
           "Simonas Kazlauskas <tracing-tracy@kazlauskas.me>"
@@ -25742,6 +25745,7 @@ rec {
           "callstack-inlines" = [ "client/callstack-inlines" ];
           "code-transfer" = [ "client/code-transfer" ];
           "context-switch-tracing" = [ "client/context-switch-tracing" ];
+          "debuginfod" = [ "client/debuginfod" ];
           "default" = [
             "enable"
             "system-tracing"
@@ -25763,6 +25767,7 @@ rec {
           "sampling" = [ "client/sampling" ];
           "system-tracing" = [ "client/system-tracing" ];
           "timer-fallback" = [ "client/timer-fallback" ];
+          "verify" = [ "client/verify" ];
         };
         resolvedDefaultFeatures = [
           "broadcast"
@@ -25772,6 +25777,7 @@ rec {
           "default"
           "enable"
           "flush-on-exit"
+          "manual-lifetime"
           "sampling"
           "system-tracing"
         ];
@@ -25841,6 +25847,7 @@ rec {
           "context-switch-tracing"
           "enable"
           "flush-on-exit"
+          "manual-lifetime"
           "sampling"
           "system-tracing"
         ];
@@ -25885,8 +25892,10 @@ rec {
           "callstack-inlines"
           "code-transfer"
           "context-switch-tracing"
+          "delayed-init"
           "enable"
           "flush-on-exit"
+          "manual-lifetime"
           "sampling"
           "system-tracing"
         ];
