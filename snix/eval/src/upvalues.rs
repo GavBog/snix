@@ -34,14 +34,14 @@ pub struct Upvalues {
     /// The upvalues of dynamic identifiers, if any exist.  This
     /// consists of the value passed to each enclosing `with val;`,
     /// from outermost to innermost.
-    with_stack: Option<Vec<Value>>,
+    with_stack: Vec<Value>,
 }
 
 impl Upvalues {
     pub fn with_capacity(count: usize) -> Self {
         Upvalues {
             static_upvalues: Vec::with_capacity(count),
-            with_stack: None,
+            with_stack: vec![],
         }
     }
 
@@ -52,28 +52,21 @@ impl Upvalues {
 
     /// Set the captured with stack.
     pub fn set_with_stack(&mut self, with_stack: Vec<Value>) {
-        self.with_stack = Some(with_stack);
+        self.with_stack = with_stack;
     }
 
     /// Retrieve a single value from the `with_stack`. Returns `None`
     /// if the stack doesn't exist or the value isn't in range.
     pub fn get_from_with_stack(&self, index: usize) -> Option<Value> {
-        if let Some(with_stack) = &self.with_stack {
-            with_stack.get(index).cloned()
-        } else {
-            None
-        }
+        self.with_stack.get(index).cloned()
     }
 
-    pub fn with_stack(&self) -> Option<&Vec<Value>> {
+    pub fn with_stack(&self) -> &Vec<Value> {
         self.with_stack.as_ref()
     }
 
     pub fn with_stack_len(&self) -> usize {
-        match &self.with_stack {
-            None => 0,
-            Some(stack) => stack.len(),
-        }
+        self.with_stack.len()
     }
 
     /// Resolve deferred upvalues from the provided stack slice,

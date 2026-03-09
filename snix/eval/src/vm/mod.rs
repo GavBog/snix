@@ -1245,12 +1245,9 @@ where
         if capture_with {
             // Start the captured with_stack off of the
             // current call frame's captured with_stack, ...
-            let mut captured_with_stack = frame
-                .upvalues
-                .with_stack()
-                .cloned()
-                // ... or make an empty one if there isn't one already.
-                .unwrap_or_else(|| Vec::with_capacity(self.with_stack.len()));
+            let mut captured_with_stack = frame.upvalues.with_stack().clone();
+            // and extend it to a size that fits the current with_stack
+            captured_with_stack.reserve_exact(self.with_stack.len());
 
             for idx in &self.with_stack {
                 captured_with_stack.push(self.stack[*idx].clone());
