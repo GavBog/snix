@@ -19,7 +19,6 @@ use serde_json::json;
 use std::{
     cmp::Ordering,
     ffi::OsStr,
-    ops::DerefMut,
     path::{Path, PathBuf},
     rc::Rc,
 };
@@ -497,23 +496,22 @@ where
                         _ => panic!("compiler bug: non-blueprint in blueprint slot"),
                     };
 
-                    let upvalue_count = frame.read_uvarint();
-
+                    let upvalues = self.populate_upvalues(&mut frame)?;
                     debug_assert!(
-                        (upvalue_count >> 1) == blueprint.upvalue_count as u64,
+                        upvalues.len() == blueprint.upvalue_count,
                         "TODO: new upvalue count not correct",
                     );
 
                     let thunk = if op == Op::ThunkClosure {
                         debug_assert!(
-                            (((upvalue_count >> 1) > 0) || (upvalue_count & 0b1 == 1)),
+                            ((upvalues.len() > 0) || (upvalues.with_stack_len() > 0)),
                             "OpThunkClosure should not be called for plain lambdas",
                         );
                         Thunk::new_closure(blueprint)
                     } else {
                         Thunk::new_suspended(blueprint, frame.current_span())
                     };
-                    let upvalues = thunk.upvalues_mut();
+
                     self.stack.push(Value::Thunk(thunk.clone()));
 
                     // From this point on we internally mutate the
@@ -521,7 +519,7 @@ where
                     // already in its stack slot, which means that it
                     // can capture itself as an upvalue for
                     // self-recursion.
-                    self.populate_upvalues(&mut frame, upvalue_count, upvalues)?;
+                    *thunk.upvalues_mut() = upvalues;
                 }
 
                 Op::Force => {
@@ -600,20 +598,18 @@ where
                         _ => panic!("compiler bug: non-blueprint in blueprint slot"),
                     };
 
-                    let upvalue_count = frame.read_uvarint();
-
+                    let upvalues = self.populate_upvalues(&mut frame)?;
+                    let upvalue_count = upvalues.len();
                     debug_assert!(
-                        (upvalue_count >> 1) == blueprint.upvalue_count as u64,
+                        upvalue_count == blueprint.upvalue_count,
                         "TODO: new upvalue count not correct in closure",
                     );
 
                     debug_assert!(
-                        ((upvalue_count >> 1) > 0 || (upvalue_count & 0b1 == 1)),
+                        (upvalue_count > 0 || upvalues.with_stack_len() > 0),
                         "OpClosure should not be called for plain lambdas"
                     );
 
-                    let mut upvalues = Upvalues::with_capacity(blueprint.upvalue_count);
-                    self.populate_upvalues(&mut frame, upvalue_count, &mut upvalues)?;
                     self.stack
                         .push(Value::Closure(Rc::new(Closure::new_with_upvalues(
                             Rc::new(upvalues),
@@ -1232,17 +1228,16 @@ where
     ///
     /// See the closely tied function `emit_upvalue_data` in the compiler
     /// implementation for details on the argument processing.
-    fn populate_upvalues(
-        &mut self,
-        frame: &mut CallFrame,
-        count: u64,
-        mut upvalues: impl DerefMut<Target = Upvalues>,
-    ) -> EvalResult<()> {
-        // Determine whether to capture the with stack, and then shift the
-        // actual count of upvalues back.
-        let capture_with = count & 0b1 == 1;
-        let count = count >> 1;
-        if capture_with {
+    fn populate_upvalues(&self, frame: &mut CallFrame) -> EvalResult<Upvalues> {
+        // TODO: refactor this into a nicer type that does the bit shifting for us
+        let (count, capture_with) = {
+            let raw = frame.read_uvarint();
+            (raw >> 1, raw & 0b1 == 1)
+        };
+
+        let mut static_upvalues = vec![];
+
+        let with_stack = if capture_with {
             // Start the captured with_stack off of the
             // current call frame's captured with_stack, ...
             let mut captured_with_stack = frame.upvalues.with_stack().clone();
@@ -1253,8 +1248,10 @@ where
                 captured_with_stack.push(self.stack[*idx].clone());
             }
 
-            upvalues.deref_mut().set_with_stack(captured_with_stack);
-        }
+            captured_with_stack
+        } else {
+            vec![]
+        };
 
         for _ in 0..count {
             let pos = Position(frame.read_uvarint());
@@ -1265,6 +1262,7 @@ where
                 let val = match self.stack.get(idx) {
                     Some(val) => val.clone(),
                     None => {
+                        // TODO: maybe panic here?
                         return frame.error(
                             self,
                             ErrorKind::SnixBug {
@@ -1279,24 +1277,17 @@ where
                     }
                 };
 
-                upvalues.deref_mut().push(val);
-                continue;
+                static_upvalues.push(val);
+            } else if let Some(idx) = pos.runtime_deferred_local() {
+                static_upvalues.push(Value::DeferredUpvalue(idx));
+            } else if let Some(idx) = pos.runtime_upvalue_index() {
+                static_upvalues.push(frame.upvalue(idx).clone());
+            } else {
+                panic!("Snix bug: invalid capture position emitted")
             }
-
-            if let Some(idx) = pos.runtime_deferred_local() {
-                upvalues.deref_mut().push(Value::DeferredUpvalue(idx));
-                continue;
-            }
-
-            if let Some(idx) = pos.runtime_upvalue_index() {
-                upvalues.deref_mut().push(frame.upvalue(idx).clone());
-                continue;
-            }
-
-            panic!("Snix bug: invalid capture position emitted")
         }
 
-        Ok(())
+        Ok(Upvalues::from_raw_parts(static_upvalues, with_stack))
     }
 }
 

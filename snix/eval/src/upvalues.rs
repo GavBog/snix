@@ -45,14 +45,17 @@ impl Upvalues {
         }
     }
 
-    /// Push an upvalue at the end of the upvalue list.
-    pub fn push(&mut self, value: Value) {
-        self.static_upvalues.push(value);
+    /// Construct an [Upvalues] instance from the raw static and with stacks.
+    pub fn from_raw_parts(static_upvalues: Vec<Value>, with_stack: Vec<Value>) -> Self {
+        Self {
+            static_upvalues,
+            with_stack,
+        }
     }
 
-    /// Set the captured with stack.
-    pub fn set_with_stack(&mut self, with_stack: Vec<Value>) {
-        self.with_stack = with_stack;
+    /// Get the number of static upvalues
+    pub fn len(&self) -> usize {
+        self.static_upvalues.len()
     }
 
     /// Retrieve a single value from the `with_stack`. Returns `None`
@@ -67,6 +70,10 @@ impl Upvalues {
 
     pub fn with_stack_len(&self) -> usize {
         self.with_stack.len()
+    }
+
+    pub fn into_static_upvalues(self) -> Vec<Value> {
+        self.static_upvalues
     }
 
     /// Resolve deferred upvalues from the provided stack slice,
