@@ -10509,7 +10509,6 @@ rec {
           }
         ];
         features = {
-          "default" = [ "otlp" ];
           "otlp" = [ "dep:tower-otel-http-metrics" ];
         };
         resolvedDefaultFeatures = [

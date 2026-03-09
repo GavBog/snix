@@ -27,7 +27,7 @@ tower-otel-http-metrics = { workspace = true, features = [
 tracing.workspace = true
 
 [features]
-default = ["otlp"]
+default = []
 otlp = ["dep:tower-otel-http-metrics"]
 
 [dev-dependencies]
