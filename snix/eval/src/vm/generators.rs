@@ -426,15 +426,22 @@ where
                         }
 
                         VMRequest::PathImport(path) => {
-                            let imported = self
-                                .io_handle
-                                .as_ref()
-                                .import_path(&path)
-                                .map_err(|e| ErrorKind::IO {
-                                    path: Some(path),
-                                    error: e.into(),
-                                })
-                                .with_span(span, self)?;
+                            let imported = if let Some(p) = self.path_import_cache.get(&path) {
+                                p.to_owned()
+                            } else {
+                                let imported = self
+                                    .io_handle
+                                    .as_ref()
+                                    .import_path(&path)
+                                    .map_err(|e| ErrorKind::IO {
+                                        path: Some(path.to_owned()),
+                                        error: e.into(),
+                                    })
+                                    .with_span(span, self)?;
+
+                                self.path_import_cache.insert(path, imported.clone());
+                                imported
+                            };
 
                             message = VMResponse::Path(imported);
                         }

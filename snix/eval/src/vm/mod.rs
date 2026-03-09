@@ -275,6 +275,19 @@ impl ImportCache {
     }
 }
 
+/// Path import cache, mapping absolute file paths to paths in the store.
+#[derive(Default)]
+struct PathImportCache(FxHashMap<PathBuf, PathBuf>);
+impl PathImportCache {
+    fn get(&self, path: impl AsRef<Path>) -> Option<PathBuf> {
+        self.0.get(path.as_ref()).cloned()
+    }
+
+    fn insert(&mut self, path: PathBuf, imported_path: PathBuf) -> Option<PathBuf> {
+        self.0.insert(path, imported_path)
+    }
+}
+
 struct VM<'o, IO> {
     /// VM's frame stack, representing the execution contexts the VM is working
     /// through. Elements are usually pushed when functions are called, or
@@ -299,6 +312,10 @@ struct VM<'o, IO> {
     /// they compile to. Note that this reuses thunks, too!
     // TODO: should probably be based on a file hash
     pub import_cache: ImportCache,
+
+    /// Path import cache, mapping absolute file paths to paths in the store.
+    // TODO: should probably be based on a file hash
+    path_import_cache: PathImportCache,
 
     /// Data structure holding all source code evaluated in this VM,
     /// used for pretty error reporting.
@@ -378,6 +395,7 @@ where
             with_stack: vec![],
             warnings: vec![],
             import_cache: Default::default(),
+            path_import_cache: Default::default(),
             try_eval_frames: vec![],
         }
     }
