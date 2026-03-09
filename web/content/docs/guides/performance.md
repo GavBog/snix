@@ -107,8 +107,8 @@ Unfortunately, while it seems to be a very powerful tool, Tracy doesn't seem to
 work too well with the async ecosystem, so it might be of limited in only very
 little scenarios.
 
-The `fibers` feature might change this, but we didn't really investigate a lot
-so far. Help welcome!
+The `fibers` feature [might change this][tracy-fibers-poc],
+but it seems to require more work upstream to nicely integrate with tokio.
 {{</callout>}}
 
 ## Benchmarking
@@ -145,4 +145,5 @@ If this is something that piques your interest, reach out - Help welcome!
 [otlp-docs]: https://docs.rs/opentelemetry-otlp/latest/opentelemetry_otlp/
 [Tracy]: https://github.com/wolfpld/tracy
 [tracy-important-information]: https://docs.rs/tracing-tracy/latest/tracing_tracy/#important-note
+[tracy-fibers-poc]: https://github.com/nagisa/rust_tracy_client/pull/144
 [criterion]: https://github.com/bheisler/criterion.rs
