@@ -3,7 +3,7 @@
 {
   age.secrets.binary-cache-key.file = depot.ops.secrets."binary-cache-key.age";
 
-  services.harmonia = {
+  services.harmonia.cache = {
     enable = true;
     signKeyPaths = [ config.age.secrets.binary-cache-key.path ];
     # Set priority to be slightly lower than cache.nixos.org.

@@ -60,7 +60,7 @@ in
     };
   };
   services.resolved.enable = true;
-  services.resolved.dnssec = "false";
+  services.resolved.settings.Resolve.DNSSEC = false;
   systemd.network.networks = {
     "10-uplink" = {
       matchConfig.Name = "en* eth*";

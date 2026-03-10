@@ -1,4 +1,4 @@
-{ pkgs, depot, ... }:
+{ pkgs, ... }:
 
 pkgs.mkShell {
   name = "snix-rust-dev-env";
@@ -9,12 +9,11 @@ pkgs.mkShell {
       # See: https://github.com/flamegraph-rs/flamegraph/issues/341#issuecomment-2483294165
       perf = (
         pkgs.perf.override ({
-          binutils-unwrapped = pkgs.writeShellScriptBin "addr2line" "exec ${depot.third_party.addr2line}/bin/addr2line \"$@\"";
+          binutils-unwrapped = pkgs.writeShellScriptBin "addr2line" "exec ${pkgs.rust-addr2line}/bin/addr2line \"$@\"";
         })
       );
     in
     [
-      depot.third_party.addr2line
       pkgs.buf
       pkgs.cargo
       pkgs.cargo-machete
@@ -32,6 +31,7 @@ pkgs.mkShell {
       pkgs.mdbook-d2
       pkgs.mdbook-plantuml
       pkgs.pkg-config
+      pkgs.rust-addr2line
       pkgs.rust-analyzer
       pkgs.rustc
       pkgs.rustfmt

@@ -72,12 +72,12 @@ in
   # This shell can be entered with e.g. `mg shell //snix:shell`.
   # This is a separate file, so it can be used individually in the snix josh
   # workspace too.
-  shell = (import ./shell.nix { inherit depot pkgs; });
+  shell = (import ./shell.nix { inherit pkgs; });
 
   # Shell, but with tools necessary to run the integration tests
   shell-integration = (
     import ./shell.nix {
-      inherit depot pkgs;
+      inherit pkgs;
       withIntegration = true;
     }
   );

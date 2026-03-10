@@ -123,6 +123,7 @@ in
     enable = true;
 
     settings = {
+      security.secret_key = "SW2YcwTIb9zpOOhoPsMm";
       server = {
         protocol = "socket";
         socket = "/run/grafana/web.sock";
