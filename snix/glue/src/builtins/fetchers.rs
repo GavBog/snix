@@ -240,6 +240,6 @@ pub(crate) mod fetcher_builtins {
             }
         }
 
-        Ok(Value::Attrs(Box::new(attrs.into())))
+        Ok(Value::Attrs(attrs.into()))
     }
 }

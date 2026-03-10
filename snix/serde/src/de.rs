@@ -389,7 +389,7 @@ impl<'de> de::Deserializer<'de> for NixDeserializer {
 
             // an attribute set however represents an externally
             // tagged enum with content
-            Value::Attrs(attrs) => visitor.visit_enum(Enum(*attrs)),
+            Value::Attrs(attrs) => visitor.visit_enum(Enum(attrs)),
 
             _ => Err(unexpected(name, &self.value)),
         }

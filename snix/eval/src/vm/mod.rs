@@ -759,7 +759,7 @@ where
                     self(rhs, lhs) => {
                         let rhs = rhs.to_attrs().with_span(&frame, self)?;
                         let lhs = lhs.to_attrs().with_span(&frame, self)?;
-                        self.stack.push(Value::attrs(lhs.update(*rhs)))
+                        self.stack.push(Value::attrs(lhs.update(rhs)))
                     }
                 },
 

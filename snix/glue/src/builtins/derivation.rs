@@ -481,7 +481,7 @@ pub(crate) mod derivation_builtins {
             .map_err(DerivationError::InvalidDerivation)?;
 
         // Assemble the attrset to return from this builtin.
-        let out = Value::Attrs(Box::new(NixAttrs::from_iter(
+        let out = Value::Attrs(NixAttrs::from_iter(
             drv.outputs
                 .iter()
                 .map(|(name, output)| {
@@ -504,7 +504,7 @@ pub(crate) mod derivation_builtins {
                         drv_path.to_absolute_path(),
                     ),
                 ))),
-        )));
+        ));
 
         // If the derivation is a fake derivation (builtin:fetchurl),
         // synthesize a [Fetch] and add it there, too.

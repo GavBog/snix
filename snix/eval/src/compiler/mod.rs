@@ -1475,7 +1475,7 @@ impl Compiler<'_, '_> {
                     ("column", Value::Integer((pos.column + 1) as i64)),
                     ("file", Value::String(NixString::from(abs_path))),
                 ]);
-                Value::Attrs(Box::new(attrs))
+                Value::Attrs(attrs)
             }
         };
 

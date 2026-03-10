@@ -36,7 +36,7 @@ mod mock_builtins {
             .into_iter(),
         ));
 
-        Ok(Value::Attrs(Box::new(attrs)))
+        Ok(Value::Attrs(attrs))
     }
 }
 

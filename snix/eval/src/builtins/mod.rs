@@ -1529,7 +1529,7 @@ mod pure_builtins {
         for set in list.to_list()? {
             let set = generators::request_force(&co, set).await;
             let set = set.to_attrs()?;
-            for (key, val) in *set {
+            for (key, val) in set {
                 match merged.entry(key) {
                     Entry::Occupied(mut occupied) => occupied.get_mut().push(val),
                     Entry::Vacant(vacant) => {

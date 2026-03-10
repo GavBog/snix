@@ -50,7 +50,7 @@ pub enum Value {
 
     #[serde(skip)]
     Path(Box<PathBuf>),
-    Attrs(Box<NixAttrs>),
+    Attrs(NixAttrs),
     List(NixList),
 
     #[serde(skip)]
@@ -224,7 +224,7 @@ pub enum PointerEquality {
 impl Value {
     /// Construct a [`Value::Attrs`] from a [`NixAttrs`].
     pub fn attrs(attrs: NixAttrs) -> Self {
-        Self::Attrs(Box::new(attrs))
+        Self::Attrs(attrs)
     }
 
     /// Deeply forces a value, traversing e.g. lists and attribute sets and forcing
@@ -712,7 +712,7 @@ impl Value {
         (*s).clone()
     );
     gen_cast!(to_path, Box<PathBuf>, "path", Value::Path(p), p.clone());
-    gen_cast!(to_attrs, Box<NixAttrs>, "set", Value::Attrs(a), a.clone());
+    gen_cast!(to_attrs, NixAttrs, "set", Value::Attrs(a), a.clone());
     gen_cast!(to_list, NixList, "list", Value::List(l), l.clone());
     gen_cast!(
         as_closure,

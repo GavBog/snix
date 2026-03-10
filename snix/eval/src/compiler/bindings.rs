@@ -656,7 +656,7 @@ impl Compiler<'_, '_> {
         if count == 0 {
             // still need an attrset to exist, but it is empty.
             if kind.is_attrs() {
-                self.emit_constant(Value::Attrs(Box::new(NixAttrs::empty())), node);
+                self.emit_constant(Value::Attrs(NixAttrs::empty()), node);
                 return;
             }
 
