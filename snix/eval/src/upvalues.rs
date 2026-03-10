@@ -11,6 +11,44 @@ use std::ops::Index;
 
 use crate::{Value, opcode::UpvalueIdx};
 
+/// Wrapper type to assist with assembling [Upvalues].
+/// The first bit is used to signify that data for a `with` scope is
+/// being used, the other 63 bits define the upvalue count.
+pub struct UpvalueData(u64);
+
+impl UpvalueData {
+    #[inline]
+    pub fn new(count: usize, captures_with: bool) -> Self {
+        debug_assert!(
+            count < (i64::MAX as usize),
+            "upvalue count exceeds storage size"
+        );
+
+        let raw = ((count as u64) << 1) | (if captures_with { 1 } else { 0 });
+        Self(raw)
+    }
+
+    #[inline]
+    pub fn from_raw(value: u64) -> Self {
+        Self(value)
+    }
+
+    #[inline]
+    pub fn count(&self) -> usize {
+        (self.0 as usize) >> 1
+    }
+
+    #[inline]
+    pub fn captures_with(&self) -> bool {
+        self.0 & 0b1 == 1
+    }
+
+    #[inline]
+    pub fn into_raw(self) -> u64 {
+        self.0
+    }
+}
+
 /// Structure for carrying upvalues of an UpvalueCarrier.  The
 /// implementation of this struct encapsulates the logic for
 /// capturing and accessing upvalues.
@@ -92,5 +130,33 @@ impl Index<UpvalueIdx> for Upvalues {
 
     fn index(&self, index: UpvalueIdx) -> &Self::Output {
         &self.static_upvalues[index.0]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::UpvalueData;
+    #[test]
+    fn test_upvalue() {
+        assert_eq!(
+            std::mem::size_of::<UpvalueData>(),
+            std::mem::size_of::<usize>(),
+            "The size of the UpvalueData should match the size of usize/u64."
+        );
+        let value = UpvalueData::new(456, false);
+        assert!(!value.captures_with());
+        assert_eq!(value.count(), 456);
+
+        let value = UpvalueData::from_raw(value.into_raw());
+        assert!(!value.captures_with());
+        assert_eq!(value.count(), 456);
+
+        let value = UpvalueData::new(1024, true);
+        assert!(value.captures_with());
+        assert_eq!(value.count(), 1024);
+
+        let value = UpvalueData::from_raw(value.into_raw());
+        assert!(value.captures_with());
+        assert_eq!(value.count(), 1024);
     }
 }

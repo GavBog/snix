@@ -32,6 +32,7 @@ use crate::errors::{Error, ErrorKind, EvalResult};
 use crate::observer::CompilerObserver;
 use crate::opcode::{CodeIdx, Op, Position, UpvalueIdx};
 use crate::spans::ToSpan;
+use crate::upvalues::UpvalueData;
 use crate::value::{Closure, Formals, Lambda, NixAttrs, Thunk, Value};
 use crate::warnings::{EvalWarning, WarningKind};
 use crate::{CoercionKind, NixString};
@@ -1429,11 +1430,8 @@ impl Compiler<'_, '_> {
     ) {
         // Push the count of arguments to be expected, with one bit set to
         // indicate whether the with stack needs to be captured.
-        let mut count = (upvalues.len() as u64) << 1;
-        if capture_with {
-            count |= 1;
-        }
-        self.push_uvarint(count);
+        let data = UpvalueData::new(upvalues.len(), capture_with);
+        self.push_uvarint(data.into_raw());
 
         for upvalue in upvalues {
             match upvalue.kind {

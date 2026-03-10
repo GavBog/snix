@@ -34,7 +34,7 @@ use crate::{
     nix_search_path::NixSearchPath,
     observer::RuntimeObserver,
     opcode::{CodeIdx, Op, Position, UpvalueIdx},
-    upvalues::Upvalues,
+    upvalues::{UpvalueData, Upvalues},
     value::{
         Builtin, BuiltinResult, Closure, CoercionKind, Lambda, NixAttrs, NixContext, NixList,
         PointerEquality, Thunk, Value, canon_path,
@@ -1229,11 +1229,9 @@ where
     /// See the closely tied function `emit_upvalue_data` in the compiler
     /// implementation for details on the argument processing.
     fn populate_upvalues(&self, frame: &mut CallFrame) -> EvalResult<Upvalues> {
-        // TODO: refactor this into a nicer type that does the bit shifting for us
-        let (count, capture_with) = {
-            let raw = frame.read_uvarint();
-            (raw >> 1, raw & 0b1 == 1)
-        };
+        let data = UpvalueData::from_raw(frame.read_uvarint());
+        let count = data.count();
+        let capture_with = data.captures_with();
 
         let mut static_upvalues = vec![];
 
