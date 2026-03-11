@@ -10,7 +10,7 @@ use crate::{B3Digest, Directory, Node};
 use futures::{Stream, StreamExt};
 use tracing::Level;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet, hash_set};
 use tracing::instrument;
 
 mod error;
@@ -51,6 +51,10 @@ where
     let mut directories: HashMap<PathBuf, Directory> = HashMap::default();
     let mut maybe_directory_putter: Option<Box<dyn DirectoryPutter>> = None;
 
+    // Directory digests we already sent out. When ingesting a tree containing two identical subtrees,
+    // we don't want to send these directories twice.
+    let mut sent_directories: HashSet<B3Digest> = HashSet::new();
+
     let root_node = loop {
         let entry = entries
             .next()
@@ -73,24 +77,30 @@ where
                 let directory_size = directory.size();
                 let directory_digest = directory.digest();
 
-                // Use the directory_putter to upload the directory.
-                // If we don't have one yet (as that's the first one to upload),
-                // initialize the putter.
+                // Get a directory putter, or create a new one if this is the first directory uploaded.
                 let directory_putter = maybe_directory_putter
                     .get_or_insert_with(|| directory_service.put_multiple_start());
 
-                match directory_putter.put(directory).await {
-                    Ok(()) => (
-                        path,
-                        Node::Directory {
-                            digest: directory_digest,
-                            size: directory_size,
-                        },
-                    ),
-                    Err(e) => {
+                // Use the directory_putter to upload the directory, if we didn't upload it yet.
+                if let hash_set::Entry::Vacant(vacant_entry) =
+                    sent_directories.entry(directory_digest)
+                {
+                    // upload, ...
+                    if let Err(e) = directory_putter.put(directory).await {
                         return Err(IngestionError::UploadDirectoryError(path, e));
                     }
+                    // and mark in sent_directories.
+                    vacant_entry.insert();
                 }
+
+                // return the Node::Directory, so it can be used in its parents.
+                (
+                    path,
+                    Node::Directory {
+                        digest: directory_digest,
+                        size: directory_size,
+                    },
+                )
             }
             IngestionEntry::Symlink { path, target } => {
                 let target: crate::SymlinkTarget = bytes::Bytes::from(target)
