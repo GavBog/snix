@@ -15,6 +15,7 @@ use snix_store::nar::NarCalculationService;
 use snix_store::utils::{ServiceUrls, ServiceUrlsGrpc};
 use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::io::AsyncReadExt;
 use tonic::transport::Server;
 use tower::ServiceBuilder;
 use tower_http::classify::{GrpcCode, GrpcErrorsAsFailures, SharedClassifier};
@@ -368,13 +369,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         } => {
             let (blob_service, directory_service, path_info_service, _nar_calculation_service) =
                 snix_store::utils::construct_services(service_addrs).await?;
+
             // Parse the file at reference_graph_path.
-            let reference_graph_json = if &reference_graph_path == "-" {
-                let mut writer: Vec<u8> = vec![];
-                tokio::io::copy(&mut tokio::io::stdin(), &mut writer).await?;
-                writer
-            } else {
-                tokio::fs::read(&reference_graph_path).await?
+            let reference_graph_json = {
+                let mut source = snix_cli::reader_for_path(reference_graph_path).await?;
+                let mut buf = Vec::new();
+                source.read_to_end(&mut buf).await?;
+                buf
             };
 
             /// Ad-hoc definition for the fields expected in the JSON.

@@ -10,6 +10,9 @@ name = "snix"
 [dependencies]
 clap = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = [
+  "fs",
+  "io-std",
+  "io-util",
   "signal",
   "rt-multi-thread",
   "process",

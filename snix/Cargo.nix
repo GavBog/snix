@@ -19778,6 +19778,9 @@ rec {
             name = "tokio";
             packageId = "tokio";
             features = [
+              "fs"
+              "io-std"
+              "io-util"
               "signal"
               "rt-multi-thread"
               "process"

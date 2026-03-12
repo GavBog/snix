@@ -81,3 +81,19 @@ pub async fn shutdown_signal() {
 
     debug!("signal received, shutting down…");
 }
+
+/// Opens a given path, with special-casing for `-` as stdin.
+pub async fn reader_for_path(
+    path: impl AsRef<std::path::Path>,
+) -> std::io::Result<Box<dyn tokio::io::AsyncBufRead + Unpin + Send>> {
+    use tokio::io::BufReader;
+
+    let path = path.as_ref();
+    if path == "-" {
+        Ok(Box::new(BufReader::new(tokio::io::stdin())) as Box<_>)
+    } else {
+        let file = tokio::fs::File::open(path).await?;
+        let reader = BufReader::new(file);
+        Ok(Box::new(reader) as Box<_>)
+    }
+}
