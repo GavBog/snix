@@ -79,7 +79,11 @@ in
 
   services.nar-bridge = {
     enable = true;
-    enableOTLP = true;
+    extraArgs = [
+      "--tracer"
+      "otlp"
+    ];
+    package = depot.snix.cli.nar-bridge.with-features-xp-store-composition-cli-otlp;
 
     settings = {
       blobservices = {

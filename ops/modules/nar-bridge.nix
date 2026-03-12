@@ -9,8 +9,6 @@
 let
   cfg = config.services.nar-bridge;
 
-  package = depot.snix.cli.nar-bridge.with-features-xp-store-composition-cli-otlp;
-
   storeCompositionFormat = pkgs.formats.toml { };
 
   storeCompositionFile = storeCompositionFormat.generate "store-composition.toml" cfg.settings;
@@ -20,10 +18,6 @@ let
     "sd-listen"
     "--experimental-store-composition"
     storeCompositionFile
-  ]
-  ++ lib.optionals cfg.enableOTLP [
-    "--tracer"
-    "otlp"
   ];
 in
 {
@@ -31,7 +25,17 @@ in
     services.nar-bridge = {
       enable = lib.mkEnableOption "nar-bridge service";
 
-      enableOTLP = lib.mkEnableOption "support for OpenTelemetry";
+      extraArgs = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        description = ''
+          List of additional command line arguments to pass to nar-bridge.
+        '';
+      };
+
+      package =
+        lib.mkPackageOption depot "snix.cli.nar-bridge.with-features-xp-store-composition-cli"
+          { };
 
       settings = lib.mkOption {
         type = storeCompositionFormat.type;
@@ -67,7 +71,7 @@ in
       wantedBy = [ "multi-user.target" ];
       environment.OTEL_SERVICE_NAME = "snix.nar-bridge";
       serviceConfig = {
-        ExecStart = "${package}/bin/snix-nar-bridge ${utils.escapeSystemdExecArgs args}";
+        ExecStart = "${cfg.package}/bin/snix-nar-bridge ${utils.escapeSystemdExecArgs args}";
 
         Restart = "always";
         RestartSec = "10";
