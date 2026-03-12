@@ -20131,6 +20131,7 @@ rec {
           {
             name = "mimalloc";
             packageId = "mimalloc";
+            optional = true;
           }
           {
             name = "rand";
@@ -20213,7 +20214,11 @@ rec {
           }
         ];
         features = {
-          "default" = [ "otlp" ];
+          "default" = [
+            "otlp"
+            "mimalloc"
+          ];
+          "mimalloc" = [ "dep:mimalloc" ];
           "otlp" = [ "snix-tracing/otlp" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracing-tracy" = [ "snix-tracing/tracy" ];
@@ -20221,6 +20226,7 @@ rec {
         };
         resolvedDefaultFeatures = [
           "default"
+          "mimalloc"
           "otlp"
           "tracing-chrome"
           "tracing-tracy"

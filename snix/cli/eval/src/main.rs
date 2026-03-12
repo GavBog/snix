@@ -1,4 +1,5 @@
 use clap::Parser;
+#[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
 use snix_cli_eval::args::Args;
 use snix_cli_eval::repl::Repl;
@@ -10,6 +11,7 @@ use std::io::Write;
 use std::rc::Rc;
 use std::{fs, path::PathBuf};
 
+#[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 

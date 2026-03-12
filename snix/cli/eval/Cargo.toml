@@ -27,7 +27,7 @@ tokio.workspace = true
 tracing.workspace = true
 tracing-indicatif.workspace = true
 rustc-hash.workspace = true
-mimalloc.workspace = true
+mimalloc = { workspace = true, optional = true }
 wu-manber.workspace = true
 url.workspace = true
 rand = "0.8.5"
@@ -36,7 +36,8 @@ rand = "0.8.5"
 expect-test.workspace = true
 
 [features]
-default = ["otlp"]
+default = ["otlp", "mimalloc"]
+mimalloc = ["dep:mimalloc"]
 otlp = ["snix-tracing/otlp"]
 tracing-chrome = ["snix-tracing/chrome"]
 tracing-tracy = ["snix-tracing/tracy"]
