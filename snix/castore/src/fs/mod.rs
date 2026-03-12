@@ -452,18 +452,19 @@ where
             let (parent_digest, children) = self.get_directory_children(parent)?;
 
             Span::current().record("directory.digest", parent_digest.to_string());
-            // Search for that name in the list of children and return the FileAttrs.
-            // FUTUREWORK: we know children are sorted.
-            let (child_ino, _, child_node) = children
-                .into_iter()
-                .find(|(_, n, _)| n == &name)
-                .ok_or_else(|| {
+            // Search for that name in the list of children (which we know are sorted)
+            // and return the FileAttrs.
+            let idx = children
+                .binary_search_by_key(&&name, |(_, n, _)| n)
+                .map_err(|_| {
                     // Child not found, return ENOENT.
                     io::Error::from_raw_os_error(libc::ENOENT)
                 })?;
 
+            let (child_ino, _, child_node) = &children[idx];
+
             // Reply with the file attributes for the child,
-            (child_ino, Arc::new(InodeData::from_node(&child_node)))
+            (*child_ino, Arc::new(InodeData::from_node(child_node)))
         };
 
         debug!(inode_data=?&inode_data, ino=ino, "Some");
