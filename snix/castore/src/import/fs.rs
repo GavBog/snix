@@ -8,7 +8,7 @@ use std::os::unix::fs::MetadataExt;
 use std::os::unix::fs::PermissionsExt;
 use tokio::io::BufReader;
 use tokio_util::io::InspectReader;
-use tracing::{Instrument, Span, info_span, instrument};
+use tracing::{info_span, instrument};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 use walkdir::DirEntry;
 use walkdir::WalkDir;
@@ -149,15 +149,7 @@ where
             .metadata()
             .map_err(|e| Error::Stat(walkdir_direntry.path().to_path_buf(), e.into()))?;
 
-        let digest = upload_blob(blob_service, walkdir_direntry.path(), reference_scanner)
-            .instrument({
-                let span = info_span!("upload_blob", "indicatif.pb_show" = tracing::field::Empty);
-                span.pb_set_message(&format!("Uploading blob for {fs_path:?}"));
-                span.pb_set_style(&snix_tracing::PB_TRANSFER_STYLE);
-
-                span
-            })
-            .await?;
+        let digest = upload_blob(blob_service, walkdir_direntry.path(), reference_scanner).await?;
 
         Ok(IngestionEntry::Regular {
             path,
@@ -173,7 +165,7 @@ where
 }
 
 /// Uploads the file at the provided [std::path::Path] to the [BlobService].
-#[instrument(skip(blob_service, reference_scanner), fields(path), err)]
+#[instrument(skip_all, fields(path), err)]
 async fn upload_blob<BS, P>(
     blob_service: BS,
     path: impl AsRef<std::path::Path>,
@@ -183,8 +175,10 @@ where
     BS: BlobService,
     P: AsRef<[u8]>,
 {
-    let span = Span::current();
-    span.pb_start();
+    let progress_span = info_span!("upload_blobs", "indicatif.pb_show" = tracing::field::Empty);
+    progress_span.pb_set_style(&snix_tracing::PB_TRANSFER_STYLE);
+    progress_span.pb_start();
+    progress_span.pb_set_message(&format!("Uploading blob at {:?}", path.as_ref()));
 
     let file = tokio::fs::File::open(path.as_ref())
         .await
@@ -195,9 +189,9 @@ where
         .await
         .map_err(|e| Error::Stat(path.as_ref().to_path_buf(), e))?;
 
-    span.pb_set_length(metadata.len());
+    progress_span.pb_set_length(metadata.len());
     let reader = InspectReader::new(file, |d| {
-        span.pb_inc(d.len() as u64);
+        progress_span.pb_inc(d.len() as u64);
     });
 
     let mut writer = blob_service.open_write().await;
