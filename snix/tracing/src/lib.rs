@@ -25,12 +25,15 @@ use tracing_tracy::TracyLayer;
 
 pub mod propagate;
 
+/// A classical progress bar.
 pub static PB_PROGRESS_STYLE: LazyLock<ProgressStyle> = LazyLock::new(|| {
     ProgressStyle::with_template(
         "{span_child_prefix} {wide_msg} {bar:10} ({elapsed}) {pos:>7}/{len:7}",
     )
     .expect("invalid progress template")
 });
+
+/// Used for file transfers, where we know an exact number of bytes and showing a trasfer speed makes sense.
 pub static PB_TRANSFER_STYLE: LazyLock<ProgressStyle> = LazyLock::new(|| {
     ProgressStyle::with_template(
         "{span_child_prefix} {wide_msg} {binary_bytes:>7}/{binary_total_bytes:7}@{decimal_bytes_per_sec} ({elapsed}) {bar:10} "
@@ -42,6 +45,13 @@ pub static PB_SPINNER_STYLE: LazyLock<ProgressStyle> = LazyLock::new(|| {
         "{span_child_prefix}{spinner} {wide_msg} ({elapsed}) {pos:>7}/{len:7}",
     )
     .expect("invalid progress template")
+});
+
+/// Used for long-running operations without a known total.
+/// Does not show the elapsed time either.
+pub static PB_SPINNER_LONG_STYLE: LazyLock<ProgressStyle> = LazyLock::new(|| {
+    ProgressStyle::with_template("{span_child_prefix}{spinner} {wide_msg} {pos:>7}/?")
+        .expect("invalid progress template")
 });
 
 #[derive(thiserror::Error, Debug)]
