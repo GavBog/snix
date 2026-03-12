@@ -8,10 +8,7 @@ use std::os::unix::fs::MetadataExt;
 use std::os::unix::fs::PermissionsExt;
 use tokio::io::BufReader;
 use tokio_util::io::InspectReader;
-use tracing::Instrument;
-use tracing::Span;
-use tracing::info_span;
-use tracing::instrument;
+use tracing::{Instrument, Span, info_span, instrument};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 use walkdir::DirEntry;
 use walkdir::WalkDir;
@@ -49,26 +46,15 @@ where
     DS: DirectoryService,
     P2: AsRef<[u8]> + Send + Sync,
 {
-    let span = Span::current();
-
     let iter = WalkDir::new(path.as_ref())
         .follow_links(false)
         .follow_root_links(false)
         .contents_first(true)
         .into_iter();
 
-    let entries =
-        dir_entries_to_ingestion_stream(blob_service, iter, path.as_ref(), reference_scanner);
     ingest_entries(
         directory_service,
-        entries.inspect({
-            let span = span.clone();
-            move |e| {
-                if e.is_ok() {
-                    span.pb_inc(1)
-                }
-            }
-        }),
+        dir_entries_to_ingestion_stream(blob_service, iter, path.as_ref(), reference_scanner),
     )
     .await
 }
