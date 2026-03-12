@@ -82,7 +82,7 @@ where
 /// into castore.
 pub fn dir_entries_to_ingestion_stream<'a, BS, I, P>(
     blob_service: BS,
-    iter: I,
+    walkdir_direntries: I,
     root: &'a std::path::Path,
     reference_scanner: Option<&'a ReferenceScanner<P>>,
 ) -> BoxStream<'a, Result<IngestionEntry, Error>>
@@ -94,7 +94,7 @@ where
     let prefix = root.parent().unwrap_or_else(|| std::path::Path::new(""));
 
     Box::pin(
-        futures::stream::iter(iter)
+        futures::stream::iter(walkdir_direntries)
             .map(move |x| {
                 let blob_service = blob_service.clone();
                 async move {
@@ -126,7 +126,7 @@ where
 /// of the path being ingested so that the last element of the stream only has one component.
 pub async fn dir_entry_to_ingestion_entry<BS, P>(
     blob_service: BS,
-    entry: &DirEntry,
+    walkdir_direntry: &DirEntry,
     prefix: &std::path::Path,
     reference_scanner: Option<&ReferenceScanner<P>>,
 ) -> Result<IngestionEntry, Error>
@@ -134,9 +134,9 @@ where
     BS: BlobService,
     P: AsRef<[u8]>,
 {
-    let file_type = entry.file_type();
+    let file_type = walkdir_direntry.file_type();
 
-    let fs_path = entry
+    let fs_path = walkdir_direntry
         .path()
         .strip_prefix(prefix)
         .expect("Snix bug: failed to strip root path prefix");
@@ -148,8 +148,8 @@ where
     if file_type.is_dir() {
         Ok(IngestionEntry::Dir { path })
     } else if file_type.is_symlink() {
-        let target = std::fs::read_link(entry.path())
-            .map_err(|e| Error::Stat(entry.path().to_path_buf(), e))?
+        let target = std::fs::read_link(walkdir_direntry.path())
+            .map_err(|e| Error::Stat(walkdir_direntry.path().to_path_buf(), e))?
             .into_os_string()
             .into_vec();
 
@@ -159,11 +159,11 @@ where
 
         Ok(IngestionEntry::Symlink { path, target })
     } else if file_type.is_file() {
-        let metadata = entry
+        let metadata = walkdir_direntry
             .metadata()
-            .map_err(|e| Error::Stat(entry.path().to_path_buf(), e.into()))?;
+            .map_err(|e| Error::Stat(walkdir_direntry.path().to_path_buf(), e.into()))?;
 
-        let digest = upload_blob(blob_service, entry.path().to_path_buf(), reference_scanner)
+        let digest = upload_blob(blob_service, walkdir_direntry.path(), reference_scanner)
             .instrument({
                 let span = info_span!("upload_blob", "indicatif.pb_show" = tracing::field::Empty);
                 span.pb_set_message(&format!("Uploading blob for {fs_path:?}"));
