@@ -9,12 +9,14 @@ name = "snix-store"
 path = "src/main.rs"
 
 [dependencies]
+async-stream.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 futures.workspace = true
 mimalloc.workspace = true
 nix-compat = { path = "../../nix-compat", features = ["async", "serde"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+serde_with.workspace = true
 snix-castore.path = "../../castore"
 snix-cli.path = "../base"
 snix-store.path = "../../store"

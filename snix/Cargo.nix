@@ -20446,6 +20446,10 @@ rec {
         };
         dependencies = [
           {
+            name = "async-stream";
+            packageId = "async-stream";
+          }
+          {
             name = "clap";
             packageId = "clap";
             features = [
@@ -20477,6 +20481,12 @@ rec {
           {
             name = "serde_json";
             packageId = "serde_json";
+          }
+          {
+            name = "serde_with";
+            packageId = "serde_with";
+            usesDefaultFeatures = false;
+            features = [ "macros" ];
           }
           {
             name = "snix-castore";

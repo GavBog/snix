@@ -4657,12 +4657,14 @@ dependencies = [
 name = "snix-cli-store"
 version = "0.1.0"
 dependencies = [
+ "async-stream",
  "clap",
  "futures",
  "mimalloc",
  "nix-compat",
  "serde",
  "serde_json",
+ "serde_with",
  "snix-castore",
  "snix-cli",
  "snix-store",

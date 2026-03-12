@@ -3,11 +3,13 @@ use clap::Subcommand;
 
 use futures::StreamExt;
 use futures::TryStreamExt;
-use nix_compat::narinfo::SignatureRef;
-use nix_compat::nixhash::CAHash;
-use nix_compat::nixhash::NixHash;
-use nix_compat::store_path::{StorePath, StorePathRef};
+use nix_compat::store_path::StorePath;
 use nix_compat::wire::de::Error;
+use nix_compat::{
+    narinfo::Signature,
+    nixhash::{CAHash, NixHash},
+};
+use serde_with::{DefaultOnNull, serde_as};
 use snix_castore::import::fs::ingest_path;
 use snix_cli::shutdown_signal;
 use snix_store::import::path_to_name;
@@ -15,7 +17,7 @@ use snix_store::nar::NarCalculationService;
 use snix_store::utils::{ServiceUrls, ServiceUrlsGrpc};
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::io::AsyncReadExt;
+use tokio::io::{AsyncBufReadExt, AsyncReadExt};
 use tonic::transport::Server;
 use tower::ServiceBuilder;
 use tower_http::classify::{GrpcCode, GrpcErrorsAsFailures, SharedClassifier};
@@ -97,6 +99,13 @@ enum Commands {
         /// nix path-info --json --closure-size --recursive <some-path>
         /// ```
         reference_graph_path: PathBuf,
+
+        #[arg(long, env, default_value_t = false)]
+        /// If enabled, accepts newline-delimited JSON instead of a list,
+        /// and reads it in a streaming fashion.
+        jsonl: bool,
+        // FUTUREWORK: add a flag to check for references to be valid
+        // (in the sent set, or in the PathInfoService)
     },
     /// Mounts a snix-store at the given mountpoint
     #[cfg(feature = "fuse")]
@@ -366,22 +375,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Commands::Copy {
             service_addrs,
             reference_graph_path,
+            jsonl,
         } => {
             let (blob_service, directory_service, path_info_service, _nar_calculation_service) =
                 snix_store::utils::construct_services(service_addrs).await?;
 
-            // Parse the file at reference_graph_path.
-            let reference_graph_json = {
-                let mut source = snix_cli::reader_for_path(reference_graph_path).await?;
-                let mut buf = Vec::new();
-                source.read_to_end(&mut buf).await?;
-                buf
-            };
-
             /// Ad-hoc definition for the fields expected in the JSON.
             /// It is less strict than `ExportedPathInfo` (no `closureSize` field).
+            #[serde_as]
             #[derive(serde::Deserialize)]
-            struct PathMetadata<'a> {
+            struct PathMetadata {
                 #[serde(
                     rename = "narHash",
                     deserialize_with = "nix_compat::nixhash::serde::from_nix_nixbase32_or_sri"
@@ -391,96 +394,131 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 #[serde(rename = "narSize")]
                 nar_size: u64,
 
-                #[serde(borrow)]
-                pub path: StorePathRef<'a>,
+                pub path: StorePath<String>,
 
-                #[serde(borrow, skip_serializing_if = "Option::is_none")]
-                pub deriver: Option<StorePathRef<'a>>,
-
-                pub references: Vec<StorePathRef<'a>>,
-                #[serde(default, skip_serializing_if = "Vec::is_empty")]
-                pub signatures: Vec<SignatureRef<'a>>,
+                pub deriver: Option<StorePath<String>>,
+                #[serde(default)]
+                pub references: Vec<StorePath<String>>,
+                #[serde(default)]
+                #[serde_as(as = "DefaultOnNull")]
+                pub signatures: Vec<Signature<String>>,
             }
 
-            let reference_graph: Vec<PathMetadata<'_>> =
-                serde_json::from_slice(reference_graph_json.as_slice())?;
+            // The span tracking the entire operation
+            let copy_paths_span =
+                info_span!("copy_paths", "indicatif.pb_show" = tracing::field::Empty);
+            copy_paths_span.pb_set_style(if jsonl {
+                &snix_tracing::PB_SPINNER_LONG_STYLE
+            } else {
+                &snix_tracing::PB_SPINNER_STYLE
+            });
+            copy_paths_span.pb_set_message("Copying paths");
+            copy_paths_span.pb_start();
 
-            let lookups_span = info_span!(
-                "lookup pathinfos",
-                "indicatif.pb_show" = tracing::field::Empty
-            );
-            lookups_span.pb_set_length(reference_graph.len() as u64);
-            lookups_span.pb_set_style(&snix_tracing::PB_PROGRESS_STYLE);
-            lookups_span.pb_start();
+            // We need another one, as they are used inside various async closures.
+            let copy_paths_span2 = copy_paths_span.clone();
 
-            // From our reference graph, lookup all pathinfos that might exist.
-            let elems: Vec<_> = futures::stream::iter(reference_graph)
-                .map(|elem| {
-                    let path_info_service = path_info_service.clone();
-                    async move {
-                        let resp = path_info_service
-                            .get(*elem.path.digest())
+            let mut source = snix_cli::reader_for_path(reference_graph_path).await?;
+
+            // Create a stream producing io::Result<PathMetadata>.
+            let elems = async_stream::try_stream! {
+                if jsonl {
+                    // read json lines from source, emit individually
+                    let mut lines = source.lines();
+                    while let Some(line) = lines.next_line().await? {
+                        let path_metadata : PathMetadata = serde_json::from_str(line.as_str()).map_err(std::io::Error::other)?;
+                        yield path_metadata
+                    }
+                } else {
+                    // Read the entire file as a list of objects.
+                    let mut json_bytes: Vec<u8> = vec![];
+                    source.read_to_end(&mut json_bytes).await?;
+
+                    let reference_graph: Vec<PathMetadata> =
+                        serde_json::from_slice(json_bytes.as_slice()).map_err(std::io::Error::other)?;
+
+                    copy_paths_span2.pb_set_length(reference_graph.len() as u64);
+
+                    for path_metadata in reference_graph {
+                        yield path_metadata;
+                    }
+                }
+            };
+
+            elems
+                .map(|v: std::io::Result<PathMetadata>| {
+                    {
+                        async {
+                            let PathMetadata {
+                                nar_sha256,
+                                nar_size,
+                                path: store_path,
+                                deriver,
+                                references,
+                                signatures,
+                            } = v.inspect_err(|err| {
+                                warn!(?err, "failed to parse line");
+                            })?;
+
+                            let span = tracing::info_span!(
+                                "copy_path",
+                                "indicatif.pb_show" = tracing::field::Empty
+                            );
+                            span.pb_set_style(&snix_tracing::PB_SPINNER_STYLE);
+                            span.pb_set_message(&format!("Ingesting {}", &store_path.to_string()));
+                            span.pb_start();
+
+                            // skip if that path already exists
+                            if path_info_service
+                                .get(*store_path.digest())
+                                .await
+                                .map_err(std::io::Error::other)?
+                                .is_some()
+                            {
+                                debug!(path_into.store_path=%store_path, "skipped, already exists");
+                                return Ok(());
+                            }
+
+                            // Ingest the given path.
+                            let node = ingest_path::<_, _, _, &[u8]>(
+                                &blob_service,
+                                &directory_service,
+                                store_path.to_absolute_path(),
+                                None,
+                            )
+                            .instrument(span.clone())
                             .await
-                            .map(|resp| (elem, resp));
+                            .map_err(std::io::Error::other)?;
 
-                        Span::current().pb_inc(1);
-                        resp
+                            // Insert into PathInfoService.
+                            let path_info = PathInfo {
+                                store_path,
+                                node,
+                                references,
+                                nar_size,
+                                nar_sha256,
+                                signatures,
+                                deriver,
+                                ca: None,
+                            };
+
+                            path_info_service
+                                .put(path_info)
+                                .await
+                                .map_err(std::io::Error::other)?;
+
+                            drop(span);
+
+                            Ok::<_, std::io::Error>(())
+                        }
                     }
-                })
-                .buffer_unordered(50)
-                // Filter out all that are already uploaded.
-                // TODO: check if there's a better combinator for this
-                .try_filter_map(|(elem, path_info)| {
-                    std::future::ready(if path_info.is_none() {
-                        Ok(Some(elem))
-                    } else {
-                        Ok(None)
-                    })
-                })
-                .try_collect()
-                .await?;
-
-            // Run ingest_path on all of them.
-            let uploads: Vec<_> = futures::stream::iter(elems)
-                .map(|elem| {
-                    // Map to a future returning the root node, alongside with the closure info.
-                    let blob_service = blob_service.clone();
-                    let directory_service = directory_service.clone();
-                    async move {
-                        // Ingest the given path.
-
-                        ingest_path::<_, _, _, &[u8]>(
-                            blob_service,
-                            directory_service,
-                            PathBuf::from(elem.path.to_absolute_path()),
-                            None,
-                        )
-                        .await
-                        .map(|root_node| (elem, root_node))
-                    }
+                    .instrument(copy_paths_span.clone())
                 })
                 .buffer_unordered(10)
-                .try_collect()
+                // Increment total progress once we uploaded the PathInfo.
+                .inspect_ok(|_| copy_paths_span.pb_inc(1))
+                .try_collect::<Vec<_>>()
                 .await?;
-
-            // Insert them into the PathInfoService.
-            // FUTUREWORK: do this properly respecting the reference graph.
-            for (elem, root_node) in uploads {
-                // Create and upload a PathInfo pointing to the root_node,
-                // annotated with information we have from the reference graph.
-                let path_info = PathInfo {
-                    store_path: elem.path.to_owned(),
-                    node: root_node,
-                    references: elem.references.iter().map(StorePath::to_owned).collect(),
-                    nar_size: elem.nar_size,
-                    nar_sha256: elem.nar_sha256,
-                    signatures: elem.signatures.iter().map(|s| s.to_owned()).collect(),
-                    deriver: elem.deriver.map(|p| p.to_owned()),
-                    ca: None,
-                };
-
-                path_info_service.put(path_info).await?;
-            }
         }
         #[cfg(feature = "fuse")]
         Commands::Mount {
