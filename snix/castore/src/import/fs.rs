@@ -186,7 +186,7 @@ where
     }
 }
 
-/// Uploads the file at the provided [std::path::Path] the the [BlobService].
+/// Uploads the file at the provided [std::path::Path] to the [BlobService].
 #[instrument(skip(blob_service, reference_scanner), fields(path), err)]
 async fn upload_blob<BS, P>(
     blob_service: BS,
