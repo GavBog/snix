@@ -29,7 +29,7 @@ use std::rc::{Rc, Weak};
 use crate::SourceCode;
 use crate::chunk::Chunk;
 use crate::errors::{Error, ErrorKind, EvalResult};
-use crate::observer::CompilerObserver;
+use crate::observer::{CompilerObserver, OptionalCompilerObserver};
 use crate::opcode::{CodeIdx, Op, Position, UpvalueIdx};
 use crate::spans::ToSpan;
 use crate::upvalues::UpvalueData;
@@ -167,7 +167,7 @@ pub struct Compiler<'source, 'observer> {
 
     /// Carry an observer for the compilation process, which is called
     /// whenever a chunk is emitted.
-    observer: &'observer mut dyn CompilerObserver,
+    observer: OptionalCompilerObserver<'observer>,
 
     /// Carry a count of nested scopes which have requested the
     /// compiler not to emit anything. This used for compiling dead
@@ -189,7 +189,7 @@ impl<'source, 'observer> Compiler<'source, 'observer> {
         env: Option<&FxHashMap<SmolStr, Value>>,
         source: &'source SourceCode,
         file: &'source codemap::File,
-        observer: &'observer mut dyn CompilerObserver,
+        observer: OptionalCompilerObserver<'observer>,
     ) -> EvalResult<Self> {
         let mut root_dir = match location {
             Some(dir) if cfg!(target_arch = "wasm32") || dir.is_absolute() => Ok(dir),
@@ -1662,7 +1662,7 @@ fn compile_src_builtin(
             None,
             &source,
             &file,
-            &mut crate::observer::NoOpObserver {},
+            Default::default(),
         )
         .map_err(|e| ErrorKind::NativeError {
             gen_type: "derivation",
@@ -1766,7 +1766,7 @@ pub fn compile(
     env: Option<&FxHashMap<SmolStr, Value>>,
     source: &SourceCode,
     file: &codemap::File,
-    observer: &mut dyn CompilerObserver,
+    observer: OptionalCompilerObserver<'_>,
 ) -> EvalResult<CompilationOutput> {
     let mut c = Compiler::new(location, globals.clone(), env, source, file, observer)?;
 

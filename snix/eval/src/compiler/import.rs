@@ -13,7 +13,6 @@ use crate::{
     ErrorKind, SourceCode, Value,
     builtins::coerce_value_to_path,
     generators::pin_generator,
-    observer::NoOpObserver,
     try_cek_to_value,
     value::{Builtin, Thunk},
     vm::generators::{self, GenCo},
@@ -66,7 +65,7 @@ async fn import_impl(
         None,
         &source,
         &file,
-        &mut NoOpObserver::default(),
+        Default::default(),
     )
     .map_err(|err| ErrorKind::ImportCompilerError {
         path: path.clone(),

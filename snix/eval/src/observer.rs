@@ -82,6 +82,45 @@ pub struct NoOpObserver {}
 impl CompilerObserver for NoOpObserver {}
 impl RuntimeObserver for NoOpObserver {}
 
+/// Compiler observer that is optimised for the case where no observer is being used.
+///
+/// The trait RuntimeObserver is implemented on the Optional<dyn
+/// RuntimeObserver>. This removes the dynamic dispatch overhead when
+/// no observer is being used.
+#[derive(Default)]
+pub struct OptionalCompilerObserver<'o>(pub Option<&'o mut dyn CompilerObserver>);
+impl<'o> CompilerObserver for OptionalCompilerObserver<'o> {
+    fn observe_compiled_toplevel(&mut self, lambda: &Rc<Lambda>) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_compiled_toplevel(lambda);
+        }
+    }
+
+    fn observe_compiled_lambda(&mut self, lambda: &Rc<Lambda>) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_compiled_lambda(lambda);
+        }
+    }
+
+    fn observe_compiled_thunk(&mut self, lambda: &Rc<Lambda>) {
+        if let Some(ref mut obs) = self.0 {
+            obs.observe_compiled_thunk(lambda)
+        }
+    }
+}
+
+impl<'o> From<&'o mut dyn CompilerObserver> for OptionalCompilerObserver<'o> {
+    fn from(val: &'o mut dyn CompilerObserver) -> Self {
+        OptionalCompilerObserver(Some(val))
+    }
+}
+
+impl<'o> From<Option<&'o mut dyn CompilerObserver>> for OptionalCompilerObserver<'o> {
+    fn from(val: Option<&'o mut dyn CompilerObserver>) -> Self {
+        Self(val)
+    }
+}
+
 /// Runtime observer that is optimised for the case where no observer is being used.
 ///
 /// The trait RuntimeObserver is implemented on the Optional<dyn

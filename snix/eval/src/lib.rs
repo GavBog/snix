@@ -37,6 +37,7 @@ mod test_utils;
 #[cfg(test)]
 mod tests;
 
+use observer::OptionalCompilerObserver;
 use rustc_hash::FxHashMap;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -454,8 +455,7 @@ where
 
         let file = source.add_file(location_str, code.as_ref().to_string());
 
-        let mut noop_observer = observer::NoOpObserver::default();
-        let compiler_observer = self.compiler_observer.take().unwrap_or(&mut noop_observer);
+        let compiler_observer = self.compiler_observer.take();
 
         parse_compile_internal(
             &mut result,
@@ -465,7 +465,7 @@ where
             source,
             self.globals,
             self.env,
-            compiler_observer,
+            compiler_observer.into(),
         );
 
         result
@@ -489,8 +489,7 @@ where
 
         let file = source.add_file(location_str, code.as_ref().to_string());
 
-        let mut noop_observer = observer::NoOpObserver::default();
-        let compiler_observer = self.compiler_observer.take().unwrap_or(&mut noop_observer);
+        let compiler_observer = self.compiler_observer.take();
 
         let lambda = match parse_compile_internal(
             &mut result,
@@ -500,7 +499,7 @@ where
             source.clone(),
             self.globals.clone(),
             self.env,
-            compiler_observer,
+            compiler_observer.into(),
         ) {
             None => return result,
             Some(cr) => cr,
@@ -570,7 +569,7 @@ fn parse_compile_internal(
     source: SourceCode,
     globals: Rc<GlobalsMap>,
     env: Option<&FxHashMap<SmolStr, Value>>,
-    compiler_observer: &mut dyn CompilerObserver,
+    compiler_observer: OptionalCompilerObserver<'_>,
 ) -> Option<Rc<Lambda>> {
     let parsed = rnix::ast::Root::parse(code);
     let parse_errors = parsed.errors();
