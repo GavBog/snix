@@ -9,8 +9,8 @@
 let
   srvos = import (
     builtins.fetchTarball {
-      url = "https://github.com/nix-community/srvos/archive/8e7d3c690975ee6790926bdfd1258016c967d163.tar.gz";
-      sha256 = "sha256-l7epHqAcg8Qktu8vO2ZfjSH1wcai01XQOKQA9ADHIk4=";
+      url = "https://github.com/nix-community/srvos/archive/f3f0277b1dee1bfd058c5b8b98cb25558d95f03f.tar.gz";
+      sha256 = "sha256-6UwMEAi6X3oMjKQm51i0+3i10DrsrSdXi/4YgmJxfhE=";
     }
   );
   disko = (
