@@ -5,7 +5,7 @@
 //! //snix/eval/docs/build-references.md for more details).
 //!
 //! The scanner itself is using the Wu-Manber string-matching algorithm, using
-//! our fork of the `wu-mamber` crate.
+//! our fork of the `wu-manber` crate.
 use pin_project_lite::pin_project;
 use std::collections::BTreeSet;
 use std::pin::Pin;
