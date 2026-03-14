@@ -8,11 +8,11 @@
 //! This data is required to find the derivation needed to actually trigger the
 //! build, if necessary.
 
+use hashbrown::HashMap;
 use nix_compat::{
     derivation::Derivation,
     store_path::{BuildStorePathError, StorePath, StorePathRef},
 };
-use std::collections::HashMap;
 
 use crate::fetchers::Fetch;
 
@@ -54,11 +54,14 @@ impl KnownPaths {
     /// Return the drv path of the derivation producing the passed output path.
     /// Note there can be multiple Derivations producing the same output path in
     /// flight; this function will only return one of them.
-    pub fn get_drv_path_for_output_path(
+    pub fn get_drv_path_for_output_path<S>(
         &self,
-        output_path: &StorePath<String>,
-    ) -> Option<&StorePath<String>> {
-        self.outputs_to_drvpath.get(output_path)
+        output_path: &StorePath<S>,
+    ) -> Option<&StorePath<String>>
+    where
+        S: AsRef<str>,
+    {
+        self.outputs_to_drvpath.get(&output_path.as_ref())
     }
 
     /// Insert a new [Derivation] into this struct.
@@ -127,12 +130,15 @@ impl KnownPaths {
 
     /// Return the name and fetch producing the passed output path.
     /// Note there can also be (multiple) Derivations producing the same output path.
-    pub fn get_fetch_for_output_path(
+    pub fn get_fetch_for_output_path<S>(
         &self,
-        output_path: &StorePath<String>,
-    ) -> Option<(String, Fetch)> {
+        output_path: &StorePath<S>,
+    ) -> Option<(String, Fetch)>
+    where
+        S: AsRef<str>,
+    {
         self.outputs_to_fetches
-            .get(output_path)
+            .get(&output_path.as_ref())
             .map(|(name, fetch)| (name.to_owned(), fetch.to_owned()))
     }
 
@@ -226,7 +232,7 @@ mod tests {
         assert_eq!(None, known_paths.get_hash_derivation_modulo(&BAR_DRV_PATH));
         assert_eq!(
             None,
-            known_paths.get_drv_path_for_output_path(&BAR_OUT_PATH)
+            known_paths.get_drv_path_for_output_path(&BAR_OUT_PATH.as_ref())
         );
 
         // Add BAR_DRV

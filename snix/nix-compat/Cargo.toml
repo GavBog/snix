@@ -7,6 +7,8 @@ rust-version.workspace = true
 [features]
 # async NAR writer. Also needs the `wire` feature.
 async = ["tokio"]
+# hashbrown::Equivalent impls
+hashbrown = ["dep:hashbrown"]
 # code emitting low-level packets used in the daemon protocol.
 wire = ["tokio", "pin-project-lite", "bytes"]
 flakeref = ["url"]
@@ -17,7 +19,7 @@ serde = ["dep:serde", "dep:serde_json", "dep:serde_with"]
 test = []
 
 # Enable all features by default.
-default = ["async", "daemon", "wire", "nix-compat-derive"]
+default = ["async", "daemon", "hashbrown", "wire", "nix-compat-derive"]
 
 [dependencies]
 bitflags.workspace = true
@@ -26,6 +28,7 @@ data-encoding.workspace = true
 ed25519.workspace = true
 ed25519-dalek.workspace = true
 futures = { workspace = true, optional = true }
+hashbrown = { workspace = true, optional = true }
 mimalloc.workspace = true
 nom.workspace = true
 serde = { workspace = true, features = ["derive"], optional = true }

@@ -73,6 +73,15 @@ where
     }
 }
 
+// Ensures it's possible to get() from a HashMap using StorePathRef<'_>,
+// even if it itself uses StorePath<String>
+#[cfg(feature = "hashbrown")]
+impl hashbrown::Equivalent<StorePath<String>> for StorePathRef<'_> {
+    fn equivalent(&self, key: &StorePath<String>) -> bool {
+        self.digest == key.digest && self.name == key.name
+    }
+}
+
 /// Like [StorePath], but without a heap allocation for the name.
 /// Used by [StorePath] for parsing.
 pub type StorePathRef<'a> = StorePath<&'a str>;

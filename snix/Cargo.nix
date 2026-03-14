@@ -10944,6 +10944,11 @@ rec {
             optional = true;
           }
           {
+            name = "hashbrown";
+            packageId = "hashbrown 0.15.5";
+            optional = true;
+          }
+          {
             name = "mimalloc";
             packageId = "mimalloc";
           }
@@ -11077,11 +11082,13 @@ rec {
           "default" = [
             "async"
             "daemon"
+            "hashbrown"
             "wire"
             "nix-compat-derive"
           ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
+          "hashbrown" = [ "dep:hashbrown" ];
           "nix-compat-derive" = [ "dep:nix-compat-derive" ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
           "serde" = [
@@ -11104,6 +11111,7 @@ rec {
           "default"
           "flakeref"
           "futures"
+          "hashbrown"
           "nix-compat-derive"
           "pin-project-lite"
           "serde"
@@ -20882,13 +20890,20 @@ rec {
             packageId = "futures";
           }
           {
+            name = "hashbrown";
+            packageId = "hashbrown 0.15.5";
+          }
+          {
             name = "md-5";
             packageId = "md-5";
           }
           {
             name = "nix-compat";
             packageId = "nix-compat";
-            features = [ "flakeref" ];
+            features = [
+              "flakeref"
+              "hashbrown"
+            ];
           }
           {
             name = "pin-project";

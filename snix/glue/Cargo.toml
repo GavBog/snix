@@ -16,7 +16,8 @@ bstr.workspace = true
 bytes.workspace = true
 data-encoding.workspace = true
 futures.workspace = true
-nix-compat = { path = "../nix-compat", features = ["flakeref"] }
+hashbrown.workspace = true
+nix-compat = { path = "../nix-compat", features = ["flakeref", "hashbrown"] }
 pin-project.workspace = true
 regex.workspace = true
 reqwest = { workspace = true }

@@ -121,9 +121,6 @@ impl SnixStoreIO {
     where
         S: AsRef<str>,
     {
-        // FUTUREWORK: thread through
-        let store_path = &store_path.to_owned();
-
         // Find the root node for the store_path.
         // It asks the PathInfoService first, but in case there was a Derivation
         // produced that would build it, fall back to triggering the build.
@@ -311,7 +308,7 @@ impl SnixStoreIO {
                                 .await
                                 .map_err(std::io::Error::other)?;
 
-                            if store_path == &output_path {
+                            if store_path.as_ref() == output_path.as_ref() {
                                 out_path_info = Some(path_info);
                             }
                         }
