@@ -99,11 +99,20 @@ impl SnixStoreIO {
 
     /// for a given [StorePath] and additional [Path] inside the store path,
     /// look up the [PathInfo], and if it exists, and then uses
-    /// [descend_to] to return the
-    /// [Node] specified by `sub_path`.
+    /// [descend_to] to return the [Node] specified by `sub_path`.
     ///
-    /// In case there is no PathInfo yet, this means we need to build it
-    /// (which currently is stubbed out still).
+    /// In case there is no PathInfo yet, we check "self.known_paths" (learnt by
+    /// the evaluator)
+    ///  - If there's a fetch, we do that and return the resulting PathInfo.
+    ///  - If there's a Derivation, we build it and return the resulting
+    ///    PathInfo.
+    ///    To build it, we need to do a function call to ourselves with all
+    ///    inputs of that Derivation, which will trigger fetches / builds of
+    ///    inputs, recursively.
+    ///
+    /// This should be replaced with a proper scheduler knowing about a partial
+    /// subgraph at some point, because this design doesn't allow concurrent
+    /// builds yet.
     #[instrument(skip(self, store_path), fields(store_path=%store_path, indicatif.pb_show=tracing::field::Empty), ret(level = Level::TRACE), err(level = Level::TRACE))]
     async fn store_path_to_path_info(
         &self,
