@@ -10,7 +10,6 @@ use std::{
     ffi::{OsStr, OsString},
     io,
     os::unix::ffi::OsStrExt,
-    path::{Path, PathBuf},
     sync::Arc,
 };
 use tokio_util::io::SyncIoBridge;
@@ -97,7 +96,7 @@ impl SnixStoreIO {
         }
     }
 
-    /// for a given [StorePath] and additional [Path] inside the store path,
+    /// for a given [StorePath] and additional [snix_castore::Path] inside the store path,
     /// look up the [PathInfo], and if it exists, and then uses
     /// [descend_to] to return the [Node] specified by `sub_path`.
     ///
@@ -114,11 +113,17 @@ impl SnixStoreIO {
     /// subgraph at some point, because this design doesn't allow concurrent
     /// builds yet.
     #[instrument(skip(self, store_path), fields(store_path=%store_path, indicatif.pb_show=tracing::field::Empty), ret(level = Level::TRACE), err(level = Level::TRACE))]
-    async fn store_path_to_path_info(
+    async fn store_path_to_path_info<S>(
         &self,
-        store_path: &StorePath<String>,
-        sub_path: &Path,
-    ) -> io::Result<Option<PathInfo>> {
+        store_path: &StorePath<S>,
+        sub_path: &snix_castore::Path,
+    ) -> io::Result<Option<PathInfo>>
+    where
+        S: AsRef<str>,
+    {
+        // FUTUREWORK: thread through
+        let store_path = &store_path.to_owned();
+
         // Find the root node for the store_path.
         // It asks the PathInfoService first, but in case there was a Derivation
         // produced that would build it, fall back to triggering the build.
@@ -198,7 +203,8 @@ impl SnixStoreIO {
                             let known_paths = &self.known_paths.borrow();
                             builder::get_all_inputs(&drv, known_paths, |path| {
                                 Box::pin(async move {
-                                    self.store_path_to_path_info(&path, Path::new("")).await
+                                    self.store_path_to_path_info(&path, snix_castore::Path::ROOT)
+                                        .await
                                 })
                             })
                         }
@@ -317,9 +323,6 @@ impl SnixStoreIO {
         };
 
         // now with the root_node and sub_path, descend to the node requested.
-        // We convert sub_path to the castore model here.
-        let sub_path = snix_castore::PathBuf::from_host_path(sub_path, true)?;
-
         Ok(
             descend_to(&self.directory_service, path_info.node.clone(), sub_path)
                 .await
@@ -341,10 +344,25 @@ fn node_get_type(node: &Node) -> FileType {
     }
 }
 
+// Helper function converting a [std::path::Path] to a [StorePath] and [snix_castore::Path].
+#[cfg(unix)]
+fn parse_store_and_sub_path(
+    path: &std::path::Path,
+) -> io::Result<(StorePath<&str>, &snix_castore::Path)> {
+    let (store_path, rest) =
+        StorePath::from_absolute_path_full(path).map_err(std::io::Error::other)?;
+
+    use std::os::unix::ffi::OsStrExt;
+    let sub_path = snix_castore::Path::from_bytes(rest.as_os_str().as_bytes())
+        .ok_or_else(|| std::io::Error::other("sub_path is no valid path"))?;
+
+    Ok((store_path, sub_path))
+}
+
 impl EvalIO for SnixStoreIO {
     #[instrument(skip(self), ret(level = Level::TRACE), err)]
-    fn path_exists(&self, path: &Path) -> io::Result<bool> {
-        if let Ok((store_path, sub_path)) = StorePath::from_absolute_path_full(path) {
+    fn path_exists(&self, path: &std::path::Path) -> io::Result<bool> {
+        if let Ok((store_path, sub_path)) = parse_store_and_sub_path(path) {
             if self
                 .tokio_handle
                 .block_on(self.store_path_to_path_info(&store_path, sub_path))?
@@ -363,8 +381,8 @@ impl EvalIO for SnixStoreIO {
     }
 
     #[instrument(skip(self), err)]
-    fn open(&self, path: &Path) -> io::Result<Box<dyn io::Read>> {
-        if let Ok((store_path, sub_path)) = StorePath::from_absolute_path_full(path) {
+    fn open(&self, path: &std::path::Path) -> io::Result<Box<dyn io::Read>> {
+        if let Ok((store_path, sub_path)) = parse_store_and_sub_path(path) {
             if let Some(path_info) = self
                 .tokio_handle
                 .block_on(async { self.store_path_to_path_info(&store_path, sub_path).await })?
@@ -417,8 +435,8 @@ impl EvalIO for SnixStoreIO {
     }
 
     #[instrument(skip(self), ret(level = Level::TRACE), err)]
-    fn file_type(&self, path: &Path) -> io::Result<FileType> {
-        if let Ok((store_path, sub_path)) = StorePath::from_absolute_path_full(path) {
+    fn file_type(&self, path: &std::path::Path) -> io::Result<FileType> {
+        if let Ok((store_path, sub_path)) = parse_store_and_sub_path(path) {
             if let Some(path_info) = self
                 .tokio_handle
                 .block_on(async { self.store_path_to_path_info(&store_path, sub_path).await })?
@@ -433,8 +451,8 @@ impl EvalIO for SnixStoreIO {
     }
 
     #[instrument(skip(self), ret(level = Level::TRACE), err)]
-    fn read_dir(&self, path: &Path) -> io::Result<Vec<(bytes::Bytes, FileType)>> {
-        if let Ok((store_path, sub_path)) = StorePath::from_absolute_path_full(path) {
+    fn read_dir(&self, path: &std::path::Path) -> io::Result<Vec<(bytes::Bytes, FileType)>> {
+        if let Ok((store_path, sub_path)) = parse_store_and_sub_path(path) {
             if let Some(path_info) = self
                 .tokio_handle
                 .block_on(async { self.store_path_to_path_info(&store_path, sub_path).await })?
@@ -486,7 +504,7 @@ impl EvalIO for SnixStoreIO {
     }
 
     #[instrument(skip(self), ret(level = Level::TRACE), err)]
-    fn import_path(&self, path: &Path) -> io::Result<PathBuf> {
+    fn import_path(&self, path: &std::path::Path) -> io::Result<std::path::PathBuf> {
         let path_info = self.tokio_handle.block_on({
             snix_store::import::import_path_as_nar_ca(
                 path,

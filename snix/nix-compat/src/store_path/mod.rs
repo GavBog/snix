@@ -1,10 +1,9 @@
 use crate::nixbase32;
-use data_encoding::{BASE64, DecodeError};
+use data_encoding::DecodeError;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::{
     fmt,
-    path::Path,
     str::{self, FromStr},
 };
 use thiserror;
@@ -30,12 +29,8 @@ pub enum Error {
     InvalidHashEncoding(#[from] DecodeError),
     #[error("Invalid length")]
     InvalidLength,
-    #[error(
-        "Invalid name: \"{}\", character at position {} is invalid",
-        std::str::from_utf8(.0).unwrap_or(&BASE64.encode(.0)),
-        .1,
-    )]
-    InvalidName(Vec<u8>, u8),
+    #[error("Invalid name")]
+    InvalidName,
     #[error("Tried to parse an absolute path which was missing the store dir prefix.")]
     MissingStoreDir,
 }
@@ -173,30 +168,36 @@ where
         }
     }
 
-    /// Decompose a string into a [StorePath] and a [Path] containing the
-    /// rest of the path, or an error.
-    #[cfg(target_family = "unix")]
-    pub fn from_absolute_path_full<'a, P>(path: &'a P) -> Result<(Self, &'a Path), Error>
+    /// Decompose a string into a [StorePath] and a [std::path::Path] containing
+    /// the rest of the path, or an error.
+    pub fn from_absolute_path_full<'p: 'sp, 'sp, P>(
+        path: &'p P,
+    ) -> Result<(Self, &'p std::path::Path), Error>
     where
-        S: From<&'a str>,
-        P: AsRef<std::path::Path> + ?Sized,
+        S: From<&'sp str>,
+        P: AsRef<std::path::Path> + 'p + ?Sized,
     {
-        // strip [STORE_DIR_WITH_SLASH] from s
+        // strip [STORE_DIR_WITH_SLASH] from path
         let p = path
             .as_ref()
             .strip_prefix(STORE_DIR_WITH_SLASH)
-            .map_err(|_e| Error::MissingStoreDir)?;
+            .map_err(|_| Error::MissingStoreDir)?;
 
-        let mut it = Path::new(p).components();
+        let mut components = p.components();
 
-        // The first component of the rest must be parse-able as a [StorePath]
-        let first_component = it.next().ok_or(Error::InvalidLength)?;
-        let store_path = StorePath::from_bytes(first_component.as_os_str().as_encoded_bytes())?;
+        use bstr::ByteSlice;
+        let first_component =
+            <[u8]>::from_os_str(components.next().ok_or(Error::InvalidLength)?.as_os_str())
+                .ok_or(Error::InvalidName)?;
 
-        // collect rest
-        let rest_buf = it.as_path();
+        // The first component must be parse-able as a [StorePath].
+        if first_component.len() < 34 {
+            return Err(Error::InvalidLength);
+        }
 
-        Ok((store_path, rest_buf))
+        let store_path = StorePath::from_bytes(first_component)?;
+
+        Ok((store_path, components.as_path()))
     }
 
     /// Returns an absolute store path string.
@@ -308,9 +309,9 @@ pub(crate) fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, Err
     }
 
     if !valid {
-        for (i, &c) in s.iter().enumerate() {
+        for &c in s.iter() {
             if !NAME_CHARS[c as usize] {
-                return Err(Error::InvalidName(s.to_vec(), i as u8));
+                return Err(Error::InvalidName);
             }
         }
 
@@ -588,13 +589,13 @@ mod tests {
     fn from_absolute_path_full(
         #[case] s: &str,
         #[case] exp_store_path: StorePath<&str>,
-        #[case] exp_path: PathBuf,
+        #[case] exp_rest: PathBuf,
     ) {
-        let (actual_store_path, actual_path) =
+        let (actual_store_path, actual_rest) =
             StorePath::from_absolute_path_full(s).expect("must succeed");
 
         assert_eq!(exp_store_path, actual_store_path);
-        assert_eq!(exp_path, actual_path);
+        assert_eq!(exp_rest, actual_rest);
     }
 
     #[test]
