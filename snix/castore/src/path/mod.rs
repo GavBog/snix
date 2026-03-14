@@ -33,6 +33,8 @@ impl Path {
         unsafe { mem::transmute(bytes) }
     }
 
+    /// Convert a byte slice to a path, while checking validity.
+    /// Returns None if it contains invalid segments.
     fn from_bytes(bytes: &[u8]) -> Option<&Path> {
         if !bytes.is_empty() {
             // Ensure all components are valid castore node names.
