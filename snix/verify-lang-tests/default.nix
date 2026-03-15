@@ -112,8 +112,10 @@ let
   };
 
   glueSkippedLangTests = {
-    # TODO: no network in the sandbox, so fetcher won't work
+    # TODO: fetchers try to create files in /fake-home, and no network in the sandbox
+    "eval-okay-fetchtarball-context.nix" = true;
     "eval-okay-fetchtarball.nix" = true;
+    "eval-okay-fetchurl-context.nix" = true;
     "eval-okay-fetchurl.nix" = true;
     # builtins.parseFlakeRef was introduced in 2.18
     "eval-okay-parseFlakeRef.nix" = [ nix_2_3 ];

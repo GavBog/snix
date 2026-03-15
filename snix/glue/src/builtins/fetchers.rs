@@ -81,7 +81,7 @@ async fn extract_fetch_args(
 pub(crate) mod fetcher_builtins {
     use bstr::ByteSlice;
     use nix_compat::{flakeref, nixhash::NixHash};
-    use snix_eval::try_cek_to_value;
+    use snix_eval::{NixContext, NixString, try_cek_to_value};
     use std::collections::BTreeMap;
 
     use super::*;
@@ -91,8 +91,10 @@ pub(crate) mod fetcher_builtins {
     /// queue the fetch to be fetched lazily, and return the store path.
     /// If there's not enough info to calculate it, do the fetch now, and then
     /// return the store path.
+    /// Note the builtins.typeof of fetchurl and fetchTarball are *not* "path", but "string",
+    /// to stay bug-compatible with Nix.
     fn fetch_lazy(state: Rc<SnixStoreIO>, name: String, fetch: Fetch) -> Result<Value, ErrorKind> {
-        match fetch
+        let store_path = match fetch
             .store_path(&name)
             .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?
         {
@@ -108,9 +110,7 @@ pub(crate) mod fetcher_builtins {
                     sp, store_path,
                     "calculated store path by KnownPaths should match"
                 );
-
-                // Emit the calculated Store Path.
-                Ok(Value::Path(Box::new(store_path.to_absolute_path().into())))
+                sp
             }
             None => {
                 // If we don't have enough info, do the fetch now.
@@ -119,9 +119,15 @@ pub(crate) mod fetcher_builtins {
                     .block_on(async { state.fetcher.ingest_and_persist(&name, fetch).await })
                     .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?;
 
-                Ok(Value::Path(Box::new(store_path.to_absolute_path().into())))
+                store_path
             }
-        }
+        };
+
+        let s = store_path.to_absolute_path();
+
+        // Emit the calculated Store Path, which needs to have context.
+        let context = NixContext::new().append(snix_eval::NixContextElement::Plain(s.clone()));
+        Ok(Value::String(NixString::new_context_from(context, s)))
     }
 
     #[builtin("fetchurl")]
