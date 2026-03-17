@@ -10,17 +10,23 @@ in
 {
   imports = [
     (mod "nar-bridge.nix")
+    (mod "snix-store-daemon.nix")
   ];
 
-  services.nar-bridge = {
+  # Explicitly configure uid/gid to ensure they match the uid/gid of the
+  # blobservice data in /tank/nar-bridge, as chown'ing all data there is no fun.
+  users.users.snix-store-daemon.uid = 998;
+  users.groups.snix-store-daemon.gid = 998;
+
+  services.snix-store-daemon = {
     enable = true;
-    package = depot.snix.cli.nar-bridge.with-features-xp-store-composition-cli-otlp;
+    package = depot.snix.cli.store.with-features-xp-store-composition-cli-otlp;
 
     settings = {
       blobservices = {
         root = {
           type = "objectstore";
-          object_store_url = "file:///tank/nar-bridge/blobs.object_store";
+          object_store_url = "file:///tank/snix-castore/blobs.object_store";
           object_store_options = { };
         };
       };
@@ -28,7 +34,7 @@ in
       directoryservices = {
         root = {
           type = "redb";
-          path = "/var/lib/nar-bridge/directories.redb";
+          path = "/var/lib/snix-store/directories.redb";
         };
       };
 
@@ -41,7 +47,7 @@ in
 
         redb = {
           type = "redb";
-          path = "/var/lib/nar-bridge/pathinfo.redb";
+          path = "/var/lib/snix-store/pathinfo.redb";
         };
 
         "cache-nixos-org" = {
@@ -56,13 +62,43 @@ in
       };
     };
   };
+  systemd.services.snix-store-daemon.environment.TRACER = "otlp";
+
+  services.nar-bridge = {
+    enable = true;
+    package = depot.snix.cli.nar-bridge.with-features-xp-store-composition-cli-otlp;
+
+    settings = {
+      blobservices = {
+        root = {
+          type = "grpc";
+          url = "grpc+unix:/run/snix-store-daemon.sock";
+        };
+      };
+
+      directoryservices = {
+        root = {
+          type = "grpc";
+          url = "grpc+unix:/run/snix-store-daemon.sock";
+        };
+      };
+
+      pathinfoservices = {
+        root = {
+          type = "grpc";
+          url = "grpc+unix:/run/snix-store-daemon.sock";
+        };
+      };
+    };
+  };
 
   systemd.tmpfiles.rules = [
-    # Put the blobs on the big disk
-    "d /tank/nar-bridge 0755 nar-bridge nar-bridge -"
-    "d /tank/nar-bridge/blobs.object_store 0755 nar-bridge nar-bridge -"
     # Cache responses on NVME
     "d /var/cache/nginx 0755 ${config.services.nginx.user} ${config.services.nginx.group} -"
+
+    # Put the blobs on the big disk
+    "v /tank/snix-castore                    0755 snix-store-daemon snix-store-daemon -"
+    "v /tank/snix-castore/blobs.object_store 0755 snix-store-daemon snix-store-daemon -"
   ];
 
   systemd.services.nar-bridge = {

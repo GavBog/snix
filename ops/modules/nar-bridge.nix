@@ -37,13 +37,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    users.users.nar-bridge = {
-      isSystemUser = true;
-      group = "nar-bridge";
-    };
-
-    users.groups.nar-bridge = { };
-
     systemd.sockets.nar-bridge = {
       description = "nar-bridge socket";
       wantedBy = [ "sockets.target" ];
@@ -70,6 +63,7 @@ in
 
         User = "nar-bridge";
         Group = "nar-bridge";
+        DynamicUser = true;
         StateDirectory = "nar-bridge";
       };
     };
