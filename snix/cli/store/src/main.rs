@@ -524,15 +524,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let (blob_service, directory_service, path_info_service, _nar_calculation_service) =
                 snix_store::utils::construct_services(service_addrs).await?;
 
-            use snix_castore::fs::{SnixStoreFs, fuse::FuseDaemon};
+            use snix_castore::fs::{FSSettings, SnixStoreFs, fuse::FuseDaemon};
 
             let fs = SnixStoreFs::new(
                 blob_service,
                 directory_service,
                 pathinfoservice::RootNodesWrapper::from(path_info_service),
-                list_root,
-                uid_gid,
-                show_xattr,
+                FSSettings {
+                    list_root,
+                    uid_gid_override: uid_gid,
+                    show_xattr,
+                },
                 tokio::runtime::Handle::current(),
             );
 
@@ -569,15 +571,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let (blob_service, directory_service, path_info_service, _nar_calculation_service) =
                 snix_store::utils::construct_services(service_addrs).await?;
 
-            use snix_castore::fs::{SnixStoreFs, virtiofs::start_virtiofs_daemon};
+            use snix_castore::fs::{FSSettings, SnixStoreFs, virtiofs::start_virtiofs_daemon};
 
             let fs = SnixStoreFs::new(
                 blob_service,
                 directory_service,
                 pathinfoservice::RootNodesWrapper::from(path_info_service),
-                list_root,
-                uid_gid,
-                show_xattr,
+                FSSettings {
+                    list_root,
+                    uid_gid_override: uid_gid,
+                    show_xattr,
+                },
                 tokio::runtime::Handle::current(),
             );
 

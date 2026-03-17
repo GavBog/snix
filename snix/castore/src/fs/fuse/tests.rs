@@ -19,7 +19,7 @@ use crate::{
 };
 use crate::{
     PathComponent,
-    fs::{SnixStoreFs, XATTR_NAME_BLOB_DIGEST, XATTR_NAME_DIRECTORY_DIGEST},
+    fs::{FSSettings, SnixStoreFs, XATTR_NAME_BLOB_DIGEST, XATTR_NAME_DIRECTORY_DIGEST},
 };
 
 const BLOB_A_NAME: &str = "00000000000000000000000000000000-test";
@@ -42,9 +42,7 @@ fn do_mount<P: AsRef<Path>, BS, DS>(
     directory_service: DS,
     root_nodes: BTreeMap<PathComponent, Node>,
     mountpoint: P,
-    list_root: bool,
-    uid_gid_override: Option<(u32, u32)>,
-    show_xattr: bool,
+    settings: FSSettings,
 ) -> io::Result<FuseDaemon>
 where
     BS: BlobService + Send + Sync + Clone + 'static,
@@ -54,9 +52,7 @@ where
         blob_service,
         directory_service,
         Arc::new(root_nodes),
-        list_root,
-        uid_gid_override,
-        show_xattr,
+        settings,
         tokio::runtime::Handle::current(),
     );
     FuseDaemon::new(Arc::new(fs), mountpoint.as_ref(), 4, false)
@@ -248,9 +244,7 @@ async fn mount() {
         directory_service,
         BTreeMap::default(),
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -272,9 +266,7 @@ async fn root() {
         directory_service,
         BTreeMap::default(),
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -307,9 +299,11 @@ async fn root_with_listing() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        true, /* allow listing */
-        None,
-        false,
+        FSSettings {
+            list_root: true, /* allow listing */
+            uid_gid_override: None,
+            show_xattr: false,
+        },
     )
     .expect("must succeed");
 
@@ -352,9 +346,7 @@ async fn stat_file_at_root() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -390,9 +382,7 @@ async fn read_file_at_root() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -428,9 +418,7 @@ async fn read_large_file_at_root() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -474,9 +462,7 @@ async fn symlink_readlink() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -522,9 +508,7 @@ async fn read_stat_through_symlink() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -568,9 +552,7 @@ async fn read_stat_directory() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -604,9 +586,11 @@ async fn uid_gid_override() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        Some((1000, 100)),
-        false,
+        FSSettings {
+            list_root: false,
+            uid_gid_override: Some((1000, 100)),
+            show_xattr: false,
+        },
     )
     .expect("must succeed");
 
@@ -644,9 +628,11 @@ async fn xattr() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        true, /* support xattr */
+        FSSettings {
+            list_root: false,
+            uid_gid_override: None,
+            show_xattr: true, /* support xattr */
+        },
     )
     .expect("must succeed");
 
@@ -728,9 +714,7 @@ async fn read_blob_inside_dir() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -769,9 +753,7 @@ async fn read_blob_deep_inside_dir() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -813,9 +795,7 @@ async fn readdir() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -874,9 +854,7 @@ async fn readdir_deep() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -925,9 +903,7 @@ async fn check_attributes() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -1001,9 +977,7 @@ async fn compare_inodes_directories() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -1046,9 +1020,7 @@ async fn compare_inodes_files() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -1096,9 +1068,7 @@ async fn compare_inodes_symlinks() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -1140,9 +1110,7 @@ async fn read_wrong_paths_in_root() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -1196,9 +1164,7 @@ async fn disallow_writes() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -1229,9 +1195,7 @@ async fn missing_directory() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 
@@ -1278,9 +1242,7 @@ async fn missing_blob() {
         directory_service,
         root_nodes,
         tmpdir.path(),
-        false,
-        None,
-        false,
+        FSSettings::default(),
     )
     .expect("must succeed");
 

@@ -1,10 +1,4 @@
 use clap::{Parser, Subcommand};
-#[cfg(any(feature = "fuse", feature = "virtiofs"))]
-use snix_castore::fs::SnixStoreFs;
-#[cfg(feature = "fuse")]
-use snix_castore::fs::fuse::FuseDaemon;
-#[cfg(feature = "virtiofs")]
-use snix_castore::fs::virtiofs::start_virtiofs_daemon;
 use snix_castore::import::{archive::ingest_archive, fs::ingest_path};
 use snix_castore::proto::blob_service_server::BlobServiceServer;
 use snix_castore::proto::directory_service_server::DirectoryServiceServer;
@@ -70,6 +64,10 @@ enum Commands {
         /// uid:gid to use, instead of 0:0
         #[clap(long, value_parser = parse_uid_gid)]
         uid_gid: Option<(u32, u32)>,
+
+        #[arg(long, default_value_t = true)]
+        /// Whether to expose blob and directory digests as extended attributes.
+        show_xattr: bool,
     },
 
     #[cfg(feature = "virtiofs")]
@@ -89,6 +87,10 @@ enum Commands {
         /// uid:gid to use, instead of 0:0
         #[clap(long, value_parser = parse_uid_gid)]
         uid_gid: Option<(u32, u32)>,
+
+        #[arg(long, default_value_t = true)]
+        /// Whether to expose blob and directory digests as extended attributes.
+        show_xattr: bool,
     },
 }
 
@@ -203,9 +205,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             dest,
             service_addrs,
             uid_gid,
+            show_xattr,
         } => {
             let (blob_service, directory_service) =
                 snix_castore::utils::construct_services(service_addrs).await?;
+
+            use snix_castore::fs::{FSSettings, SnixStoreFs, fuse::FuseDaemon};
 
             let digest = digest.parse()?;
             let directory = directory_service
@@ -218,9 +223,11 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     blob_service,
                     directory_service,
                     directory,
-                    true,
-                    uid_gid,
-                    true,
+                    FSSettings {
+                        list_root: true,
+                        uid_gid_override: uid_gid,
+                        show_xattr,
+                    },
                     tokio::runtime::Handle::current(),
                 );
                 info!(mount_path=?dest, "mounting");
@@ -250,9 +257,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             socket,
             service_addrs,
             uid_gid,
+            show_xattr,
         } => {
             let (blob_service, directory_service) =
                 snix_castore::utils::construct_services(service_addrs).await?;
+
+            use snix_castore::fs::{FSSettings, SnixStoreFs, virtiofs::start_virtiofs_daemon};
 
             let digest = digest.parse()?;
             let directory = directory_service
@@ -265,9 +275,11 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     blob_service,
                     directory_service,
                     directory,
-                    true,
-                    uid_gid,
-                    true,
+                    FSSettings {
+                        list_root: true,
+                        uid_gid_override: uid_gid,
+                        show_xattr,
+                    },
                     tokio::runtime::Handle::current(),
                 );
                 info!(socket_path=?socket, "starting virtiofs-daemon");

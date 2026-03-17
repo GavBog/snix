@@ -100,9 +100,11 @@ where
                     blob_service,
                     directory_service,
                     root_nodes,
-                    true,
-                    None,
-                    false,
+                    snix_castore::fs::FSSettings {
+                        list_root: true,
+                        uid_gid_override: None,
+                        show_xattr: false,
+                    },
                     tokio::runtime::Handle::current(),
                 );
                 // mount the filesystem and wait for it to be unmounted.

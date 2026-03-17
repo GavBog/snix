@@ -79,15 +79,7 @@ pub struct SnixStoreFs<BS, DS, RN: RootNodes> {
     blob_service: BS,
     directory_service: DS,
     root_nodes_provider: RN,
-
-    /// Whether to (try) listing elements in the root.
-    list_root: bool,
-
-    /// If uid/gid should be overridden, their values
-    uid_gid_override: Option<(u32, u32)>,
-
-    /// Whether to expose blob and directory digests as extended attributes.
-    show_xattr: bool,
+    settings: FSSettings,
 
     /// This maps a given basename in the root to the inode we allocated for the node.
     root_nodes: RwLock<HashMap<PathComponent, u64>>,
@@ -123,6 +115,19 @@ pub struct SnixStoreFs<BS, DS, RN: RootNodes> {
     tokio_handle: tokio::runtime::Handle,
 }
 
+/// Configures some filesystem settings
+#[derive(Debug, Default)]
+pub struct FSSettings {
+    /// Whether to (try) listing elements in the root.
+    pub list_root: bool,
+
+    /// If uid/gid should be overridden, their values
+    pub uid_gid_override: Option<(u32, u32)>,
+
+    /// Whether to expose blob and directory digests as extended attributes.
+    pub show_xattr: bool,
+}
+
 impl<BS, DS, RN> SnixStoreFs<BS, DS, RN>
 where
     BS: BlobService,
@@ -133,9 +138,8 @@ where
         blob_service: BS,
         directory_service: DS,
         root_nodes_provider: RN,
-        list_root: bool,
-        uid_gid_override: Option<(u32, u32)>,
-        show_xattr: bool,
+
+        settings: FSSettings,
         tokio_handle: tokio::runtime::Handle,
     ) -> Self {
         Self {
@@ -143,9 +147,7 @@ where
             directory_service,
             root_nodes_provider,
 
-            list_root,
-            uid_gid_override,
-            show_xattr,
+            settings,
 
             root_nodes: RwLock::new(HashMap::default()),
             inode_tracker: RwLock::new(Default::default()),
@@ -328,7 +330,7 @@ where
             ..Default::default()
         };
 
-        if let Some((uid, gid)) = self.uid_gid_override {
+        if let Some((uid, gid)) = self.settings.uid_gid_override {
             attr.uid = uid;
             attr.gid = gid;
         }
@@ -491,7 +493,7 @@ where
         // In case opendir on the root is called, we provide the handle, as re-entering that listing is expensive.
         // For all other directory inodes we just let readdir take care of it.
         if inode == ROOT_ID {
-            if !self.list_root {
+            if !self.settings.list_root {
                 return Err(io::Error::from_raw_os_error(libc::EPERM)); // same error code as ipfs/kubo
             }
 
@@ -535,7 +537,7 @@ where
         debug!("readdir");
 
         if inode == ROOT_ID {
-            if !self.list_root {
+            if !self.settings.list_root {
                 return Err(io::Error::from_raw_os_error(libc::EPERM)); // same error code as ipfs/kubo
             }
 
@@ -618,7 +620,7 @@ where
         debug!("readdirplus");
 
         if inode == ROOT_ID {
-            if !self.list_root {
+            if !self.settings.list_root {
                 return Err(io::Error::from_raw_os_error(libc::EPERM)); // same error code as ipfs/kubo
             }
 
@@ -884,7 +886,7 @@ where
         name: &CStr,
         size: u32,
     ) -> io::Result<GetxattrReply> {
-        if !self.show_xattr {
+        if !self.settings.show_xattr {
             return Err(io::Error::from_raw_os_error(libc::ENOSYS));
         }
 
@@ -925,7 +927,7 @@ where
         inode: Self::Inode,
         size: u32,
     ) -> io::Result<ListxattrReply> {
-        if !self.show_xattr {
+        if !self.settings.show_xattr {
             return Err(io::Error::from_raw_os_error(libc::ENOSYS));
         }
 
