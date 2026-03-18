@@ -41,7 +41,7 @@ pub async fn ingest_path<BS, DS, P, P2>(
     reference_scanner: Option<&ReferenceScanner<P2>>,
 ) -> Result<Node, IngestionError<Error>>
 where
-    P: AsRef<std::path::Path> + std::fmt::Debug,
+    P: AsRef<std::path::Path>,
     BS: BlobService + Clone,
     DS: DirectoryService,
     P2: AsRef<[u8]> + Send + Sync,

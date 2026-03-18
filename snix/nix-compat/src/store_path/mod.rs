@@ -294,8 +294,8 @@ static NAME_CHARS: [bool; 256] = {
 };
 
 /// Checks a given &[u8] to match the restrictions for [StorePath::name], and
-/// returns the name as string if successful.
-pub(crate) fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, Error> {
+/// returns the name as &str if successful.
+pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, Error> {
     let s = s.as_ref();
 
     // Empty or excessively long names are not allowed.
@@ -320,6 +320,14 @@ pub(crate) fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, Err
 
     // SAFETY: We permit a subset of ASCII, which guarantees valid UTF-8.
     Ok(unsafe { str::from_utf8_unchecked(s) })
+}
+
+/// Checks a given OsStr to match the restrictions for [StorePath::name], and
+/// returns the name as &str if successful.
+pub fn validate_name_as_os_str(s: &(impl AsRef<std::ffi::OsStr> + ?Sized)) -> Result<&str, Error> {
+    let s = s.as_ref().to_str().ok_or(Error::InvalidName)?;
+
+    validate_name(s)
 }
 
 impl<S> fmt::Display for StorePath<S>

@@ -180,15 +180,27 @@ mod import_builtins {
         recursive_ingestion: bool,
         expected_sha256: Option<[u8; 32]>,
     ) -> Result<Value, ErrorKind> {
+        // Determine the name, either chosen by the user or derived from the path.
         let name: String = match name {
-            Some(name) => generators::request_force(&co, name.clone())
-                .await
-                .to_str()?
-                .as_bstr()
-                .to_string(),
-            None => snix_store::import::path_to_name(&path)
-                .expect("Failed to derive the default name out of the path")
-                .to_string(),
+            Some(name) => {
+                let nix_str = generators::request_force(&co, name.clone())
+                    .await
+                    .to_str()?;
+
+                nix_compat::store_path::validate_name(&nix_str)
+                    .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?
+                    .to_owned()
+            }
+            None => nix_compat::store_path::validate_name_as_os_str(path.file_name().ok_or_else(
+                || {
+                    std::io::Error::new(
+                        std::io::ErrorKind::InvalidFilename,
+                        "path without basename encountered",
+                    )
+                },
+            )?)
+            .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?
+            .to_owned(),
         };
         // As a first step, we ingest the contents, and get back a root node,
         // and optionally the sha256 a flat file.

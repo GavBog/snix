@@ -3,6 +3,7 @@ use clap::Subcommand;
 
 use futures::StreamExt;
 use futures::TryStreamExt;
+use nix_compat::store_path;
 use nix_compat::store_path::StorePath;
 use nix_compat::wire::de::Error;
 use nix_compat::{
@@ -12,7 +13,6 @@ use nix_compat::{
 use serde_with::{DefaultOnNull, serde_as};
 use snix_castore::import::fs::ingest_path;
 use snix_cli::shutdown_signal;
-use snix_store::import::path_to_name;
 use snix_store::nar::NarCalculationService;
 use snix_store::utils::{ServiceUrls, ServiceUrlsGrpc};
 use std::path::PathBuf;
@@ -266,12 +266,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             // For each path passed, construct the name, or bail out if it's invalid.
             let paths_and_names = paths
                 .into_iter()
-                .map(|p| match path_to_name(&p) {
-                    Ok(name) => {
-                        let name = name.to_owned();
-                        Ok((p, name))
-                    }
-                    Err(e) => Err(e),
+                .map(|p| {
+                    let basename = p
+                        .file_name()
+                        .ok_or_else(|| std::io::Error::invalid_data("path has no basename"))?;
+
+                    let name = store_path::validate_name_as_os_str(basename)
+                        .map_err(|_| std::io::Error::invalid_data("basename invalid"))?
+                        .to_owned();
+                    Ok::<_, std::io::Error>((p, name))
                 })
                 .collect::<Result<Vec<_>, _>>()?;
 
@@ -317,7 +320,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         // FUTUREWORK: express the `name` at the type level to be valid and check for this earlier.
                         let ca = CAHash::Nar(NixHash::Sha256(nar_sha256));
                         let output_path: StorePath<String> =
-                            nix_compat::store_path::build_ca_path::<&str, _, _>(
+                            store_path::build_ca_path::<&str, _, _>(
                                 &name,
                                 &ca,
                                 [],

@@ -1,7 +1,6 @@
 use snix_castore::{
     blobservice::BlobService, directoryservice::DirectoryService, import::fs::ingest_path,
 };
-use std::path::Path;
 use tracing::instrument;
 
 use nix_compat::{
@@ -26,35 +25,24 @@ impl From<CAHash> for nar_info::Ca {
     }
 }
 
-/// Transform a path into its base name and returns an [`std::io::Error`] if it is `..` or if the
-/// basename is not valid unicode.
-#[inline]
-pub fn path_to_name(path: &Path) -> std::io::Result<&str> {
-    path.file_name()
-        .and_then(|file_name| file_name.to_str())
-        .ok_or_else(|| {
-            std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "path must not be .. and the basename valid unicode",
-            )
-        })
-}
-
 /// Ingest the contents at the given path `path` into castore, and registers the
 /// resulting root node in the passed PathInfoService, using the "NAR sha256
 /// digest" and the passed name for output path calculation.
 /// Inserts the PathInfo into the PathInfoService and returns it back to the caller.
-#[instrument(skip_all, fields(store_name=name, path=?path), err)]
+/// The `name` should have been checked by [nix_compat::store_path::validate_name]
+/// before, to avoid unnecessarily importing, but will prevent the PathInfo from
+/// being created in case of an invalid name.
+#[instrument(skip_all, fields(name=name.as_ref(), path=?path.as_ref()), err)]
 pub async fn import_path_as_nar_ca<BS, DS, PS, NS, P>(
     path: P,
-    name: &str,
+    name: impl AsRef<str>,
     blob_service: BS,
     directory_service: DS,
     path_info_service: PS,
     nar_calculation_service: NS,
 ) -> Result<PathInfo, std::io::Error>
 where
-    P: AsRef<Path> + std::fmt::Debug,
+    P: AsRef<std::path::Path>,
     BS: BlobService + Clone,
     DS: DirectoryService,
     PS: AsRef<dyn PathInfoService>,
@@ -73,16 +61,17 @@ where
 
     let ca = CAHash::Nar(NixHash::Sha256(nar_sha256));
 
-    // Calculate the output path. This might still fail, as some names are illegal.
-    // FUTUREWORK: express the `name` at the type level to be valid and move the conversion
-    // at the caller level.
+    // Calculate the output path. Will fail if the previously passed name doesn't pass
+    // the [nix_compat::store_path::validate_name] check.
     let output_path: StorePath<String> =
-        store_path::build_ca_path(name, &ca, std::iter::empty::<&str>(), false).map_err(|_| {
-            std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                format!("invalid name: {name}"),
-            )
-        })?;
+        store_path::build_ca_path(name.as_ref(), &ca, std::iter::empty::<&str>(), false).map_err(
+            |_| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("invalid name: {0}", name.as_ref()),
+                )
+            },
+        )?;
 
     // Insert a PathInfo. On success, return it back to the caller.
     path_info_service
@@ -100,30 +89,4 @@ where
         })
         .await
         .map_err(std::io::Error::other)
-}
-
-#[cfg(test)]
-mod tests {
-    use std::{ffi::OsStr, os::unix::ffi::OsStrExt, path::PathBuf};
-
-    use crate::import::path_to_name;
-    use rstest::rstest;
-
-    #[rstest]
-    #[case::simple_path("a/b/c", "c")]
-    #[case::simple_path_containing_dotdot("a/b/../c", "c")]
-    #[case::path_containing_multiple_dotdot("a/b/../c/d/../e", "e")]
-
-    fn test_path_to_name(#[case] path: &str, #[case] expected_name: &str) {
-        let path: PathBuf = path.into();
-        assert_eq!(path_to_name(&path).expect("must succeed"), expected_name);
-    }
-
-    #[rstest]
-    #[case::path_ending_in_dotdot(b"a/b/..")]
-    #[case::non_unicode_path(b"\xf8\xa1\xa1\xa1\xa1")]
-    fn test_invalid_path_to_name(#[case] invalid_path: &[u8]) {
-        let path: PathBuf = OsStr::from_bytes(invalid_path).into();
-        path_to_name(&path).expect_err("must fail");
-    }
 }
