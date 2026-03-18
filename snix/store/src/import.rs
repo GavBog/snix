@@ -91,10 +91,9 @@ where
     NS: NarCalculationService,
 {
     // Ingest the contents at the given path `path` into castore.
-    let root_node =
-        ingest_path::<_, _, _, &[u8]>(blob_service, directory_service, path.as_ref(), None)
-            .await
-            .map_err(std::io::Error::other)?;
+    let root_node = ingest_path::<_, _, _, &[u8]>(blob_service, directory_service, path, None)
+        .await
+        .map_err(std::io::Error::other)?;
 
     // Ask for the NAR size and sha256
     let (nar_size, nar_sha256) = nar_calculation_service
