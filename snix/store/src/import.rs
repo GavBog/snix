@@ -1,9 +1,8 @@
-use bstr::ByteSlice;
 use snix_castore::{
-    Node, blobservice::BlobService, directoryservice::DirectoryService, import::fs::ingest_path,
+    blobservice::BlobService, directoryservice::DirectoryService, import::fs::ingest_path,
 };
 use std::path::Path;
-use tracing::{debug, instrument};
+use tracing::instrument;
 
 use nix_compat::{
     nixhash::{CAHash, NixHash},
@@ -23,35 +22,6 @@ impl From<CAHash> for nar_info::Ca {
         nar_info::Ca {
             r#type: hash_type.into(),
             digest,
-        }
-    }
-}
-
-pub fn log_node(name: &[u8], node: &Node, path: &Path) {
-    match node {
-        Node::Directory { digest, .. } => {
-            debug!(
-                path = ?path,
-                name = %name.as_bstr(),
-                digest = %digest,
-                "import successful",
-            )
-        }
-        Node::File { digest, .. } => {
-            debug!(
-                path = ?path,
-                name = %name.as_bstr(),
-                digest = %digest,
-                "import successful"
-            )
-        }
-        Node::Symlink { target } => {
-            debug!(
-                path = ?path,
-                name = %name.as_bstr(),
-                target = ?target,
-                "import successful"
-            )
         }
     }
 }
