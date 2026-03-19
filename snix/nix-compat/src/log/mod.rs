@@ -230,6 +230,7 @@ pub enum Error {
 // while it *is* compared.
 #[allow(unused_variables)]
 mod test {
+    #[cfg(feature = "serde")]
     use std::borrow::Cow;
 
     use super::VerbosityLevel;
