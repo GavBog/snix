@@ -360,7 +360,6 @@ where
 mod tests {
     use super::Error;
     use std::cmp::Ordering;
-    use std::path::PathBuf;
 
     use crate::store_path::{DIGEST_SIZE, StorePath, StorePathRef};
     use hex_literal::hex;
@@ -593,26 +592,26 @@ mod tests {
     #[rstest]
     #[case::without_prefix(
         "/nix/store/00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432",
-        StorePath::from_bytes(b"00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432").unwrap(), PathBuf::new())]
+        StorePath::from_bytes(b"00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432").unwrap(), "")]
     #[case::without_prefix_but_trailing_slash(
         "/nix/store/00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432/",
-        StorePath::from_bytes(b"00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432").unwrap(), PathBuf::new())]
+        StorePath::from_bytes(b"00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432").unwrap(), "")]
     #[case::with_prefix(
         "/nix/store/00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432/bin/arp",
-        StorePath::from_bytes(b"00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432").unwrap(), PathBuf::from("bin/arp"))]
+        StorePath::from_bytes(b"00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432").unwrap(), "bin/arp")]
     #[case::with_prefix_and_trailing_slash(
         "/nix/store/00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432/bin/arp/",
-        StorePath::from_bytes(b"00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432").unwrap(), PathBuf::from("bin/arp/"))]
+        StorePath::from_bytes(b"00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432").unwrap(), "bin/arp/")]
     fn from_absolute_path_full(
         #[case] s: &str,
         #[case] exp_store_path: StorePath<&str>,
-        #[case] exp_rest: PathBuf,
+        #[case] exp_rest_str: &str,
     ) {
         let (actual_store_path, actual_rest) =
             StorePath::from_absolute_path_full(s).expect("must succeed");
 
         assert_eq!(exp_store_path, actual_store_path);
-        assert_eq!(exp_rest, actual_rest);
+        assert_eq!(exp_rest_str, actual_rest);
     }
 
     #[test]
