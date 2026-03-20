@@ -1220,6 +1220,241 @@ rec {
         ];
 
       };
+      "aws-config" = rec {
+        crateName = "aws-config";
+        version = "1.8.15";
+        edition = "2021";
+        sha256 = "1g3x0jzw2v45mkg9lh654hcsk6sjvnba116jibxp0chlml5knj8i";
+        libName = "aws_config";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Russell Cohen <rcoh@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-runtime";
+            packageId = "aws-runtime";
+          }
+          {
+            name = "aws-sdk-sso";
+            packageId = "aws-sdk-sso";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "aws-sdk-ssooidc";
+            packageId = "aws-sdk-ssooidc";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "aws-sdk-sts";
+            packageId = "aws-sdk-sts";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-http";
+            packageId = "aws-smithy-http";
+          }
+          {
+            name = "aws-smithy-json";
+            packageId = "aws-smithy-json";
+          }
+          {
+            name = "aws-smithy-runtime";
+            packageId = "aws-smithy-runtime";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+          }
+          {
+            name = "aws-types";
+            packageId = "aws-types";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "fastrand";
+            packageId = "fastrand";
+          }
+          {
+            name = "hex";
+            packageId = "hex";
+            optional = true;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+          }
+          {
+            name = "sha1";
+            packageId = "sha1";
+            optional = true;
+          }
+          {
+            name = "time";
+            packageId = "time";
+            features = [ "parsing" ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [ "sync" ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "url";
+            packageId = "url";
+          }
+          {
+            name = "zeroize";
+            packageId = "zeroize";
+            optional = true;
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+            features = [
+              "rt-tokio"
+              "test-util"
+            ];
+          }
+          {
+            name = "aws-smithy-runtime";
+            packageId = "aws-smithy-runtime";
+            features = [
+              "client"
+              "test-util"
+            ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "test-util" ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "full"
+              "test-util"
+            ];
+          }
+        ];
+        features = {
+          "client-hyper" = [ "aws-smithy-runtime/default-https-client" ];
+          "credentials-login" = [
+            "dep:aws-sdk-signin"
+            "dep:sha2"
+            "dep:zeroize"
+            "dep:hex"
+            "dep:base64-simd"
+            "dep:uuid"
+            "uuid?/v4"
+            "dep:p256"
+            "p256?/arithmetic"
+            "p256?/pem"
+            "dep:rand"
+          ];
+          "credentials-process" = [ "tokio/process" ];
+          "default" = [
+            "default-https-client"
+            "rt-tokio"
+            "credentials-process"
+            "sso"
+          ];
+          "default-https-client" = [ "aws-smithy-runtime/default-https-client" ];
+          "rt-tokio" = [
+            "aws-smithy-async/rt-tokio"
+            "aws-smithy-runtime/rt-tokio"
+            "tokio/rt"
+          ];
+          "rustls" = [ "client-hyper" ];
+          "sso" = [
+            "dep:aws-sdk-sso"
+            "dep:aws-sdk-ssooidc"
+            "dep:sha1"
+            "dep:hex"
+            "dep:zeroize"
+            "aws-smithy-runtime-api/http-auth"
+          ];
+          "test-util" = [ "aws-runtime/test-util" ];
+        };
+        resolvedDefaultFeatures = [
+          "behavior-version-latest"
+          "credentials-process"
+          "default"
+          "default-https-client"
+          "rt-tokio"
+          "sso"
+        ];
+      };
+      "aws-credential-types" = rec {
+        crateName = "aws-credential-types";
+        version = "1.2.14";
+        edition = "2021";
+        sha256 = "1xyagxr44jzl9li8z1vk2m0zj2h9qahgn19hzqhy26rs6ydpj84g";
+        libName = "aws_credential_types";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [
+              "client"
+              "http-auth"
+            ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+          }
+          {
+            name = "zeroize";
+            packageId = "zeroize";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "test-util" ];
+          }
+        ];
+        features = {
+          "test-util" = [ "aws-smithy-runtime-api/test-util" ];
+        };
+        resolvedDefaultFeatures = [ "test-util" ];
+      };
       "aws-lc-rs" = rec {
         crateName = "aws-lc-rs";
         version = "1.15.1";
@@ -1309,6 +1544,1495 @@ rec {
         };
         resolvedDefaultFeatures = [ "prebuilt-nasm" ];
       };
+      "aws-runtime" = rec {
+        crateName = "aws-runtime";
+        version = "1.7.2";
+        edition = "2021";
+        sha256 = "05wdp71rs6fzbrhlgmq3k3hkd6aap1h14g0m8wp21173awf6bh2z";
+        libName = "aws_runtime";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+          }
+          {
+            name = "aws-sigv4";
+            packageId = "aws-sigv4";
+            features = [ "http0-compat" ];
+          }
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-http";
+            packageId = "aws-smithy-http";
+          }
+          {
+            name = "aws-smithy-runtime";
+            packageId = "aws-smithy-runtime";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [
+              "client"
+              "http-1x"
+            ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "http-body-1-x" ];
+          }
+          {
+            name = "aws-types";
+            packageId = "aws-types";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "bytes-utils";
+            packageId = "bytes-utils";
+          }
+          {
+            name = "fastrand";
+            packageId = "fastrand";
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body 1.0.1";
+            rename = "http-body-1x";
+          }
+          {
+            name = "percent-encoding";
+            packageId = "percent-encoding";
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "uuid";
+            packageId = "uuid";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [
+              "test-util"
+              "http-1x"
+            ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "test-util" ];
+          }
+          {
+            name = "bytes-utils";
+            packageId = "bytes-utils";
+          }
+        ];
+        features = {
+          "event-stream" = [
+            "dep:aws-smithy-eventstream"
+            "aws-sigv4/sign-eventstream"
+          ];
+          "http-02x" = [
+            "dep:http-02x"
+            "dep:http-body-04x"
+          ];
+          "sigv4a" = [ "aws-sigv4/sigv4a" ];
+          "test-util" = [ "dep:regex-lite" ];
+        };
+      };
+      "aws-sdk-sso" = rec {
+        crateName = "aws-sdk-sso";
+        version = "1.97.0";
+        edition = "2021";
+        sha256 = "0rr57z58am10kf7va3w1y2p1pz37ca6b5bxylsm1ql44w5lwdbcs";
+        libName = "aws_sdk_sso";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Russell Cohen <rcoh@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+          }
+          {
+            name = "aws-runtime";
+            packageId = "aws-runtime";
+          }
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-http";
+            packageId = "aws-smithy-http";
+          }
+          {
+            name = "aws-smithy-json";
+            packageId = "aws-smithy-json";
+          }
+          {
+            name = "aws-smithy-observability";
+            packageId = "aws-smithy-observability";
+          }
+          {
+            name = "aws-smithy-runtime";
+            packageId = "aws-smithy-runtime";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [
+              "client"
+              "http-1x"
+            ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "http-body-1-x" ];
+          }
+          {
+            name = "aws-types";
+            packageId = "aws-types";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "fastrand";
+            packageId = "fastrand";
+          }
+          {
+            name = "http";
+            packageId = "http 0.2.12";
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+          }
+          {
+            name = "regex-lite";
+            packageId = "regex-lite";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+            features = [ "test-util" ];
+          }
+        ];
+        features = {
+          "default" = [
+            "rustls"
+            "default-https-client"
+            "rt-tokio"
+          ];
+          "default-https-client" = [ "aws-smithy-runtime/default-https-client" ];
+          "rt-tokio" = [
+            "aws-smithy-async/rt-tokio"
+            "aws-smithy-types/rt-tokio"
+          ];
+          "rustls" = [ "aws-smithy-runtime/tls-rustls" ];
+          "test-util" = [
+            "aws-credential-types/test-util"
+            "aws-smithy-runtime/test-util"
+          ];
+        };
+      };
+      "aws-sdk-ssooidc" = rec {
+        crateName = "aws-sdk-ssooidc";
+        version = "1.99.0";
+        edition = "2021";
+        sha256 = "1a5hzhmhnw263p6593c47674axg8ah5pl06jmvh3v39mizdsfhhk";
+        libName = "aws_sdk_ssooidc";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Russell Cohen <rcoh@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+          }
+          {
+            name = "aws-runtime";
+            packageId = "aws-runtime";
+          }
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-http";
+            packageId = "aws-smithy-http";
+          }
+          {
+            name = "aws-smithy-json";
+            packageId = "aws-smithy-json";
+          }
+          {
+            name = "aws-smithy-observability";
+            packageId = "aws-smithy-observability";
+          }
+          {
+            name = "aws-smithy-runtime";
+            packageId = "aws-smithy-runtime";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [
+              "client"
+              "http-1x"
+            ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "http-body-1-x" ];
+          }
+          {
+            name = "aws-types";
+            packageId = "aws-types";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "fastrand";
+            packageId = "fastrand";
+          }
+          {
+            name = "http";
+            packageId = "http 0.2.12";
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+          }
+          {
+            name = "regex-lite";
+            packageId = "regex-lite";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+            features = [ "test-util" ];
+          }
+        ];
+        features = {
+          "default" = [
+            "rustls"
+            "default-https-client"
+            "rt-tokio"
+          ];
+          "default-https-client" = [ "aws-smithy-runtime/default-https-client" ];
+          "rt-tokio" = [
+            "aws-smithy-async/rt-tokio"
+            "aws-smithy-types/rt-tokio"
+          ];
+          "rustls" = [ "aws-smithy-runtime/tls-rustls" ];
+          "test-util" = [
+            "aws-credential-types/test-util"
+            "aws-smithy-runtime/test-util"
+          ];
+        };
+      };
+      "aws-sdk-sts" = rec {
+        crateName = "aws-sdk-sts";
+        version = "1.101.0";
+        edition = "2021";
+        sha256 = "12j2ijkipsk3d6g29pg1hwrfi4ashhbnlbc0xazcl7h5wijashdb";
+        libName = "aws_sdk_sts";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Russell Cohen <rcoh@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+          }
+          {
+            name = "aws-runtime";
+            packageId = "aws-runtime";
+          }
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-http";
+            packageId = "aws-smithy-http";
+          }
+          {
+            name = "aws-smithy-json";
+            packageId = "aws-smithy-json";
+          }
+          {
+            name = "aws-smithy-observability";
+            packageId = "aws-smithy-observability";
+          }
+          {
+            name = "aws-smithy-query";
+            packageId = "aws-smithy-query";
+          }
+          {
+            name = "aws-smithy-runtime";
+            packageId = "aws-smithy-runtime";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [
+              "client"
+              "http-1x"
+            ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "http-body-1-x" ];
+          }
+          {
+            name = "aws-smithy-xml";
+            packageId = "aws-smithy-xml";
+          }
+          {
+            name = "aws-types";
+            packageId = "aws-types";
+          }
+          {
+            name = "fastrand";
+            packageId = "fastrand";
+          }
+          {
+            name = "http";
+            packageId = "http 0.2.12";
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+          }
+          {
+            name = "regex-lite";
+            packageId = "regex-lite";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-runtime";
+            packageId = "aws-runtime";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-smithy-runtime";
+            packageId = "aws-smithy-runtime";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [
+              "http-body-1-x"
+              "test-util"
+            ];
+          }
+        ];
+        features = {
+          "default" = [
+            "rustls"
+            "default-https-client"
+            "rt-tokio"
+          ];
+          "default-https-client" = [ "aws-smithy-runtime/default-https-client" ];
+          "rt-tokio" = [
+            "aws-smithy-async/rt-tokio"
+            "aws-smithy-types/rt-tokio"
+          ];
+          "rustls" = [ "aws-smithy-runtime/tls-rustls" ];
+          "test-util" = [
+            "aws-credential-types/test-util"
+            "aws-smithy-runtime/test-util"
+          ];
+        };
+      };
+      "aws-sigv4" = rec {
+        crateName = "aws-sigv4";
+        version = "1.4.2";
+        edition = "2021";
+        sha256 = "1x6inl28qk6a9i5j0s2zy3yl8iw53wgy4y3pg4isp0v6780n1dmh";
+        libName = "aws_sigv4";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "David Barsky <me@davidbarsky.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+          }
+          {
+            name = "aws-smithy-http";
+            packageId = "aws-smithy-http";
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "form_urlencoded";
+            packageId = "form_urlencoded";
+            optional = true;
+          }
+          {
+            name = "hex";
+            packageId = "hex";
+          }
+          {
+            name = "hmac";
+            packageId = "hmac";
+          }
+          {
+            name = "http";
+            packageId = "http 0.2.12";
+            rename = "http0";
+            optional = true;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            optional = true;
+          }
+          {
+            name = "percent-encoding";
+            packageId = "percent-encoding";
+            optional = true;
+          }
+          {
+            name = "sha2";
+            packageId = "sha2";
+          }
+          {
+            name = "time";
+            packageId = "time";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+            features = [
+              "test-util"
+              "hardcoded-credentials"
+            ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [
+              "client"
+              "test-util"
+            ];
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "time";
+            packageId = "time";
+            features = [ "parsing" ];
+          }
+        ];
+        features = {
+          "default" = [
+            "sign-http"
+            "http1"
+          ];
+          "http0-compat" = [ "dep:http0" ];
+          "http1" = [ "dep:http" ];
+          "sign-eventstream" = [ "dep:aws-smithy-eventstream" ];
+          "sign-http" = [
+            "dep:http0"
+            "dep:percent-encoding"
+            "dep:form_urlencoded"
+          ];
+          "sigv4a" = [
+            "dep:p256"
+            "dep:crypto-bigint"
+            "dep:subtle"
+            "dep:zeroize"
+            "dep:ring"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "http0-compat"
+          "http1"
+          "sign-http"
+        ];
+      };
+      "aws-smithy-async" = rec {
+        crateName = "aws-smithy-async";
+        version = "1.2.14";
+        edition = "2021";
+        sha256 = "1z5cb4dasm2s698x8py79mirhi94d8r0qh3835bq996xddiazz1g";
+        libName = "aws_smithy_async";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "John DiSanti <jdisanti@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [ "sync" ];
+          }
+        ];
+        devDependencies = [
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "rt"
+              "macros"
+              "test-util"
+            ];
+          }
+        ];
+        features = {
+          "rt-tokio" = [ "tokio/time" ];
+          "test-util" = [
+            "rt-tokio"
+            "tokio/rt"
+          ];
+        };
+        resolvedDefaultFeatures = [ "rt-tokio" ];
+      };
+      "aws-smithy-http" = rec {
+        crateName = "aws-smithy-http";
+        version = "0.63.6";
+        edition = "2021";
+        sha256 = "0cajps6ywn129gxmhh4k1s5vw49gqhrx703isbm4jdrc3kfb46ms";
+        libName = "aws_smithy_http";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Russell Cohen <rcoh@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [
+              "client"
+              "http-1x"
+            ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [
+              "byte-stream-poll-next"
+              "http-body-1-x"
+            ];
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "bytes-utils";
+            packageId = "bytes-utils";
+          }
+          {
+            name = "futures-core";
+            packageId = "futures-core";
+          }
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body 1.0.1";
+            rename = "http-body-1x";
+          }
+          {
+            name = "http-body-util";
+            packageId = "http-body-util";
+          }
+          {
+            name = "percent-encoding";
+            packageId = "percent-encoding";
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "pin-utils";
+            packageId = "pin-utils";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "aws-smithy-eventstream" = [ "dep:aws-smithy-eventstream" ];
+          "event-stream" = [ "aws-smithy-eventstream" ];
+          "rt-tokio" = [ "aws-smithy-types/rt-tokio" ];
+        };
+      };
+      "aws-smithy-http-client" = rec {
+        crateName = "aws-smithy-http-client";
+        version = "1.1.12";
+        edition = "2021";
+        sha256 = "0sgpqnkznfd468d439krf7xg91qr3059v2cb09iz5rpfgxd1cbva";
+        libName = "aws_smithy_http_client";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+          }
+          {
+            name = "h2";
+            packageId = "h2";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+            optional = true;
+          }
+          {
+            name = "hyper";
+            packageId = "hyper";
+            optional = true;
+            features = [
+              "client"
+              "http1"
+              "http2"
+            ];
+          }
+          {
+            name = "hyper-rustls";
+            packageId = "hyper-rustls";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [
+              "http2"
+              "http1"
+              "native-tokio"
+              "tls12"
+            ];
+          }
+          {
+            name = "hyper-util";
+            packageId = "hyper-util";
+            optional = true;
+            features = [
+              "http1"
+              "http2"
+            ];
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "rustls";
+            packageId = "rustls";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "rustls-native-certs";
+            packageId = "rustls-native-certs";
+            optional = true;
+          }
+          {
+            name = "rustls-pki-types";
+            packageId = "rustls-pki-types";
+            optional = true;
+            features = [ "std" ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+          }
+          {
+            name = "tokio-rustls";
+            packageId = "tokio-rustls";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "tower";
+            packageId = "tower 0.5.3";
+            optional = true;
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+            features = [
+              "rt-tokio"
+              "test-util"
+            ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [
+              "http-body-0-4-x"
+              "test-util"
+            ];
+          }
+          {
+            name = "hyper-util";
+            packageId = "hyper-util";
+            features = [ "full" ];
+          }
+          {
+            name = "rustls-pki-types";
+            packageId = "rustls-pki-types";
+            features = [ "std" ];
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "macros"
+              "rt"
+              "rt-multi-thread"
+              "test-util"
+              "full"
+            ];
+          }
+          {
+            name = "tokio-rustls";
+            packageId = "tokio-rustls";
+          }
+        ];
+        features = {
+          "default-client" = [
+            "aws-smithy-runtime-api/http-1x"
+            "aws-smithy-types/http-body-1-x"
+            "dep:hyper"
+            "dep:hyper-util"
+            "hyper-util?/client-legacy"
+            "hyper-util?/client-proxy"
+            "dep:http-1x"
+            "dep:tower"
+            "dep:rustls-pki-types"
+            "dep:rustls-native-certs"
+          ];
+          "hyper-014" = [
+            "aws-smithy-runtime-api/http-02x"
+            "aws-smithy-types/http-body-0-4-x"
+            "dep:http-02x"
+            "dep:http-body-04x"
+            "dep:hyper-0-14"
+            "dep:h2-0-3"
+          ];
+          "legacy-rustls-ring" = [
+            "dep:legacy-hyper-rustls"
+            "dep:legacy-rustls"
+            "dep:rustls-native-certs"
+            "hyper-014"
+          ];
+          "legacy-test-util" = [
+            "test-util"
+            "dep:http-02x"
+            "aws-smithy-runtime-api/http-02x"
+            "aws-smithy-types/http-body-0-4-x"
+          ];
+          "rustls-aws-lc" = [
+            "dep:rustls"
+            "rustls?/aws_lc_rs"
+            "rustls?/prefer-post-quantum"
+            "dep:hyper-rustls"
+            "dep:tokio-rustls"
+            "default-client"
+          ];
+          "rustls-aws-lc-fips" = [
+            "dep:rustls"
+            "rustls?/fips"
+            "rustls?/prefer-post-quantum"
+            "dep:hyper-rustls"
+            "dep:tokio-rustls"
+            "default-client"
+          ];
+          "rustls-ring" = [
+            "dep:rustls"
+            "rustls?/ring"
+            "dep:hyper-rustls"
+            "dep:tokio-rustls"
+            "default-client"
+          ];
+          "s2n-tls" = [
+            "dep:s2n-tls"
+            "dep:s2n-tls-hyper"
+            "dep:s2n-tls-tokio"
+            "default-client"
+          ];
+          "test-util" = [
+            "dep:aws-smithy-protocol-test"
+            "dep:serde"
+            "dep:serde_json"
+            "dep:indexmap"
+            "dep:bytes"
+            "dep:http-1x"
+            "aws-smithy-runtime-api/http-1x"
+            "dep:http-body-1x"
+            "aws-smithy-types/http-body-1-x"
+            "tokio/rt"
+          ];
+          "wire-mock" = [
+            "test-util"
+            "default-client"
+            "hyper-util?/server"
+            "hyper-util?/server-auto"
+            "hyper-util?/service"
+            "hyper-util?/server-graceful"
+            "tokio/macros"
+            "dep:http-body-util"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default-client"
+          "rustls-aws-lc"
+        ];
+      };
+      "aws-smithy-json" = rec {
+        crateName = "aws-smithy-json";
+        version = "0.62.5";
+        edition = "2021";
+        sha256 = "0sl553j1frrnd3vgprfy7a71ybc238mavijj822dvvm2haxv0j4n";
+        libName = "aws_smithy_json";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "John DiSanti <jdisanti@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+          }
+        ];
+
+      };
+      "aws-smithy-observability" = rec {
+        crateName = "aws-smithy-observability";
+        version = "0.2.6";
+        edition = "2021";
+        sha256 = "176amda1ravk36bgrh7409q855cn32ks72ys40cvzvbks4aj6v50";
+        libName = "aws_smithy_observability";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+          }
+        ];
+
+      };
+      "aws-smithy-query" = rec {
+        crateName = "aws-smithy-query";
+        version = "0.60.15";
+        edition = "2021";
+        sha256 = "1g8yyaj6msisn2g21jr2jhxis4hy1239vxrff9fxngpv8jbxfmhs";
+        libName = "aws_smithy_query";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "John DiSanti <jdisanti@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "http-body-1-x" ];
+          }
+          {
+            name = "urlencoding";
+            packageId = "urlencoding";
+          }
+        ];
+
+      };
+      "aws-smithy-runtime" = rec {
+        crateName = "aws-smithy-runtime";
+        version = "1.10.3";
+        edition = "2021";
+        sha256 = "0411mz9d3nky19ljgwqwlxrwyhx6qkpgjckjd65dabrddl2rk282";
+        libName = "aws_smithy_runtime";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Zelda Hessler <zhessler@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-http";
+            packageId = "aws-smithy-http";
+          }
+          {
+            name = "aws-smithy-http-client";
+            packageId = "aws-smithy-http-client";
+            optional = true;
+          }
+          {
+            name = "aws-smithy-observability";
+            packageId = "aws-smithy-observability";
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "http-body-0-4-x" ];
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "fastrand";
+            packageId = "fastrand";
+          }
+          {
+            name = "http";
+            packageId = "http 0.2.12";
+            rename = "http-02x";
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body 0.4.6";
+            rename = "http-body-04x";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body 1.0.1";
+            rename = "http-body-1x";
+          }
+          {
+            name = "http-body-util";
+            packageId = "http-body-util";
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "pin-utils";
+            packageId = "pin-utils";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+            features = [
+              "rt-tokio"
+              "test-util"
+            ];
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "test-util" ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "test-util" ];
+          }
+          {
+            name = "fastrand";
+            packageId = "fastrand";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "macros"
+              "rt"
+              "rt-multi-thread"
+              "test-util"
+              "full"
+            ];
+          }
+        ];
+        features = {
+          "client" = [
+            "aws-smithy-runtime-api/client"
+            "aws-smithy-types/http-body-1-x"
+          ];
+          "connector-hyper-0-14-x" = [
+            "dep:aws-smithy-http-client"
+            "aws-smithy-http-client?/hyper-014"
+          ];
+          "default-https-client" = [
+            "dep:aws-smithy-http-client"
+            "aws-smithy-http-client?/rustls-aws-lc"
+          ];
+          "http-auth" = [ "aws-smithy-runtime-api/http-auth" ];
+          "legacy-test-util" = [
+            "aws-smithy-runtime-api/test-util"
+            "dep:tracing-subscriber"
+            "aws-smithy-http-client/test-util"
+            "connector-hyper-0-14-x"
+            "aws-smithy-http-client/legacy-test-util"
+          ];
+          "rt-tokio" = [ "tokio/rt" ];
+          "test-util" = [
+            "aws-smithy-runtime-api/test-util"
+            "dep:tracing-subscriber"
+            "aws-smithy-http-client/test-util"
+            "legacy-test-util"
+          ];
+          "tls-rustls" = [
+            "dep:aws-smithy-http-client"
+            "aws-smithy-http-client?/legacy-rustls-ring"
+            "connector-hyper-0-14-x"
+          ];
+          "wire-mock" = [
+            "legacy-test-util"
+            "aws-smithy-http-client/wire-mock"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "client"
+          "default-https-client"
+          "rt-tokio"
+        ];
+      };
+      "aws-smithy-runtime-api" = rec {
+        crateName = "aws-smithy-runtime-api";
+        version = "1.11.6";
+        edition = "2021";
+        sha256 = "1rkr79rw6wjj2y5jc2fsmcywc7p294q0ly1bl15vm4cpqb4v6sl7";
+        libName = "aws_smithy_runtime_api";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Zelda Hessler <zhessler@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            features = [ "http-body-1-x" ];
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "http";
+            packageId = "http 0.2.12";
+            rename = "http-02x";
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [ "sync" ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "zeroize";
+            packageId = "zeroize";
+            optional = true;
+          }
+        ];
+        devDependencies = [
+          {
+            name = "tokio";
+            packageId = "tokio";
+            features = [
+              "macros"
+              "rt"
+              "rt-multi-thread"
+            ];
+          }
+        ];
+        features = {
+          "http-auth" = [ "dep:zeroize" ];
+          "test-util" = [
+            "aws-smithy-types/test-util"
+            "http-1x"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "client"
+          "default"
+          "http-1x"
+          "http-auth"
+          "test-util"
+        ];
+      };
+      "aws-smithy-types" = rec {
+        crateName = "aws-smithy-types";
+        version = "1.4.7";
+        edition = "2021";
+        sha256 = "0p69816m27cfznmn18q96n179ljqp607c4s5j1xwajwfmbxxnwwx";
+        libName = "aws_smithy_types";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Russell Cohen <rcoh@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "base64-simd";
+            packageId = "base64-simd";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "bytes-utils";
+            packageId = "bytes-utils";
+          }
+          {
+            name = "http";
+            packageId = "http 0.2.12";
+            optional = true;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            rename = "http-1x";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body 0.4.6";
+            rename = "http-body-0-4";
+            optional = true;
+          }
+          {
+            name = "http-body";
+            packageId = "http-body 1.0.1";
+            rename = "http-body-1-0";
+            optional = true;
+          }
+          {
+            name = "http-body-util";
+            packageId = "http-body-util";
+            optional = true;
+          }
+          {
+            name = "itoa";
+            packageId = "itoa";
+          }
+          {
+            name = "num-integer";
+            packageId = "num-integer";
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "pin-utils";
+            packageId = "pin-utils";
+          }
+          {
+            name = "ryu";
+            packageId = "ryu";
+          }
+          {
+            name = "serde";
+            packageId = "serde";
+            target = { target, features }: (target."aws_sdk_unstable" or false);
+            features = [ "derive" ];
+          }
+          {
+            name = "time";
+            packageId = "time";
+            features = [ "parsing" ];
+          }
+        ];
+        devDependencies = [
+          {
+            name = "serde";
+            packageId = "serde";
+            features = [ "derive" ];
+          }
+        ];
+        features = {
+          "http-body-0-4-x" = [
+            "dep:http-body-0-4"
+            "dep:http"
+          ];
+          "http-body-1-x" = [
+            "dep:http-body-1-0"
+            "dep:http-body-util"
+            "dep:http-body-0-4"
+            "dep:http"
+          ];
+          "hyper-0-14-x" = [ "dep:hyper-0-14" ];
+          "rt-tokio" = [
+            "dep:http-body-0-4"
+            "dep:tokio-util"
+            "dep:tokio"
+            "tokio?/rt"
+            "tokio?/fs"
+            "tokio?/io-util"
+            "tokio-util?/io"
+            "dep:futures-core"
+            "dep:http"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "byte-stream-poll-next"
+          "http-body-0-4-x"
+          "http-body-1-x"
+          "test-util"
+        ];
+      };
+      "aws-smithy-xml" = rec {
+        crateName = "aws-smithy-xml";
+        version = "0.60.15";
+        edition = "2021";
+        sha256 = "1cr27lfx4p0lkjbyicd12xgsjiihpvf83pwa5w17srx33bfjmq0c";
+        libName = "aws_smithy_xml";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Russell Cohen <rcoh@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "xmlparser";
+            packageId = "xmlparser";
+          }
+        ];
+
+      };
+      "aws-types" = rec {
+        crateName = "aws-types";
+        version = "1.3.14";
+        edition = "2021";
+        sha256 = "1nb2b5rdhk9pz21chmwr2zymivydx4d0a4rwbf6kr6yxk4v35j27";
+        libName = "aws_types";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+          "Russell Cohen <rcoh@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
+          }
+          {
+            name = "aws-smithy-async";
+            packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+        ];
+        buildDependencies = [
+          {
+            name = "rustc_version";
+            packageId = "rustc_version";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "http-02x" ];
+          }
+        ];
+        features = {
+          "aws-smithy-runtime" = [ "dep:aws-smithy-runtime" ];
+          "examples" = [
+            "dep:hyper-rustls"
+            "aws-smithy-runtime/client"
+            "aws-smithy-runtime/connector-hyper-0-14-x"
+            "aws-smithy-runtime/tls-rustls"
+          ];
+        };
+      };
       "axum" = rec {
         crateName = "axum";
         version = "0.8.8";
@@ -1341,11 +3065,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "http-body-util";
@@ -1585,11 +3309,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "http-body-util";
@@ -1662,11 +3386,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "http-body-util";
@@ -1828,11 +3552,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "http-body-util";
@@ -2038,7 +3762,7 @@ rec {
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "pin-project";
@@ -2108,7 +3832,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body-util";
@@ -2245,6 +3969,42 @@ rec {
           "std"
         ];
       };
+      "base64-simd" = rec {
+        crateName = "base64-simd";
+        version = "0.8.0";
+        edition = "2021";
+        sha256 = "15cihnjqpxy0h7llpk816czyp5z613yrvsivw9i8f5vkivkvp6ik";
+        libName = "base64_simd";
+        dependencies = [
+          {
+            name = "outref";
+            packageId = "outref";
+          }
+          {
+            name = "vsimd";
+            packageId = "vsimd";
+          }
+        ];
+        features = {
+          "alloc" = [ "vsimd/alloc" ];
+          "default" = [
+            "std"
+            "detect"
+          ];
+          "detect" = [ "vsimd/detect" ];
+          "std" = [
+            "alloc"
+            "vsimd/std"
+          ];
+          "unstable" = [ "vsimd/unstable" ];
+        };
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "detect"
+          "std"
+        ];
+      };
       "base64ct" = rec {
         crateName = "base64ct";
         version = "1.8.1";
@@ -2277,7 +4037,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "hyper-util";
@@ -2605,6 +4365,40 @@ rec {
           "default" = [ "std" ];
           "extra-platforms" = [ "dep:extra-platforms" ];
           "serde" = [ "dep:serde" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
+      };
+      "bytes-utils" = rec {
+        crateName = "bytes-utils";
+        version = "0.1.4";
+        edition = "2021";
+        sha256 = "0dcd0lxfpj367j9nwm7izj4mkib3slg61rg4wqmpw0kvfnlf7bvx";
+        libName = "bytes_utils";
+        authors = [
+          "Michal 'vorner' Vaner <vorner@vorner.cz>"
+        ];
+        dependencies = [
+          {
+            name = "bytes";
+            packageId = "bytes";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "either";
+            packageId = "either";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "default" = [ "std" ];
+          "serde" = [
+            "dep:serde"
+            "bytes/serde"
+          ];
+          "std" = [ "bytes/default" ];
         };
         resolvedDefaultFeatures = [
           "default"
@@ -6469,7 +8263,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body-util";
@@ -6987,7 +8781,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "indexmap";
@@ -7271,7 +9065,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "httpdate";
@@ -7301,7 +9095,7 @@ rec {
         dependencies = [
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
         ];
 
@@ -7345,7 +9139,11 @@ rec {
           "serde" = [ "dep:serde" ];
           "std" = [ "alloc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" ];
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "std"
+        ];
       };
       "hex-literal" = rec {
         crateName = "hex-literal";
@@ -7357,6 +9155,32 @@ rec {
           "RustCrypto Developers"
         ];
 
+      };
+      "hmac" = rec {
+        crateName = "hmac";
+        version = "0.12.1";
+        edition = "2018";
+        sha256 = "0pmbr069sfg76z7wsssfk5ddcqd9ncp79fyz6zcm6yn115yc6jbc";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "digest";
+            packageId = "digest";
+            features = [ "mac" ];
+          }
+        ];
+        devDependencies = [
+          {
+            name = "digest";
+            packageId = "digest";
+            features = [ "dev" ];
+          }
+        ];
+        features = {
+          "std" = [ "digest/std" ];
+        };
       };
       "home" = rec {
         crateName = "home";
@@ -7380,7 +9204,33 @@ rec {
         ];
 
       };
-      "http" = rec {
+      "http 0.2.12" = rec {
+        crateName = "http";
+        version = "0.2.12";
+        edition = "2018";
+        sha256 = "1w81s4bcbmcj9bjp7mllm8jlz6b31wzvirz8bgpzbqkpwmbvn730";
+        authors = [
+          "Alex Crichton <alex@alexcrichton.com>"
+          "Carl Lerche <me@carllerche.com>"
+          "Sean McArthur <sean@seanmonstar.com>"
+        ];
+        dependencies = [
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "fnv";
+            packageId = "fnv";
+          }
+          {
+            name = "itoa";
+            packageId = "itoa";
+          }
+        ];
+
+      };
+      "http 1.4.0" = rec {
         crateName = "http";
         version = "1.4.0";
         edition = "2021";
@@ -7408,7 +9258,34 @@ rec {
           "std"
         ];
       };
-      "http-body" = rec {
+      "http-body 0.4.6" = rec {
+        crateName = "http-body";
+        version = "0.4.6";
+        edition = "2018";
+        sha256 = "1lmyjfk6bqk6k9gkn1dxq770sb78pqbqshga241hr5p995bb5skw";
+        libName = "http_body";
+        authors = [
+          "Carl Lerche <me@carllerche.com>"
+          "Lucio Franco <luciofranco14@gmail.com>"
+          "Sean McArthur <sean@seanmonstar.com>"
+        ];
+        dependencies = [
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "http";
+            packageId = "http 0.2.12";
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+        ];
+
+      };
+      "http-body 1.0.1" = rec {
         crateName = "http-body";
         version = "1.0.1";
         edition = "2018";
@@ -7426,7 +9303,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
         ];
 
@@ -7454,11 +9331,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "pin-project-lite";
@@ -7540,11 +9417,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "httparse";
@@ -7671,7 +9548,7 @@ rec {
         dependencies = [
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "hyper";
@@ -7877,11 +9754,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "hyper";
@@ -8971,9 +10848,9 @@ rec {
       };
       "itoa" = rec {
         crateName = "itoa";
-        version = "1.0.15";
-        edition = "2018";
-        sha256 = "0b4fj9kz54dr3wam0vprjwgygvycyw8r0qwg7vp19ly8b2w16psa";
+        version = "1.0.18";
+        edition = "2021";
+        sha256 = "10jnd1vpfkb8kj38rlkn2a6k02afvj3qmw054dfpzagrpl6achlg";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -11559,6 +13436,7 @@ rec {
           "std" = [ "num-traits/std" ];
         };
         resolvedDefaultFeatures = [
+          "default"
           "i128"
           "std"
         ];
@@ -11825,7 +13703,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body-util";
@@ -12285,7 +14163,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
             usesDefaultFeatures = false;
             features = [ "std" ];
           }
@@ -12336,7 +14214,7 @@ rec {
         dependencies = [
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
             optional = true;
             usesDefaultFeatures = false;
             features = [ "std" ];
@@ -12835,6 +14713,13 @@ rec {
           "memchr"
           "raw_os_str"
         ];
+      };
+      "outref" = rec {
+        crateName = "outref";
+        version = "0.5.2";
+        edition = "2021";
+        sha256 = "03pzw9aj4qskqhh0fkagy2mkgfwgj5a1m67ajlba5hw80h68100s";
+
       };
       "parking" = rec {
         crateName = "parking";
@@ -15482,6 +17367,28 @@ rec {
           "unicode-word-boundary"
         ];
       };
+      "regex-lite" = rec {
+        crateName = "regex-lite";
+        version = "0.1.9";
+        edition = "2021";
+        sha256 = "0wzr31ysmiy9sw48i36raqbm1iyk2xnq0lp4zbs6fzi47p3k9f6a";
+        libName = "regex_lite";
+        authors = [
+          "The Rust Project Developers"
+          "Andrew Gallant <jamslam@gmail.com>"
+        ];
+        features = {
+          "default" = [
+            "std"
+            "string"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+          "string"
+        ];
+      };
       "regex-syntax" = rec {
         crateName = "regex-syntax";
         version = "0.8.8";
@@ -15577,11 +17484,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
             target = { target, features }: (!("wasm32" == target."arch" or null));
           }
           {
@@ -16051,11 +17958,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
             target = { target, features }: (!("wasm32" == target."arch" or null));
           }
           {
@@ -16464,7 +18371,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "reqwest";
@@ -16532,7 +18439,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "matchit";
@@ -16962,7 +18869,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "mime";
@@ -17491,6 +19398,7 @@ rec {
           "aws_lc_rs"
           "log"
           "logging"
+          "prefer-post-quantum"
           "ring"
           "std"
           "tls12"
@@ -17939,9 +19847,9 @@ rec {
       };
       "ryu" = rec {
         crateName = "ryu";
-        version = "1.0.20";
-        edition = "2018";
-        sha256 = "07s855l8sb333h6bpn24pka5sp7hjk2w667xy6a0khkf6sqv5lr8";
+        version = "1.0.23";
+        edition = "2021";
+        sha256 = "0zs70sg00l2fb9jwrf6cbkdyscjs53anrvai2hf7npyyfi5blx4p";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -19323,6 +21231,15 @@ rec {
           {
             name = "auto_impl";
             packageId = "auto_impl";
+          }
+          {
+            name = "aws-config";
+            packageId = "aws-config";
+            features = [ "behavior-version-latest" ];
+          }
+          {
+            name = "aws-credential-types";
+            packageId = "aws-credential-types";
           }
           {
             name = "bigtable_rs";
@@ -21423,7 +23340,7 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
             optional = true;
           }
           {
@@ -22472,6 +24389,7 @@ rec {
         };
         resolvedDefaultFeatures = [
           "alloc"
+          "default"
           "formatting"
           "macros"
           "parsing"
@@ -23931,11 +25849,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "http-body-util";
@@ -24757,11 +26675,11 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
             optional = true;
           }
           {
@@ -24817,7 +26735,7 @@ rec {
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
           }
           {
             name = "tokio";
@@ -25051,13 +26969,13 @@ rec {
           }
           {
             name = "http";
-            packageId = "http";
+            packageId = "http 1.4.0";
             usesDefaultFeatures = false;
             features = [ "std" ];
           }
           {
             name = "http-body";
-            packageId = "http-body";
+            packageId = "http-body 1.0.1";
             usesDefaultFeatures = false;
           }
           {
@@ -25108,9 +27026,9 @@ rec {
       };
       "tracing" = rec {
         crateName = "tracing";
-        version = "0.1.43";
+        version = "0.1.44";
         edition = "2018";
-        sha256 = "0iy6dyqk9ign880xw52snixrs507hj2xqyflaa4kf6aw1c5dj59d";
+        sha256 = "006ilqkg1lmfdh3xhg3z762izfwmxcvz0w7m4qx2qajbz9i1drv3";
         authors = [
           "Eliza Weisman <eliza@buoyant.io>"
           "Tokio Contributors <team@tokio.rs>"
@@ -25230,9 +27148,9 @@ rec {
       };
       "tracing-core" = rec {
         crateName = "tracing-core";
-        version = "0.1.35";
+        version = "0.1.36";
         edition = "2018";
-        sha256 = "0v0az9hivci6bysd796za7g823gkasb8qmdqdsiwd2awmd7y413s";
+        sha256 = "16mpbz6p8vd6j7sf925k9k8wzvm9vdfsjbynbmaxxyq6v7wwm5yv";
         libName = "tracing_core";
         authors = [
           "Tokio Contributors <team@tokio.rs>"
@@ -26285,6 +28203,17 @@ rec {
           "std"
         ];
       };
+      "urlencoding" = rec {
+        crateName = "urlencoding";
+        version = "2.1.3";
+        edition = "2021";
+        sha256 = "1nj99jp37k47n0hvaz5fvz7z6jd0sb4ppvfy3nphr1zbnyixpy6s";
+        authors = [
+          "Kornel <kornel@geekhood.net>"
+          "Bertram Truong <b@bertramtruong.com>"
+        ];
+
+      };
       "utf8_iter" = rec {
         crateName = "utf8_iter";
         version = "1.0.4";
@@ -26694,6 +28623,21 @@ rec {
             "serde_derive"
           ];
         };
+      };
+      "vsimd" = rec {
+        crateName = "vsimd";
+        version = "0.8.0";
+        edition = "2021";
+        sha256 = "0r4wn54jxb12r0x023r5yxcrqk785akmbddqkcafz9fm03584c2w";
+        features = {
+          "detect" = [ "std" ];
+          "std" = [ "alloc" ];
+        };
+        resolvedDefaultFeatures = [
+          "alloc"
+          "detect"
+          "std"
+        ];
       };
       "vsock" = rec {
         crateName = "vsock";
@@ -32505,6 +34449,22 @@ rec {
         resolvedDefaultFeatures = [
           "default"
           "unsupported"
+        ];
+      };
+      "xmlparser" = rec {
+        crateName = "xmlparser";
+        version = "0.13.6";
+        edition = "2018";
+        sha256 = "1r796g21c70p983ax0j6rmhzmalg4rhx61mvd4farxdhfyvy1zk6";
+        authors = [
+          "Yevhenii Reizner <razrfalcon@gmail.com>"
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
         ];
       };
       "yansi" = rec {
