@@ -60,6 +60,8 @@ in
 
   "grafana-oauth-secret.age" = public01Default;
 
+  "ci-cache-bucket-credentials.age" = public01Default;
+
   "binary-cache-key.age" = builderDefault;
   "buildkite-agent-token.age" = builderDefault;
   "buildkite-ssh-private-key.age" = builderDefault;

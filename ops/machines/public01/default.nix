@@ -12,6 +12,7 @@ in
 {
   imports = [
     ./disko.nix
+    ./snix-store-daemon.nix
 
     (mod "hetzner-cloud.nix")
     (mod "forgejo.nix")
@@ -137,6 +138,7 @@ in
       keycloak-db-password.file = secretFile "keycloak-db-password";
       restic-repository-password.file = secretFile "restic-repository-password";
       restic-bucket-credentials.file = secretFile "restic-bucket-credentials";
+      ci-cache-bucket-credentials.file = secretFile "ci-cache-bucket-credentials";
     };
 
   services.fail2ban.enable = true;
