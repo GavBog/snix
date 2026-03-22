@@ -15,7 +15,7 @@ where
     write!(f, "'")?;
     for c in s.chars() {
         if c == '\'' {
-            write!(f, "\\'")?;
+            write!(f, "'\\''")?;
         } else {
             write!(f, "{c}")?;
         }
@@ -167,7 +167,7 @@ mod test {
     #[case::empty_key(json!({"": "value"}), "")]
     #[case::null(json!({"k": null}), r#"declare k=''"#)]
     #[case::string(json!({"k":"v"}), r#"declare k='v'"#)]
-    #[case::string_escaping(json!({"k":"v'"}), r#"declare k='v\''"#)]
+    #[case::string_escaping(json!({"k":"v'w"}), r#"declare k='v'\''w'"#)]
     #[case::bool_false(json!({"k":false}), r#"declare k="#)]
     #[case::bool_true(json!({"k":true}), r#"declare k=1"#)]
     #[case::number(json!({"k":1}), r#"declare k=1"#)]
