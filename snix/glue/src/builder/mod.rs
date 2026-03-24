@@ -647,11 +647,11 @@ mod test {
                 ]),
                 additional_files: vec![
                     AdditionalFile {
-                        path: "/build/.attrs.json".into(),
+                        path: "build/.attrs.json".into(),
                         contents: Bytes::from_static(br#"{"":"bar","PATH":"/nix/store/imad8dvhp77h0pjbckp6wvmnyhp8dpgg-coreutils-9.8/bin","builder":"/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash","k":{"b":1.0,"bar":true,"c":false,"d":true},"l":42,"m":false,"n":1.1,"name":"script.sh","outputs":{"out":"/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh"},"system":"x86_64-linux"}"#)
                     },
                     AdditionalFile {
-                        path: "/build/.attrs.sh".into(),
+                        path: "build/.attrs.sh".into(),
                         contents: Bytes::from_static(br#"declare PATH='/nix/store/imad8dvhp77h0pjbckp6wvmnyhp8dpgg-coreutils-9.8/bin'
 declare builder='/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash'
 declare -A k=(['b']=1 ['bar']=1 ['c']= ['d']=1 )

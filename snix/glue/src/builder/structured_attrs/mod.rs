@@ -59,14 +59,14 @@ pub fn handle_structured_attrs<'a>(
 
     environment_vars.insert(JSON_FILE_ENV_NAME.to_owned(), JSON_FILE_PATH.into());
     additional_files.insert(
-        JSON_FILE_PATH.to_string(),
+        JSON_FILE_PATH[1..].to_string(),
         serde_json::to_string(&map)
             .expect("Snix bug: unable to serialize json")
             .into(),
     );
 
     environment_vars.insert(SH_FILE_ENV_NAME.to_owned(), SH_FILE_PATH.into());
-    additional_files.insert(SH_FILE_PATH.to_string(), {
+    additional_files.insert(SH_FILE_PATH[1..].to_string(), {
         let mut out = String::new();
         shell::write_attrs_sh_file(&mut out, map).unwrap();
         Bytes::from(out)
