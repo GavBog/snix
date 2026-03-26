@@ -11,6 +11,10 @@ use crate::fixtures::{DUMMY_PATH_DIGEST, PATH_INFO};
 use crate::pathinfoservice::redb::{RedbPathInfoService, RedbPathInfoServiceConfig};
 use crate::pathinfoservice::test_signing_service;
 
+#[cfg(test)]
+#[cfg(feature = "fuse")]
+mod fs;
+
 mod utils;
 pub use self::utils::make_grpc_path_info_service_client;
 

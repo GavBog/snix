@@ -65,6 +65,11 @@ pub trait PathInfoService: Send + Sync {
     /// and the box allows different underlying stream implementations to be returned since
     /// Rust doesn't support this as a generic in traits yet. This is the same thing that
     /// [async_trait] generates, but for streams instead of futures.
+    ///
+    /// Even though this function is not async, underlying implementations are
+    /// assumed to be nonblocking on IO, so they MUST use spawn_blocking when
+    /// doing IO.
+    /// Implementations can assume to be invoked in the context of a tokio runtime.
     fn list(&self) -> BoxStream<'static, Result<PathInfo, Error>>;
 
     /// Returns a (more) suitable NarCalculationService.

@@ -78,7 +78,7 @@ use tracing::{Span, debug, error, instrument, warn};
 pub struct SnixStoreFs<BS, DS, RN: RootNodes> {
     blob_service: BS,
     directory_service: DS,
-    root_nodes_provider: RN,
+    root_nodes_provider: Arc<RN>,
     settings: FSSettings,
 
     /// This maps a given basename in the root to the inode we allocated for the node.
@@ -145,7 +145,7 @@ where
         Self {
             blob_service,
             directory_service,
-            root_nodes_provider,
+            root_nodes_provider: Arc::new(root_nodes_provider),
 
             settings,
 
@@ -497,7 +497,10 @@ where
                 return Err(io::Error::from_raw_os_error(libc::EPERM)); // same error code as ipfs/kubo
             }
 
-            let stream = self.root_nodes_provider.list().enumerate().boxed();
+            let root_nodes_provider = self.root_nodes_provider.clone();
+            let stream = self
+                .tokio_handle
+                .block_on(async move { root_nodes_provider.list().enumerate().boxed() });
 
             // Put the stream into [self.dir_handles].
             // TODO: this will overflow after 2**64 operations,

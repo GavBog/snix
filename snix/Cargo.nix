@@ -21329,6 +21329,10 @@ rec {
             packageId = "async-process";
           }
           {
+            name = "fuse-backend-rs";
+            packageId = "fuse-backend-rs";
+          }
+          {
             name = "hex-literal";
             packageId = "hex-literal";
           }
