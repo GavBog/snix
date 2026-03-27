@@ -8,6 +8,7 @@ mod error;
 
 pub use de::from_str;
 pub use de::from_str_with_config;
+pub use error::Error;
 
 #[cfg(test)]
 mod de_tests;
