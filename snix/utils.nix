@@ -125,7 +125,7 @@ in
         nativeBuildInputs = [ pkgs.protobuf ];
       };
 
-      snix-castore-htp = prev: {
+      snix-castore-http = prev: {
         src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
 
@@ -167,6 +167,41 @@ in
       };
 
       snix-tracing = prev: {
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
+      };
+
+      snix-cli-build = prev: {
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
+      };
+
+      snix-cli-castore = prev: {
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
+      };
+
+      snix-cli-castore-http = prev: {
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
+      };
+
+      snix-cli-derivation-show = prev: {
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
+      };
+
+      snix-cli-eval = prev: {
+        src = filterRustCrateSrc rec {
+          root = prev.src.origSrc;
+          extraFileset = lib.fileset.fileFilter (f: f.hasExt "nix") (root + "/tests");
+        };
+      };
+
+      snix-cli-nar-bridge = prev: {
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
+      };
+
+      snix-cli-nix-daemon = prev: {
+        src = filterRustCrateSrc { root = prev.src.origSrc; };
+      };
+
+      snix-cli-store = prev: {
         src = filterRustCrateSrc { root = prev.src.origSrc; };
       };
     };
