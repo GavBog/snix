@@ -64,6 +64,7 @@ in
           output {
             logs = [otelcol.exporter.loki.default.input]
             metrics = [otelcol.exporter.prometheus.default.input]
+            traces = [otelcol.exporter.otlphttp.tempo.input]
           }
         }
 
@@ -146,6 +147,29 @@ in
           external_labels = {
             hostname = constants.hostname,
           }
+        }
+
+        // Push to tempo via otlp-http.
+        otelcol.exporter.otlphttp "tempo" {
+          client {
+            endpoint = "https://tempo.snix.dev"
+            auth = otelcol.auth.basic.creds.handler
+          }
+        }
+
+        local.file "creds_password" {
+          filename = format("%s/metrics_remote_write_password", sys.env("CREDENTIALS_DIRECTORY"))
+          is_secret = true
+        }
+
+        otelcol.auth.basic "creds" {
+          username = "promtail" // FUTUREWORK: rename this
+          password = local.file.creds_password.content
+          // FUTUREWORK: update to client_auth once alloy is bumped
+          // client_auth {
+          //   username = "promtail" // FUTUREWORK: rename this
+          //   password_file = format("%s/metrics_remote_write_password", env("CREDENTIALS_DIRECTORY"))
+          // }
         }
       '';
     }
