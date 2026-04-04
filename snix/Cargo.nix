@@ -23324,7 +23324,10 @@ rec {
             name = "clap";
             packageId = "clap";
             optional = true;
-            features = [ "derive" ];
+            features = [
+              "derive"
+              "env"
+            ];
           }
           {
             name = "clap-verbosity-flag";

@@ -14,10 +14,6 @@ in
 
   services.nar-bridge = {
     enable = true;
-    extraArgs = [
-      "--tracer"
-      "otlp"
-    ];
     package = depot.snix.cli.nar-bridge.with-features-xp-store-composition-cli-otlp;
 
     settings = {
@@ -70,6 +66,8 @@ in
   ];
 
   systemd.services.nar-bridge = {
+    environment.TRACER = "otlp";
+
     # Ensure /tank is mounted, which is where we the blobservice reads from.
     unitConfig.RequiresMountsFor = "/tank";
 

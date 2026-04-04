@@ -468,7 +468,7 @@ fn gen_meter_provider()
 pub struct TracingArgs<L: LogLevel = InfoLevel> {
     #[cfg(any(feature = "otlp", feature = "tracy", feature = "chrome"))]
     /// Which tracers to enable.
-    #[arg(long, value_enum, action(clap::ArgAction::Append))]
+    #[arg(long, value_enum, action(clap::ArgAction::Append), env)]
     tracer: Vec<Tracer>,
 
     #[clap(flatten)]

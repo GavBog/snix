@@ -25,14 +25,6 @@ in
     services.nar-bridge = {
       enable = lib.mkEnableOption "nar-bridge service";
 
-      extraArgs = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [ ];
-        description = ''
-          List of additional command line arguments to pass to nar-bridge.
-        '';
-      };
-
       package =
         lib.mkPackageOption depot "snix.cli.nar-bridge.with-features-xp-store-composition-cli"
           { };
@@ -71,9 +63,7 @@ in
       wantedBy = [ "multi-user.target" ];
       environment.OTEL_SERVICE_NAME = "snix.nar-bridge";
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/snix-nar-bridge ${
-          utils.escapeSystemdExecArgs (args ++ cfg.extraArgs)
-        }";
+        ExecStart = "${cfg.package}/bin/snix-nar-bridge ${utils.escapeSystemdExecArgs args}";
 
         Restart = "always";
         RestartSec = "10";
