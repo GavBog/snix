@@ -51,6 +51,27 @@ in
 
     environment.etc = {
       "alloy/config.alloy".text = ''
+        // Accept OTLP on localhost and forward.
+        otelcol.receiver.otlp "main" {
+          grpc {
+            endpoint = "[::1]:4317"
+          }
+
+          http {
+            endpoint = "[::1]:4318"
+          }
+
+          output {
+            logs = [otelcol.exporter.loki.default.input]
+            metrics = [otelcol.exporter.prometheus.default.input]
+          }
+        }
+
+        // convert OTLP metrics to Prometheus format
+        otelcol.exporter.prometheus "default" {
+          forward_to = [prometheus.remote_write.default.receiver]
+        }
+
         prometheus.exporter.unix "default" {
           enable_collectors = [
             "processes",
@@ -62,17 +83,17 @@ in
         // Configure node exporter
         prometheus.scrape "node_exporter" {
           targets = prometheus.exporter.unix.default.targets
-          forward_to = [prometheus.remote_write.mimir.receiver]
+          forward_to = [prometheus.remote_write.default.receiver]
         }
 
         // Configure a prometheus.scrape component to collect Alloy metrics.
         prometheus.exporter.self "default" {}
         prometheus.scrape "self" {
           targets    = prometheus.exporter.self.default.targets
-          forward_to = [prometheus.remote_write.mimir.receiver]
+          forward_to = [prometheus.remote_write.default.receiver]
         }
 
-        prometheus.remote_write "mimir" {
+        prometheus.remote_write "default" {
           endpoint {
             url = "https://mimir.snix.dev/api/v1/push"
             basic_auth {
@@ -94,7 +115,7 @@ in
             targets = [
               {"__address__" = "localhost:${toString v.port}"},
             ]
-            forward_to = [prometheus.remote_write.mimir.receiver]
+            forward_to = [prometheus.remote_write.default.receiver]
           }
         '';
       }
