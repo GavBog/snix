@@ -19,16 +19,21 @@ let
       sha256 = "13mfnjnjp21wms4mw35ar019775qgy3fnjc59zrpnqbkfmzyvv02";
     }
   );
+  mod = name: depot.path.origSrc + ("/ops/modules/" + name);
 
 in
 {
   imports = [
     "${disko}/module.nix"
     ./disko.nix
-    ./monitoring.nix
     ./nar-bridge.nix
     srvos.nixosModules.hardware-hetzner-online-amd
     srvos.nixosModules.mixins-nginx
+
+    # Automatically enable metric and log collection.
+    (mod "o11y/alloy.nix")
+
+    (depot.third_party.agenix.src + "/modules/age.nix")
   ];
 
   options = {
@@ -49,8 +54,7 @@ in
 
     nixpkgs.hostPlatform = lib.mkForce "x86_64-linux";
 
-    # kept as-is because we don't want to relabel historical metrics
-    networking.hostName = "tvix-cache";
+    networking.hostName = "snix-cache";
 
     systemd.network.networks."10-uplink".networkConfig.Address = "2a01:4f9:3071:1091::2/64";
 
