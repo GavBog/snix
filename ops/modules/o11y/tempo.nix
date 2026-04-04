@@ -45,7 +45,10 @@ in
           ];
         };
 
-        overrides.defaults.metrics_generator.processors = [ "span-metrics" ];
+        overrides.defaults.metrics_generator.processors = [
+          "local-blocks"
+          "span-metrics"
+        ];
       };
     };
 
