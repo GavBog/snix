@@ -32,31 +32,30 @@ in
 
     # Automatically enable metric and log collection.
     (mod "o11y/alloy.nix")
+    (mod "www/nixos.snix.store.nix")
 
     (depot.third_party.agenix.src + "/modules/age.nix")
   ];
 
-  options = {
-    machine.domain = lib.mkOption {
-      type = lib.types.str;
-      default = "nixos.snix.store";
-    };
-  };
-
   config = {
-    services.nginx.virtualHosts."${config.machine.domain}" = {
-      enableACME = true;
-      forceSSL = true;
-    };
-
-    security.acme.acceptTerms = true;
-    security.acme.defaults.email = "admin+acme@numtide.com";
-
     nixpkgs.hostPlatform = lib.mkForce "x86_64-linux";
 
     networking.hostName = "snix-cache";
 
     systemd.network.networks."10-uplink".networkConfig.Address = "2a01:4f9:3071:1091::2/64";
+
+    services.nginx.virtualHosts."nixos.snix.store".locations."=/" = {
+      tryFiles = "$uri $uri/index.html =404";
+      root =
+        pkgs.runCommand "index"
+          {
+            nativeBuildInputs = [ pkgs.markdown2html-converter ];
+          }
+          ''
+            mkdir -p $out
+            markdown2html-converter ${./README.md} -o $out/index.html
+          '';
+    };
 
     # Enable SSH and add some keys
     services.openssh.enable = true;
