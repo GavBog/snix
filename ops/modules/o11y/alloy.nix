@@ -72,6 +72,11 @@ in
           forward_to = [prometheus.remote_write.default.receiver]
         }
 
+        // Convert OTLP logs to Loki format
+        otelcol.exporter.loki "default" {
+          forward_to = [loki.write.default.receiver]
+        }
+
         prometheus.exporter.unix "default" {
           enable_collectors = [
             "processes",
@@ -96,6 +101,43 @@ in
         prometheus.remote_write "default" {
           endpoint {
             url = "https://mimir.snix.dev/api/v1/push"
+            basic_auth {
+              username = "promtail" // FUTUREWORK: rename this
+              password_file = format("%s/metrics_remote_write_password", env("CREDENTIALS_DIRECTORY"))
+            }
+          }
+          external_labels = {
+            hostname = constants.hostname,
+          }
+        }
+
+        loki.relabel "journal" {
+          forward_to = []
+          rule {
+            source_labels = ["__journal__systemd_unit"]
+            target_label = "systemd_unit"
+          }
+          rule {
+            source_labels = ["__journal__hostname"]
+            target_label = "nodename"
+          }
+          rule {
+            source_labels = ["__journal_syslog_identifier"]
+            target_label = "syslog_identifier"
+          }
+        }
+
+        loki.source.journal "journal" {
+          forward_to = [loki.write.default.receiver]
+          max_age = "12h"
+
+          labels = {job = "systemd-journal"}
+          relabel_rules = loki.relabel.journal.rules
+        }
+
+        loki.write "default" {
+          endpoint {
+            url = "https://loki.snix.dev/loki/api/v1/push"
             basic_auth {
               username = "promtail" // FUTUREWORK: rename this
               password_file = format("%s/metrics_remote_write_password", env("CREDENTIALS_DIRECTORY"))
