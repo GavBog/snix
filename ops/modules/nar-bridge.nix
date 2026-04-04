@@ -71,7 +71,9 @@ in
       wantedBy = [ "multi-user.target" ];
       environment.OTEL_SERVICE_NAME = "snix.nar-bridge";
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/snix-nar-bridge ${utils.escapeSystemdExecArgs args}";
+        ExecStart = "${cfg.package}/bin/snix-nar-bridge ${
+          utils.escapeSystemdExecArgs (args ++ cfg.extraArgs)
+        }";
 
         Restart = "always";
         RestartSec = "10";
