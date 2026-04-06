@@ -162,6 +162,11 @@ where
         // parse the received narinfo
         let narinfo = NarInfo::parse(&narinfo_str).map_err(Error::ParseNARInfo)?;
 
+        // ensure the store path digest in the returned NARInfo matches the one we requested.
+        if narinfo.store_path.digest() != &digest {
+            return Err("Store path digest in NARInfo doesn't match".into());
+        }
+
         // if [self.trusted_public_keys] is set, ensure there's at least one valid signature.
         if !self.trusted_public_keys.is_empty() {
             let fingerprint = narinfo.fingerprint();
