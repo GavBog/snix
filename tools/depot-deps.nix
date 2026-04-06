@@ -5,6 +5,7 @@
 depot.nix.lazy-deps {
   age-keygen.attr = "third_party.nixpkgs.age";
   age.attr = "third_party.nixpkgs.age";
+  colmena.attr = "third_party.nixpkgs.colmena";
   depotfmt.attr = "tools.depotfmt";
   gerrit.attr = "tools.gerrit-cli";
   mg.attr = "tools.magrathea";
