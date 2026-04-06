@@ -1,0 +1,13 @@
+// A test case requiring null device
+
+lang {
+  builtins "readFileType"
+}
+
+// Maybe that should be a platform flag?, like
+//   environment { platform "unix" }
+environment {
+  fixtures {
+    device "/dev/null"
+  }
+}

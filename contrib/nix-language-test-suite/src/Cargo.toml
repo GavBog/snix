@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = ["common", "cppnix", "snix"]
+
+[workspace.dependencies]
+rstest = "0.26.1"
+serde = "1.0.228"
+toml = "1.1.2"

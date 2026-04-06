@@ -1,0 +1,114 @@
+// This file is a helper with information about all possible
+// flags, features and errors. It also connects certain builtins to features.
+//
+// This information can be useful for implementing test runners, e.g. know what to expect in
+// case descriptions, see flags' defaults, etc.
+
+// Language parts required for the test case
+//
+// There are two categories so far: builtins and features
+//
+// builtins are mostly just builtin functions
+//
+// features are different semantic elements of the language e.g. operators, special symbols, etc.
+//  They represented as a flat list instead of multiple categories (like operators, expressions, etc.)
+//  because it seems like from the runner's perspective it would not make a big difference. In the end,
+//  each runner is going to have some sort of enum of everything and it does not matter if it is
+//  a single long enum or multiple shorter ones.
+//  Also, defining and describing all of Nix's language features seem like a huge task on its own,
+//  so for now just focus on the basic structure
+lang {
+  // Functions
+  builtins \
+    "abort" \
+    "baseNameOf" \
+    "bitAnd" \
+    "bitOr" \
+    "bitXor" \
+    "currentSystem" \
+    "derivation" \
+    "fetchtarball" \
+    "fetchurl" \
+    "filter" \
+    "fromTOML" \
+    "isFunction" \
+    "length" \
+    "parseFlakeRef" \
+    "readFile" \
+    "readFileType" \
+    "__nixPath" \
+    "__div"
+
+  // As a starting point only features introduced since 2.3 are defined
+  features \
+    "flakes" \ // >= 2.3
+    "path-interpolation" \ // >= 2.4
+    "lexical-lists-comparison" \ // >= 2.5
+    "pipe-operators" \ // >= 2.24
+    "corepkgs" \ // a function, but usually invoked through `import <nix/fetchurl.nix>`
+    "curpos" // __curPos is a feature and not a builtin because its semantics differs. For example, __nixPath can be shadowed while __curPos can not
+}
+
+environment {
+  fixtures {
+    dir "empty-directory"
+
+    // A not empty directory
+    dir "directory" {
+      file "nested-file" content="hello"
+      dir "nested-directory"
+    }
+
+    // A file with inlined content
+    file "inline-content" content="hello"
+
+    // A symlink file
+    file "symlinked" symlink="path/to/source"
+
+    // A file copied from assets (but not limited to)
+    file "copy" ref="path/to/asset"
+
+    // This is not a valid file fixture. `content`, `ref` and
+    // `symlink` properties are mutually exclusive
+    //
+    // file "ambigous" ref="path/to/asset" content="hello"
+  }
+
+  // A working directory where the test must be executed. This is required for
+  // cases that return absolute paths e.g. __curPos or path interpolation
+  //
+  // Runners currently handle in via output replacement
+  //
+  // TODO: So far, the only value for that is "/pwd/lang". Maybe make it a default?
+  work-dir ""
+
+  // Whether the test case requires network access
+  network
+
+  // Whether nix store is required (import from derivation case)
+  nix-store
+
+  // Environment variables needed for the test
+  env-var "HOME" "/fake-home"
+}
+
+runtime-opts {
+  // Boolean nodes. They have no assosiated
+  // arguments. If the node is not present, its value is `false`, otherwise `true`
+  eval-strict
+  xml-output
+
+  search-path "dir1" "dir2=dir3"
+}
+
+// Error kinds are derived from snix's errors
+// but referred to by slug and not by code like E000
+// for better human-readability
+//
+// Errors are stored in .err files adjacent to test cases,
+// so they're not techically a part of .kdl files
+//
+// Possible values:
+errors \
+  "IO" \
+  "NotCoercibleToString"

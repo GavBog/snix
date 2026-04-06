@@ -1,0 +1,15 @@
+[nix_2_3]
+paths = [
+  # Ordering change after 2.3
+  "eval-okay-xml",
+
+  # In 2.3, even if NIX_PATH is overwritten,
+  # nix search path includes `corepkgs` and test
+  # assertion fails
+  "eval-okay-search-path",
+]
+builtins = ["readFileType"]
+features = ["flakes", "pipe-operators", "path-interpolation"]
+
+[nix_latest]
+[lix_latest]

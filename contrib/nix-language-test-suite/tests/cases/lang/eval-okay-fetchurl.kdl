@@ -1,0 +1,13 @@
+// A test case that requires <nix/fetchurl.nix>
+
+lang {
+  builtins "fetchurl" "corepkgs"
+}
+
+environment {
+  network
+}
+
+runtime-opts {
+  eval-strict
+}

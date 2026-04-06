@@ -1,0 +1,18 @@
+lang {
+  builtins "readFileType"
+}
+
+environment {
+  fixtures {
+    dir "readDir" {
+      dir "foo"
+      file "bar" content=""
+      dir "ldir" symlink="foo"
+      file "linked" symlink="bar"
+    }
+  }
+}
+
+runtime-opts {
+  eval-strict
+}

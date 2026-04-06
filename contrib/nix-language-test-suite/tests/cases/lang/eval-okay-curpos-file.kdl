@@ -1,0 +1,13 @@
+// A test case that requires a certain keyword to be implement
+
+lang {
+  features "curpos"
+}
+
+environment {
+  work-dir "/pwd/lang"
+}
+
+runtime-opts {
+  eval-strict
+}

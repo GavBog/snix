@@ -1,0 +1,28 @@
+lang {
+  builtins "isFunction" "length" "filter" "baseNameOf" "__nixPath"
+  features "corepkgs"
+}
+
+environment {
+  fixtures {
+    dir "dir1" ref="assets/dir1"
+    dir "dir2" ref="assets/dir2"
+    dir "dir3" ref="assets/dir3"
+    dir "dir4" ref="assets/dir4"
+  }
+
+  env-var "NIX_PATH" "dir3:dir4"
+}
+
+runtime-opts {
+  // Maybe something like below instead?
+  //
+  // ```
+  // runtime-opts {
+  //   search-path "dir1"
+  //   search-path "dir2"
+  //   search-path "dir3" prefix="dir5"
+  // }
+  // ```
+  search-path "dir1" "dir2" "dir5=dir3"
+}

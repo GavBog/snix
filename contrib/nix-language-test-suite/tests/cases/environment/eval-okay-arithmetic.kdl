@@ -1,0 +1,12 @@
+// A test case that requires a shared lib.nix file, used
+// by multiple other tests
+
+lang {
+  builtins "abort" "bitAnd" "bitOr" "bitXor"
+}
+
+environment {
+  fixtures {
+    file "lib.nix" ref="../../nixlib/lib.nix"
+  }
+}

@@ -1,0 +1,10 @@
+[package]
+name = "nix-language-test-suite-cppnix"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+nix-language-test-suite-common = { path = "../common" }
+rstest.workspace = true
+serde.workspace = true
+toml.workspace = true

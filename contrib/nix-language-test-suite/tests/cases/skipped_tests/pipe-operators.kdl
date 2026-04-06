@@ -1,0 +1,5 @@
+// This test case is skipped based on language feature
+
+lang {
+  features "pipe-operators"
+}

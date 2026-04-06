@@ -1,0 +1,5 @@
+// A test case that expects error
+
+lang {
+  features "path-interpolation"
+}

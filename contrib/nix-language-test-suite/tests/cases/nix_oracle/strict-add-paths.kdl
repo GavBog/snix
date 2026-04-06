@@ -1,0 +1,9 @@
+// This is a nix_oracle.rs test with strict eval mode
+
+environment {
+  work-dir "/pwd/lang"
+}
+
+runtime-opts {
+  eval-strict
+}

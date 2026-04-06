@@ -1,0 +1,15 @@
+// A test case that requires HOME to be /fake-home
+
+lang {
+  features "path-interpolation"
+}
+
+environment {
+  work-dir "/pwd/lang"
+
+  env-var "HOME" "/fake-home"
+}
+
+runtime-opts {
+  eval-strict
+}

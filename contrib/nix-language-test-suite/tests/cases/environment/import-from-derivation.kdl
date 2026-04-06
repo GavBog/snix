@@ -1,0 +1,9 @@
+// An example of import-from-derivation test, which requires an actual store
+
+lang {
+  builtins "derivation" "readFile" "currentSystem"
+}
+
+environment {
+  nix-store
+}

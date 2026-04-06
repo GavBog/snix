@@ -1,0 +1,8 @@
+paths = [
+  # dir is missing in snix's output
+  "eval-okay-parser-flake-ref",
+]
+
+builtins = ["readFileType", "readFile", "__nixPath"]
+
+features = ["pipe-operators"]

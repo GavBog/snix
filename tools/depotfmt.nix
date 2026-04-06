@@ -16,7 +16,8 @@ let
       "snix/eval/src/tests/nix_tests/*",
       "snix/eval/src/tests/snix_tests/*",
       "snix/glue/src/tests/nix_tests/*",
-      "snix/glue/src/tests/snix_tests/*"
+      "snix/glue/src/tests/snix_tests/*",
+      "contrib/nix-language-test-suite/tests/*",
     ]
 
     [formatter.rust]

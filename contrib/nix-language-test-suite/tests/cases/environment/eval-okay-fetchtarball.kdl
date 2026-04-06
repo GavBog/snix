@@ -1,0 +1,13 @@
+// A test case that requires network access
+
+lang {
+  builtins "fetchtarball"
+}
+
+environment {
+  network
+}
+
+runtime-opts {
+  eval-strict
+}

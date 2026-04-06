@@ -1,0 +1,6 @@
+// an XML output test example
+
+runtime-opts {
+  eval-strict
+  xml-output
+}
