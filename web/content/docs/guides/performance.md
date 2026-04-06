@@ -55,6 +55,7 @@ In a production scenario, you will have these collectors running on all your
 machines, and some centralized service ingesting and aggregating all traces,
 across your infrastructure.
 
+### Testing with Jaeger
 If you don't have such a thing running, but want to give it a try, you can spin
 up a testing one on demand:
 
@@ -80,6 +81,12 @@ interface at http://localhost:16686/search.
 
 After running Snix, you should see some spans in the web interface.
 
+### Testing with `otel-tui`
+There's also a TUI, [otel-tui](https://github.com/ymtdzzz/otel-tui) that will
+accept OTLP traces and show them in a TUI.
+It's packaged in nixpkgs-unstable.
+
+### Sending traces to somewhere else than localhost.
 As documented in the [OpenTelemetry docs][otlp-docs], you can also
 point Snix to push to another location by setting `OTEL_EXPORTER_OTLP_ENDPOINT`.
 However note it is recommended to keep the collectors close to where the
