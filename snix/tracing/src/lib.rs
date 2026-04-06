@@ -266,6 +266,7 @@ impl TracingBuilder {
             ))
             .with_writer(indicatif_layer.get_stderr_writer())
             .compact()
+            .with_filter(construct_filter(self.level.to_owned()))
             .and_then((!self.disable_progress_bars).then(|| {
                 indicatif_layer.with_filter(
                     // only show progress for spans with indicatif.pb_show field being set
@@ -327,8 +328,6 @@ impl TracingBuilder {
                 TracyLayer::default()
             }),
         );
-
-        let layered = layered.with_filter(construct_filter(self.level.to_owned()));
 
         tracing_subscriber::registry()
             // TODO: if additional_layer has global filters, there is a risk that it will disable the "default" ones,
