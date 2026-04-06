@@ -317,8 +317,8 @@ thread_local! {
 ///
 /// For performance reasons (to keep allocations small, and to avoid indirections), [`NixString`] is
 /// represented as a single *thin* pointer to a packed data structure containing the
-/// [context][NixContext] and the string data itself (which is a raw byte array, to match the Nix
-/// string semantics that allow any array of bytes to be represented by a string).
+/// the string data (which is a raw byte array, to match the Nix
+/// string semantics that allow any array of bytes to be represented by a string) and optionally a [context][NixContext].
 ///
 /// This memory representation is documented in [`NixStringInner`], but since Rust prefers to deal
 /// with slices via *fat pointers* (pointers that include the length in the *pointer*, not in the
