@@ -1,5 +1,3 @@
-{ config, pkgs, ... }:
-
 {
   config = {
     networking.firewall.allowedTCPPorts = [
