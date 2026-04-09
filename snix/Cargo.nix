@@ -487,7 +487,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.60.2";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_System_Console"
@@ -515,7 +515,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.60.2";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_System_Console"
@@ -5254,7 +5254,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -8858,7 +8858,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -11359,7 +11359,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             rename = "windows";
             target = { target, features }: (target."windows" or false);
             features = [
@@ -15060,9 +15060,9 @@ rec {
       };
       "redb" = rec {
         crateName = "redb";
-        version = "3.1.1";
+        version = "4.0.0";
         edition = "2024";
-        sha256 = "04c6k2fngjr4y66rpsbl53hr1fy3cimk0fmd753am0n734ikd6gg";
+        sha256 = "1pnbyxyrkg2fm8v5hn6m2rdgpw2h29mzkk00mjvp44bvx8qz5xv7";
         authors = [
           "Christopher Berner <me@cberner.com>"
         ];
@@ -17284,7 +17284,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -17696,7 +17696,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.61.2";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -22144,7 +22144,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -28891,7 +28891,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.48.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -30602,10 +30602,8 @@ rec {
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Pipes"
-          "Win32_System_SystemInformation"
           "Win32_System_WindowsProgramming"
           "default"
         ];
@@ -30861,14 +30859,7 @@ rec {
           "Win32_Foundation"
           "Win32_Networking"
           "Win32_Networking_WinSock"
-          "Win32_Security"
-          "Win32_Security_Cryptography"
-          "Win32_Storage"
-          "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_Threading"
           "Win32_System_WindowsProgramming"
@@ -31135,11 +31126,9 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
-          "Win32_Security"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
           "Win32_System_IO"
           "default"
         ];
@@ -31707,6 +31696,8 @@ rec {
           "Win32_System"
           "Win32_System_Com"
           "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_LibraryLoader"
           "Win32_System_Memory"
