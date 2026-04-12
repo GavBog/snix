@@ -5,11 +5,14 @@
   ...
 }:
 let
-  protos = lib.sourceByRegex depot.path.origSrc [
-    "buf.yaml"
-    "buf.gen.yaml"
-    "^snix(/castore(/protos(/.*\.proto)?)?)?$"
-  ];
+  protos = lib.fileset.toSource rec {
+    root = depot.path.origSrc;
+    fileset = lib.fileset.unions [
+      (root + "/buf.yaml")
+      (root + "/buf.gen.yaml")
+      (lib.fileset.fileFilter (f: f.hasExt "proto") (root + "/snix/castore/protos"))
+    ];
+  };
 in
 depot.nix.readTree.drvTargets {
   inherit protos;
