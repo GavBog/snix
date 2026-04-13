@@ -7066,7 +7066,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -9402,9 +9402,9 @@ rec {
       };
       "hyper" = rec {
         crateName = "hyper";
-        version = "1.8.1";
+        version = "1.9.0";
         edition = "2021";
-        sha256 = "04cxr8j5y86bhxxlyqb8xkxjskpajk7cxwfzzk4v3my3a3rd9cia";
+        sha256 = "1jmwbwqcaficskg76kq402gbymbnh2z4v99xwq3l5aa6n8bg16b2";
         authors = [
           "Sean McArthur <sean@seanmonstar.com>"
         ];
@@ -9459,11 +9459,6 @@ rec {
           {
             name = "pin-project-lite";
             packageId = "pin-project-lite";
-            optional = true;
-          }
-          {
-            name = "pin-utils";
-            packageId = "pin-utils";
             optional = true;
           }
           {
@@ -9535,7 +9530,6 @@ rec {
             "dep:futures-core"
             "dep:httparse"
             "dep:itoa"
-            "dep:pin-utils"
           ];
           "http2" = [
             "dep:futures-channel"
@@ -9803,7 +9797,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.5.10";
             optional = true;
             features = [ "all" ];
           }
@@ -10753,7 +10747,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -13254,7 +13248,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             rename = "windows";
             target = { target, features }: (target."windows" or false);
             features = [
@@ -16403,7 +16397,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.5.10";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -16675,7 +16669,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.5.10";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -16689,7 +16683,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.60.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19340,7 +19334,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19753,7 +19747,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -24213,7 +24207,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.52.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -30960,7 +30954,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.48.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -32671,8 +32665,10 @@ rec {
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Pipes"
+          "Win32_System_SystemInformation"
           "Win32_System_WindowsProgramming"
           "default"
         ];
@@ -32928,7 +32924,14 @@ rec {
           "Win32_Foundation"
           "Win32_Networking"
           "Win32_Networking_WinSock"
+          "Win32_Security"
+          "Win32_Security_Cryptography"
+          "Win32_Storage"
+          "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_Threading"
           "Win32_System_WindowsProgramming"
@@ -33195,9 +33198,11 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
+          "Win32_Security"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
           "Win32_System_IO"
           "default"
         ];
@@ -33765,8 +33770,6 @@ rec {
           "Win32_System"
           "Win32_System_Com"
           "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_LibraryLoader"
           "Win32_System_Memory"
