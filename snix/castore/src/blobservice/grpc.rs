@@ -19,7 +19,7 @@ use tokio_util::{
     sync::PollSender,
 };
 use tonic::{Code, Status, async_trait};
-use tracing::{Instrument as _, instrument};
+use tracing::{Instrument, Span, instrument};
 
 /// Connects to a (remote) snix-store BlobService over gRPC.
 #[derive(Clone)]
@@ -138,7 +138,20 @@ where
 
         // bytes arriving on the RX side are wrapped inside a
         // [proto::BlobChunk], and a [ReceiverStream] is constructed.
-        let blobchunk_stream = ReceiverStream::new(rx).map(|x| proto::BlobChunk { data: x });
+        let span = Span::current();
+        let blobchunk_stream = ReceiverStream::new(rx).map(move |x| {
+            let span = tracing::trace_span!(
+                parent: &span,
+                "blob_chunk",
+                blob.size = x.len()
+            );
+
+            span.in_scope(|| {
+                tracing::trace!("constructing BlobChunk");
+            });
+
+            proto::BlobChunk { data: x }
+        });
 
         // spawn the gRPC put request, which will read from blobchunk_stream.
         let task = tokio::spawn({
