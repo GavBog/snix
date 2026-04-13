@@ -134,7 +134,7 @@ where
     #[instrument(skip_all, fields(instance_name=%self.instance_name))]
     async fn open_write(&self) -> Box<dyn BlobWriter> {
         // set up an mpsc channel passing around Bytes.
-        let (tx, rx) = tokio::sync::mpsc::channel::<bytes::Bytes>(10);
+        let (tx, rx) = tokio::sync::mpsc::channel::<bytes::Bytes>(64);
 
         // bytes arriving on the RX side are wrapped inside a
         // [proto::BlobChunk], and a [ReceiverStream] is constructed.
