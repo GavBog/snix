@@ -1,3 +1,10 @@
 {
+  "git+https://github.com/arianvp/hyper.git?branch=push-ktssyytnyrru#hyper@1.9.0": "1ghxvg78h0dkjba9xb722pv4p2xzf0z2pnhy7g5f4syghx0hwxay",
+  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-build@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
+  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-health@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
+  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-prost-build@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
+  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-prost@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
+  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-reflection@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
+  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
   "git+https://github.com/tvlfyi/wu-manber.git#wu-manber@0.1.0": "1zhk83lbq99xzyjwphv2qrb8f8qgfqwa5bbbvyzm0z0bljsjv0pd"
 }

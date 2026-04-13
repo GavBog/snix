@@ -9404,7 +9404,12 @@ rec {
         crateName = "hyper";
         version = "1.9.0";
         edition = "2021";
-        sha256 = "1jmwbwqcaficskg76kq402gbymbnh2z4v99xwq3l5aa6n8bg16b2";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/arianvp/hyper.git";
+          rev = "e071325cc75549b37bbcd5be591e93c4c974b4a2";
+          sha256 = "1ghxvg78h0dkjba9xb722pv4p2xzf0z2pnhy7g5f4syghx0hwxay";
+        };
         authors = [
           "Sean McArthur <sean@seanmonstar.com>"
         ];
@@ -14297,9 +14302,9 @@ rec {
       };
       "opentelemetry-otlp" = rec {
         crateName = "opentelemetry-otlp";
-        version = "0.31.0";
+        version = "0.31.1";
         edition = "2021";
-        sha256 = "1gv3h75z8c0p9b85mbq7f1rgsi18wip1xlfa6g82lkfa5pdnc8vs";
+        sha256 = "07zp0b62b9dajnvvcd6j2ppw5zg7wp4ixka9z6fr3bxrrdmcss8z";
         libName = "opentelemetry_otlp";
         dependencies = [
           {
@@ -14485,6 +14490,9 @@ rec {
             "serde_json"
           ];
           "tls" = [ "tonic/tls-ring" ];
+          "tls-aws-lc" = [ "tonic/tls-aws-lc" ];
+          "tls-provider-agnostic" = [ "tonic/_tls-any" ];
+          "tls-ring" = [ "tonic/tls-ring" ];
           "tls-roots" = [
             "tls"
             "tonic/tls-native-roots"
@@ -16265,10 +16273,10 @@ rec {
       };
       "pulldown-cmark" = rec {
         crateName = "pulldown-cmark";
-        version = "0.13.0";
+        version = "0.13.3";
         edition = "2021";
         crateBin = [ ];
-        sha256 = "183fg8lrdhvydrx0dmg446n108rwrvnzci0sd1ig7lkbjqdbx2qy";
+        sha256 = "1bgxjn869lyyb8yc7cpj0pm1127kmrhh8hfby6b3g27sdn4i8fkw";
         libName = "pulldown_cmark";
         authors = [
           "Raph Levien <raph.levien@gmail.com>"
@@ -25963,8 +25971,13 @@ rec {
       "tonic" = rec {
         crateName = "tonic";
         version = "0.14.5";
-        edition = "2021";
-        sha256 = "1v4k7aa28m7722gz9qak2jiy7lis1ycm4fdmq63iip4m0qdcdizy";
+        edition = "2024";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/edef1c/tonic.git";
+          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
+          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+        };
         authors = [
           "Lucio Franco <luciofranco14@gmail.com>"
         ];
@@ -26115,6 +26128,7 @@ rec {
             "tls-connect-info"
           ];
           "channel" = [
+            "dep:h2"
             "dep:hyper"
             "hyper?/client"
             "dep:hyper-util"
@@ -26201,9 +26215,14 @@ rec {
       };
       "tonic-build" = rec {
         crateName = "tonic-build";
-        version = "0.14.3";
-        edition = "2021";
-        sha256 = "1z5njzxk1wsgx63h1zsvi9mqay6h2ir3ddkx5lg782znxl4wiai7";
+        version = "0.14.5";
+        edition = "2024";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/edef1c/tonic.git";
+          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
+          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+        };
         libName = "tonic_build";
         authors = [
           "Lucio Franco <luciofranco14@gmail.com>"
@@ -26234,8 +26253,13 @@ rec {
       "tonic-health" = rec {
         crateName = "tonic-health";
         version = "0.14.5";
-        edition = "2021";
-        sha256 = "1dwf5whxd2z1mnp8d8ynp6mvhxs3xfyga618q0zgnyplzqv0dzzl";
+        edition = "2024";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/edef1c/tonic.git";
+          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
+          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+        };
         libName = "tonic_health";
         authors = [
           "James Nugent <james@jen20.com>"
@@ -26283,8 +26307,13 @@ rec {
       "tonic-prost" = rec {
         crateName = "tonic-prost";
         version = "0.14.5";
-        edition = "2021";
-        sha256 = "02fkg2bv87q0yds2wz3w0s7i1x6qcgbrl00dy6ipajdapfh7clx5";
+        edition = "2024";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/edef1c/tonic.git";
+          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
+          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+        };
         libName = "tonic_prost";
         authors = [
           "Lucio Franco <luciofranco14@gmail.com>"
@@ -26309,8 +26338,13 @@ rec {
       "tonic-prost-build" = rec {
         crateName = "tonic-prost-build";
         version = "0.14.5";
-        edition = "2021";
-        sha256 = "0nprp0dpa0aivxlccjap6289zi6ygrnzbl4k5rkp8xci6vv4s57k";
+        edition = "2024";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/edef1c/tonic.git";
+          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
+          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+        };
         libName = "tonic_prost_build";
         authors = [
           "Lucio Franco <luciofranco14@gmail.com>"
@@ -26367,8 +26401,13 @@ rec {
       "tonic-reflection" = rec {
         crateName = "tonic-reflection";
         version = "0.14.5";
-        edition = "2021";
-        sha256 = "19zwlfzzzdi594ixj4zd582g7dv6ww140xm05d82pl76a5d6iw5a";
+        edition = "2024";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/edef1c/tonic.git";
+          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
+          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+        };
         libName = "tonic_reflection";
         authors = [
           "James Nugent <james@jen20.com>"
