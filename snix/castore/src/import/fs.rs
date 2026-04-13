@@ -195,13 +195,14 @@ where
     });
 
     let mut writer = blob_service.open_write().await;
+    let mut reader = BufReader::with_capacity(128 * 1024, reader);
     if let Some(reference_scanner) = reference_scanner {
-        let mut reader = ReferenceReader::new(reference_scanner, BufReader::new(reader));
-        tokio::io::copy(&mut reader, &mut writer)
+        let mut reader = ReferenceReader::new(reference_scanner, reader);
+        tokio::io::copy_buf(&mut reader, &mut writer)
             .await
             .map_err(|e| Error::BlobRead(path.as_ref().to_path_buf(), e))?;
     } else {
-        tokio::io::copy(&mut BufReader::new(reader), &mut writer)
+        tokio::io::copy_buf(&mut reader, &mut writer)
             .await
             .map_err(|e| Error::BlobRead(path.as_ref().to_path_buf(), e))?;
     }
