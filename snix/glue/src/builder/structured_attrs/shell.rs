@@ -143,7 +143,12 @@ where
 
                 write!(f, "declare -A {k}=(")?;
                 for (k, v) in map {
-                    write!(f, "['{k}']=")?;
+                    // Nix shell-escapes the key (parsed-derivations.cc,
+                    // writeStructuredAttrsShell); unlike the outer var name,
+                    // inner keys are not filtered and may contain quotes.
+                    write!(f, "[")?;
+                    write_shell_escaped_single_quoted(f, &k)?;
+                    write!(f, "]=")?;
                     write_simple_type(f, v)?;
                     write!(f, " ")?;
                 }
@@ -176,6 +181,8 @@ mod test {
     #[case::array_of_strings(json!({"k": ["bar", "baz"]}), r#"declare -a k=('bar' 'baz' )"#)]
     #[case::array_of_strings_and_bool(json!({"k": ["bar", true]}), r#"declare -a k=('bar' 1 )"#)]
     #[case::array_of_strings_and_invalid_number(json!({"k": ["bar", 1.1]}), "")]
+    #[case::object_key_escaping(json!(
+        {"k": {"it's": "v"}}), r#"declare -A k=(['it'\''s']='v' )"#)]
     #[case::object(json!(
         {"k": {
             "bar": true,
