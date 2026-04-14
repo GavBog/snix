@@ -5381,7 +5381,6 @@ dependencies = [
  "nix 0.27.1",
  "nix-compat",
  "pretty_assertions",
- "regex",
  "reqwest 0.13.1",
  "rstest",
  "serde",

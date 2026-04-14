@@ -1,11 +1,14 @@
 //! Contains the code rendering the shell script that's used for structured attrs.
 //!
 
-use regex::Regex;
-use std::sync::LazyLock;
-
-static RE_SH_VAR_NAME: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap());
+/// Checks whether `s` is a valid shell variable name, matching `[A-Za-z_][A-Za-z0-9_]*`.
+fn is_valid_sh_var_name(s: &str) -> bool {
+    let mut bytes = s.bytes();
+    let Some(b'A'..=b'Z' | b'a'..=b'z' | b'_') = bytes.next() else {
+        return false;
+    };
+    bytes.all(|b| matches!(b, b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'_'))
+}
 
 /// Writes an escaped version of the passed string to the writer.
 fn write_shell_escaped_single_quoted<W>(f: &mut W, s: &str) -> std::fmt::Result
@@ -99,7 +102,7 @@ where
         // keys with spaces, backslashes (and potentially everything else making
         // that key an invalid identifier) are silently skipped from the bash
         // file (but present in the ATerm!)
-        if !RE_SH_VAR_NAME.is_match(k.as_str()) {
+        if !is_valid_sh_var_name(k.as_str()) {
             continue;
         }
         match v {

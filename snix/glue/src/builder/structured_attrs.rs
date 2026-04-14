@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 
 use bytes::Bytes;
 use nix_compat::store_path::StorePathRef;
-mod shell;
+use nix_compat::structured_attrs::write_attrs_sh_file;
 
 pub const JSON_KEY: &str = "__json";
 
@@ -68,7 +68,7 @@ pub fn handle_structured_attrs<'a>(
     environment_vars.insert(SH_FILE_ENV_NAME.to_owned(), SH_FILE_PATH.into());
     additional_files.insert(SH_FILE_PATH[1..].to_string(), {
         let mut out = String::new();
-        shell::write_attrs_sh_file(&mut out, map).unwrap();
+        write_attrs_sh_file(&mut out, map).unwrap();
         Bytes::from(out)
     });
 

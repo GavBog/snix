@@ -18159,11 +18159,8 @@ rec {
             features = [
               "flakeref"
               "hashbrown"
+              "serde"
             ];
-          }
-          {
-            name = "regex";
-            packageId = "regex";
           }
           {
             name = "reqwest";

@@ -30,6 +30,8 @@ pub mod nixcpp;
 pub mod nixhash;
 pub mod path_info;
 pub mod store_path;
+#[cfg(feature = "serde")]
+pub mod structured_attrs;
 
 #[cfg(feature = "async")]
 pub mod hashing;

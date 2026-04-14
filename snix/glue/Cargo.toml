@@ -11,8 +11,11 @@ bytes.workspace = true
 data-encoding.workspace = true
 futures.workspace = true
 hashbrown.workspace = true
-nix-compat = { path = "../nix-compat", features = ["flakeref", "hashbrown"] }
-regex.workspace = true
+nix-compat = { path = "../nix-compat", features = [
+  "flakeref",
+  "hashbrown",
+  "serde",
+] }
 reqwest = { workspace = true }
 snix-build = { path = "../build", default-features = false, features = [] }
 snix-eval = { path = "../eval" }
