@@ -8,7 +8,7 @@ use std::os::unix::fs::MetadataExt;
 use std::os::unix::fs::PermissionsExt;
 use tokio::io::BufReader;
 use tokio_util::io::InspectReader;
-use tracing::{info_span, instrument};
+use tracing::{Instrument, info_span, instrument, trace_span};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 use walkdir::DirEntry;
 use walkdir::WalkDir;
@@ -79,30 +79,30 @@ where
 {
     let prefix = root.parent().unwrap_or_else(|| std::path::Path::new(""));
 
-    Box::pin(
-        futures::stream::iter(walkdir_direntries)
-            .map(move |x| {
-                let blob_service = blob_service.clone();
-                async move {
-                    match x {
-                        Ok(dir_entry) => {
-                            dir_entry_to_ingestion_entry(
-                                blob_service,
-                                &dir_entry,
-                                prefix,
-                                reference_scanner,
-                            )
-                            .await
-                        }
-                        Err(e) => Err(Error::Stat(
-                            prefix.to_path_buf(),
-                            e.into_io_error().expect("walkdir err must be some"),
-                        )),
+    futures::stream::iter(walkdir_direntries)
+        .map(move |x| {
+            let blob_service = blob_service.clone();
+            async move {
+                match x {
+                    Ok(dir_entry) => {
+                        dir_entry_to_ingestion_entry(
+                            blob_service,
+                            &dir_entry,
+                            prefix,
+                            reference_scanner,
+                        )
+                        .await
                     }
+                    Err(e) => Err(Error::Stat(
+                        prefix.to_path_buf(),
+                        e.into_io_error().expect("walkdir err must be some"),
+                    )),
                 }
-            })
-            .buffered(50),
-    )
+            }
+            .instrument(trace_span!("process_walkdir_direntry"))
+        })
+        .buffered(50)
+        .boxed()
 }
 
 /// Converts a [walkdir::DirEntry] into an [IngestionEntry], uploading blobs to the
