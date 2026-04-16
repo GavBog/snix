@@ -138,6 +138,7 @@ impl BigtableDirectoryService {
             &params.project_id,
             &params.instance_name,
             params.is_read_only,
+            1,
             params.timeout,
         )?;
 

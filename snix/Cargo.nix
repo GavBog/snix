@@ -4020,9 +4020,9 @@ rec {
       };
       "bigtable_rs" = rec {
         crateName = "bigtable_rs";
-        version = "0.2.19";
+        version = "0.2.21";
         edition = "2021";
-        sha256 = "11bhz477541harq7qi8cpwk8gzy7n75sb42a1ygsy2cwn96gkplm";
+        sha256 = "17as4xnm617qd0vprqw7r9f0bsiahwlyhf0ls54im7laga49gv0x";
         authors = [
           "Fuyang Liu <liufuyang@users.noreply.github.com>"
         ];
@@ -7066,7 +7066,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -9797,7 +9797,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.5.10";
+            packageId = "socket2 0.6.1";
             optional = true;
             features = [ "all" ];
           }
@@ -9984,7 +9984,7 @@ rec {
           }
           {
             name = "windows-core";
-            packageId = "windows-core 0.62.2";
+            packageId = "windows-core";
             target = { target, features }: ("windows" == target."os" or null);
           }
         ];
@@ -10747,7 +10747,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -15964,7 +15964,7 @@ rec {
           }
           {
             name = "itertools";
-            packageId = "itertools 0.14.0";
+            packageId = "itertools 0.10.5";
             usesDefaultFeatures = false;
             features = [ "use_alloc" ];
           }
@@ -16066,7 +16066,7 @@ rec {
           }
           {
             name = "itertools";
-            packageId = "itertools 0.14.0";
+            packageId = "itertools 0.10.5";
           }
           {
             name = "proc-macro2";
@@ -16397,7 +16397,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.5.10";
+            packageId = "socket2 0.6.1";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -16669,7 +16669,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.5.10";
+            packageId = "socket2 0.6.1";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -16683,7 +16683,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19334,7 +19334,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19747,7 +19747,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.59.0";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -24207,7 +24207,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.52.0";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -27925,7 +27925,7 @@ rec {
         dependencies = [
           {
             name = "windows-targets";
-            packageId = "windows-targets 0.52.6";
+            packageId = "windows-targets 0.48.5";
             target = { target, features }: (target."windows" or false);
           }
         ];
@@ -30993,7 +30993,7 @@ rec {
           }
           {
             name = "windows-core";
-            packageId = "windows-core 0.61.2";
+            packageId = "windows-core";
             usesDefaultFeatures = false;
           }
           {
@@ -31728,7 +31728,7 @@ rec {
         dependencies = [
           {
             name = "windows-core";
-            packageId = "windows-core 0.61.2";
+            packageId = "windows-core";
             usesDefaultFeatures = false;
           }
         ];
@@ -31736,7 +31736,7 @@ rec {
           "default" = [ "std" ];
         };
       };
-      "windows-core 0.61.2" = rec {
+      "windows-core" = rec {
         crateName = "windows-core";
         version = "0.61.2";
         edition = "2021";
@@ -31779,48 +31779,6 @@ rec {
             "windows-strings/std"
           ];
         };
-        resolvedDefaultFeatures = [ "std" ];
-      };
-      "windows-core 0.62.2" = rec {
-        crateName = "windows-core";
-        version = "0.62.2";
-        edition = "2021";
-        sha256 = "1swxpv1a8qvn3bkxv8cn663238h2jccq35ff3nsj61jdsca3ms5q";
-        libName = "windows_core";
-        dependencies = [
-          {
-            name = "windows-implement";
-            packageId = "windows-implement";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "windows-interface";
-            packageId = "windows-interface";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "windows-link";
-            packageId = "windows-link 0.2.1";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "windows-result";
-            packageId = "windows-result 0.4.1";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "windows-strings";
-            packageId = "windows-strings 0.5.1";
-            usesDefaultFeatures = false;
-          }
-        ];
-        features = {
-          "default" = [ "std" ];
-          "std" = [
-            "windows-result/std"
-            "windows-strings/std"
-          ];
-        };
         resolvedDefaultFeatures = [
           "default"
           "std"
@@ -31835,7 +31793,7 @@ rec {
         dependencies = [
           {
             name = "windows-core";
-            packageId = "windows-core 0.61.2";
+            packageId = "windows-core";
             usesDefaultFeatures = false;
           }
           {
@@ -31947,7 +31905,7 @@ rec {
         dependencies = [
           {
             name = "windows-core";
-            packageId = "windows-core 0.61.2";
+            packageId = "windows-core";
             usesDefaultFeatures = false;
           }
           {
@@ -32924,14 +32882,7 @@ rec {
           "Win32_Foundation"
           "Win32_Networking"
           "Win32_Networking_WinSock"
-          "Win32_Security"
-          "Win32_Security_Cryptography"
-          "Win32_Storage"
-          "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_Threading"
           "Win32_System_WindowsProgramming"
@@ -33198,11 +33149,16 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
+          "Win32_Networking"
+          "Win32_Networking_WinSock"
           "Win32_Security"
+          "Win32_Security_Cryptography"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
           "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "default"
         ];

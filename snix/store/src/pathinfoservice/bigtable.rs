@@ -135,6 +135,7 @@ impl BigtablePathInfoService {
             &params.project_id,
             &params.instance_name,
             false,
+            1,
             None,
         )?;
 
