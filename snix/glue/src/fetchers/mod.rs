@@ -636,8 +636,10 @@ where
 /// Attempts to mimic `nix::libutil::baseNameOf`
 pub(crate) fn url_basename(url: &Url) -> &str {
     let s = url.path();
-    if s.is_empty() {
-        return "";
+    // url.path() always returns `/`, even for urls
+    // without trailing slash
+    if s == "/" {
+        return url.host_str().unwrap_or_default();
     }
 
     let mut last = s.len() - 1;
@@ -755,10 +757,10 @@ mod tests {
         use rstest::rstest;
 
         #[rstest]
-        #[case::empty_path("", "")]
+        #[case::empty_path("", "localhost")]
         #[case::path_on_root("/dir", "dir")]
         #[case::relative_path("dir/foo", "foo")]
-        #[case::root_with_trailing_slash("/", "")]
+        #[case::root_with_trailing_slash("/", "localhost")]
         #[case::trailing_slash("/dir/", "dir")]
         fn test_url_basename(#[case] url_path: &str, #[case] exp_basename: &str) {
             let mut url = Url::parse("http://localhost").expect("invalid url");
