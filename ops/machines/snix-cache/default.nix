@@ -33,6 +33,7 @@ in
     # Automatically enable metric and log collection.
     (mod "o11y/alloy.nix")
     (mod "www/nixos.snix.store.nix")
+    (mod "www/cache-updates.snix.store.nix")
 
     (depot.third_party.agenix.src + "/modules/age.nix")
   ];
