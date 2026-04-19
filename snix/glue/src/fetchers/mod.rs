@@ -635,34 +635,12 @@ where
 
 /// Attempts to mimic `nix::libutil::baseNameOf`
 pub(crate) fn url_basename(url: &Url) -> &str {
-    let s = url.path();
-    // url.path() always returns `/`, even for urls
-    // without trailing slash
-    if s == "/" {
-        return url.host_str().unwrap_or_default();
+    let s = url.path().trim_end_matches('/');
+
+    match s.rsplit_once('/') {
+        None => url.host_str().unwrap_or_default(),
+        Some((_, basename)) => basename,
     }
-
-    let mut last = s.len() - 1;
-    if s.chars().nth(last).unwrap() == '/' && last > 0 {
-        last -= 1;
-    }
-
-    if last == 0 {
-        return "";
-    }
-
-    let pos = match s[..=last].rfind('/') {
-        Some(pos) => {
-            if pos == last - 1 {
-                0
-            } else {
-                pos
-            }
-        }
-        None => 0,
-    };
-
-    &s[(pos + 1)..=last]
 }
 
 #[cfg(test)]
@@ -761,7 +739,9 @@ mod tests {
         #[case::path_on_root("/dir", "dir")]
         #[case::relative_path("dir/foo", "foo")]
         #[case::root_with_trailing_slash("/", "localhost")]
+        #[case::root_with_many_trailing_slashes("///", "localhost")]
         #[case::trailing_slash("/dir/", "dir")]
+        #[case::many_trailing_slashes("/dir//", "dir")]
         fn test_url_basename(#[case] url_path: &str, #[case] exp_basename: &str) {
             let mut url = Url::parse("http://localhost").expect("invalid url");
             url.set_path(url_path);
