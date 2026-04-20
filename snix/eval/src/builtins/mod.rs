@@ -798,13 +798,9 @@ mod pure_builtins {
             return Ok(y);
         }
         let left_set = x.to_attrs()?;
-        if left_set.is_empty() {
-            return Ok(Value::attrs(NixAttrs::empty()));
-        }
-
         let right_set = y.to_attrs()?;
 
-        if right_set.is_empty() {
+        if left_set.is_empty() || right_set.is_empty() {
             return Ok(Value::attrs(NixAttrs::empty()));
         }
 
