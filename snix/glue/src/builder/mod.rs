@@ -126,6 +126,8 @@ pub(crate) fn derivation_into_build_request(
     );
 
     if let Some(json_str) = derivation.environment.remove(structured_attrs::JSON_KEY) {
+        // Replace placeholders directly inside json, if any.
+        let json_str = replace_placeholders_b(&json_str, &derivation.outputs);
         handle_structured_attrs(
             &json_str,
             derivation.outputs.iter().map(|(out_name, output)| {
@@ -596,8 +598,8 @@ mod test {
 
     #[test]
     fn test_structured_attrs() {
-        // (builtins.derivation { name = "script.sh"; system = builtins.currentSystem; PATH = lib.makeBinPath [pkgs.coreutils]; ""="bar"; k = {"bar" = true; b =1.0; c = false; d = true;}; l = 42; m = false; n = 1.1; builder="${bash}/bin/bash"; args = ["-xc" "source \${NIX_ATTRS_SH_FILE:-/dev/null}; cat \${NIX_ATTRS_JSON_FILE:-/dev/null}; out=\${out:-\${outputs[out]}}; cat \${NIX_ATTRS_JSON_FILE:-/dev/null} >\$out; exit 0"];__structuredAttrs = true;})
-        let aterm_bytes = r#"Derive([("out","/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh","","")],[("/nix/store/azd4vaik6ssl5d411m5fsa757sic630r-bash-interactive-5.3p3.drv",["out"]),("/nix/store/m507z3g5zq4lv5x99rqb6dfdh5m0xixx-coreutils-9.8.drv",["out"])],[],"x86_64-linux","/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash",["-xc","source ${NIX_ATTRS_SH_FILE:-/dev/null}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null}; out=${out:-${outputs[out]}}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null} >$out; exit 0"],[("__json","{\"\":\"bar\",\"PATH\":\"/nix/store/imad8dvhp77h0pjbckp6wvmnyhp8dpgg-coreutils-9.8/bin\",\"builder\":\"/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash\",\"k\":{\"b\":1.0,\"bar\":true,\"c\":false,\"d\":true},\"l\":42,\"m\":false,\"n\":1.1,\"name\":\"script.sh\",\"system\":\"x86_64-linux\"}"),("out","/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh")])"#.as_bytes();
+        // (builtins.derivation { name = "script.sh"; system = builtins.currentSystem; PATH = lib.makeBinPath [pkgs.coreutils]; ""="bar"; k = {"bar" = true; b =1.0; c = false; d = true;}; l = 42; m = false; n = 1.1; builder="${bash}/bin/bash"; hello = placeholder "out"; args = ["-xc" "source \${NIX_ATTRS_SH_FILE:-/dev/null}; cat \${NIX_ATTRS_JSON_FILE:-/dev/null}; out=\${out:-\${outputs[out]}}; cat \${NIX_ATTRS_JSON_FILE:-/dev/null} >\$out; exit 0"];__structuredAttrs = true;})
+        let aterm_bytes = r#"Derive([("out","/nix/store/knq92bscsfi5xzvhf8icj2kbwddkk5m4-script.sh","","")],[("/nix/store/l6bi2ln3vlv6mkkw95bvh09pgy4d3xra-coreutils-9.10.drv",["out"]),("/nix/store/s9b1a2zhv6l7x8ady5vfbj5kg8rkvznx-bash-interactive-5.3p9.drv",["out"])],[],"x86_64-linux","/nix/store/sfvyavxai6qvzmv9p9x6mp4wwdz4v41m-bash-interactive-5.3p9/bin/bash",["-xc","source ${NIX_ATTRS_SH_FILE:-/dev/null}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null}; out=${out:-${outputs[out]}}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null} >$out; exit 0"],[("__json","{\"\":\"bar\",\"PATH\":\"/nix/store/74sind1d6vf2bfwd7yklg8chsvzqxmmq-coreutils-9.10/bin\",\"builder\":\"/nix/store/sfvyavxai6qvzmv9p9x6mp4wwdz4v41m-bash-interactive-5.3p9/bin/bash\",\"hello\":\"/1rz4g4znpzjwh1xymhjpm42vipw92pr73vdgl6xs1hycac8kf2n9\",\"k\":{\"b\":1.0,\"bar\":true,\"c\":false,\"d\":true},\"l\":42,\"m\":false,\"n\":1.1,\"name\":\"script.sh\",\"system\":\"x86_64-linux\"}"),("out","/nix/store/knq92bscsfi5xzvhf8icj2kbwddkk5m4-script.sh")])"#.as_bytes();
 
         let derivation = Derivation::from_aterm_bytes(aterm_bytes).expect("must parse");
 
@@ -628,11 +630,11 @@ mod test {
 
         let exp_build_request =  BuildRequest {
                 command_args: vec![
-                    "/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash".to_string(),
+                    "/nix/store/sfvyavxai6qvzmv9p9x6mp4wwdz4v41m-bash-interactive-5.3p9/bin/bash".to_string(),
                     "-xc".to_string(),
                     r#"source ${NIX_ATTRS_SH_FILE:-/dev/null}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null}; out=${out:-${outputs[out]}}; cat ${NIX_ATTRS_JSON_FILE:-/dev/null} >$out; exit 0"#.to_string()
                 ],
-                outputs: vec!["nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh".into()],
+                outputs: vec!["nix/store/knq92bscsfi5xzvhf8icj2kbwddkk5m4-script.sh".into()],
                 environment_vars: Vec::from_iter(expected_environment_vars.into_iter().map(
                     |(k, v)| EnvVar {
                         key: k.into(),
@@ -648,24 +650,25 @@ mod test {
                 additional_files: vec![
                     AdditionalFile {
                         path: "build/.attrs.json".into(),
-                        contents: Bytes::from_static(br#"{"":"bar","PATH":"/nix/store/imad8dvhp77h0pjbckp6wvmnyhp8dpgg-coreutils-9.8/bin","builder":"/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash","k":{"b":1.0,"bar":true,"c":false,"d":true},"l":42,"m":false,"n":1.1,"name":"script.sh","outputs":{"out":"/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh"},"system":"x86_64-linux"}"#)
+                        contents: Bytes::from_static(br#"{"":"bar","PATH":"/nix/store/74sind1d6vf2bfwd7yklg8chsvzqxmmq-coreutils-9.10/bin","builder":"/nix/store/sfvyavxai6qvzmv9p9x6mp4wwdz4v41m-bash-interactive-5.3p9/bin/bash","hello":"/nix/store/knq92bscsfi5xzvhf8icj2kbwddkk5m4-script.sh","k":{"b":1.0,"bar":true,"c":false,"d":true},"l":42,"m":false,"n":1.1,"name":"script.sh","outputs":{"out":"/nix/store/knq92bscsfi5xzvhf8icj2kbwddkk5m4-script.sh"},"system":"x86_64-linux"}"#)
                     },
                     AdditionalFile {
                         path: "build/.attrs.sh".into(),
-                        contents: Bytes::from_static(br#"declare PATH='/nix/store/imad8dvhp77h0pjbckp6wvmnyhp8dpgg-coreutils-9.8/bin'
-declare builder='/nix/store/35yc81pz0q5yba14lxhn5r3jx5yg6c3l-bash-interactive-5.3p3/bin/bash'
+                        contents: Bytes::from_static(br#"declare PATH='/nix/store/74sind1d6vf2bfwd7yklg8chsvzqxmmq-coreutils-9.10/bin'
+declare builder='/nix/store/sfvyavxai6qvzmv9p9x6mp4wwdz4v41m-bash-interactive-5.3p9/bin/bash'
+declare hello='/nix/store/knq92bscsfi5xzvhf8icj2kbwddkk5m4-script.sh'
 declare -A k=(['b']=1 ['bar']=1 ['c']= ['d']=1 )
 declare l=42
 declare m=
 declare name='script.sh'
-declare -A outputs=(['out']='/nix/store/s92b6ykfzn3d8z0479r56x9f23bsyl92-script.sh' )
+declare -A outputs=(['out']='/nix/store/knq92bscsfi5xzvhf8icj2kbwddkk5m4-script.sh' )
 declare system='x86_64-linux'
 "#)
                     }
                 ],
                 working_dir: "build".into(),
                 scratch_paths: vec!["build".into(), "nix/store".into()],
-                refscan_needles: vec!["s92b6ykfzn3d8z0479r56x9f23bsyl92".into()],
+                refscan_needles: vec!["knq92bscsfi5xzvhf8icj2kbwddkk5m4".into()],
             };
 
         assert_eq!(
