@@ -100,16 +100,11 @@ pub(crate) fn derivation_into_build_request(
 ) -> std::io::Result<BuildRequest> {
     debug_assert!(derivation.validate(true).is_ok(), "drv must validate");
 
-    // produce command_args, which is builder and arguments in a Vec.
-    let mut command_args: Vec<String> = Vec::with_capacity(derivation.arguments.len() + 1);
-    command_args.push(derivation.builder);
-    command_args.extend_from_slice(
-        derivation
-            .arguments
-            .into_iter()
-            .map(|arg| replace_placeholders(&arg, &derivation.outputs))
-            .collect::<Vec<String>>()
-            .as_slice(),
+    // produce command_args, which is builder and arguments in a Vec, replacing any placeholders.
+    let command_args: Vec<String> = Vec::from_iter(
+        std::iter::once(&derivation.builder)
+            .chain(&derivation.arguments)
+            .map(|s| replace_placeholders(s, &derivation.outputs)),
     );
 
     // Produce environment_vars and additional files.
