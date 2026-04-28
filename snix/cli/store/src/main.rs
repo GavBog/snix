@@ -19,10 +19,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt};
 use tonic::transport::Server;
-use tower::ServiceBuilder;
-use tower_http::classify::{GrpcCode, GrpcErrorsAsFailures, SharedClassifier};
-use tower_http::trace::{DefaultMakeSpan, TraceLayer};
-use tracing::{Instrument, Level, Span, debug, info, info_span, warn};
+use tracing::{Instrument, Span, debug, info, info_span, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 
 use snix_castore::proto::GRPCBlobServiceWrapper;
@@ -183,22 +180,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let (blob_service, directory_service, path_info_service, nar_calculation_service) =
                 snix_store::utils::construct_services(service_addrs).await?;
 
-            let mut server = Server::builder().layer(
-                ServiceBuilder::new()
-                    .layer(
-                        TraceLayer::new(SharedClassifier::new(
-                            GrpcErrorsAsFailures::new()
-                                .with_success(GrpcCode::InvalidArgument)
-                                .with_success(GrpcCode::NotFound),
-                        ))
-                        .make_span_with(
-                            DefaultMakeSpan::new()
-                                .level(Level::INFO)
-                                .include_headers(true),
-                        ),
-                    )
-                    .map_request(snix_tracing::propagate::tonic::accept_trace),
-            );
+            let mut server = Server::builder()
+                .layer(tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default());
 
             let (_health_reporter, health_service) = tonic_health::server::health_reporter();
 

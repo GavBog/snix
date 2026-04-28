@@ -82,7 +82,8 @@ mod tests {
                 .map(|index| index.as_ref().to_string())
                 .collect(),
             auto_index,
-        }));
+        }))
+        .layer(axum_tracing_opentelemetry::middleware::OtelAxumLayer::default());
 
         (
             axum_test::TestServer::new(app),

@@ -1,11 +1,10 @@
+use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use clap::Parser;
 use mimalloc::MiMalloc;
 use nar_bridge::AppState;
 use snix_cli::shutdown_signal;
 use snix_store::utils::ServiceUrlsGrpc;
 use std::num::NonZeroUsize;
-use tower::ServiceBuilder;
-use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::info;
 
 #[global_allocator]
@@ -64,17 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     );
 
     let app = nar_bridge::gen_router(args.priority)
-        .layer(
-            ServiceBuilder::new()
-                .layer(
-                    TraceLayer::new_for_http().make_span_with(
-                        DefaultMakeSpan::new()
-                            .level(tracing::Level::INFO)
-                            .include_headers(true),
-                    ),
-                )
-                .map_request(snix_tracing::propagate::axum::accept_trace),
-        )
+        .layer(OtelAxumLayer::default())
         .with_state(state);
 
     let listen_address = &args.listen_args.listen_address.unwrap_or_else(|| {

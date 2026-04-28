@@ -17,6 +17,7 @@ snix-store.path = "../../store"
 snix-tracing = { path = "../../tracing", features = ["tonic", "axum"] }
 tokio.workspace = true
 axum.workspace = true
+axum-tracing-opentelemetry.workspace = true
 tokio-listener = { workspace = true, features = [
   "axum08",
   "clap",

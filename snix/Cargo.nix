@@ -3951,6 +3951,77 @@ rec {
           "pretty-assertions"
         ];
       };
+      "axum-tracing-opentelemetry" = rec {
+        crateName = "axum-tracing-opentelemetry";
+        version = "0.33.1";
+        edition = "2024";
+        sha256 = "1mwgw5dcp03b22y4h23jqqz5sxcfgyy4yrjvlfij52s8hp1x5vab";
+        libName = "axum_tracing_opentelemetry";
+        dependencies = [
+          {
+            name = "axum";
+            packageId = "axum";
+            usesDefaultFeatures = false;
+            features = [
+              "matched-path"
+              "tokio"
+            ];
+          }
+          {
+            name = "futures-core";
+            packageId = "futures-core";
+          }
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+          }
+          {
+            name = "opentelemetry";
+            packageId = "opentelemetry";
+            usesDefaultFeatures = false;
+            features = [
+              "trace"
+              "trace"
+            ];
+          }
+          {
+            name = "opentelemetry-semantic-conventions";
+            packageId = "opentelemetry-semantic-conventions";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "tower";
+            packageId = "tower 0.5.3";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "tracing-opentelemetry";
+            packageId = "tracing-opentelemetry";
+          }
+          {
+            name = "tracing-opentelemetry-instrumentation-sdk";
+            packageId = "tracing-opentelemetry-instrumentation-sdk";
+            features = [ "http" ];
+          }
+        ];
+        features = {
+          "tracing_level_info" = [ "tracing-opentelemetry-instrumentation-sdk/tracing_level_info" ];
+        };
+        resolvedDefaultFeatures = [ "tracing_level_info" ];
+      };
       "base64" = rec {
         crateName = "base64";
         version = "0.22.1";
@@ -7066,7 +7137,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -10752,7 +10823,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -13253,7 +13324,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             rename = "windows";
             target = { target, features }: (target."windows" or false);
             features = [
@@ -15972,7 +16043,7 @@ rec {
           }
           {
             name = "itertools";
-            packageId = "itertools 0.10.5";
+            packageId = "itertools 0.14.0";
             usesDefaultFeatures = false;
             features = [ "use_alloc" ];
           }
@@ -16074,7 +16145,7 @@ rec {
           }
           {
             name = "itertools";
-            packageId = "itertools 0.10.5";
+            packageId = "itertools 0.14.0";
           }
           {
             name = "proc-macro2";
@@ -16691,7 +16762,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.60.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19342,7 +19413,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19755,7 +19826,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -21763,6 +21834,11 @@ rec {
             packageId = "axum-range";
           }
           {
+            name = "axum-tracing-opentelemetry";
+            packageId = "axum-tracing-opentelemetry";
+            features = [ "tracing_level_info" ];
+          }
+          {
             name = "mime";
             packageId = "mime";
           }
@@ -22037,6 +22113,11 @@ rec {
             name = "tonic-reflection";
             packageId = "tonic-reflection";
             optional = true;
+          }
+          {
+            name = "tonic-tracing-opentelemetry";
+            packageId = "tonic-tracing-opentelemetry";
+            features = [ "tracing_level_info" ];
           }
           {
             name = "tower";
@@ -22333,6 +22414,11 @@ rec {
             packageId = "axum";
           }
           {
+            name = "axum-tracing-opentelemetry";
+            packageId = "axum-tracing-opentelemetry";
+            features = [ "tracing_level_info" ];
+          }
+          {
             name = "clap";
             packageId = "clap";
             features = [
@@ -22621,6 +22707,11 @@ rec {
             name = "tonic-reflection";
             packageId = "tonic-reflection";
             optional = true;
+          }
+          {
+            name = "tonic-tracing-opentelemetry";
+            packageId = "tonic-tracing-opentelemetry";
+            features = [ "tracing_level_info" ];
           }
           {
             name = "tower";
@@ -24215,7 +24306,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -26477,6 +26568,76 @@ rec {
           "server"
         ];
       };
+      "tonic-tracing-opentelemetry" = rec {
+        crateName = "tonic-tracing-opentelemetry";
+        version = "0.32.2";
+        edition = "2024";
+        sha256 = "09g7r1k3m9b39gdblmfxjhpgqqqhmqrnax9lcm15n26da3ligdpm";
+        libName = "tonic_tracing_opentelemetry";
+        dependencies = [
+          {
+            name = "futures-core";
+            packageId = "futures-core";
+          }
+          {
+            name = "futures-util";
+            packageId = "futures-util";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+          }
+          {
+            name = "http-body";
+            packageId = "http-body 1.0.1";
+          }
+          {
+            name = "hyper";
+            packageId = "hyper";
+          }
+          {
+            name = "opentelemetry";
+            packageId = "opentelemetry";
+            usesDefaultFeatures = false;
+            features = [ "trace" ];
+          }
+          {
+            name = "pin-project-lite";
+            packageId = "pin-project-lite";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "tower";
+            packageId = "tower 0.5.3";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "tracing-opentelemetry";
+            packageId = "tracing-opentelemetry";
+          }
+          {
+            name = "tracing-opentelemetry-instrumentation-sdk";
+            packageId = "tracing-opentelemetry-instrumentation-sdk";
+            features = [ "http" ];
+          }
+        ];
+        features = {
+          "tracing_level_info" = [ "tracing-opentelemetry-instrumentation-sdk/tracing_level_info" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "tracing_level_info"
+        ];
+      };
       "tower 0.4.13" = rec {
         crateName = "tower";
         version = "0.4.13";
@@ -27591,6 +27752,48 @@ rec {
           "metrics"
           "smallvec"
           "tracing-log"
+        ];
+      };
+      "tracing-opentelemetry-instrumentation-sdk" = rec {
+        crateName = "tracing-opentelemetry-instrumentation-sdk";
+        version = "0.32.5";
+        edition = "2024";
+        sha256 = "1lbyaazxjj954kh2gb4qci05ji9vaxlz37zww4qarmgn24059wmq";
+        libName = "tracing_opentelemetry_instrumentation_sdk";
+        dependencies = [
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+            optional = true;
+          }
+          {
+            name = "opentelemetry";
+            packageId = "opentelemetry";
+            usesDefaultFeatures = false;
+            features = [ "trace" ];
+          }
+          {
+            name = "opentelemetry-semantic-conventions";
+            packageId = "opentelemetry-semantic-conventions";
+            usesDefaultFeatures = false;
+            features = [ "semconv_experimental" ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "tracing-opentelemetry";
+            packageId = "tracing-opentelemetry";
+          }
+        ];
+        features = {
+          "http" = [ "dep:http" ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "http"
+          "tracing_level_info"
         ];
       };
       "tracing-subscriber" = rec {
@@ -33188,16 +33391,9 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
-          "Win32_Networking"
-          "Win32_Networking_WinSock"
-          "Win32_Security"
-          "Win32_Security_Cryptography"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "default"
         ];
@@ -33765,6 +33961,8 @@ rec {
           "Win32_System"
           "Win32_System_Com"
           "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_LibraryLoader"
           "Win32_System_Memory"

@@ -76,7 +76,6 @@ let
           BLOB_SERVICE_ADDR=${lib.escapeShellArg blobServiceAddr} \
           DIRECTORY_SERVICE_ADDR=${lib.escapeShellArg directoryServiceAddr} \
           PATH_INFO_SERVICE_ADDR=${lib.escapeShellArg pathInfoServiceAddr} \
-          RUST_LOG="info,snix_tracing::propagate::tonic=error" \
             snix store daemon -l $PWD/snix-store.sock &
 
           # Wait for the service to report healthy.

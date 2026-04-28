@@ -11,10 +11,6 @@ use std::path::PathBuf;
 use tokio::fs::{self, File};
 use tokio_tar::Archive;
 use tonic::transport::Server;
-use tower::ServiceBuilder;
-use tower_http::classify::{GrpcCode, GrpcErrorsAsFailures, SharedClassifier};
-use tower_http::trace::{DefaultMakeSpan, TraceLayer};
-use tracing::{Level, info};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -110,22 +106,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             let (blob_service, directory_service) =
                 snix_castore::utils::construct_services(service_addrs).await?;
 
-            let mut server = Server::builder().layer(
-                ServiceBuilder::new()
-                    .layer(
-                        TraceLayer::new(SharedClassifier::new(
-                            GrpcErrorsAsFailures::new()
-                                .with_success(GrpcCode::InvalidArgument)
-                                .with_success(GrpcCode::NotFound),
-                        ))
-                        .make_span_with(
-                            DefaultMakeSpan::new()
-                                .level(Level::INFO)
-                                .include_headers(true),
-                        ),
-                    )
-                    .map_request(snix_tracing::propagate::tonic::accept_trace),
-            );
+            let mut server = Server::builder()
+                .layer(tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default());
 
             let (_health_reporter, health_service) = tonic_health::server::health_reporter();
 
@@ -170,7 +152,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             )
             .await?;
 
-            info!(listen_address=%listen_address, "starting daemon");
+            tracing::info!(listen_address=%listen_address, "starting daemon");
 
             router
                 .serve_with_incoming_shutdown(listener, shutdown_signal())
@@ -230,7 +212,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     },
                     tokio::runtime::Handle::current(),
                 );
-                info!(mount_path=?dest, "mounting");
+                tracing::info!(mount_path=?dest, "mounting");
 
                 FuseDaemon::new(fs, &dest, 4, true)
             })
@@ -282,7 +264,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     },
                     tokio::runtime::Handle::current(),
                 );
-                info!(socket_path=?socket, "starting virtiofs-daemon");
+                tracing::info!(socket_path=?socket, "starting virtiofs-daemon");
 
                 start_virtiofs_daemon(fs, socket)
             })

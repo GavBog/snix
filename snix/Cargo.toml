@@ -65,6 +65,9 @@ aws-credential-types = "1.2.14"
 axum = "0.8.8"
 axum-extra = "0.12.5"
 axum-range = "1.0.0"
+axum-tracing-opentelemetry = { version = "0.33.1", features = [
+  "tracing_level_info",
+] }
 bigtable_rs = "0.2.19"
 bitflags = "2.6.0"
 blake3 = "1.5.4"
@@ -155,6 +158,9 @@ tonic-health = { version = "0.14.5", default-features = false }
 tonic-reflection = "0.14.5"
 tonic-prost = "0.14.5"
 tonic-prost-build = "0.14.5"
+tonic-tracing-opentelemetry = { version = "0.32.2", features = [
+  "tracing_level_info",
+] }
 tower = "0.4.13"
 tower-http = "0.6.2"
 tracing = "0.1.40"
