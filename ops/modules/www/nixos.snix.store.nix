@@ -38,7 +38,12 @@
     virtualHosts."nixos.tvix.store" = {
       forceSSL = true;
       enableACME = true;
-      locations."/".return = "301 https://nixos.snix.store$request_uri";
+
+      # Send a 410 Gone for most requests, with an error page pointing to nixos.snix.store.
+      locations."/".return = "410 \"Please use https://nixos.snix.store instead.\"";
+
+      # Send redirects to nixos.snix.store for all NARs, as clients might have old NARInfo cached locally.
+      locations."/nar/snix-castore".return = "301 https://nixos.snix.store$request_uri";
     };
 
     # use more cores for compression
