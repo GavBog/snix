@@ -146,55 +146,50 @@ where
         }
         Node::Directory { digest, .. } => {
             // look it up with the directory service
-            match directory_service
+            let directory = directory_service
                 .get(digest)
                 .await
                 .map_err(RenderError::DirectoryService)?
-            {
-                // if it's None, that's an error!
-                None => Err(RenderError::DirectoryNotFound(
-                    *digest,
-                    bytes::Bytes::copy_from_slice(name),
-                ))?,
-                Some(directory) => {
-                    // start a directory node
-                    let mut nar_node_directory = nar_node
-                        .directory()
-                        .await
-                        .map_err(RenderError::NARWriterError)?;
+                .ok_or_else(|| {
+                    RenderError::DirectoryNotFound(*digest, bytes::Bytes::copy_from_slice(name))
+                })?;
 
-                    // We put blob_service, directory_service back here whenever we come up from
-                    // the recursion.
-                    let mut blob_service = blob_service;
-                    let mut directory_service = directory_service;
+            // start a directory node
+            let mut nar_node_directory = nar_node
+                .directory()
+                .await
+                .map_err(RenderError::NARWriterError)?;
 
-                    // for each node in the directory, create a new entry with its name,
-                    // and then recurse on that entry.
-                    for (name, node) in directory.nodes() {
-                        let child_node = nar_node_directory
-                            .entry(name.as_ref())
-                            .await
-                            .map_err(RenderError::NARWriterError)?;
+            // We put blob_service, directory_service back here whenever we come up from
+            // the recursion.
+            let mut blob_service = blob_service;
+            let mut directory_service = directory_service;
 
-                        (blob_service, directory_service) = Box::pin(walk_node(
-                            child_node,
-                            node,
-                            name.as_ref(),
-                            blob_service,
-                            directory_service,
-                        ))
-                        .await?;
-                    }
+            // for each node in the directory, create a new entry with its name,
+            // and then recurse on that entry.
+            for (name, node) in directory.nodes() {
+                let child_node = nar_node_directory
+                    .entry(name.as_ref())
+                    .await
+                    .map_err(RenderError::NARWriterError)?;
 
-                    // close the directory
-                    nar_node_directory
-                        .close()
-                        .await
-                        .map_err(RenderError::NARWriterError)?;
-
-                    return Ok((blob_service, directory_service));
-                }
+                (blob_service, directory_service) = Box::pin(walk_node(
+                    child_node,
+                    node,
+                    name.as_ref(),
+                    blob_service,
+                    directory_service,
+                ))
+                .await?;
             }
+
+            // close the directory
+            nar_node_directory
+                .close()
+                .await
+                .map_err(RenderError::NARWriterError)?;
+
+            return Ok((blob_service, directory_service));
         }
     }
 
