@@ -39,7 +39,7 @@ let
             snix store daemon -l $PWD/snix-store.sock &
 
           # Wait for the service to report healthy.
-          timeout 22 sh -c "until ${pkgs.ip2unix}/bin/ip2unix -r out,path=$PWD/snix-store.sock ${pkgs.grpc-health-check}/bin/grpc-health-check --address 127.0.0.1 --port 8080; do sleep 1; done"
+          timeout 22 sh -c "until ${pkgs.grpc-health-probe}/bin/grpc-health-probe -addr unix://$PWD/snix-store.sock; do sleep 1; done"
 
           # Export env vars so that subsequent snix-store commands will talk to
           # our snix-store daemon over the unix socket.
