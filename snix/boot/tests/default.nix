@@ -180,6 +180,9 @@ let
 
       # Speed-up evaluation and building.
       documentation.enable = lib.mkForce false;
+
+      # Ensure init points to the activation script, not just plain systemd.
+      boot.initrd.systemd.enable = false;
     }).config.system.build.toplevel;
 
 in

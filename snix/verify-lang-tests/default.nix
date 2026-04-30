@@ -14,7 +14,7 @@
 let
   inherit (pkgs) nix_2_3;
   # The latest Nix version we've verified to work for our testing suite.
-  _nix_latest_verified = pkgs.nixVersions.nix_2_32;
+  _nix_latest_verified = pkgs.nixVersions.nix_2_34;
   nix_latest_verified =
     # https://github.com/NixOS/nix/issues/14642
     # lib.warnIf (lib.versionOlder _nix_latest_verified.version pkgs.nixVersions.latest.version)
