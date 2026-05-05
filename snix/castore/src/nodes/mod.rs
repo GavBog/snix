@@ -17,7 +17,7 @@ pub use symlink_target::{SymlinkTarget, SymlinkTargetError};
 )]
 pub enum Node {
     /// A DirectoryNode is a pointer to a [Directory], by its [Directory::digest].
-    /// It also records a`size`.
+    /// It also records a `size`.
     /// Such a node is either an element in the [Directory] it itself is contained in,
     /// or a standalone root node.
     Directory {

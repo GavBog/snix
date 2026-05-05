@@ -28,9 +28,9 @@ use tracing::{debug, error, instrument, warn};
 /// Helper function, descending from the given `root_node` to the `requested_path` specified.
 /// Returns HTTP Responses or Status Codes.
 /// If the path points to a regular file, it serves its contents.
-/// If the path points to a symlink, it sends a redirect to the target (pretending `base_path`, if relative)
+/// If the path points to a symlink, it sends a redirect to the target (prepending `base_path`, if relative)
 /// If the path points to a directory, files of `index_names` are tried,
-/// if no files matched then a directory listing is returned if `auto_index` is enabled.
+/// If no files matched then a directory listing is returned if `auto_index` is enabled.
 ///
 /// Uses the passed [BlobService] and [DirectoryService]
 #[allow(clippy::too_many_arguments)]

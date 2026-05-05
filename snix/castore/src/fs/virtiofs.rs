@@ -181,7 +181,7 @@ where
         let mut queue = match device_event {
             // High priority queue
             0 => vrings[0].get_mut(),
-            // Regurlar priority queue
+            // Regular priority queue
             1 => vrings[1].get_mut(),
             _ => {
                 return Err(Error::HandleEventUnknownEvent.into());

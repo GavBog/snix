@@ -135,7 +135,7 @@ impl FuseDaemon {
 impl Drop for FuseDaemon {
     fn drop(&mut self) {
         if let Err(error) = self.unmount() {
-            error!(?error, "failed to unmont fuse filesystem")
+            error!(?error, "failed to unmount fuse filesystem")
         }
     }
 }

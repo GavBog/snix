@@ -162,7 +162,7 @@ impl AsRef<Path> for Path {
     }
 }
 
-/// Represents a owned PathBuf in the castore model.
+/// Represents an owned PathBuf in the castore model.
 /// These are always relative, and platform-independent, which distinguishes
 /// them from the ones provided in the standard library.
 #[derive(Clone, Default, Eq, Hash, PartialEq)]

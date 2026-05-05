@@ -27,7 +27,7 @@ pub use self::object_store::{ObjectStoreBlobService, ObjectStoreBlobServiceConfi
 /// The base trait all BlobService services need to implement.
 /// It provides functions to check whether a given blob exists,
 /// a way to read (and seek) a blob, and a method to create a blobwriter handle,
-/// which will implement a writer interface, and also provides a close funtion,
+/// which will implement a writer interface, and also provides a close function,
 /// to finalize a blob and get its digest.
 #[async_trait]
 #[auto_impl(&, &mut, Arc, Box)]
@@ -62,14 +62,14 @@ pub trait BlobService: Send + Sync {
     }
 }
 
-/// A [tokio::io::AsyncWrite] that the user needs to close() afterwards for persist.
+/// A [tokio::io::AsyncWrite] that the user needs to close() afterwards to persist.
 /// On success, it returns the digest of the written blob.
 #[async_trait]
 pub trait BlobWriter: tokio::io::AsyncWrite + Send + Unpin {
     /// Signal there's no more data to be written, and return the digest of the
     /// contents written.
     ///
-    /// Closing a already-closed BlobWriter is a no-op.
+    /// Closing an already-closed BlobWriter is a no-op.
     async fn close(&mut self) -> io::Result<B3Digest>;
 }
 

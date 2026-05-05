@@ -43,7 +43,7 @@ and making a hash of *this listing* the blob digest/identifier.
    "unpack the graph" of nodes, until it ends up with a list of individual small
    chunks, which can be fetched individually.
  - Similarly, IPFS with its IPLD model builds up a Merkle DAG, and uses the
-   digest of the root node as an identitier.
+   digest of the root node as an identifier.
 
 These approaches solve the problem of being able to fetch smaller chunks in a
 trusted fashion. They can also do some deduplication, in case there are the same
@@ -74,7 +74,7 @@ BLAKE3 is a tree hash where all left nodes fully populated, contrary to
 conventional serial hash functions. To be able to validate the hash of a node,
 one only needs the hash of the (2) children [^1], if any.
 
-This means one only needs to the root digest to validate a constructions, and these
+This means one only needs the root digest to validate a construction, and these
 constructions can be sent [separately][bao-spec].
 
 This relieves us from the need of having to encode more granular chunking into

@@ -229,7 +229,7 @@ impl<T: 'static> TryFrom<url::Url> for DeserializeWithRegistry<T> {
     type Error = Box<dyn std::error::Error + Send + Sync>;
     fn try_from(url: url::Url) -> Result<Self, Self::Error> {
         let tag = url.scheme().split('+').next().unwrap();
-        // same as in the SeedFactory impl: using find() and not get() because of https://github.com/rust-lang/rust/issues/80389
+        // same as in the SeedFactory impl: using get() and not find() because of https://github.com/rust-lang/rust/issues/80389
         let seed = ACTIVE_REG
             .get()
             .unwrap()

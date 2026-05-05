@@ -1,6 +1,6 @@
 use super::PathBuf;
 
-/// Represents all error types that emitted by ingest_entries.
+/// Represents all error types that are emitted by ingest_entries.
 /// It can represent errors uploading individual Directories and finalizing
 /// the upload.
 /// It also contains a generic error kind that'll carry ingestion-method

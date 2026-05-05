@@ -33,7 +33,7 @@ pub static PB_PROGRESS_STYLE: LazyLock<ProgressStyle> = LazyLock::new(|| {
     .expect("invalid progress template")
 });
 
-/// Used for file transfers, where we know an exact number of bytes and showing a trasfer speed makes sense.
+/// Used for file transfers, where we know an exact number of bytes and showing a transfer speed makes sense.
 pub static PB_TRANSFER_STYLE: LazyLock<ProgressStyle> = LazyLock::new(|| {
     ProgressStyle::with_template(
         "{span_child_prefix} {wide_msg} {binary_bytes:>7}/{binary_total_bytes:7}@{decimal_bytes_per_sec} ({elapsed}) {bar:10} "
