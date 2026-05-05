@@ -1,14 +1,14 @@
 # nixos-snix-cache
 
-This is a fetch-through mirror of cache.nixos.org, hosted by NumTide.
+This is a fetch-through mirror of cache.nixos.org.
 
-The current machine is a SX65 Hetzner dedicated server with 4x22TB SATA disks,
+The current machine is a Hetzner dedicated server with 2x6TB SATA disks,
 and 2x1TB NVMe disks.
 
 The goals of this machine:
 
  - Exercise snix-store and nar-bridge code
- - Collect usage metrics (see [Grafana](https://nixos.snix.store/grafana))
+ - Collect usage metrics (see [Grafana](https://status.snix.dev))
  - Identify bottlenecks in the current implementations and fix them
  - Replace cache.nixos.org?
 

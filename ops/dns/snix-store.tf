@@ -8,14 +8,16 @@ resource "digitalocean_record" "snix_store_nixos_v4" {
   domain   = digitalocean_domain.snix_store.id
   type     = "A"
   name     = "nixos"
-  value    = "37.27.128.134"
+  value    = "95.216.37.98"
+  ttl      = 120
 }
 
 resource "digitalocean_record" "snix_store_nixos_v6" {
   domain   = digitalocean_domain.snix_store.id
   type     = "AAAA"
   name     = "nixos"
-  value    = "2a01:4f9:3071:1091::2"
+  value    = "2a01:4f9:2a:2597::2"
+  ttl      = 120
 }
 
 # tvix.store, old alias
@@ -35,12 +37,14 @@ resource "digitalocean_record" "snix_store_cache_updates_v4" {
   domain   = digitalocean_domain.snix_store.id
   type     = "A"
   name     = "cache-updates"
-  value    = "37.27.128.134"
+  value    = "95.216.37.98"
+  ttl      = 120
 }
 
 resource "digitalocean_record" "snix_store_cache_updates_v6" {
   domain   = digitalocean_domain.snix_store.id
   type     = "AAAA"
   name     = "cache-updates"
-  value    = "2a01:4f9:3071:1091::2"
+  value    = "2a01:4f9:2a:2597::2"
+  ttl      = 120
 }

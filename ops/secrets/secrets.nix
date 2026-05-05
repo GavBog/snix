@@ -18,7 +18,7 @@ let
   build03 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG8G+x82sCebiH35kmWjWT7js3rOMiJoUNu7DjYL6B6j root@build03";
 
   meta01 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINj2csTShq5PsmB/T0596TASyf7VImD4592HEqaYHgKh root@meta01";
-  snixCache = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMeT780aXcpp9CFuNgD/H67ASoN74rCs0AybL6H01/LH";
+  snixCache = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF5bYa2cxaTUpweycBNv1YNDNOFPt4LR9I9bEm2X6GdH root@snix-cache";
 
   superadmins = raito ++ edef ++ flokli;
 

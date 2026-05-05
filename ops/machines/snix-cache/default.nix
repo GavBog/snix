@@ -13,21 +13,13 @@ let
       sha256 = "sha256-6UwMEAi6X3oMjKQm51i0+3i10DrsrSdXi/4YgmJxfhE=";
     }
   );
-  disko = (
-    builtins.fetchTarball {
-      url = "https://github.com/nix-community/disko/archive/84dd8eea9a06006d42b8af7cfd4fda4cf334db81.tar.gz";
-      sha256 = "13mfnjnjp21wms4mw35ar019775qgy3fnjc59zrpnqbkfmzyvv02";
-    }
-  );
   mod = name: depot.path.origSrc + ("/ops/modules/" + name);
 
 in
 {
   imports = [
-    "${disko}/module.nix"
-    ./disko.nix
     ./nar-bridge.nix
-    srvos.nixosModules.hardware-hetzner-online-amd
+    srvos.nixosModules.hardware-hetzner-online-intel
     srvos.nixosModules.mixins-nginx
 
     # Automatically enable metric and log collection.
@@ -43,7 +35,36 @@ in
 
     networking.hostName = "snix-cache";
 
-    systemd.network.networks."10-uplink".networkConfig.Address = "2a01:4f9:3071:1091::2/64";
+    boot.loader.efi.canTouchEfiVariables = true;
+    boot.loader.systemd-boot.configurationLimit = 10;
+    boot.loader.systemd-boot.enable = true;
+    boot.loader.timeout = 3;
+    boot.supportedFilesystems = [ "btrfs" ];
+
+    # Disk /dev/nvme0n1: 1024 GB (=> 953 GiB)
+    # Disk /dev/nvme1n1: 1024 GB (=> 953 GiB)
+    # Disk /dev/sda: 6001 GB (=> 5589 GiB)
+    # Disk /dev/sdb: 6001 GB (=> 5589 GiB)
+    # btrfs raid1 on two SSDs, btrfs raid0 (data) on HDDs.
+    fileSystems."/" = {
+      fsType = "btrfs";
+      device = "/dev/disk/by-label/root";
+      options = [
+        "compress=zstd"
+        "discard"
+      ];
+    };
+    fileSystems."/boot" = {
+      fsType = "vfat";
+      device = "/dev/disk/by-partlabel/esp"; # ef00
+    };
+    fileSystems."/tank" = {
+      fsType = "btrfs";
+      device = "/dev/disk/by-label/tank";
+      options = [ "discard" ];
+    };
+
+    systemd.network.networks."10-uplink".networkConfig.Address = "2a01:4f9:2a:2597::2/64";
 
     services.nginx.virtualHosts."nixos.snix.store".locations."=/" = {
       tryFiles = "$uri $uri/index.html =404";
@@ -61,12 +82,7 @@ in
     # Enable SSH and add some keys
     services.openssh.enable = true;
 
-    users.users.root.openssh.authorizedKeys.keys =
-      depot.ops.users.edef
-      ++ depot.ops.users.flokli
-      ++ depot.ops.users.mic92
-      ++ depot.ops.users.padraic
-      ++ depot.ops.users.zimbatm;
+    users.users.root.openssh.authorizedKeys.keys = depot.ops.users.edef ++ depot.ops.users.flokli;
 
     environment.systemPackages = [
       pkgs.helix
