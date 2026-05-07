@@ -22,11 +22,6 @@ terraform {
   }
 }
 
-variable "sni_proxy_ipv4" {
-  type    = string
-  default = "163.172.69.160"
-}
-
 variable "public01_ipv6" {
   type    = string
   default = "2a01:4f8:c013:3e62::1"
