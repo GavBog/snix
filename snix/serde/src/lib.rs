@@ -1,6 +1,61 @@
-//! `snix-serde` implements (de-)serialisation of Rust data structures
-//! to/from Nix. This is intended to make it easy to use Nix as as
+//! `snix-serde` bridges Rust types and [`snix_eval::Value`] via the
+//! standard [`serde`] traits, making it straightforward to use Nix as a
 //! configuration language.
+//!
+//! # Entry points
+//!
+//! | Function | Direction |
+//! |---|---|
+//! | [`from_str`] | Evaluate a Nix expression string → `T` |
+//! | [`from_value`] | [`snix_eval::Value`] → `T` |
+//! | [`to_value`] | `T` → [`snix_eval::Value`] |
+//!
+//! # Type mapping
+//!
+//! | Rust / serde | Nix |
+//! |---|---|
+//! | `bool` | `true` / `false` |
+//! | integers (`i8`…`i64`, `u8`…`u32`) | integer |
+//! | `u64` | integer (errors if > `i64::MAX`) |
+//! | `f32`, `f64` | float |
+//! | `char`, `str`, `String` | string |
+//! | `Option::None` / unit / unit struct | `null` |
+//! | `Option::Some(v)` / newtype struct | inner value |
+//! | sequence / tuple | list `[ … ]` |
+//! | map / struct | attribute set `{ … }` |
+//! | unit enum variant | string of the variant name |
+//! | newtype enum variant | `{ VariantName = value; }` |
+//! | tuple enum variant | `{ VariantName = [ … ]; }` |
+//! | struct enum variant | `{ VariantName = { … }; }` |
+//!
+//! Bytes are not supported by the Nix value model and will produce an error.
+//!
+//! # Examples
+//!
+//! Deserialise a Nix expression:
+//!
+//! ```rust
+//! # use serde::Deserialize;
+//! #[derive(Deserialize)]
+//! struct Config { host: String, port: u16 }
+//!
+//! let cfg: Config = snix_serde::from_str(r#"{ host = "localhost"; port = 8080; }"#).unwrap();
+//! assert_eq!(cfg.host, "localhost");
+//! assert_eq!(cfg.port, 8080);
+//! ```
+//!
+//! Serialise to a [`snix_eval::Value`] and back:
+//!
+//! ```rust
+//! # use serde::{Serialize, Deserialize};
+//! #[derive(Serialize, Deserialize, PartialEq, Debug)]
+//! struct Point { x: i64, y: i64 }
+//!
+//! let p = Point { x: 1, y: 2 };
+//! let value = snix_serde::to_value(&p).unwrap();
+//! let q: Point = snix_serde::from_value(value).unwrap();
+//! assert_eq!(p, q);
+//! ```
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod de;
