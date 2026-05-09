@@ -1,4 +1,4 @@
-//! When serialising Nix goes wrong ...
+//! When (de-)serialising Nix goes wrong ...
 
 use std::error;
 use std::fmt::Display;
@@ -34,6 +34,15 @@ pub enum Error {
 
     /// Attempted to provide content to a unit enum.
     UnitEnumContent,
+
+    /// Serialisation error returned from `serde::ser`.
+    Serialization(String),
+
+    /// Attempted to serialise a value with a non-string map key.
+    NonStringKey,
+
+    /// Attempted to serialise an integer that does not fit into i64.
+    IntegerOverflow { got: u64 },
 }
 
 impl Display for Error {
@@ -45,7 +54,7 @@ impl Display for Error {
             ),
 
             Error::Unsupported { wanted } => {
-                write!(f, "can not deserialize a '{wanted}' from a Nix value")
+                write!(f, "'{wanted}' is not supported by the Nix value model")
             }
 
             Error::UnexpectedType { expected, got } => {
@@ -75,6 +84,14 @@ impl Display for Error {
             Error::AmbiguousEnum => write!(f, "could not determine enum variant: ambiguous keys"),
 
             Error::UnitEnumContent => write!(f, "provided content for unit enum variant"),
+
+            Error::Serialization(err) => write!(f, "serialisation error occured: {err}"),
+
+            Error::NonStringKey => write!(f, "Nix attribute sets only support string keys"),
+
+            Error::IntegerOverflow { got } => {
+                write!(f, "u64({got}) does not fit in a Nix integer (i64)")
+            }
         }
     }
 }
@@ -94,5 +111,14 @@ impl serde::de::Error for Error {
         T: Display,
     {
         Self::Deserialization(err.to_string())
+    }
+}
+
+impl serde::ser::Error for Error {
+    fn custom<T>(err: T) -> Self
+    where
+        T: Display,
+    {
+        Self::Serialization(err.to_string())
     }
 }

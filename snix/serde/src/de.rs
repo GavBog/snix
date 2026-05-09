@@ -29,6 +29,15 @@ impl de::IntoDeserializer<'_, Error> for NixDeserializer {
     }
 }
 
+/// Deserialise a [`snix_eval::Value`] directly into a `T` without going
+/// through Nix evaluation. This is the inverse of [`crate::to_value`].
+pub fn from_value<T>(value: snix_eval::Value) -> Result<T, Error>
+where
+    T: serde::de::DeserializeOwned,
+{
+    T::deserialize(NixDeserializer::new(value))
+}
+
 /// Evaluate the Nix code in `src` and attempt to deserialise the
 /// value it returns to `T`.
 pub fn from_str<'code, T>(src: &'code str) -> Result<T, Error>
@@ -244,14 +253,14 @@ impl<'de> de::Deserializer<'de> for NixDeserializer {
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        Err(Error::Unsupported { wanted: "bytes" })
     }
 
     fn deserialize_byte_buf<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        Err(Error::Unsupported { wanted: "byte_buf" })
     }
 
     // Note that this can not distinguish between a serialisation of

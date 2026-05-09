@@ -87,9 +87,9 @@ It currently is our vehicle to evaluate Nixpkgs and check for differences - it's
 not a replacement for `nix-build` or similar. Its CLI is subject to change.
 
 ## Serde
-`snix-serde` is a crate allowing (de)-serialisation of Rust data structures
-to/from Nix. It allows you to use (a subset of) Nix as a configuration language
-in/for your application.
+`snix-serde` is a crate implementing (de-)serialisation of Rust data structures
+to/from Nix. It allows you to use (a subset of) the Nix language as an embedded
+configuration language in your application.
 
 ## Tracing
 `snix-tracing` contains some common tracing / logging / progress reporting code

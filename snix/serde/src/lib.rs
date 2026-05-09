@@ -5,10 +5,16 @@
 
 mod de;
 mod error;
+mod ser;
 
 pub use de::from_str;
 pub use de::from_str_with_config;
+pub use de::from_value;
 pub use error::Error;
+pub use ser::to_string;
+pub use ser::to_value;
 
 #[cfg(test)]
 mod de_tests;
+#[cfg(test)]
+mod ser_tests;
