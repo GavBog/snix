@@ -11,7 +11,7 @@
       "submodules": false,
       "revision": "531beac616433bac6f9e2a19feb8e99a22a66baf",
       "url": "https://github.com/ryantm/agenix/archive/531beac616433bac6f9e2a19feb8e99a22a66baf.tar.gz",
-      "hash": "103slb8xy5sb68zxjjbb9d0svq8xz751a7yrg6vrz5rh4374bzgl"
+      "hash": "sha256-9P1FziAwl5+3edkfFcr5HeGtQUtrSdk/MksX39GieoA="
     },
     "crane": {
       "type": "Git",
@@ -24,7 +24,7 @@
       "submodules": false,
       "revision": "c1f101c1de5c2fe9838937774270ae71a7482340",
       "url": "https://github.com/ipetkov/crane/archive/c1f101c1de5c2fe9838937774270ae71a7482340.tar.gz",
-      "hash": "0ywij0y8n0an7875mxacix2mzkr54lmcj661qlv1jmprwhls3v62"
+      "hash": "sha256-wuyhKeT5Vhk2xcEYySolJc9fRY9M9VoOOlYBizyQkXs="
     },
     "disko": {
       "type": "Git",
@@ -37,7 +37,7 @@
       "submodules": false,
       "revision": "0d8c6ad4a43906d14abd5c60e0ffe7b587b213de",
       "url": "https://github.com/nix-community/disko/archive/0d8c6ad4a43906d14abd5c60e0ffe7b587b213de.tar.gz",
-      "hash": "0mwnd7vfyd2wqbrvlpjgxng83fp97lg1ihzzx9ipbj5c9l0bjgjm"
+      "hash": "sha256-VT65AE2syHVj6v/DGB496bqBnu1PXrrzwlw07/Zpllc="
     },
     "gitignore.nix": {
       "type": "Git",
@@ -50,7 +50,7 @@
       "submodules": false,
       "revision": "637db329424fd7e46cf4185293b9cc8c88c95394",
       "url": "https://github.com/hercules-ci/gitignore.nix/archive/637db329424fd7e46cf4185293b9cc8c88c95394.tar.gz",
-      "hash": "02wxkdpbhlm3yk5mhkhsp3kwakc16xpmsf2baw57nz1dg459qv8w"
+      "hash": "sha256-HG2cCnktfHsKV0s4XW83gU3F57gaTljL9KNSuG6bnQs="
     },
     "korora": {
       "type": "Git",
@@ -63,7 +63,7 @@
       "submodules": false,
       "revision": "f7d8f17c4f20b69bc77189d4202c59c680400623",
       "url": "https://github.com/adisbladis/korora/archive/f7d8f17c4f20b69bc77189d4202c59c680400623.tar.gz",
-      "hash": "15im7sm7z36n128g38fz3dcy26qml7vzj986x0nfpzwgyd7499pb"
+      "hash": "sha256-66ZETvOP/+ss6AYl+fehFRvhWRvfofGQCNaMf6o+NZY="
     },
     "naersk": {
       "type": "Git",
@@ -76,7 +76,7 @@
       "submodules": false,
       "revision": "e5130d37369bfa600144c2424270c96f0ef0e11d",
       "url": "https://github.com/nmattia/naersk/archive/e5130d37369bfa600144c2424270c96f0ef0e11d.tar.gz",
-      "hash": "0n4rg5cl0v8s7z31pjbdf814x9868b7y90h2vq3b6m0nql46phvx"
+      "hash": "sha256-fcNrCMUWVLMG3gKC5M9CBqVOAnJtyRvGPxptQFl5mVg="
     },
     "nix-gerrit": {
       "type": "Git",
@@ -89,7 +89,7 @@
       "submodules": false,
       "revision": "69df19557922602ae411bda4d751e35a6feea447",
       "url": "https://github.com/flokli/nix-gerrit/archive/69df19557922602ae411bda4d751e35a6feea447.tar.gz",
-      "hash": "0pfvmcig27l9yd7ylna05q31v7r2q4vsqcym9pv5m8vg173vks37"
+      "hash": "sha256-Z+i5xwlvo1r2TdUzrDfBIp8dBi5AWepP84ke8SKr210="
     },
     "nixpkgs": {
       "type": "Git",
@@ -115,7 +115,7 @@
       "submodules": false,
       "revision": "ac62194c3917d5f474c1a844b6fd6da2db95077d",
       "url": "https://github.com/NixOS/nixpkgs/archive/ac62194c3917d5f474c1a844b6fd6da2db95077d.tar.gz",
-      "hash": "0v6bd1xk8a2aal83karlvc853x44dg1n4nk08jg3dajqyy0s98np"
+      "hash": "sha256-16KkgfdYqjaeRGBaYsNrhPRRENs0qzkQVUooNHtoy2w="
     },
     "rust-overlay": {
       "type": "Git",
@@ -128,7 +128,7 @@
       "submodules": false,
       "revision": "66bb33fdfb50b1ee724381c3f5d6012dac6c89b3",
       "url": "https://github.com/oxalica/rust-overlay/archive/66bb33fdfb50b1ee724381c3f5d6012dac6c89b3.tar.gz",
-      "hash": "0ll8ryqxi9vaz06va4rdk7mmsdi44dznfqipxfq9gn9f46ngalkz"
+      "hash": "sha256-f1L1rCEu2Zew6zdiZ38jJDZd65ktE7UN+Gqn2LHPiFI="
     },
     "rustsec-advisory-db": {
       "type": "Git",
@@ -141,7 +141,7 @@
       "submodules": false,
       "revision": "825bd26e5e14f8906f9314be1ba6734a753341d1",
       "url": "https://github.com/RustSec/advisory-db/archive/825bd26e5e14f8906f9314be1ba6734a753341d1.tar.gz",
-      "hash": "1n2wlbvfny71k93bzmjvfad1kyg6n84804gvng34z6ijnb5yrxsl"
+      "hash": "sha256-VPfsy7Iymk/Gs/sRgAiy5vkZmnJb1r9GmuF46/aiXNg="
     }
   },
   "version": 7
