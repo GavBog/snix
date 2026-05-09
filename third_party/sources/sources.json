@@ -81,14 +81,15 @@
     "nix-gerrit": {
       "type": "Git",
       "repository": {
-        "type": "GitHub",
-        "owner": "flokli",
+        "type": "Forgejo",
+        "server": "https://git.afnix.fr/",
+        "owner": "afnix",
         "repo": "nix-gerrit"
       },
-      "branch": "master",
+      "branch": "main",
       "submodules": false,
       "revision": "69df19557922602ae411bda4d751e35a6feea447",
-      "url": "https://github.com/flokli/nix-gerrit/archive/69df19557922602ae411bda4d751e35a6feea447.tar.gz",
+      "url": "https://git.afnix.fr/afnix/nix-gerrit/archive/69df19557922602ae411bda4d751e35a6feea447.tar.gz",
       "hash": "sha256-Z+i5xwlvo1r2TdUzrDfBIp8dBi5AWepP84ke8SKr210="
     },
     "nixpkgs": {
