@@ -12,6 +12,6 @@ sidebar:
   collapsed: true
 ---
 
-The OCI builder creates a OCI Runtime specification out of the received
+The OCI builder creates an OCI Runtime specification out of the received
 `BuildRequest`, then mounts the specified inputs using snix-castore, and then
 invokes `runc`.

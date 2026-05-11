@@ -9,12 +9,12 @@ weight: 13
 toc: true
 ---
 
-There's various ways to look at Snix performance, and see where it spends time
+There are various ways to look at Snix performance, and see where it spends time
 (and why). This document describes how to inspect Snix, using various
 techniques.
 
 {{< callout context="tip" title="Did you know?" icon="outline/rocket" >}}
-There also plenty of few known issues and (low-)hanging fruits.
+There are also plenty of known issues and (low-)hanging fruits.
 If you find something, best to check the [issue tracker][issues] - it
 might already be a known issue, or there a design proposal on how to solve it.
 

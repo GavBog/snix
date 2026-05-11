@@ -68,7 +68,7 @@ It also provides some "core" builtins, though builtins are pluggable - you can
 construct an evaluator and bring your own builtins.
 
 It also defines the `EvalIO` trait and provides some very simple implementations
-of it, which is how the evaluator does do IO.
+of it, which is how the evaluator does IO.
 
 
 ## Glue

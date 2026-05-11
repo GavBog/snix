@@ -24,7 +24,7 @@ the top-most layer.
 The feature is described in the [Upstream Nix Documentation][Local Overlay Store].
 Work is [ongoing][lix-local-overlay] to bring the feature to Lix aswell.
 
-The main use-case is for it is having a large Nix store mounted onto a machine
+The main use-case is having a large Nix store mounted onto a machine
 as read-only and having Nix not rebuild/substitute store paths available in
 lower layers.
 

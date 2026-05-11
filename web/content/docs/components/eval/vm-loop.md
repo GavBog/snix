@@ -154,7 +154,7 @@ been *completed* or *suspended* by returning a boolean.
 ### Inner bytecode loop
 
 The inner bytecode loop drives the execution of some Snix bytecode by
-continously looking at the next instruction to execute, and dispatching to the
+continuously looking at the next instruction to execute, and dispatching to the
 instruction handler.
 
 ```
@@ -200,7 +200,7 @@ to inform the outer loop of the suspension
 ### Inner generator loop
 
 The inner generator loop is responsible for driving the execution of a
-generator frame by continously calling [`Gen::resume`][] until it requests a
+generator frame by continuously calling [`Gen::resume`][] until it requests a
 suspension (as a result of which control is returned to the outer loop), or
 until the generator is done and yields a value.
 
@@ -283,7 +283,7 @@ But it also comes with some disadvantages:
   used for sorting in Nix because our comparators themselves are `async`.
 
   This led us to having to implement some logic on our own, as the design of
-  `async` in Rust even makes it difficult to provide usecase-generic
+  `async` in Rust even makes it difficult to provide use-case-generic
   implementations of concepts like sorting.
 
 * We need to allocate quite a few new structures on the heap in order to drive
@@ -299,7 +299,7 @@ But it also comes with some disadvantages:
 ## Alternatives considered
 
 1. Tacking on more functionality onto the existing VM loop
-   implementation to accomodate problems as they show up. This is not
+   implementation to accommodate problems as they show up. This is not
    preferred as the code is already getting messy.
 
 2. Making `snix-eval` a fully `async` project, pulling in something like Tokio

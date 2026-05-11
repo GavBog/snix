@@ -10,7 +10,7 @@ toc: true
 
 At the end of a build, Nix does scan a store path for references to other store
 paths (*out of the set of all store paths present during the build*).
-It does do this by (only) looking for a list of nixbase32-encoded hashes in
+It does this by (only) looking for a list of nixbase32-encoded hashes in
 filenames (?), symlink targets and blob contents.
 
 As outlined in the [Builder Protocol]({{< relref "protocol" >}}) page, we
@@ -18,8 +18,8 @@ don't want to introduce Nix specifics to the builder protocol, but if we simply
 do refscanning on the coordinator side, that side would need to download the
 produced inputs and scan them locally.
 
-This is undesireable, as the builder already has all produced
-outputs locally, and it'd make more sense for it do do it.
+This is undesirable, as the builder already has all produced
+outputs locally, and it'd make more sense for it to do it.
 
 Instead, we want to describe reference scanning in a generic, non-Nix-specific
 fashion.

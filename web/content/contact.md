@@ -24,7 +24,7 @@ don't work reliably, which is outside our control.
 We use the [Issue Tracker][issues] on our [Forgejo Instance][code] to track
 issues.
 If you want to work on some of these issues, it's best to reach out first, to
-make sure noone is already working on this and to exchange ideas on how to solve
+make sure no one is already working on this and to exchange ideas on how to solve
 it.
 
 ## Contributing

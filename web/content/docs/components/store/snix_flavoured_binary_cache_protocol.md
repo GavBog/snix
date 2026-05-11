@@ -16,7 +16,7 @@ this, but the client code to make use of these hints is still missing.
 This document describes an extension of the Nix HTTP Binary Cache to allow more
 granular, `snix-castore`-based substitution.
 
-While still being fully compatible with a not Snix-aware client (like Nix
+While still being fully compatible with a Snix-unaware client (like Nix
 itself), it allows clients aware of this protocol extension a "shortcut", where
 they parse the "castore node hint" in the NAR URL and opportunistically try to
 download (only the missing) castore nodes directly.

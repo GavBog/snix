@@ -47,7 +47,7 @@ The three individual URLs exposed in the CLI currently are internally converted
 to a composition with just one instance of each store (at the "root" name).
 
 Keep in mind the config format is very granular and low-level, and due to this,
-a potential subject to larger breaking and unannounced changes, which is why we
+potentially subject to larger, breaking and unannounced changes, which is why
 it is not exposed by default yet.
 
 In the long term, for "user-facing" configuration, we might want to expose a

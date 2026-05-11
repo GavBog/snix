@@ -98,7 +98,7 @@ If you want to update/edit your CL, simply squash these changes into your local
 commit and push again.
 
 ### The Gerrit model
-If do not have experience with the Gerrit, consider reading the
+If you do not have experience with Gerrit, consider reading the
 [<cite>Working with Gerrit: An example</cite>][Gerrit Walkthrough] or
 [<cite>Basic Gerrit Walkthrough — For GitHub Users</cite>][gerrit-for-github-users].
 

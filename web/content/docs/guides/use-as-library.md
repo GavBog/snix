@@ -18,7 +18,7 @@ We do not publish to crates.io yet, due to the interfaces still being a bit
 in flux.
 
 For example, to add `nix-compat`, exposing a lot of Nix data types and formats,
-add the following line to your `Cargo.toml`'s `[dependencies]`':
+add the following line to your `Cargo.toml`'s `[dependencies]`:
 
 
 ```toml

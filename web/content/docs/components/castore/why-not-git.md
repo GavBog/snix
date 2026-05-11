@@ -45,7 +45,7 @@ The [Snix Castore Data Model][castore-data-model] simply uses the
 which makes it very easy to ask other data sources for the same data, as no
 git-specific payload is included in the hash.
 This also plays very well together with things like [iroh][iroh-discussion],
-which plans to provide a way to substitute (large)blobs by their [BLAKE3][] hash
+which plans to provide a way to substitute (large) blobs by their [BLAKE3][] hash
 over the IPFS network.
 
 In addition to that, [BLAKE3][] makes it possible to do

@@ -46,8 +46,8 @@ and making a hash of *this listing* the blob digest/identifier.
    digest of the root node as an identitier.
 
 These approaches solve the problem of being able to fetch smaller chunks in a
-trusted fashion. They can also do some deduplication, in case there's the same
-leaf nodes same leaf nodes in multiple places.
+trusted fashion. They can also do some deduplication, in case there are the same
+leaf nodes in multiple places.
 
 However, they also have a big disadvantage. The chunking parameters, and the
 "topology" of the graph structure itself "bleeds" into the root hash of the

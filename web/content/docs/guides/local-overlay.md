@@ -28,7 +28,7 @@ snix store daemon
 
 ### Mount the store
 
-To expose the store paths and their contents as a file system, if can be
+To expose the store paths and their contents as a file system, it can be
 FUSE-mounted with the following command:
 
 ```bash

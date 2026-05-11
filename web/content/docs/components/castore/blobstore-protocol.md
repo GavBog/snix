@@ -79,7 +79,7 @@ alltogether, as chunks are supposed to be "reasonably small" [^2].
 
 There's some further optimization potential, a `BlobService.Stat()` request
 could tell the server it's happy with very small blobs just being inlined in
-an additional additional field in the response, which would allow clients to
+an additional field in the response, which would allow clients to
 populate their local chunk store in a single roundtrip.
 
 ## Verified Streaming

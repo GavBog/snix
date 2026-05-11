@@ -82,7 +82,7 @@ This also introduces a dependency on the state that's present on the remote
 builder machine: Whatever is in its store and matches the paths will be used,
 even if it was maliciously placed there.
 
-To eliminate this hermiticity problem and increase the integrity of builds,
+To eliminate this hermeticity problem and increase the integrity of builds,
 we've decided to use content-addressing in the builder protocol.
 
 In the long run, recording this information is gonna improve our posture

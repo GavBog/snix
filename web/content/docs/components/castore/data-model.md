@@ -82,7 +82,7 @@ name MUST be unique across all three lists.
 [rustdoc-node]: https://snix.dev/rustdoc/snix_castore/enum.Node.html
 [rustdoc-pathcomponent]: https://snix.dev/rustdoc/snix_castore/struct.PathComponent.html
 [BLAKE3]: https://github.com/BLAKE3-team/BLAKE3
-[^why-not-git-trees]: For a detailed comparison with the git model, and what (and why we do differently, see [here]({{< relref "why-not-git.md" >}}))
+[^why-not-git-trees]: For a detailed comparison with the git model, and what we do differently (and why), see [here]({{< relref "why-not-git.md" >}})
 [^directory-digest]: We currently use the [BLAKE3][] digest of the protobuf
                      serialization of the `proto::Directory` struct to calculate
                      these digests. While pretty stable across most

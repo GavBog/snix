@@ -106,7 +106,7 @@ that it necessitates:
   more problematic. Aside from thunks, internal values only exist for a brief
   amount of time on the stack and it is very clear what parts of the VM or
   builtins need to handle them. This means that the rest of the implementation
-  need to consider them, keeping the complexity caused by the internal value
+  needs to consider them, keeping the complexity caused by the internal value
   low. `Value::Catchable`, on the other hand, may exist anywhere and be passed
   to any VM op or builtin, so it needs to be correctly propagated _everywhere_.
   This causes a lot of noise in the code as well as a big potential for bugs.
@@ -142,7 +142,7 @@ generate catchable errors are never eliminated?
 --
 
 [cl/6924]: https://cl.snix.dev/q/6924
-[cl/6940]: https://cl.snix.dev/q/6942
+[cl/6940]: https://cl.snix.dev/q/6940
 [cl/9289]: https://cl.snix.dev/q/9289
-[cl/10991]: https://cl.snix.dev/q/10091
+[cl/10991]: https://cl.snix.dev/q/10991
 
