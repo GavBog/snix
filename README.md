@@ -19,6 +19,6 @@ the GPL3, but users are free to implement their own components speaking these
 protocols under the terms of the MIT license.
 
 Other tooling in this repository might be licensed differently, and is usually
-described in the code itself, via some auxillary metadata (`Cargo.toml` etc), or
+described in the code itself, via some auxiliary metadata (`Cargo.toml` etc), or
 a `LICENSE` file in the same or parent folder(s). If this is not the case,
 please open a bug!

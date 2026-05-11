@@ -56,7 +56,7 @@ with some exceptions:
   imported - however children are traversed as normal.
 * If a folder contains a `default.nix` it is loaded and, if it
   evaluates to a set, *merged* with the children. If it evaluates to
-  anything other than a set, else the children are *not traversed*.
+  anything other than a set, the children are *not traversed*.
 * A folder can opt out from readTree completely by containing a
   `.skip-tree` file. The content of the file is not read. These
   folders will be missing completely from the readTree structure.
