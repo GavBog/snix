@@ -16,7 +16,7 @@ The VM loop implemented in Snix prior to [cl/8104][] had several functions:
 1. Advancing the instruction pointer for a chunk of Snix bytecode and
    executing instructions in a loop until a result was yielded.
 
-2. Tracking Nix call frames as functions/thunks were entered/exited.
+2. Tracking Nix bytecode frames as functions/thunks were entered/exited.
 
 3. Catching trampoline requests returned from instructions to force suspended
    thunks without increasing stack size *where possible*.

@@ -40,14 +40,20 @@ pub trait CompilerObserver {
 /// Implemented by types that wish to observe internal happenings of
 /// the Snix virtual machine at runtime.
 pub trait RuntimeObserver {
-    /// Called when the runtime enters a new call frame.
-    fn observe_enter_call_frame(&mut self, _arg_count: usize, _: &Rc<Lambda>, _call_depth: usize) {}
+    /// Called when the runtime enters a new bytecode frame.
+    fn observe_enter_bytecode_frame(
+        &mut self,
+        _arg_count: usize,
+        _: &Rc<Lambda>,
+        _call_depth: usize,
+    ) {
+    }
 
-    /// Called when the runtime exits a call frame.
-    fn observe_exit_call_frame(&mut self, _frame_at: usize, _stack: &[Value]) {}
+    /// Called when the runtime exits a bytecode frame.
+    fn observe_exit_bytecode_frame(&mut self, _frame_at: usize, _stack: &[Value]) {}
 
-    /// Called when the runtime suspends a call frame.
-    fn observe_suspend_call_frame(&mut self, _frame_at: usize, _stack: &[Value]) {}
+    /// Called when the runtime suspends a bytecode frame.
+    fn observe_suspend_bytecode_frame(&mut self, _frame_at: usize, _stack: &[Value]) {}
 
     /// Called when the runtime enters a generator frame.
     fn observe_enter_generator(&mut self, _frame_at: usize, _name: &str, _stack: &[Value]) {}
@@ -61,7 +67,7 @@ pub trait RuntimeObserver {
     /// Called when a generator requests an action from the VM.
     fn observe_generator_request(&mut self, _name: &str, _msg: &VMRequest) {}
 
-    /// Called when the runtime replaces the current call frame for a
+    /// Called when the runtime replaces the current bytecode frame for a
     /// tail call.
     fn observe_tail_call(&mut self, _frame_at: usize, _: &Rc<Lambda>) {}
 
@@ -136,28 +142,28 @@ impl<'o> From<&'o mut dyn RuntimeObserver> for OptionalRuntimeObserver<'o> {
 
 impl<'o> RuntimeObserver for OptionalRuntimeObserver<'o> {
     #[inline(always)]
-    fn observe_enter_call_frame(
+    fn observe_enter_bytecode_frame(
         &mut self,
         arg_count: usize,
         lambda: &Rc<Lambda>,
         call_depth: usize,
     ) {
         if let Some(ref mut obs) = self.0 {
-            obs.observe_enter_call_frame(arg_count, lambda, call_depth);
+            obs.observe_enter_bytecode_frame(arg_count, lambda, call_depth);
         }
     }
 
     #[inline(always)]
-    fn observe_exit_call_frame(&mut self, frame_at: usize, stack: &[Value]) {
+    fn observe_exit_bytecode_frame(&mut self, frame_at: usize, stack: &[Value]) {
         if let Some(ref mut obs) = self.0 {
-            obs.observe_exit_call_frame(frame_at, stack);
+            obs.observe_exit_bytecode_frame(frame_at, stack);
         }
     }
 
     #[inline(always)]
-    fn observe_suspend_call_frame(&mut self, frame_at: usize, stack: &[Value]) {
+    fn observe_suspend_bytecode_frame(&mut self, frame_at: usize, stack: &[Value]) {
         if let Some(ref mut obs) = self.0 {
-            obs.observe_suspend_call_frame(frame_at, stack);
+            obs.observe_suspend_bytecode_frame(frame_at, stack);
         }
     }
 
@@ -342,7 +348,7 @@ impl<W: Write> TracingObserver<W> {
 }
 
 impl<W: Write> RuntimeObserver for TracingObserver<W> {
-    fn observe_enter_call_frame(
+    fn observe_enter_bytecode_frame(
         &mut self,
         arg_count: usize,
         lambda: &Rc<Lambda>,
@@ -369,14 +375,14 @@ impl<W: Write> RuntimeObserver for TracingObserver<W> {
         );
     }
 
-    /// Called when the runtime exits a call frame.
-    fn observe_exit_call_frame(&mut self, frame_at: usize, stack: &[Value]) {
+    /// Called when the runtime exits a bytecode frame.
+    fn observe_exit_bytecode_frame(&mut self, frame_at: usize, stack: &[Value]) {
         self.maybe_write_time();
         let _ = write!(&mut self.writer, "=== exiting frame {frame_at} ===\t ");
         self.write_stack(stack);
     }
 
-    fn observe_suspend_call_frame(&mut self, frame_at: usize, stack: &[Value]) {
+    fn observe_suspend_bytecode_frame(&mut self, frame_at: usize, stack: &[Value]) {
         self.maybe_write_time();
         let _ = write!(&mut self.writer, "=== suspending frame {frame_at} ===\t");
 

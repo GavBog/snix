@@ -77,7 +77,7 @@ pub enum VMRequest {
     /// prepared on the stack. Value must already be forced.
     Call(Value),
 
-    /// Request a call frame entering the given lambda immediately. This can be
+    /// Request a bytecode frame entering the given lambda immediately. This can be
     /// used to force thunks.
     EnterLambda {
         lambda: Rc<Lambda>,
@@ -348,10 +348,10 @@ where
                         VMRequest::CapturedWithValue(idx) => {
                             self.reenqueue_generator(name, span, generator);
 
-                            let call_frame = self.last_call_frame()
-                                .expect("Snix bug: generator requested captured with-value, but there is no call frame");
+                            let bytecode_frame = self.last_bytecode_frame()
+                                .expect("Snix bug: generator requested captured with-value, but there is no bytecode frame");
 
-                            let value = call_frame
+                            let value = bytecode_frame
                                 .upvalues
                                 .get_from_with_stack(idx)
                                 .expect("Snix bug: upvalue not found on stack");
@@ -392,9 +392,9 @@ where
                         } => {
                             self.reenqueue_generator(name, span, generator);
 
-                            self.frames.push(Frame::CallFrame {
+                            self.frames.push(Frame::BytecodeFrame {
                                 span,
-                                call_frame: CallFrame {
+                                bytecode_frame: BytecodeFrame {
                                     lambda,
                                     upvalues,
                                     ip: CodeIdx(0),

@@ -59,7 +59,7 @@ impl<IO> GetSpan for &VM<'_, IO> {
     }
 }
 
-impl GetSpan for &CallFrame {
+impl GetSpan for &BytecodeFrame {
     fn get_span(self) -> Span {
         self.current_span()
     }
@@ -78,7 +78,7 @@ impl GetSpan for Span {
 }
 
 /// Internal helper trait for ergonomically converting from a `Result<T,
-/// ErrorKind>` to a `Result<T, Error>` using the current span of a call frame,
+/// ErrorKind>` to a `Result<T, Error>` using the current span of a bytecode frame,
 /// and chaining the VM's frame stack around it for printing a cause chain.
 trait WithSpan<T, S: GetSpan, IO> {
     fn with_span(self, top_span: S, vm: &VM<IO>) -> Result<T, Error>;
@@ -95,7 +95,7 @@ impl<T, S: GetSpan, IO> WithSpan<T, S, IO> for Result<T, ErrorKind> {
                 // of the frame stack.
                 for frame in vm.frames.iter().rev() {
                     match frame {
-                        Frame::CallFrame { span, .. } => {
+                        Frame::BytecodeFrame { span, .. } => {
                             error = Error::new(
                                 ErrorKind::BytecodeError(Box::new(error)),
                                 *span,
@@ -121,7 +121,7 @@ impl<T, S: GetSpan, IO> WithSpan<T, S, IO> for Result<T, ErrorKind> {
     }
 }
 
-struct CallFrame {
+struct BytecodeFrame {
     /// The lambda currently being executed.
     lambda: Rc<Lambda>,
 
@@ -137,7 +137,7 @@ struct CallFrame {
     stack_offset: usize,
 }
 
-impl CallFrame {
+impl BytecodeFrame {
     /// Retrieve an upvalue from this frame at the given index.
     fn upvalue(&self, idx: UpvalueIdx) -> &Value {
         &self.upvalues[idx]
@@ -198,14 +198,14 @@ impl CallFrame {
 /// When a frame has been fully executed, it is removed from the VM's frame
 /// stack and expected to leave a result [`Value`] on the top of the stack.
 enum Frame {
-    /// CallFrame represents the execution of Snix bytecode within a thunk,
+    /// BytecodeFrame represents the execution of Snix bytecode within a thunk,
     /// function or closure.
-    CallFrame {
-        /// The call frame itself, separated out into another type to pass it
+    BytecodeFrame {
+        /// The bytecode frame itself, separated out into another type to pass it
         /// around easily.
-        call_frame: CallFrame,
+        bytecode_frame: BytecodeFrame,
 
-        /// Span from which the call frame was launched.
+        /// Span from which the bytecode frame was launched.
         span: Span,
     },
 
@@ -232,7 +232,7 @@ enum Frame {
 impl Frame {
     pub fn span(&self) -> Span {
         match self {
-            Frame::CallFrame { span, .. } | Frame::Generator { span, .. } => *span,
+            Frame::BytecodeFrame { span, .. } | Frame::Generator { span, .. } => *span,
         }
     }
 }
@@ -399,9 +399,12 @@ where
         }
     }
 
-    /// Push a call frame onto the frame stack.
-    fn push_call_frame(&mut self, span: Span, call_frame: CallFrame) {
-        self.frames.push(Frame::CallFrame { span, call_frame })
+    /// Push a bytecode frame onto the frame stack.
+    fn push_bytecode_frame(&mut self, span: Span, bytecode_frame: BytecodeFrame) {
+        self.frames.push(Frame::BytecodeFrame {
+            span,
+            bytecode_frame,
+        })
     }
 
     /// Run the VM's primary (outer) execution loop, continuing execution based
@@ -412,17 +415,21 @@ where
             let frame_id = self.frames.len();
 
             match frame {
-                Frame::CallFrame { call_frame, span } => {
+                Frame::BytecodeFrame {
+                    bytecode_frame,
+                    span,
+                } => {
                     self.observer
-                        .observe_enter_call_frame(0, &call_frame.lambda, frame_id);
+                        .observe_enter_bytecode_frame(0, &bytecode_frame.lambda, frame_id);
 
-                    match self.execute_bytecode(span, call_frame) {
+                    match self.execute_bytecode(span, bytecode_frame) {
                         Ok(true) => {
-                            self.observer.observe_exit_call_frame(frame_id, &self.stack);
+                            self.observer
+                                .observe_exit_bytecode_frame(frame_id, &self.stack);
                         }
                         Ok(false) => {
                             self.observer
-                                .observe_suspend_call_frame(frame_id, &self.stack);
+                                .observe_suspend_bytecode_frame(frame_id, &self.stack);
                         }
                         Err(err) => return Err(err),
                     };
@@ -484,7 +491,7 @@ where
     ///
     /// The return value indicates whether the bytecode has been executed to
     /// completion, or whether it has been suspended in favour of a generator.
-    fn execute_bytecode(&mut self, span: Span, mut frame: CallFrame) -> EvalResult<bool> {
+    fn execute_bytecode(&mut self, span: Span, mut frame: BytecodeFrame) -> EvalResult<bool> {
         loop {
             let op = frame.inc_ip();
             self.observer.observe_execute_op(frame.ip, &op, &self.stack);
@@ -533,7 +540,7 @@ where
 
                         let gen_span = frame.current_span();
 
-                        self.push_call_frame(span, frame);
+                        self.push_bytecode_frame(span, frame);
                         self.enqueue_generator("force", gen_span, |co| {
                             Thunk::force(thunk, co, gen_span)
                         });
@@ -713,7 +720,7 @@ where
                 Op::Equal => lifted_pop! {
                     self(b, a) => {
                         let gen_span = frame.current_span();
-                        self.push_call_frame(span, frame);
+                        self.push_bytecode_frame(span, frame);
                         self.enqueue_generator("nix_eq", gen_span, |co| {
                             a.nix_eq_owned_genco(b, co, PointerEquality::ForbidAll, gen_span)
                         });
@@ -815,13 +822,13 @@ where
 
                     // Re-enqueue this frame.
                     let op_span = frame.current_span();
-                    self.push_call_frame(span, frame);
+                    self.push_bytecode_frame(span, frame);
 
                     // Construct a generator frame doing the lookup in constant
                     // stack space.
                     let with_stack_len = self.with_stack.len();
                     let closed_with_stack_len = self
-                        .last_call_frame()
+                        .last_bytecode_frame()
                         .map(|frame| frame.upvalues.with_stack_len())
                         .unwrap_or(0);
 
@@ -847,7 +854,7 @@ where
 
                     let value = self.stack_pop();
                     let gen_span = frame.current_span();
-                    self.push_call_frame(span, frame);
+                    self.push_bytecode_frame(span, frame);
 
                     self.enqueue_generator("coerce_to_string", gen_span, |co| {
                         value.coerce_to_string(co, kind, gen_span)
@@ -885,7 +892,7 @@ where
                 Op::Add => lifted_pop! {
                     self(b, a) => {
                         let gen_span = frame.current_span();
-                        self.push_call_frame(span, frame);
+                        self.push_bytecode_frame(span, frame);
 
                         // OpAdd can add not just numbers, but also string-like
                         // things, which requires more VM logic. This operation is
@@ -1025,7 +1032,7 @@ where
         &self.stack[self.stack.len() - 1 - offset]
     }
 
-    fn run_attrset(&mut self, count: usize, frame: &CallFrame) -> EvalResult<()> {
+    fn run_attrset(&mut self, count: usize, frame: &BytecodeFrame) -> EvalResult<()> {
         let attrs = NixAttrs::construct(count, self.stack.split_off(self.stack.len() - count * 2))
             .with_span(frame, self)?
             .map(Value::attrs)
@@ -1035,11 +1042,11 @@ where
         Ok(())
     }
 
-    /// Access the last call frame present in the frame stack.
-    fn last_call_frame(&self) -> Option<&CallFrame> {
+    /// Access the last bytecode frame present in the frame stack.
+    fn last_bytecode_frame(&self) -> Option<&BytecodeFrame> {
         for frame in self.frames.iter().rev() {
-            if let Frame::CallFrame { call_frame, .. } = frame {
-                return Some(call_frame);
+            if let Frame::BytecodeFrame { bytecode_frame, .. } = frame {
+                return Some(bytecode_frame);
             }
         }
 
@@ -1063,7 +1070,7 @@ where
     /// Interpolate string fragments by popping the specified number of
     /// fragments of the stack, evaluating them to strings, and pushing
     /// the concatenated result string back on the stack.
-    fn run_interpolate(&mut self, count: u64, frame: &CallFrame) -> EvalResult<()> {
+    fn run_interpolate(&mut self, count: u64, frame: &BytecodeFrame) -> EvalResult<()> {
         let mut out = BString::default();
         // Interpolation propagates the context and union them.
         let mut context: NixContext = NixContext::new();
@@ -1092,7 +1099,7 @@ where
     /// Interpolate path fragments by popping the specified number of
     /// fragments off the stack, evaluating them into a single path,
     /// and pushing a Path value back on the stack.
-    fn run_interpolate_path(&mut self, count: u64, frame: &CallFrame) -> EvalResult<()> {
+    fn run_interpolate_path(&mut self, count: u64, frame: &BytecodeFrame) -> EvalResult<()> {
         // Similar pattern to run_interpolate for strings but simpler
         let mut path_str = String::new();
 
@@ -1166,7 +1173,7 @@ where
     fn call_value(
         &mut self,
         span: Span,
-        parent: Option<(Span, CallFrame)>,
+        parent: Option<(Span, BytecodeFrame)>,
         callable: Value,
     ) -> EvalResult<()> {
         match callable {
@@ -1187,12 +1194,12 @@ where
                 // `OpReturn` left. Not throwing it away leads to more
                 // useful error traces.
                 if let Some((parent_span, parent_frame)) = parent {
-                    self.push_call_frame(parent_span, parent_frame);
+                    self.push_bytecode_frame(parent_span, parent_frame);
                 }
 
-                self.push_call_frame(
+                self.push_bytecode_frame(
                     span,
-                    CallFrame {
+                    BytecodeFrame {
                         lambda,
                         upvalues: closure.upvalues(),
                         ip: CodeIdx(0),
@@ -1206,7 +1213,7 @@ where
             // Attribute sets with a __functor attribute are callable.
             val @ Value::Attrs(_) => {
                 if let Some((parent_span, parent_frame)) = parent {
-                    self.push_call_frame(parent_span, parent_frame);
+                    self.push_bytecode_frame(parent_span, parent_frame);
                 }
 
                 self.enqueue_generator("__functor call", span, |co| call_functor(co, val));
@@ -1230,7 +1237,7 @@ where
     ///
     /// See the closely tied function `emit_upvalue_data` in the compiler
     /// implementation for details on the argument processing.
-    fn populate_upvalues(&self, frame: &mut CallFrame) -> EvalResult<Upvalues> {
+    fn populate_upvalues(&self, frame: &mut BytecodeFrame) -> EvalResult<Upvalues> {
         let data = UpvalueData::from_raw(frame.read_uvarint());
         let count = data.count();
         let capture_with = data.captures_with();
@@ -1239,7 +1246,7 @@ where
 
         let with_stack = if capture_with {
             // Start the captured with_stack off of the
-            // current call frame's captured with_stack, ...
+            // current bytecode frame's captured with_stack, ...
             let mut captured_with_stack = frame.upvalues.with_stack().clone();
             // and extend it to a size that fits the current with_stack
             captured_with_stack.reserve_exact(self.with_stack.len());
@@ -1485,9 +1492,9 @@ where
         EvalMode::Strict => vm.enqueue_generator("final_deep_force", root_span, final_deep_force),
     }
 
-    vm.frames.push(Frame::CallFrame {
+    vm.frames.push(Frame::BytecodeFrame {
         span: root_span,
-        call_frame: CallFrame {
+        bytecode_frame: BytecodeFrame {
             lambda,
             upvalues: Rc::new(Upvalues::with_capacity(0)),
             ip: CodeIdx(0),

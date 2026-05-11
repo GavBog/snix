@@ -1056,7 +1056,7 @@ impl Compiler<'_, '_> {
     ///
     /// These patterns are treated as a special case of locals binding
     /// where the attribute set itself is placed on the first stack
-    /// slot of the call frame (either as a phantom, or named in case
+    /// slot of the bytecode frame (either as a phantom, or named in case
     /// of an `@` binding), and the function call sets up the rest of
     /// the stack as if the parameters were rewritten into a `let`
     /// binding.

@@ -28,7 +28,7 @@ impl Sub<usize> for CodeIdx {
 }
 
 /// Index of a value in the runtime stack.  This is an offset
-/// *relative to* the VM value stack_base of the CallFrame
+/// *relative to* the VM value stack_base of the BytecodeFrame
 /// containing the opcode which contains this StackIdx.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd)]
@@ -36,7 +36,7 @@ pub struct StackIdx(pub usize);
 
 /// Index of an upvalue within a closure's bound-variable upvalue
 /// list.  This is an absolute index into the Upvalues of the
-/// CallFrame containing the opcode which contains this UpvalueIdx.
+/// BytecodeFrame containing the opcode which contains this UpvalueIdx.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct UpvalueIdx(pub usize);
@@ -217,7 +217,7 @@ pub enum Op {
     AssertFail,
 
     // Lambdas & closures
-    /// Call the value at `{1}` in a new VM callframe
+    /// Call the value at `{1}` in a new VM bytecode frame
     Call,
 
     /// Retrieve the upvalue at the given index from the closure or thunk
