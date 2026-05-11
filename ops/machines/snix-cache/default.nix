@@ -7,20 +7,14 @@
 { config, ... }: # passed by module system
 
 let
-  srvos = import (
-    builtins.fetchTarball {
-      url = "https://github.com/nix-community/srvos/archive/f3f0277b1dee1bfd058c5b8b98cb25558d95f03f.tar.gz";
-      sha256 = "sha256-6UwMEAi6X3oMjKQm51i0+3i10DrsrSdXi/4YgmJxfhE=";
-    }
-  );
   mod = name: depot.path.origSrc + ("/ops/modules/" + name);
 
 in
 {
   imports = [
     ./nar-bridge.nix
-    srvos.nixosModules.hardware-hetzner-online-intel
-    srvos.nixosModules.mixins-nginx
+    depot.third_party.srvos.nixosModules.hardware-hetzner-online-intel
+    depot.third_party.srvos.nixosModules.mixins-nginx
 
     # Automatically enable metric and log collection.
     (mod "o11y/alloy.nix")

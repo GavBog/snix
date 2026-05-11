@@ -143,6 +143,19 @@
       "revision": "825bd26e5e14f8906f9314be1ba6734a753341d1",
       "url": "https://github.com/RustSec/advisory-db/archive/825bd26e5e14f8906f9314be1ba6734a753341d1.tar.gz",
       "hash": "sha256-VPfsy7Iymk/Gs/sRgAiy5vkZmnJb1r9GmuF46/aiXNg="
+    },
+    "srvos": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "nix-community",
+        "repo": "srvos"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "23122d21dfbe00e072ce515e21af18882bc88fd7",
+      "url": "https://github.com/nix-community/srvos/archive/23122d21dfbe00e072ce515e21af18882bc88fd7.tar.gz",
+      "hash": "sha256-A5ZdpWN5d+OmKln2EPPeMmPJaBwbugO9dEhyp3pn/X8="
     }
   },
   "version": 7
