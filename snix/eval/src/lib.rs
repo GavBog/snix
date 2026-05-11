@@ -147,7 +147,7 @@ where
 }
 
 // NOTE(aspen): The methods here are intentionally incomplete; feel free to add new ones (ideally
-// with similar naming conventions to the ones already present) but don't expose fields publically!
+// with similar naming conventions to the ones already present) but don't expose fields publicly!
 impl<'co, 'ro, 'env, IO> EvaluationBuilder<'co, 'ro, 'env, IO> {
     pub fn new(io_handle: IO) -> Self {
         let mut builtins = builtins::pure_builtins();
@@ -386,10 +386,10 @@ pub struct EvaluationResult {
     /// Nix value that the code evaluated to.
     pub value: Option<Value>,
 
-    /// Errors that occured during evaluation (if any).
+    /// Errors that occurred during evaluation (if any).
     pub errors: Vec<Error>,
 
-    /// Warnings that occured during evaluation. Warnings are not critical, but
+    /// Warnings that occurred during evaluation. Warnings are not critical, but
     /// should be addressed either to modernise code or improve performance.
     pub warnings: Vec<EvalWarning>,
 

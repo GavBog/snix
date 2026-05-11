@@ -50,7 +50,7 @@ pub async fn get_root_node_contents<BS: BlobService, DS: DirectoryService, S: As
             let requested_node = descend_to(&directory_service, root_node.clone(), requested_path)
                 .await
                 .map_err(|err| {
-                    error!(err=%err, "an error occured descending");
+                    error!(err=%err, "an error occurred descending");
                     StatusCode::INTERNAL_SERVER_ERROR
                 })?
                 .ok_or_else(|| {
@@ -63,7 +63,7 @@ pub async fn get_root_node_contents<BS: BlobService, DS: DirectoryService, S: As
                         .get(&digest)
                         .await
                         .map_err(|err| {
-                            error!(err=%err, "an error occured getting the directory");
+                            error!(err=%err, "an error occurred getting the directory");
                             StatusCode::INTERNAL_SERVER_ERROR
                         })?
                         .ok_or_else(|| {

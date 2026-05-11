@@ -792,7 +792,7 @@ where
             // drop the blob reader, which will close it.
             Some(blob_reader) => drop(blob_reader),
             None => {
-                // These might already be dropped if a read error occured.
+                // These might already be dropped if a read error occurred.
                 warn!("file handle not found");
             }
         }

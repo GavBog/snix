@@ -348,7 +348,7 @@ pub enum Error {
     /// returned by bigtable to actually match what we requested.
     #[error("bigtable returned unexpected data: {0}")]
     UnexpectedDataReturned(&'static str),
-    #[error("bigtable error occured while {msg}: {source}")]
+    #[error("bigtable error occurred while {msg}: {source}")]
     BigTable {
         msg: &'static str,
         #[source]

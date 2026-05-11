@@ -33,7 +33,7 @@ let
       importPathName ? null,
 
       # Commands to run before starting the snix-daemon. Useful to provide
-      # auxillary mock services.
+      # auxiliary mock services.
       preStart ? "",
 
       # The cmdline to pass to the VM.

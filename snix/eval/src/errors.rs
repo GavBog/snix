@@ -187,7 +187,7 @@ pub enum ErrorKind {
     #[error(
         r#"variable '{0}' could not be found
 
-Note that this occured within a `with`-expression. The problem may be related
+Note that this occurred within a `with`-expression. The problem may be related
 to a missing value in the attribute set(s) included via `with`."#
     )]
     UnknownDynamicVariable(String),
@@ -212,7 +212,7 @@ to a missing value in the attribute set(s) included via `with`."#
     #[error("failed to parse Nix code:")]
     ParseErrors(Vec<rnix::ParseError>),
 
-    /// An error occured while executing some native code (e.g. a
+    /// An error occurred while executing some native code (e.g. a
     /// builtin), and needs to be chained up.
     #[error("while evaluating this as native code ({gen_type})")]
     NativeError {
@@ -220,7 +220,7 @@ to a missing value in the attribute set(s) included via `with`."#
         err: Box<Error>,
     },
 
-    /// An error occured while executing Snix bytecode, but needs to
+    /// An error occurred while executing Snix bytecode, but needs to
     /// be chained up.
     #[error("while evaluating this Nix code")]
     BytecodeError(Box<Error>),
@@ -258,16 +258,16 @@ to a missing value in the attribute set(s) included via `with`."#
     UnmergeableValue,
 
     // Errors themselves ignored here & handled in Self::spans instead
-    /// Parse errors occured while importing a file.
-    #[error("parse errors occured while importing '{}'", .path.to_string_lossy())]
+    /// Parse errors occurred while importing a file.
+    #[error("parse errors occurred while importing '{}'", .path.to_string_lossy())]
     ImportParseError {
         path: PathBuf,
         file: Arc<File>,
         errors: Vec<rnix::ParseError>,
     },
 
-    /// Compilation errors occured while importing a file.
-    #[error("compiler errors occured while importing '{}'", .path.to_string_lossy())]
+    /// Compilation errors occurred while importing a file.
+    #[error("compiler errors occurred while importing '{}'", .path.to_string_lossy())]
     ImportCompilerError { path: PathBuf, errors: Vec<Error> },
 
     /// I/O errors

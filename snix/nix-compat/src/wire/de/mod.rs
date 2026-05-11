@@ -22,7 +22,7 @@ pub trait Error: Sized + StdError {
     /// A totally custom non-specific error.
     fn custom<T: fmt::Display>(msg: T) -> Self;
 
-    /// Some kind of std::io::Error occured.
+    /// Some kind of std::io::Error occurred.
     fn io_error(err: std::io::Error) -> Self {
         Self::custom(format_args!("There was an I/O error {err}"))
     }

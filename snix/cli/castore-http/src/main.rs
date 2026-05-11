@@ -14,7 +14,7 @@ struct Args {
     /// The root directory digest to serve.
     #[arg(short, long)]
     root_directory: B3Digest,
-    /// The name of the file to serve if a client requests a directory, seperated by ','. e.g. "index.html,index.htm"
+    /// The name of the file to serve if a client requests a directory, separated by ','. e.g. "index.html,index.htm"
     #[arg(long, value_delimiter = ',')]
     index_names: Vec<String>,
     /// Whether a directory listing should be returned if a client requests a directory but none of the `index_names` matched

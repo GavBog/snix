@@ -65,7 +65,7 @@ enum ThunkRepr {
     Native(SuspendedNative),
 
     /// Thunk currently under-evaluation; encountering a blackhole
-    /// value means that infinite recursion has occured.
+    /// value means that infinite recursion has occurred.
     Blackhole {
         /// Span at which the thunk was first forced.
         forced_at: Span,

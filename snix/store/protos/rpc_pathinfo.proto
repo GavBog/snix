@@ -16,7 +16,7 @@ service PathInfoService {
   rpc Get(GetPathInfoRequest) returns (PathInfo);
 
   // Upload a PathInfo object to the remote end. It MUST not return until the
-  // PathInfo object has been written on the the remote end.
+  // PathInfo object has been written on the remote end.
   //
   // The remote end MAY check if a potential DirectoryNode has already been
   // uploaded.

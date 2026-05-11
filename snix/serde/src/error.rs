@@ -64,7 +64,7 @@ impl Display for Error {
             Error::NixErrors { errors } => {
                 writeln!(
                     f,
-                    "{} occured during Nix evaluation: ",
+                    "{} occurred during Nix evaluation: ",
                     if errors.len() == 1 { "error" } else { "errors" }
                 )?;
 
@@ -75,7 +75,7 @@ impl Display for Error {
                 Ok(())
             }
 
-            Error::Deserialization(err) => write!(f, "deserialisation error occured: {err}"),
+            Error::Deserialization(err) => write!(f, "deserialisation error occurred: {err}"),
 
             Error::IntegerConversion { got, need } => {
                 write!(f, "i64({got}) does not fit in a {need}")
@@ -85,7 +85,7 @@ impl Display for Error {
 
             Error::UnitEnumContent => write!(f, "provided content for unit enum variant"),
 
-            Error::Serialization(err) => write!(f, "serialisation error occured: {err}"),
+            Error::Serialization(err) => write!(f, "serialisation error occurred: {err}"),
 
             Error::NonStringKey => write!(f, "Nix attribute sets only support string keys"),
 

@@ -59,7 +59,7 @@ pub struct RootToLeavesValidator {
     pending_directories: HashSet<B3Digest>,
 
     /// tracks whether [Self::finalize] has been called,
-    /// or an error has occured while trying to accept.
+    /// or an error has occurred while trying to accept.
     poison: bool,
 }
 
@@ -201,7 +201,7 @@ pub struct LeavesToRootValidator {
     last_inserted_digest: Option<B3Digest>,
 
     /// tracks whether [Self::finalize] has been called,
-    /// or an error has occured while trying to accept.
+    /// or an error has occurred while trying to accept.
     poison: bool,
 }
 

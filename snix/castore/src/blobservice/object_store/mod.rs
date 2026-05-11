@@ -29,7 +29,7 @@ use super::{BlobReader, BlobService, BlobWriter, ChunkedReader};
 mod aws;
 
 /// The number of chunks that will be uploaded in parallel, per blob.
-const COCURRENT_CHUNK_UPLOADS: usize = 64;
+const CONCURRENT_CHUNK_UPLOADS: usize = 64;
 
 /// Uses any object storage supported by the [object_store] crate to provide a
 /// snix-castore [BlobService].
@@ -378,7 +378,7 @@ async fn chunk_and_upload<R: AsyncRead + Unpin>(
             let chunk_path = derive_chunk_path(&base_path, &chunk_digest);
             upload_chunk(object_store, chunk_digest, chunk_path, chunk_data.data)
         })
-        .try_buffered(COCURRENT_CHUNK_UPLOADS)
+        .try_buffered(CONCURRENT_CHUNK_UPLOADS)
         .try_collect::<Vec<ChunkMeta>>()
         .await?;
 

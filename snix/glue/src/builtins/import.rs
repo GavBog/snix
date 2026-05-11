@@ -262,7 +262,7 @@ mod import_builtins {
             ),
             FileType::Symlink => {
                 // FUTUREWORK: Nix follows a symlink if it's at the root,
-                // except if it's not resolve-able (NixOS/nix#7761).i
+                // except if it's not resolve-able (NixOS/nix#7761).
                 return Err(snix_eval::ErrorKind::IO {
                     path: Some(path),
                     error: Rc::new(std::io::Error::new(

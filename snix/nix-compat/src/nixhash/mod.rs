@@ -152,7 +152,7 @@ impl NixHash {
     /// Parses a Nix SRI string to a NixHash.
     /// (See caveats in [Self] on the deviations from the SRI spec)
     pub fn from_sri(s: &str) -> Result<NixHash, Error> {
-        // split at the first occurence of "-"
+        // split at the first occurrence of "-"
         let (algo_str, digest_str) = s.split_once('-').ok_or(Error::InvalidSRI)?;
 
         // try to map the part before that `-` to a supported hash algo:

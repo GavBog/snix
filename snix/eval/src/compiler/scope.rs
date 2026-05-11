@@ -373,7 +373,7 @@ impl Scope {
                 if let LocalName::Ident(name) = local.name
                     && let hash_map::Entry::Occupied(mut entry) = self.by_name.entry(name)
                 {
-                    // If no removal occured through `remove_idx`
+                    // If no removal occurred through `remove_idx`
                     // (i.e. there was no shadowing going on),
                     // nuke the whole entry.
                     if !entry.get_mut().remove_idx() {
