@@ -44,7 +44,7 @@ enum Commands {
         #[arg(long, env, default_value = "grpc+http://[::1]:8000")]
         directory_service_addr: String,
 
-        #[arg(long, env, default_value = "dummy://")]
+        #[arg(long, env, default_value = "dummy:")]
         build_service_addr: String,
     },
 }

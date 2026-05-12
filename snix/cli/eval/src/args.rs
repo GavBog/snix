@@ -94,7 +94,7 @@ pub struct Args {
     #[clap(flatten)]
     pub service_addrs: ServiceUrlsMemory,
 
-    #[arg(long, env, default_value = "dummy://")]
+    #[arg(long, env, default_value = "dummy:")]
     pub build_service_addr: String,
 
     #[clap(flatten)]
