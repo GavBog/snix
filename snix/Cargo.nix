@@ -7137,7 +7137,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -8838,9 +8838,9 @@ rec {
       };
       "h2" = rec {
         crateName = "h2";
-        version = "0.4.12";
+        version = "0.4.14";
         edition = "2021";
-        sha256 = "11hk5mpid8757z6n3v18jwb62ikffrgzjlrgpzqvkqdlzjfbdh7k";
+        sha256 = "0cw7jk7kn2vn6f8w8ssh6gis1mljnfjxd606gvi4sjpyjayfy7qp";
         authors = [
           "Carl Lerche <me@carllerche.com>"
           "Sean McArthur <sean@seanmonstar.com>"
@@ -9873,7 +9873,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.6.3";
             optional = true;
             features = [ "all" ];
           }
@@ -10823,7 +10823,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -13324,7 +13324,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             rename = "windows";
             target = { target, features }: (target."windows" or false);
             features = [
@@ -16476,7 +16476,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.6.3";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -16748,7 +16748,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.6.3";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -16762,7 +16762,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.60.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19413,7 +19413,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19826,7 +19826,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -23754,11 +23754,11 @@ rec {
         };
         resolvedDefaultFeatures = [ "all" ];
       };
-      "socket2 0.6.1" = rec {
+      "socket2 0.6.3" = rec {
         crateName = "socket2";
-        version = "0.6.1";
+        version = "0.6.3";
         edition = "2021";
-        sha256 = "109qn0kjhqi5zds84qyqi5wn72g8azjhmf4b04fkgkrkd48rw4hp";
+        sha256 = "0gkjjcyn69hqhhlh5kl8byk5m0d7hyrp2aqwzbs3d33q208nwxis";
         authors = [
           "Alex Crichton <alex@alexcrichton.com>"
           "Thomas de Zeeuw <thomasdezeeuw@gmail.com>"
@@ -23767,11 +23767,11 @@ rec {
           {
             name = "libc";
             packageId = "libc";
-            target = { target, features }: (target."unix" or false);
+            target = { target, features }: ((target."unix" or false) || ("wasi" == target."os" or null));
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.60.2";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -24306,7 +24306,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -24837,7 +24837,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.6.3";
             optional = true;
             target = { target, features }: (!(builtins.elem "wasm" target."family"));
             features = [ "all" ];
@@ -24870,7 +24870,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.6.3";
             target = { target, features }: (!(builtins.elem "wasm" target."family"));
           }
           {
@@ -26144,7 +26144,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.1";
+            packageId = "socket2 0.6.3";
             optional = true;
             features = [ "all" ];
           }
@@ -33391,9 +33391,16 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
+          "Win32_Networking"
+          "Win32_Networking_WinSock"
+          "Win32_Security"
+          "Win32_Security_Cryptography"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "default"
         ];
@@ -33664,16 +33671,12 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
-          "Win32_Networking"
-          "Win32_Networking_WinSock"
           "Win32_Security"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
           "Win32_System_Console"
-          "Win32_System_IO"
           "Win32_System_Threading"
-          "Win32_System_WindowsProgramming"
           "Win32_UI"
           "Win32_UI_Input"
           "Win32_UI_Input_KeyboardAndMouse"
@@ -33961,8 +33964,6 @@ rec {
           "Win32_System"
           "Win32_System_Com"
           "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_LibraryLoader"
           "Win32_System_Memory"
