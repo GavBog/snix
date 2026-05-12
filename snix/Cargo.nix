@@ -21352,6 +21352,14 @@ rec {
             features = [ "fuse" ];
           }
           {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+            features = [
+              "clap"
+              "tonic"
+            ];
+          }
+          {
             name = "thiserror";
             packageId = "thiserror 2.0.17";
           }

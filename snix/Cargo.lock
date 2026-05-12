@@ -4850,6 +4850,7 @@ dependencies = [
  "rstest",
  "serde_json",
  "snix-castore",
+ "snix-tracing",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",

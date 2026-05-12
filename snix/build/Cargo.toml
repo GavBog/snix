@@ -15,6 +15,7 @@ tokio = { workspace = true, features = ["process"] }
 tonic.workspace = true
 # TODO: put the fuse dep behind a feature flag?
 snix-castore = { path = "../castore", features = ["fuse"] }
+snix-tracing = { path = "../tracing", features = ["clap", "tonic"] }
 tracing.workspace = true
 url.workspace = true
 mimalloc.workspace = true
