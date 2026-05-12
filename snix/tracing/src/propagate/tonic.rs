@@ -22,9 +22,7 @@ impl opentelemetry::propagation::Injector for MetadataInjector<'_> {
 /// Trace context propagation: send the trace context by injecting it into the metadata of the given
 /// request. This only injects the current span if the otlp feature is also enabled.
 #[allow(unused_mut)]
-pub fn send_trace<T>(
-    mut request: tonic::Request<T>,
-) -> Result<tonic::Request<T>, Box<tonic::Status>> {
+pub fn send_trace<T>(mut request: tonic::Request<T>) -> Result<tonic::Request<T>, tonic::Status> {
     #[cfg(feature = "otlp")]
     {
         use tracing_opentelemetry::OpenTelemetrySpanExt;

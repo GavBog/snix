@@ -183,9 +183,7 @@ impl ServiceBuilder for GRPCPathInfoServiceConfig {
     ) -> Result<Arc<Self::Output>, Box<dyn std::error::Error + Send + Sync>> {
         let client = proto::path_info_service_client::PathInfoServiceClient::with_interceptor(
             snix_castore::tonic::channel_from_url(&self.url.parse()?).await?,
-            // tonic::service::Interceptor wants an unboxed Status as return type.
-            // https://github.com/hyperium/tonic/issues/2253
-            |rq| snix_tracing::propagate::tonic::send_trace(rq).map_err(|e| *e),
+            snix_tracing::propagate::tonic::send_trace,
         );
         Ok(Arc::new(GRPCPathInfoService::from_client(
             instance_name.to_string(),

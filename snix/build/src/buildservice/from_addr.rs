@@ -73,9 +73,7 @@ where
                         snix_castore::tonic::channel_from_url(&url)
                             .await
                             .map_err(std::io::Error::other)?,
-                        // tonic::service::Interceptor wants an unboxed Status as return type.
-                        // https://github.com/hyperium/tonic/issues/2253
-                        |rq| snix_tracing::propagate::tonic::send_trace(rq).map_err(|e| *e),
+                        snix_tracing::propagate::tonic::send_trace,
                     );
                 // FUTUREWORK: also allow responding to {blob,directory}_service
                 // requests from the remote BuildService?
