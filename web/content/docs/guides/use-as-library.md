@@ -31,7 +31,7 @@ Keep in mind some crates have additional requirements on their environment.
 
 For example, `snix-castore` and `snix-store` need to have access to a `protobuf`
 compiler and the proto defintions (setting `PROTO_ROOT` usually).
-`tvix-build` wants `TVIX_BUILD_SANDBOX_SHELL` to be set, etc.
+`snix-build` wants `SNIX_BUILD_SANDBOX_SHELL` to be set, etc.
 
 Check each crates' `build.rs` scripts for details.
 {{</callout>}}
