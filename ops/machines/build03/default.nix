@@ -15,6 +15,8 @@ in
     (mod "harmonia.nix")
     (mod "known-hosts.nix")
 
+    ./watch-store.nix
+
     (depot.third_party.agenix.src + "/modules/age.nix")
   ];
 
