@@ -49,4 +49,5 @@ depot.nix.readTree.drvTargets {
     vendorHash = "sha256-aynhBko6ecYyyMG9XO5315kLerWDFZ6V8LQ/WIkvC70=";
   });
 
+  watch-store = super.callPackage ./pkgs/watch-store.nix { };
 }
