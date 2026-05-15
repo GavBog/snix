@@ -60,12 +60,6 @@ Snix currently has three language test suites for snix-eval:
     that is discovered while working on Snix and isn't covered by the
     `nix_tests` suite.
 
-* `nix_oracle` can evaluate Nix expressions in Snix and compare the
-  result against C++ Nix (2.3) directly. Eventually it should gain
-  the ability to property test generated Nix expressions.
-  An additional feature is that it can evaluate expressions without
-  `--strict`, so thunking behavior can be verified more easily.
-
 ## rnix-parser
 
 Snix is written in memory of jD91mZM2, the author of [rnix-parser][]

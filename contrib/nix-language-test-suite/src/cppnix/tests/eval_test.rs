@@ -123,6 +123,10 @@ fn eval_test(
             cmd.arg("--strict");
         }
 
+        if matches!(nix_version, NixVersion::LixLatest) {
+            cmd.args(["--extra-deprecated-features", "url-literals"]);
+        }
+
         if test_case.runtime_opts.xml_output {
             cmd.arg("--no-location");
             cmd.arg("--xml");

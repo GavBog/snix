@@ -1,0 +1,3 @@
+environment {
+  work-dir "/pwd/lang"
+}

@@ -47,14 +47,6 @@ As long as the test case fits into the existing test suite, it is easy: add .nix
 
 This is a problem of runners rather than the test suite, but as long as the suite provides enough information, skipping tests should not be a big problem. See the reference runners for examples.
 
-> _lazy_ eval test cases: This is currently only supported by the `nix_oracle`
-> test suite in Snix which compares the evaluation result of expressions to the
-> output of `nix-instantiate(1)` without `--strict`. By relying on the fact
-> that the resulting value is not forced deeply before printing, it can be
-> observed whether certain expressions are thunked or not.
-
-If I got the idea of the nix_oracle tests right, they fit nicely into the suite, see [./tests/cases/nix_oracle]
-
 > **Filesystem**: Some test cases `import` other files or use `builtins.readFile`, `builtins.readDir` and friends.
 
 Files required for the test case are defined in the `environment` section. See [./tests/cases/environment/eval-okay-readFileType.kdl] as an example.
@@ -115,6 +107,6 @@ This one builds a `nix-instantiate` command and runs it. The config's format is 
 
 ## Thoughts On This Proposal
 
-This proposal is a small step forward and at the moment its biggest benifit is that it unifies and puts together existing test cases: eval, glue, nix_oracle and verify-lang-tests and adds error comparison
+This proposal is a small step forward and at the moment its biggest benifit is that it unifies and puts together existing test cases: eval, glue, [nix_oracle](https://git.snix.dev/snix/snix/src/commit/da9a2be3faa96e79185625a225000fdefabdfa51/snix/eval/tests/nix_oracle.rs) and verify-lang-tests and adds error comparison
 
 My concern is what might be the limits of this approach. What if certain behaviour can only be verified via multiple actions and won't feed into `input -> eval -> output` model? An example of such cases can be something like CppNix's tests here: https://github.com/NixOS/nix/tree/master/tests/nixos

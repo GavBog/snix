@@ -1,0 +1,1 @@
+({ foo ? "wiggly" }: [ foo ]) { }
