@@ -86,14 +86,21 @@ pub async fn shutdown_signal() {
 pub async fn reader_for_path(
     path: impl AsRef<std::path::Path>,
 ) -> std::io::Result<Box<dyn tokio::io::AsyncBufRead + Unpin + Send>> {
+    use std::os::unix::fs::FileTypeExt;
     use tokio::io::BufReader;
 
     let path = path.as_ref();
     if path == "-" {
         Ok(Box::new(BufReader::new(tokio::io::stdin())) as Box<_>)
     } else {
-        let file = tokio::fs::File::open(path).await?;
-        let reader = BufReader::new(file);
-        Ok(Box::new(reader) as Box<_>)
+        let metadata = tokio::fs::metadata(path).await?;
+
+        if metadata.file_type().is_socket() {
+            let stream = tokio::net::UnixStream::connect(path).await?;
+            Ok(Box::new(BufReader::new(stream)))
+        } else {
+            let file = tokio::fs::File::open(path).await?;
+            Ok(Box::new(BufReader::new(file)))
+        }
     }
 }

@@ -21941,6 +21941,7 @@ rec {
               "fs"
               "io-std"
               "io-util"
+              "net"
               "signal"
               "rt-multi-thread"
               "process"
