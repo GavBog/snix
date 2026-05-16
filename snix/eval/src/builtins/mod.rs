@@ -443,6 +443,10 @@ mod pure_builtins {
 
     #[builtin("functionArgs")]
     async fn builtin_function_args(co: GenCo, f: Value) -> Result<Value, ErrorKind> {
+        if matches!(f, Value::Builtin(_)) {
+            return Ok(Value::attrs(NixAttrs::empty()));
+        }
+
         let lambda = &f.as_closure()?.lambda();
         let formals = if let Some(formals) = &lambda.formals {
             formals
