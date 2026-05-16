@@ -61,13 +61,13 @@ impl Directory {
     /// Allows iterating over all nodes (directories, files and symlinks)
     /// For each, it returns a tuple of its name and node.
     /// The elements are sorted by their names.
-    pub fn nodes(&self) -> impl Iterator<Item = (&PathComponent, &Node)> + '_ {
+    pub fn nodes(&self) -> impl ExactSizeIterator<Item = (&PathComponent, &Node)> + '_ {
         self.nodes.iter()
     }
 
     /// Dissolves a Directory into its individual names and nodes.
     /// The elements are sorted by their names.
-    pub fn into_nodes(self) -> impl Iterator<Item = (PathComponent, Node)> {
+    pub fn into_nodes(self) -> impl ExactSizeIterator<Item = (PathComponent, Node)> {
         self.nodes.into_iter()
     }
 
