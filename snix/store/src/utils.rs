@@ -63,7 +63,7 @@ pub struct ServiceUrlsGrpc {
 ///
 /// This particular variant has defaults tailored for usecases keeping all data
 /// in memory.
-/// It's currently used in snix-cli, as we don't really care about persistency
+/// It's currently used in snix-cli-eval, as we don't really care about persistency
 /// there yet, and using something else here might make some perf output harder
 /// to interpret.
 #[derive(clap::Parser, Clone)]
