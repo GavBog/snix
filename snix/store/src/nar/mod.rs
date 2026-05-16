@@ -6,9 +6,12 @@ use tonic::async_trait;
 
 mod hashing_reader;
 mod import;
+mod listing;
 mod renderer;
 pub mod seekable;
+
 pub use import::{NarIngestionError, ingest_nar, ingest_nar_and_hash};
+pub use listing::{Error as ListingError, produce_listing};
 pub use renderer::SimpleRenderer;
 pub use renderer::calculate_size_and_sha256;
 pub use renderer::write_nar;
