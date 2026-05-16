@@ -23389,10 +23389,6 @@ rec {
             packageId = "snix-castore";
           }
           {
-            name = "snix-cli";
-            packageId = "snix-cli";
-          }
-          {
             name = "snix-tracing";
             packageId = "snix-tracing";
             features = [

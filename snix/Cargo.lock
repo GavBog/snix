@@ -5262,7 +5262,6 @@ dependencies = [
  "sha1",
  "sha2",
  "snix-castore",
- "snix-cli",
  "snix-tracing",
  "tempfile",
  "thiserror 2.0.17",

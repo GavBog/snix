@@ -4058,18 +4058,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "snix-cli"
-version = "0.1.0"
-dependencies = [
- "clap",
- "clap-verbosity-flag",
- "snix-tracing",
- "tokio",
- "tracing",
- "which",
-]
-
-[[package]]
 name = "snix-eval"
 version = "0.1.0"
 dependencies = [
@@ -4183,7 +4171,6 @@ dependencies = [
  "sha1",
  "sha2 0.10.9",
  "snix-castore",
- "snix-cli",
  "snix-tracing",
  "thiserror 2.0.18",
  "tokio",
@@ -5311,15 +5298,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31141ce3fc3e300ae89b78c0dd67f9708061d1d2eda54b8209346fd6be9a92c"
 dependencies = [
  "rustls-pki-types",
-]
-
-[[package]]
-name = "which"
-version = "8.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81995fafaaaf6ae47a7d0cc83c67caf92aeb7e5331650ae6ff856f7c0c60c459"
-dependencies = [
- "libc",
 ]
 
 [[package]]

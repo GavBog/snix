@@ -17973,56 +17973,6 @@ rec {
           "fuse"
         ];
       };
-      "snix-cli" = rec {
-        crateName = "snix-cli";
-        version = "0.1.0";
-        edition = "2024";
-        crateBin = [ ];
-        src = lib.cleanSourceWith {
-          filter = sourceFilter;
-          src = ../../../snix/cli/base;
-        };
-        libName = "snix_cli";
-        dependencies = [
-          {
-            name = "clap";
-            packageId = "clap";
-            features = [ "derive" ];
-          }
-          {
-            name = "clap-verbosity-flag";
-            packageId = "clap-verbosity-flag";
-            usesDefaultFeatures = false;
-            features = [ "tracing" ];
-          }
-          {
-            name = "snix-tracing";
-            packageId = "snix-tracing";
-            features = [ "clap" ];
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [
-              "fs"
-              "io-std"
-              "io-util"
-              "signal"
-              "rt-multi-thread"
-              "process"
-            ];
-          }
-          {
-            name = "tracing";
-            packageId = "tracing";
-          }
-          {
-            name = "which";
-            packageId = "which";
-          }
-        ];
-
-      };
       "snix-eval" = rec {
         crateName = "snix-eval";
         version = "0.1.0";
@@ -18546,10 +18496,6 @@ rec {
           {
             name = "snix-castore";
             packageId = "snix-castore";
-          }
-          {
-            name = "snix-cli";
-            packageId = "snix-cli";
           }
           {
             name = "snix-tracing";
@@ -19949,7 +19895,6 @@ rec {
           "bytes"
           "default"
           "fs"
-          "io-std"
           "io-util"
           "libc"
           "macros"
@@ -24982,35 +24927,6 @@ rec {
           }
         ];
 
-      };
-      "which" = rec {
-        crateName = "which";
-        version = "8.0.2";
-        edition = "2021";
-        sha256 = "0nf4c067qvw5zzk0lr9iadzfnaprr9kkrj0cgmxf8smgmapmz6c1";
-        authors = [
-          "Harry Fei <tiziyuanfang@gmail.com>, Jacob Kiesel <jake@bitcrafters.co>"
-        ];
-        dependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-            optional = true;
-            target =
-              { target, features }:
-              ((target."unix" or false) || ("wasi" == target."os" or null) || ("redox" == target."os" or null));
-          }
-        ];
-        features = {
-          "default" = [ "real-sys" ];
-          "real-sys" = [ "dep:libc" ];
-          "regex" = [ "dep:regex" ];
-          "tracing" = [ "dep:tracing" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "real-sys"
-        ];
       };
       "winapi" = rec {
         crateName = "winapi";
