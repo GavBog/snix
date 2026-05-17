@@ -1,11 +1,11 @@
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
+use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 
 use crate::nar;
 
 #[test]
 fn weird_paths() {
     let root = nar::listing::ListingEntry::Directory {
-        entries: HashMap::new(),
+        entries: BTreeMap::new(),
     };
 
     root.locate("../../../../etc/passwd")

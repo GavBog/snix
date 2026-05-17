@@ -9,11 +9,11 @@
 //! offset. Validating the contents is the caller's responsibility.
 
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     path::{Component, Path},
 };
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize, ser::SerializeMap};
 
 #[cfg(test)]
 mod test;
@@ -46,11 +46,48 @@ pub enum ListingEntry {
         // It's tempting to think that the key should be a `Vec<u8>`
         // but Nix does not support that and will fail to emit a listing version 1 for any non-UTF8
         // encodeable string.
-        entries: HashMap<String, ListingEntry>,
+        entries: BTreeMap<String, ListingEntry>,
     },
     Symlink {
         target: String,
     },
+}
+
+// Custom Serialize impl, as otherwise type would always come first, causing noncanonical JSON.
+impl Serialize for ListingEntry {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            ListingEntry::Regular {
+                size,
+                executable,
+                nar_offset,
+            } => {
+                let mut map = serializer.serialize_map(Some(if *executable { 4 } else { 3 }))?;
+                if *executable {
+                    map.serialize_entry("executable", &true)?;
+                }
+                map.serialize_entry("narOffset", nar_offset)?;
+                map.serialize_entry("size", size)?;
+                map.serialize_entry("type", "regular")?;
+                map.end()
+            }
+            ListingEntry::Directory { entries } => {
+                let mut map = serializer.serialize_map(Some(2))?;
+                map.serialize_entry("entries", entries)?;
+                map.serialize_entry("type", "directory")?;
+                map.end()
+            }
+            ListingEntry::Symlink { target } => {
+                let mut map = serializer.serialize_map(Some(2))?;
+                map.serialize_entry("target", target)?;
+                map.serialize_entry("type", "symlink")?;
+                map.end()
+            }
+        }
+    }
 }
 
 impl ListingEntry {
@@ -117,7 +154,16 @@ impl<'de, const V: u8> Deserialize<'de> for ListingVersion<V> {
     }
 }
 
-#[derive(Debug, Deserialize)]
+impl<const V: u8> Serialize for ListingVersion<V> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        V.serialize(serializer)
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
 pub enum Listing {
