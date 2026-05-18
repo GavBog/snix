@@ -32,6 +32,9 @@
           proxy_cache_valid 404 1m;  # Cache 404 responses for 1 minute
           proxy_cache_min_uses 2;  # Cache only if the object is requested at least twice
           proxy_cache_use_stale error timeout updating;
+
+          # Enable CORS from everywhere, same as c.n.o
+          add_header Access-Control-Allow-Origin *;
         '';
       };
     };
