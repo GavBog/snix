@@ -12410,6 +12410,10 @@ rec {
             features = [ "derive" ];
           }
           {
+            name = "serde_json";
+            packageId = "serde_json";
+          }
+          {
             name = "snix-castore";
             packageId = "snix-castore";
           }

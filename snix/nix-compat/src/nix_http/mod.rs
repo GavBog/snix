@@ -8,6 +8,8 @@ pub const MIME_TYPE_NAR: &str = "application/x-nix-nar";
 pub const MIME_TYPE_NARINFO: &str = "text/x-nix-narinfo";
 /// The mime type used for the `nix-cache-info` file
 pub const MIME_TYPE_CACHE_INFO: &str = "text/x-nix-cache-info";
+/// The mime type used for `$outhash.ls` files
+pub const MIME_TYPE_NAR_LISTING: &str = "application/json";
 
 /// Parses a `14cx20k6z4hq508kqi2lm79qfld5f9mf7kiafpqsjs3zlmycza0k.nar`
 /// string and returns the nixbase32-decoded digest, as well as the compression
@@ -38,16 +40,22 @@ pub fn parse_nar_str(s: &str) -> Option<([u8; 32], &str)> {
     }
 }
 
-/// Parses a `3mzh8lvgbynm9daj7c82k2sfsfhrsfsy.narinfo` string and returns the
-/// nixbase32-decoded digest.
-pub fn parse_narinfo_str(s: &str) -> Option<[u8; 20]> {
+#[derive(Debug, PartialEq, Eq)]
+pub enum RequestType {
+    Narinfo,
+    Listing,
+}
+
+/// Parses a `3mzh8lvgbynm9daj7c82k2sfsfhrsfsy.narinfo` or `3mzh8lvgbynm9daj7c82k2sfsfhrsfsy.ls`
+/// string and returns the nixbase32-decoded digest, and what was requested.
+pub fn parse_outhash_str(s: &str) -> Option<([u8; 20], RequestType)> {
     if !s.is_char_boundary(32) {
         trace!("invalid string, no char boundary at 32");
         return None;
     }
 
     match s.split_at(32) {
-        (hash_str, ".narinfo") => {
+        (hash_str, suffix @ ".narinfo") | (hash_str, suffix @ ".ls") => {
             // we know this is 32 bytes, so it's ok to unwrap here.
             let hash_str_fixed: [u8; 32] = hash_str.as_bytes().try_into().unwrap();
 
@@ -56,7 +64,14 @@ pub fn parse_narinfo_str(s: &str) -> Option<[u8; 20]> {
                     trace!(err=%e, "invalid nixbase32 encoding");
                     None
                 }
-                Ok(digest) => Some(digest),
+                Ok(digest) => Some((
+                    digest,
+                    match suffix {
+                        ".narinfo" => RequestType::Narinfo,
+                        ".ls" => RequestType::Listing,
+                        _ => unreachable!(),
+                    },
+                )),
             }
         }
         _ => {
@@ -68,7 +83,9 @@ pub fn parse_narinfo_str(s: &str) -> Option<[u8; 20]> {
 
 #[cfg(test)]
 mod test {
-    use super::{parse_nar_str, parse_narinfo_str};
+    use crate::nix_http::RequestType;
+
+    use super::{parse_nar_str, parse_outhash_str};
     use hex_literal::hex;
 
     #[test]
@@ -98,18 +115,29 @@ mod test {
         )
     }
     #[test]
-    fn parse_narinfo_str_success() {
+    fn parse_outhash_str_success() {
         assert_eq!(
-            hex!("8a12321522fd91efbd60ebb2481af88580f61600"),
-            parse_narinfo_str("00bgd045z0d4icpbc2yyz4gx48ak44la.narinfo").unwrap()
+            (
+                hex!("8a12321522fd91efbd60ebb2481af88580f61600"),
+                RequestType::Narinfo
+            ),
+            parse_outhash_str("00bgd045z0d4icpbc2yyz4gx48ak44la.narinfo").unwrap()
+        );
+        assert_eq!(
+            (
+                hex!("8a12321522fd91efbd60ebb2481af88580f61600"),
+                RequestType::Listing
+            ),
+            parse_outhash_str("00bgd045z0d4icpbc2yyz4gx48ak44la.ls").unwrap()
         );
     }
 
     #[test]
-    fn parse_narinfo_str_failure() {
-        assert!(parse_narinfo_str("00bgd045z0d4icpbc2yyz4gx48ak44la").is_none());
-        assert!(parse_narinfo_str("/00bgd045z0d4icpbc2yyz4gx48ak44la").is_none());
-        assert!(parse_narinfo_str("000000").is_none());
-        assert!(parse_narinfo_str("00bgd045z0d4icpbc2yyz4gx48ak44l🦊.narinfo").is_none());
+    fn parse_outhash_str_failure() {
+        assert!(parse_outhash_str("00bgd045z0d4icpbc2yyz4gx48ak44la").is_none());
+        assert!(parse_outhash_str("/00bgd045z0d4icpbc2yyz4gx48ak44la").is_none());
+        assert!(parse_outhash_str("000000").is_none());
+        assert!(parse_outhash_str("00bgd045z0d4icpbc2yyz4gx48ak44l🦊.narinfo").is_none());
+        assert!(parse_outhash_str("00bgd045z0d4icpbc2yyz4gx48ak44la.nah").is_none());
     }
 }

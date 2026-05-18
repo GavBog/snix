@@ -15,7 +15,7 @@ use std::num::NonZeroUsize;
 use std::sync::Arc;
 
 mod nar;
-mod narinfo;
+mod outhash;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -60,9 +60,9 @@ pub fn gen_router(priority: u64) -> Router<AppState> {
         .route("/nar/{nar_str}", put(nar::put))
         .route("/nar/snix-castore/{root_node_enc}", get(nar::get_head))
         .route("/nar/snix-castore/{root_node_enc}", head(nar::get_head))
-        .route("/{narinfo_str}", get(narinfo::get))
-        .route("/{narinfo_str}", head(narinfo::head))
-        .route("/{narinfo_str}", put(narinfo::put))
+        .route("/{outhash_str}", get(outhash::get))
+        .route("/{outhash_str}", head(outhash::head))
+        .route("/{outhash_str}", put(outhash::put))
         .route("/nix-cache-info", get(move || nix_cache_info(priority)));
 
     let router = router.layer(tower_http::compression::CompressionLayer::new());

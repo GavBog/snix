@@ -2994,6 +2994,7 @@ dependencies = [
  "parking_lot",
  "prost",
  "serde",
+ "serde_json",
  "sha2",
  "snix-castore",
  "snix-store",

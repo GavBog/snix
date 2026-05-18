@@ -1,8 +1,10 @@
+//* Handlers for $outhash.{narinfo,ls} paths.
+
 use axum::{http::StatusCode, response::IntoResponse};
 use bytes::Bytes;
 use nix_compat::{
     narinfo::{NarInfo, Signature},
-    nix_http, nixbase32,
+    nix_http,
     store_path::StorePath,
 };
 use snix_castore::proto::write_infused_nar_path;
@@ -11,18 +13,15 @@ use tracing::{Span, instrument, warn};
 
 use crate::AppState;
 
-/// The size limit for NARInfo uploads nar-bridge receives
-const NARINFO_LIMIT: usize = 2 * 1024 * 1024;
-
 #[instrument(skip_all, fields(path_info.digest=tracing::field::Empty))]
 pub async fn head(
-    axum::extract::Path(narinfo_str): axum::extract::Path<String>,
+    axum::extract::Path(p): axum::extract::Path<String>,
     axum::extract::State(AppState {
         path_info_service, ..
     }): axum::extract::State<AppState>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let digest = nix_http::parse_narinfo_str(&narinfo_str).ok_or(StatusCode::NOT_FOUND)?;
-    Span::current().record("path_info.digest", &narinfo_str[0..32]);
+    let (digest, _request_type) = nix_http::parse_outhash_str(&p).ok_or(StatusCode::NOT_FOUND)?;
+    Span::current().record("path_info.digest", &p[0..32]);
 
     if path_info_service.has(digest).await.map_err(|e| {
         warn!(err=%e, "failed to get PathInfo");
@@ -37,13 +36,15 @@ pub async fn head(
 
 #[instrument(skip_all, fields(path_info.digest=tracing::field::Empty))]
 pub async fn get(
-    axum::extract::Path(narinfo_str): axum::extract::Path<String>,
+    axum::extract::Path(p): axum::extract::Path<String>,
     axum::extract::State(AppState {
-        path_info_service, ..
+        directory_service,
+        path_info_service,
+        ..
     }): axum::extract::State<AppState>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let digest = nix_http::parse_narinfo_str(&narinfo_str).ok_or(StatusCode::NOT_FOUND)?;
-    Span::current().record("path_info.digest", &narinfo_str[0..32]);
+    let (digest, request_type) = nix_http::parse_outhash_str(&p).ok_or(StatusCode::NOT_FOUND)?;
+    Span::current().record("path_info.digest", &p[0..32]);
 
     // fetch the PathInfo
     let path_info = path_info_service
@@ -55,15 +56,39 @@ pub async fn get(
         })?
         .ok_or(StatusCode::NOT_FOUND)?;
 
-    Ok((
-        [("content-type", nix_http::MIME_TYPE_NARINFO)],
-        gen_narinfo_str(&path_info),
-    ))
+    match request_type {
+        nix_http::RequestType::Narinfo => Ok((
+            [("content-type", nix_http::MIME_TYPE_NARINFO)],
+            gen_narinfo_str(&path_info),
+        )),
+        nix_http::RequestType::Listing => {
+            // render the listing
+            let listing = snix_store::nar::produce_listing(&path_info.node, &directory_service)
+                .await
+                .map_err(|err| {
+                    warn!(%err, "failed to produce listing");
+                    StatusCode::INTERNAL_SERVER_ERROR
+                })?;
+
+            let listing_str = serde_json::to_string(&listing).map_err(|err| {
+                warn!(%err, "failed to serialize listing");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?;
+
+            Ok((
+                [("content-type", nix_http::MIME_TYPE_NAR_LISTING)],
+                listing_str,
+            ))
+        }
+    }
 }
+
+/// The size limit for NARInfo uploads nar-bridge receives
+const NARINFO_SIZE_LIMIT: usize = 2 * 1024 * 1024;
 
 #[instrument(skip_all, fields(path_info.digest=tracing::field::Empty))]
 pub async fn put(
-    axum::extract::Path(narinfo_str): axum::extract::Path<String>,
+    axum::extract::Path(p): axum::extract::Path<String>,
     axum::extract::State(AppState {
         path_info_service,
         root_nodes,
@@ -71,10 +96,22 @@ pub async fn put(
     }): axum::extract::State<AppState>,
     request: axum::extract::Request,
 ) -> Result<&'static str, StatusCode> {
-    let _narinfo_digest = nix_http::parse_narinfo_str(&narinfo_str).ok_or(StatusCode::UNAUTHORIZED);
-    Span::current().record("path_info.digest", &narinfo_str[0..32]);
+    let (digest, request_type) = nix_http::parse_outhash_str(&p).ok_or(StatusCode::NOT_FOUND)?;
+    Span::current().record("path_info.digest", &p[0..32]);
 
-    let narinfo_bytes: Bytes = axum::body::to_bytes(request.into_body(), NARINFO_LIMIT)
+    match request_type {
+        // rest of the function body
+        nix_http::RequestType::Narinfo => {}
+        nix_http::RequestType::Listing => {
+            // Nix might want to upload them, but we don't really care.
+            // FUTUREWORK: We could potentially compare what it uploads
+            // with what we synthesize and fail out if it's not identical.
+            // Right now we just pretend we uploaded and call it a day.
+            return Ok("");
+        }
+    }
+
+    let narinfo_bytes: Bytes = axum::body::to_bytes(request.into_body(), NARINFO_SIZE_LIMIT)
         .await
         .map_err(|e| {
             warn!(err=%e, "unable to fetch body");
@@ -92,8 +129,10 @@ pub async fn put(
         StatusCode::BAD_REQUEST
     })?;
 
-    // Extract the NARHash from the PathInfo.
-    Span::current().record("path_info.nar_info", nixbase32::encode(&narinfo.nar_hash));
+    if &digest != narinfo.store_path.digest() {
+        warn!("digest in URL doesn't match store path in NARInfo");
+        Err(StatusCode::BAD_REQUEST)?
+    }
 
     // Lookup root node with peek, as we don't want to update the LRU list.
     // We need to be careful to not hold the RwLock across the await point.
@@ -161,7 +200,7 @@ mod tests {
         utils::gen_test_directory_service,
     };
     use snix_store::{
-        fixtures::{DUMMY_PATH_DIGEST, NAR_CONTENTS_SYMLINK, PATH_INFO, PATH_INFO_SYMLINK},
+        fixtures::{DUMMY_PATH_DIGEST, NAR_CONTENTS_SYMLINK, PATH_INFO_SYMLINK},
         path_info::PathInfo,
         pathinfoservice::PathInfoService,
         utils::gen_test_pathinfo_service,
@@ -208,53 +247,81 @@ mod tests {
     }
 
     /// HEAD and GET for a NARInfo for which there's no PathInfo should fail.
+    /// Same for the listing endpoint.
     #[traced_test]
     #[tokio::test]
     async fn test_get_head_not_found() {
         let (server, _blob_service, _directory_service, _path_info_service) =
             gen_server(crate::gen_router(100));
 
-        let url = &format!("{}.narinfo", nixbase32::encode(&DUMMY_PATH_DIGEST));
-
-        // HEAD
+        let narinfo_url = &format!("{}.narinfo", nixbase32::encode(&DUMMY_PATH_DIGEST));
         server
-            .method(Method::HEAD, url)
+            .method(Method::HEAD, narinfo_url)
             .expect_failure()
             .await
             .assert_status_not_found();
 
-        // GET
         server
-            .get(url)
+            .get(narinfo_url)
+            .expect_failure()
+            .await
+            .assert_status_not_found();
+
+        let listing_url = &format!("{}.ls", nixbase32::encode(&DUMMY_PATH_DIGEST));
+        server
+            .method(Method::HEAD, listing_url)
+            .expect_failure()
+            .await
+            .assert_status_not_found();
+        server
+            .get(listing_url)
             .expect_failure()
             .await
             .assert_status_not_found();
     }
 
     /// HEAD and GET for a NARInfo for which there's a PathInfo stored succeeds.
+    /// Same for the listing endpoint.
     #[traced_test]
     #[tokio::test]
     async fn test_get_head_found() {
         let (server, _blob_service, _directory_service, path_info_service) =
             gen_server(crate::gen_router(100));
 
-        let url = &format!("{}.narinfo", nixbase32::encode(&DUMMY_PATH_DIGEST));
-
+        let narinfo_url = &format!("{}.narinfo", nixbase32::encode(&DUMMY_PATH_DIGEST));
         path_info_service
-            .put(PATH_INFO.clone())
+            .put(PATH_INFO_SYMLINK.clone())
             .await
             .expect("put pathinfo");
 
         server
-            .method(Method::HEAD, url)
+            .method(Method::HEAD, narinfo_url)
             .expect_success()
             .await
             .assert_status_ok();
 
-        // GET
-        let narinfo_bytes = server.get(url).expect_success().await.into_bytes();
+        // Compare NARInfo
+        let narinfo_bytes = server.get(narinfo_url).expect_success().await.into_bytes();
+        assert_eq!(
+            super::gen_narinfo_str(&PATH_INFO_SYMLINK),
+            narinfo_bytes,
+            "expect NARInfo to match"
+        );
 
-        assert_eq!(crate::narinfo::gen_narinfo_str(&PATH_INFO), narinfo_bytes);
+        let listing_url = &format!("{}.ls", nixbase32::encode(&DUMMY_PATH_DIGEST));
+        server
+            .method(Method::HEAD, listing_url)
+            .expect_success()
+            .await
+            .assert_status_ok();
+
+        // Compare listing
+        let listing_bytes = server.get(listing_url).expect_success().await.into_bytes();
+        assert_eq!(
+            r#"{"root":{"target":"/nix/store/somewhereelse","type":"symlink"},"version":1}"#,
+            listing_bytes,
+            "expect listing to match"
+        );
     }
 
     /// Uploading a NARInfo without the NAR previously uploaded should fail.
