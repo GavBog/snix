@@ -53,7 +53,7 @@ version = "0.1.0"
 # https://doc.rust-lang.org/cargo/reference/rust-version.html
 # Update with the Rust version in the pinned
 # (`../third_party/sources/sources.json`) Nixpkgs
-rust-version = "1.91.1"
+rust-version = "1.94.1"
 
 [workspace.dependencies]
 anyhow = "1.0.86"
