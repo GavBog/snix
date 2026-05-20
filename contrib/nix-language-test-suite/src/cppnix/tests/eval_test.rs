@@ -218,6 +218,10 @@ fn matches_expected_error(version: NixVersion, error_string: &str, expected: &Er
             NixVersion::CppNixLatest => "does not exist",
             _ => "No such file or directory",
         },
+        // FUTUREWORK: obviously, there are more error messages
+        // for this kind of error, will probably refactor that function
+        // as new cases arise
+        ErrorKind::TypeError => "requires a function",
     };
 
     error_string.contains(must_contain)

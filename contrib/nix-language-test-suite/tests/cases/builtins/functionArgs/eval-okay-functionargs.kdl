@@ -1,0 +1,7 @@
+lang {
+  builtins "functionArgs" "isFunction" "intersectAttrs"
+}
+
+runtime-opts {
+  eval-strict
+}

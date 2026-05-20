@@ -67,6 +67,7 @@ pub struct RuntimeOpts {
 pub enum ErrorKind {
     IO,
     NotCoercibleToString,
+    TypeError,
 }
 
 impl std::str::FromStr for ErrorKind {
@@ -76,6 +77,7 @@ impl std::str::FromStr for ErrorKind {
         match s {
             "IO" => Ok(ErrorKind::IO),
             "NotCoercibleToString" => Ok(ErrorKind::NotCoercibleToString),
+            "TypeError" => Ok(ErrorKind::TypeError),
             other => Err(format!("unknown error kind: {other}")),
         }
     }

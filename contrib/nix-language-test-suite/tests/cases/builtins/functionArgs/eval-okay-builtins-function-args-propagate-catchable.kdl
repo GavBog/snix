@@ -1,0 +1,7 @@
+lang {
+  builtins "functionArgs" "tryEval" "throw"
+}
+
+runtime-opts {
+  eval-strict
+}
