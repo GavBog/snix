@@ -88,7 +88,7 @@ in
     // {
       name = "snix-rust-docs";
       cargoArtifacts = nightlyCargoArtifacts;
-      RUSTDOCFLAGS = "-D rustdoc::broken-intra-doc-links --document-private-items";
+      RUSTDOCFLAGS = "-D rustdoc::broken-intra-doc-links --document-private-items --enable-index-page";
       packages = [
         "snix-build"
         "snix-castore"

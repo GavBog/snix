@@ -12,7 +12,6 @@
       root = depot.web.website;
 
       locations."/rustdoc/".alias = "${depot.snix.rust-docs}/share/doc/";
-      locations."=/rustdoc".return = "302 https://snix.dev/rustdoc/snix_eval/index.html";
     };
   };
 }
