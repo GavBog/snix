@@ -20,22 +20,16 @@ pkgs.mkShell {
       pkgs.cargo-expand
       (pkgs.cargo-flamegraph.override { inherit perf; })
       pkgs.clippy
-      pkgs.d2
       pkgs.evans
       pkgs.fuse
       pkgs.go
       pkgs.grpcurl
       pkgs.hyperfine
-      pkgs.mdbook
-      pkgs.mdbook-admonish
-      pkgs.mdbook-d2
-      pkgs.mdbook-plantuml
       pkgs.pkg-config
       pkgs.rust-addr2line
       pkgs.rust-analyzer
       pkgs.rustc
       pkgs.rustfmt
-      pkgs.plantuml
       pkgs.protobuf
       pkgs.tracy_0_13
     ]
