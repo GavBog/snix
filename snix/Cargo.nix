@@ -22634,6 +22634,10 @@ rec {
             ];
           }
           {
+            name = "data-encoding";
+            packageId = "data-encoding";
+          }
+          {
             name = "futures";
             packageId = "futures";
           }
@@ -22648,6 +22652,10 @@ rec {
               "async"
               "serde"
             ];
+          }
+          {
+            name = "prost";
+            packageId = "prost";
           }
           {
             name = "serde";
@@ -22667,6 +22675,7 @@ rec {
           {
             name = "snix-castore";
             packageId = "snix-castore";
+            features = [ "serde" ];
           }
           {
             name = "snix-cli";

@@ -13,7 +13,7 @@ let
       export BLOB_SERVICE_ADDR=memory:
       export DIRECTORY_SERVICE_ADDR=redb+memory:
       export PATH_INFO_SERVICE_ADDR=redb+memory:
-      SNIX_STORE_OUTPUT=$(result/bin/snix-store import ${p})
+      SNIX_STORE_OUTPUT=$(result/bin/snix-store import-path ${p})
       EXPECTED='${
         # the vebatim expected Snix output:
         expectedPath

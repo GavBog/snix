@@ -14,7 +14,7 @@ use serde_with::{DefaultOnNull, serde_as};
 use snix_castore::import::fs::ingest_path;
 use snix_cli::shutdown_signal;
 use snix_store::nar::NarCalculationService;
-use snix_store::utils::{ServiceUrls, ServiceUrlsGrpc};
+use snix_store::utils::ServiceUrls;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt};
@@ -50,6 +50,32 @@ struct Args {
     command: Commands,
 }
 
+#[derive(Clone, PartialEq, Eq, clap::ValueEnum)]
+enum ImportNarOutputFormats {
+    /// Print the node itself in urlsafe base64. This can be used in NAR URLs served by nar-bridge
+    UrlsafeBase64,
+
+    /// Print the node itself in base64.
+    Base64,
+
+    /// Print the node fields as JSON.
+    Json,
+}
+
+impl std::fmt::Display for ImportNarOutputFormats {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ImportNarOutputFormats::UrlsafeBase64 => "urlsafe-base64",
+                ImportNarOutputFormats::Base64 => "base64",
+                ImportNarOutputFormats::Json => "json",
+            }
+        )
+    }
+}
+
 #[derive(Subcommand)]
 enum Commands {
     /// Runs the snix-store daemon.
@@ -62,18 +88,36 @@ enum Commands {
         service_addrs: ServiceUrls,
     },
     /// Imports a list of paths into the store, print the store path for each of them.
-    Import {
+    ImportPath {
         #[clap(value_name = "PATH")]
         paths: Vec<PathBuf>,
 
         #[clap(flatten)]
-        service_addrs: ServiceUrlsGrpc,
+        service_addrs: snix_store::utils::ServiceUrlsGrpc,
     },
 
-    /// Copies a list of store paths on the system into snix-store.
+    /// Imports a list of NAR files into castore, without persisting any NARInfos.
+    ImportNar {
+        #[clap(value_name = "PATH")]
+        paths: Vec<PathBuf>,
+
+        #[clap(flatten)]
+        service_addrs: snix_castore::utils::ServiceUrlsGrpc,
+
+        /// The format to use when printing the outputs.
+        /// Outputs preserve input path ordering, one per line.
+        #[arg(long, default_value_t = ImportNarOutputFormats::Json)]
+        format: ImportNarOutputFormats,
+
+        /// The number of paths to import concurrently.
+        #[arg(long, default_value_t = 10)]
+        concurrency: usize,
+    },
+
+    /// Copies store paths into snix-store by reading JSON metadata from a path or stdin.
     Copy {
         #[clap(flatten)]
-        service_addrs: ServiceUrlsGrpc,
+        service_addrs: snix_store::utils::ServiceUrlsGrpc,
 
         /// A path pointing to a JSON file(or '-' for stdin) containing store path metadata.
         /// Needs to be a list of objects with `narHash`, `narSize`, `path`, `references` fields;
@@ -102,7 +146,7 @@ enum Commands {
         dest: PathBuf,
 
         #[clap(flatten)]
-        service_addrs: ServiceUrlsGrpc,
+        service_addrs: snix_store::utils::ServiceUrlsGrpc,
 
         /// Number of FUSE threads to spawn.
         #[arg(long, env, default_value_t = default_threads())]
@@ -136,7 +180,7 @@ enum Commands {
         socket: PathBuf,
 
         #[clap(flatten)]
-        service_addrs: ServiceUrlsGrpc,
+        service_addrs: snix_store::utils::ServiceUrlsGrpc,
 
         /// Whether to list elements at the root of the mount point.
         /// This is useful if your PathInfoService doesn't provide an
@@ -234,7 +278,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .serve_with_incoming_shutdown(listener, shutdown_signal())
                 .await?;
         }
-        Commands::Import {
+        Commands::ImportPath {
             paths,
             service_addrs,
         } => {
@@ -349,6 +393,62 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .try_collect::<()>()
                 .await?;
         }
+
+        Commands::ImportNar {
+            paths,
+            service_addrs,
+            ref format,
+            concurrency,
+        } => {
+            let (blob_service, directory_service) =
+                snix_castore::utils::construct_services(service_addrs).await?;
+
+            // Ingest each NAR concurrently.
+            futures::stream::iter(paths)
+                .map(|path| {
+                    use std::io::Write;
+                    let blob_service = blob_service.clone();
+                    let directory_service = &directory_service;
+                    let mut stdout_writer = stdout_writer.clone();
+                    async move {
+                        let mut reader = snix_cli::reader_for_path(path).await?;
+                        let root_node = snix_store::nar::ingest_nar(
+                            blob_service,
+                            directory_service,
+                            &mut reader,
+                        )
+                        .await?;
+                        writeln!(
+                            &mut stdout_writer,
+                            "{}",
+                            match format {
+                                ImportNarOutputFormats::UrlsafeBase64
+                                | ImportNarOutputFormats::Base64 => {
+                                    use prost::Message;
+                                    let proto_node =
+                                        snix_castore::proto::Entry::from_name_and_node(
+                                            "".into(),
+                                            root_node,
+                                        )
+                                        .encode_to_vec();
+                                    if *format == ImportNarOutputFormats::UrlsafeBase64 {
+                                        data_encoding::BASE64URL_NOPAD.encode(&proto_node)
+                                    } else {
+                                        data_encoding::BASE64.encode(&proto_node)
+                                    }
+                                }
+                                ImportNarOutputFormats::Json =>
+                                    serde_json::to_string(&root_node).expect("serialize"),
+                            },
+                        )?;
+                        Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+                    }
+                })
+                .buffered(concurrency)
+                .try_collect::<Vec<()>>()
+                .await?;
+        }
+
         Commands::Copy {
             service_addrs,
             reference_graph_path,

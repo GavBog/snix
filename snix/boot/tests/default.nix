@@ -90,7 +90,7 @@ let
         + lib.optionalString (!isClosure) ''
           echo "Importing ${path} into snix-store with name ${importPathName}…"
           cp -R ${path} ${importPathName}
-          outpath=$(snix store import ${importPathName})
+          outpath=$(snix store import-path ${importPathName})
 
           echo "imported to $outpath"
         ''
