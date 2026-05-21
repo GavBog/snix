@@ -63,7 +63,7 @@ environment {
     file "inline-content" content="hello"
 
     // A symlink file
-    file "symlinked" symlink="path/to/source"
+    symlink "source" target="target"
 
     // A file copied from assets (but not limited to)
     file "copy" ref="path/to/asset"

@@ -87,6 +87,7 @@ impl std::str::FromStr for ErrorKind {
 pub enum Fixture {
     File(FileFixture),
     Dir(DirFixture),
+    Symlink(SymlinkFixture),
     Device(DeviceFixture),
 }
 
@@ -100,9 +101,6 @@ pub struct FileFixture {
 
     #[knus(property(name = "content"))]
     content: Option<String>,
-
-    #[knus(property(name = "symlink"))]
-    symlink: Option<PathBuf>,
 }
 
 #[derive(knus::Decode, Debug)]
@@ -113,11 +111,17 @@ pub struct DirFixture {
     #[knus(property(name = "ref"))]
     r#ref: Option<PathBuf>,
 
-    #[knus(property(name = "symlink"))]
-    symlink: Option<PathBuf>,
-
     #[knus(children)]
     entries: Vec<Fixture>,
+}
+
+#[derive(knus::Decode, Debug)]
+pub struct SymlinkFixture {
+    #[knus(argument)]
+    source: PathBuf,
+
+    #[knus(property(name = "target"))]
+    target: PathBuf,
 }
 
 #[derive(knus::Decode, Debug)]
@@ -259,17 +263,13 @@ fn setup_fixtures(case_path: &Path, parent: &Path, fixtures: &[Fixture]) {
             Fixture::File(file) => {
                 let full_path = parent.join(&file.path);
 
-                match (&file.content, &file.r#ref, &file.symlink) {
-                    (Some(content), None, None) => {
+                match (&file.content, &file.r#ref) {
+                    (Some(content), None) => {
                         fs::write(&full_path, content).unwrap();
                     }
-                    (None, Some(r#ref), None) => {
+                    (None, Some(r#ref)) => {
                         let src = case_path.join(r#ref);
                         fs::copy(&src, &full_path).unwrap();
-                    }
-                    (None, None, Some(symlink)) => {
-                        let target = parent.join(symlink);
-                        std::os::unix::fs::symlink(target, full_path).unwrap();
                     }
                     _ => panic!("file fixture is ambiguos: {:?}", file),
                 };
@@ -279,24 +279,23 @@ fn setup_fixtures(case_path: &Path, parent: &Path, fixtures: &[Fixture]) {
 
                 match (
                     &dir.r#ref,
-                    &dir.symlink,
                     (!dir.entries.is_empty()).then_some(&dir.entries),
                 ) {
-                    (Some(r#ref), None, None) => {
+                    (Some(r#ref), None) => {
                         let src = case_path.join(r#ref);
                         copy_dir(&src, &full_path).unwrap();
                     }
-                    (None, Some(symlink), None) => {
-                        let target = parent.join(symlink);
-                        std::os::unix::fs::symlink(target, full_path).unwrap();
-                    }
-                    (None, None, Some(entries)) => {
+                    (None, Some(entries)) => {
                         fs::create_dir_all(&full_path).unwrap();
                         setup_fixtures(case_path, &full_path, entries);
                     }
-                    (None, None, None) => fs::create_dir_all(&full_path).unwrap(),
+                    (None, None) => fs::create_dir_all(&full_path).unwrap(),
                     _ => panic!("dir fixture is ambiguos: {:?}", dir),
                 }
+            }
+            Fixture::Symlink(symlink) => {
+                let full_path = parent.join(&symlink.source);
+                std::os::unix::fs::symlink(&symlink.target, full_path).unwrap();
             }
             Fixture::Device(_) => {}
         }

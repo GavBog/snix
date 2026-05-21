@@ -7,8 +7,8 @@ environment {
     dir "readDir" {
       dir "foo"
       file "bar" content=""
-      dir "ldir" symlink="foo"
-      file "linked" symlink="bar"
+      symlink "ldir" target="foo"
+      symlink "linked" target="bar"
     }
   }
 }
