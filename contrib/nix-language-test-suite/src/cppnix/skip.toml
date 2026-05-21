@@ -7,9 +7,17 @@ paths = [
   # nix search path includes `corepkgs` and test
   # assertion fails
   "eval-okay-search-path",
+
+  # Nix changed how filterSource works,
+  # so the output of latest Nix and others (Nix2.3, Lix) differs
+  #
+  # Related issue: https://github.com/NixOS/nix/issues/7761
+  "filterSource-symlink-dir",
 ]
 builtins = ["readFileType"]
 features = ["flakes", "pipe-operators", "path-interpolation"]
 
-[nix_latest]
 [lix_latest]
+paths = ["filterSource-symlink-dir"]
+
+[nix_latest]

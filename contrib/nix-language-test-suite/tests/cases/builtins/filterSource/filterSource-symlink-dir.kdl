@@ -1,0 +1,19 @@
+lang {
+  builtins "filterSource"
+}
+
+environment {
+  fixtures {
+    dir "import_fixtures" {
+      dir "a_dir" {
+        file "a_file" content=""
+      }
+
+      symlink "symlink_to_a_dir" target="a_dir"
+    }
+  }
+}
+
+runtime-opts {
+  eval-strict
+}

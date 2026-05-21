@@ -1,6 +1,12 @@
 paths = [
   # dir is missing in snix's output
   "eval-okay-parser-flake-ref",
+
+  # Nix changed how filterSource works,
+  # so the output of latest Nix ans Snix differs
+  #
+  # Related issue: https://github.com/NixOS/nix/issues/7761
+  "filterSource-symlink-dir",
 ]
 
 builtins = ["readFileType", "readFile", "__nixPath"]
