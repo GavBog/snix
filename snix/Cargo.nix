@@ -21810,6 +21810,7 @@ rec {
           "fs"
           "fuse"
           "integration"
+          "serde"
           "toml"
           "tonic-reflection"
           "virtiofs"

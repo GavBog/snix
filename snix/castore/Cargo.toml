@@ -103,6 +103,7 @@ virtiofs = [
   "fuse-backend-rs?/virtiofs",
 ]
 fuse = ["fs"]
+serde = []
 tonic-reflection = ["dep:tonic-reflection"]
 xp-composition-cli = ["toml", "xp-composition-url-refs"]
 # This feature enables anonymous url syntax which might inherently expose

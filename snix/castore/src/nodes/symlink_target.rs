@@ -6,6 +6,7 @@ use std::fmt::{self, Debug, Display};
 /// containing null bytes.
 #[repr(transparent)]
 #[derive(Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde_with::SerializeDisplay))]
 pub struct SymlinkTarget {
     inner: bytes::Bytes,
 }

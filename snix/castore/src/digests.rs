@@ -4,6 +4,7 @@ use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde_with::SerializeDisplay))]
 #[repr(transparent)]
 pub struct B3Digest([u8; Self::LENGTH]);
 
