@@ -27,7 +27,7 @@ pin_project! {
 
 impl<BS> ChunkedReader<BS>
 where
-    BS: AsRef<dyn BlobService> + Clone + 'static + Send,
+    BS: BlobService + Clone + 'static,
 {
     /// Construct a new [ChunkedReader], by retrieving a list of chunks (their
     /// blake3 digests and chunk sizes)
@@ -44,11 +44,11 @@ where
 }
 
 /// ChunkedReader implements BlobReader.
-impl<BS> BlobReader for ChunkedReader<BS> where BS: Send + Clone + 'static + AsRef<dyn BlobService> {}
+impl<BS> BlobReader for ChunkedReader<BS> where BS: BlobService + Clone + 'static {}
 
 impl<BS> tokio::io::AsyncRead for ChunkedReader<BS>
 where
-    BS: AsRef<dyn BlobService> + Clone + 'static,
+    BS: BlobService + Clone + 'static,
 {
     fn poll_read(
         self: std::pin::Pin<&mut Self>,
@@ -71,7 +71,7 @@ where
 
 impl<BS> tokio::io::AsyncSeek for ChunkedReader<BS>
 where
-    BS: AsRef<dyn BlobService> + Clone + Send + 'static,
+    BS: BlobService + Clone + 'static,
 {
     #[instrument(skip(self), err(Debug))]
     fn start_seek(self: Pin<&mut Self>, position: std::io::SeekFrom) -> std::io::Result<()> {
@@ -142,7 +142,7 @@ struct ChunkedBlob<BS> {
 
 impl<BS> ChunkedBlob<BS>
 where
-    BS: AsRef<dyn BlobService> + Clone + 'static + Send,
+    BS: BlobService + Clone + 'static,
 {
     /// Constructs [Self] from a list of blake3 digests of chunks and their
     /// sizes, and a reference to a blob service.
@@ -221,7 +221,6 @@ where
                 async move {
                     trace!(chunk_size=%chunk_size, chunk_digest=%chunk_digest, "open_read on chunk in stream");
                     let mut blob_reader = blob_service
-                        .as_ref()
                         .open_read(&chunk_digest.to_owned())
                         .await?
                         .ok_or_else(|| {

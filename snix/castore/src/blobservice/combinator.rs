@@ -89,7 +89,7 @@ where
                                         chunk.size,
                                     )
                                 }),
-                                Arc::new(self.clone()) as Arc<dyn BlobService>,
+                                self.clone(),
                             )) as Box<dyn AsyncRead + Unpin + Send>
                         }
                     };
