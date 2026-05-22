@@ -162,7 +162,7 @@ where
             } else {
                 return Poll::Ready(Err(io::Error::new(
                     io::ErrorKind::InvalidData,
-                    "tar data not gz, bzip2, or xz compressed",
+                    "data not gz, bzip2, or xz compressed",
                 )));
             }
             this.inner.poll_read(cx, buf)
