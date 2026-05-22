@@ -1,7 +1,7 @@
 use super::{PathInfo, PathInfoService};
 use crate::{
     nar::{NarIngestionError, ingest_nar_and_hash},
-    pathinfoservice,
+    pathinfoservice::{self, nix_http::castore_infused::try_infused_nar_path},
 };
 use futures::{TryStreamExt, stream::BoxStream};
 use nix_compat::{
@@ -18,6 +18,8 @@ use tokio::io::{self, AsyncRead};
 use tonic::async_trait;
 use tracing::{Span, instrument, warn};
 use url::Url;
+
+mod castore_infused;
 
 /// NixHTTPPathInfoService acts as a bridge in between the Nix HTTP Binary cache
 /// protocol provided by Nix binary caches such as cache.nixos.org, and the Snix
@@ -181,74 +183,93 @@ where
             }
         }
 
-        // To construct the full PathInfo, we also need to populate the node field,
-        // and for this we need to download the NAR file and ingest it into castore.
         // FUTUREWORK: Keep some database around mapping from narsha256 to
         // (unnamed) rootnode, so we can use that and avoid downloading the same
         // NAR a second time.
 
-        // create a request for the NAR file itself.
-        let nar_url = self
-            .base_url
-            .join(narinfo.url)
-            .map_err(|e| Error::JoinUrl(self.base_url.clone(), narinfo.url.to_owned(), e))?;
-        span.record("nar.url", nar_url.to_string());
-
-        let resp = self
-            .http_client
-            .get(nar_url.clone())
-            .send()
-            .await
-            .map_err(Error::Reqwest)?;
-
-        // if the request is not successful, return an error.
-        if !resp.status().is_success() {
-            Err(Error::FailedToRequestNAR(resp.status()))?;
-        }
-
-        // get a reader of the response body.
-        let r = tokio_util::io::StreamReader::new(resp.bytes_stream().map_err(|e| {
-            let e = e.without_url();
-            warn!(e=%e, "failed to get response body");
-            io::Error::new(io::ErrorKind::BrokenPipe, e.to_string())
-        }));
-
-        // handle decompression, depending on the compression field.
-        let mut r: Box<dyn AsyncRead + Send + Unpin> = match narinfo.compression {
-            None => Box::new(r) as Box<dyn AsyncRead + Send + Unpin>,
-            Some("bzip2") => Box::new(async_compression::tokio::bufread::BzDecoder::new(r))
-                as Box<dyn AsyncRead + Send + Unpin>,
-            Some("gzip") => Box::new(async_compression::tokio::bufread::GzipDecoder::new(r))
-                as Box<dyn AsyncRead + Send + Unpin>,
-            Some("xz") => Box::new(async_compression::tokio::bufread::XzDecoder::new(r))
-                as Box<dyn AsyncRead + Send + Unpin>,
-            Some("zstd") => Box::new(async_compression::tokio::bufread::ZstdDecoder::new(r))
-                as Box<dyn AsyncRead + Send + Unpin>,
-            Some(comp_str) => Err(Error::UnsupportedNARCompression(comp_str.to_owned()))?,
-        };
-
-        let (root_node, nar_hash, nar_size) = ingest_nar_and_hash(
+        // To construct the full PathInfo, we also need to populate the node field,
+        // and for this we need to download the NAR file and ingest it into castore.
+        // We can use a shortcut - if the NAR URL is castore-infused we can try
+        // that route and maybe save some downloading, as we can leverage already locally present castore subnodes.
+        // Get the root node, either by using the infused nar path or by ingesting the entire NAR.
+        //
+        // TODO: compose BS/DS with a gRPC one for the same URL
+        let root_node = if let Some(root_node) = try_infused_nar_path(
+            &narinfo,
             self.blob_service.clone(),
-            &self.directory_service,
-            &mut r,
-            &narinfo.ca,
+            self.directory_service.clone(),
         )
         .await
-        .map_err(Error::IngestNAR)?;
+        .unwrap_or_else(|err| {
+            warn!(%err, "unable to use infused store path");
+            None
+        }) {
+            root_node
+        } else {
+            // create a request for the NAR file itself.
+            let nar_url = self
+                .base_url
+                .join(narinfo.url)
+                .map_err(|e| Error::JoinUrl(self.base_url.clone(), narinfo.url.to_owned(), e))?;
+            span.record("nar.url", nar_url.to_string());
 
-        // ensure the ingested narhash and narsize do actually match.
-        if narinfo.nar_size != nar_size {
-            Err(Error::NARSizeMismatch {
-                narinfo_size: narinfo.nar_size,
-                actual_size: nar_size,
-            })?
-        }
-        if narinfo.nar_hash != nar_hash {
-            Err(Error::NARHashMismatch {
-                narinfo_nar_sha256: narinfo.nar_hash,
-                actual_nar_sha256: nar_hash,
-            })?
-        }
+            let resp = self
+                .http_client
+                .get(nar_url.clone())
+                .send()
+                .await
+                .map_err(Error::Reqwest)?;
+
+            // if the request is not successful, return an error.
+            if !resp.status().is_success() {
+                Err(Error::FailedToRequestNAR(resp.status()))?;
+            }
+
+            // get a reader of the response body.
+            let r = tokio_util::io::StreamReader::new(resp.bytes_stream().map_err(|e| {
+                let e = e.without_url();
+                warn!(e=%e, "failed to get response body");
+                io::Error::new(io::ErrorKind::BrokenPipe, e.to_string())
+            }));
+
+            // handle decompression, depending on the compression field.
+            let mut r: Box<dyn AsyncRead + Send + Unpin> = match narinfo.compression {
+                None => Box::new(r) as Box<dyn AsyncRead + Send + Unpin>,
+                Some("bzip2") => Box::new(async_compression::tokio::bufread::BzDecoder::new(r))
+                    as Box<dyn AsyncRead + Send + Unpin>,
+                Some("gzip") => Box::new(async_compression::tokio::bufread::GzipDecoder::new(r))
+                    as Box<dyn AsyncRead + Send + Unpin>,
+                Some("xz") => Box::new(async_compression::tokio::bufread::XzDecoder::new(r))
+                    as Box<dyn AsyncRead + Send + Unpin>,
+                Some("zstd") => Box::new(async_compression::tokio::bufread::ZstdDecoder::new(r))
+                    as Box<dyn AsyncRead + Send + Unpin>,
+                Some(comp_str) => Err(Error::UnsupportedNARCompression(comp_str.to_owned()))?,
+            };
+
+            let (root_node, nar_hash, nar_size) = ingest_nar_and_hash(
+                self.blob_service.clone(),
+                &self.directory_service,
+                &mut r,
+                &narinfo.ca,
+            )
+            .await
+            .map_err(Error::IngestNAR)?;
+
+            // ensure the ingested narhash and narsize do actually match.
+            if narinfo.nar_size != nar_size {
+                Err(Error::NARSizeMismatch {
+                    narinfo_size: narinfo.nar_size,
+                    actual_size: nar_size,
+                })?
+            }
+            if narinfo.nar_hash != nar_hash {
+                Err(Error::NARHashMismatch {
+                    narinfo_nar_sha256: narinfo.nar_hash,
+                    actual_nar_sha256: nar_hash,
+                })?
+            }
+            root_node
+        };
 
         Ok(Some(PathInfo {
             store_path: narinfo.store_path.to_owned(),
