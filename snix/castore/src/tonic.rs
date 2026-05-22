@@ -2,6 +2,131 @@ use hyper_util::rt::TokioIo;
 use tokio::net::UnixStream;
 use tonic::transport::{Channel, Endpoint};
 
+pub enum TonicConnector {
+    Endpoint {
+        endpoint: Endpoint,
+        wait_connect: bool,
+    },
+    EndpointAndConnector {
+        endpoint: Endpoint,
+        connector: tower::util::BoxCloneService<
+            tonic::transport::Uri,
+            TokioIo<UnixStream>,
+            std::io::Error,
+        >,
+        wait_connect: bool,
+    },
+}
+
+impl TonicConnector {
+    /// All URLs support adding `wait-connect=1` as a URL parameter, in which case
+    /// the connection is established lazily.
+    pub fn from_url(url: &url::Url) -> Result<TonicConnector, self::Error> {
+        match url.scheme() {
+            "grpc+unix" => {
+                if url.has_authority() {
+                    return Err(Error::AuthorityDisallowed());
+                }
+
+                let connector = tower::service_fn({
+                    let url = url.clone();
+                    move |_: tonic::transport::Uri| {
+                        let unix = UnixStream::connect(url.path().to_string());
+                        async move { Ok::<_, std::io::Error>(TokioIo::new(unix.await?)) }
+                    }
+                });
+
+                // the URL doesn't matter, but we need a custom connector
+                Ok(TonicConnector::EndpointAndConnector {
+                    endpoint: Endpoint::from_static("http://[::]:50051"),
+                    connector: tower::util::BoxCloneService::new(connector),
+                    wait_connect: url_wants_wait_connect(url),
+                })
+            }
+            _ => {
+                // ensure path is empty, not supported with gRPC.
+                if !url.path().is_empty() {
+                    return Err(Error::PathMayNotBeSet());
+                }
+
+                // Stringify the URL and remove the grpc+ prefix.
+                // We can't use `url.set_scheme(rest)`, as it disallows
+                // setting something http(s) that previously wasn't.
+                let unprefixed_url_str = url
+                    .as_str()
+                    .strip_prefix("grpc+")
+                    .ok_or(Error::MissingGRPCPrefix())?;
+
+                // Use the regular tonic transport::Endpoint logic, but unprefixed_url_str,
+                // as tonic doesn't know about grpc+http[s].
+                let endpoint = Endpoint::from_shared(unprefixed_url_str.to_owned())?;
+
+                let endpoint = if url.scheme() == "grpc+https" {
+                    let tls_config = tonic::transport::ClientTlsConfig::new().with_enabled_roots();
+                    endpoint.tls_config(tls_config)?
+                } else {
+                    endpoint
+                };
+
+                Ok(TonicConnector::Endpoint {
+                    endpoint,
+                    wait_connect: url_wants_wait_connect(url),
+                })
+            }
+        }
+    }
+
+    // Tries to connect lazily
+    // Will panic if `wait-connect=1` was set in the URL, as connecting
+    // non-lazily needs to be async, use [Self::connect] for that.
+    pub fn connect_expect_lazy(self) -> Channel {
+        match self {
+            TonicConnector::Endpoint {
+                endpoint,
+                wait_connect,
+            } => {
+                assert!(!wait_connect, "wait-connect URL called with connect_lazy");
+                endpoint.connect_lazy()
+            }
+            TonicConnector::EndpointAndConnector {
+                endpoint,
+                connector,
+                wait_connect,
+            } => {
+                assert!(!wait_connect, "wait-connect URL called with connect_lazy");
+                endpoint.connect_with_connector_lazy(connector)
+            }
+        }
+    }
+
+    // Tries to connect.
+    pub async fn connect(self) -> Result<Channel, Error> {
+        Ok(match self {
+            TonicConnector::Endpoint {
+                endpoint,
+                wait_connect,
+            } => {
+                if !wait_connect {
+                    endpoint.connect_lazy()
+                } else {
+                    endpoint.connect().await?
+                }
+            }
+            TonicConnector::EndpointAndConnector {
+                endpoint,
+                connector,
+                wait_connect,
+            } => {
+                if !wait_connect {
+                    endpoint.connect_with_connector_lazy(connector)
+                } else {
+                    endpoint.connect_with_connector(connector).await?
+                }
+            }
+        })
+    }
+}
+
 fn url_wants_wait_connect(url: &url::Url) -> bool {
     url.query_pairs()
         .filter(|(k, v)| k == "wait-connect" && v == "1")
@@ -14,67 +139,11 @@ fn url_wants_wait_connect(url: &url::Url) -> bool {
 ///  - `grpc+http://[::1]:8000`, connecting over unencrypted HTTP/2 (h2c)
 ///  - `grpc+https://[::1]:8000`, connecting over encrypted HTTP/2
 ///  - `grpc+unix:/path/to/socket`, connecting to a unix domain socket
-///
-/// All URLs support adding `wait-connect=1` as a URL parameter, in which case
-/// the connection is established lazily.
-pub async fn channel_from_url(url: &url::Url) -> Result<Channel, self::Error> {
-    match url.scheme() {
-        "grpc+unix" => {
-            if url.has_authority() {
-                return Err(Error::AuthorityDisallowed());
-            }
-
-            let connector = tower::service_fn({
-                let url = url.clone();
-                move |_: tonic::transport::Uri| {
-                    let unix = UnixStream::connect(url.path().to_string().clone());
-                    async move { Ok::<_, std::io::Error>(TokioIo::new(unix.await?)) }
-                }
-            });
-
-            // the URL doesn't matter
-            let endpoint = Endpoint::from_static("http://[::]:50051");
-            if url_wants_wait_connect(url) {
-                Ok(endpoint.connect_with_connector(connector).await?)
-            } else {
-                Ok(endpoint.connect_with_connector_lazy(connector))
-            }
-        }
-        _ => {
-            // ensure path is empty, not supported with gRPC.
-            if !url.path().is_empty() {
-                return Err(Error::PathMayNotBeSet());
-            }
-
-            // Stringify the URL and remove the grpc+ prefix.
-            // We can't use `url.set_scheme(rest)`, as it disallows
-            // setting something http(s) that previously wasn't.
-            let unprefixed_url_str = match url.to_string().strip_prefix("grpc+") {
-                None => return Err(Error::MissingGRPCPrefix()),
-                Some(url_str) => url_str.to_owned(),
-            };
-
-            // Use the regular tonic transport::Endpoint logic, but unprefixed_url_str,
-            // as tonic doesn't know about grpc+http[s].
-            let endpoint = Endpoint::try_from(unprefixed_url_str)?;
-
-            let endpoint = if url.scheme() == "grpc+https" {
-                let tls_config = tonic::transport::ClientTlsConfig::new().with_enabled_roots();
-                endpoint.tls_config(tls_config)?
-            } else {
-                endpoint
-            };
-
-            if url_wants_wait_connect(url) {
-                Ok(endpoint.connect().await?)
-            } else {
-                Ok(endpoint.connect_lazy())
-            }
-        }
-    }
+pub async fn channel_from_url(url: &url::Url) -> Result<Channel, Error> {
+    TonicConnector::from_url(url)?.connect().await
 }
 
-/// Errors occuring when trying to connect to a backend
+/// Errors occuring when parsing a gRPC backend URL, or trying to connect to it.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("grpc+ prefix is missing from URL")]
