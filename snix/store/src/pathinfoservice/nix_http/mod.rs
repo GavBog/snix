@@ -11,11 +11,20 @@ use nix_compat::{
     store_path::StorePath,
 };
 use reqwest::StatusCode;
-use snix_castore::composition::{CompositionContext, ServiceBuilder};
-use snix_castore::{blobservice::BlobService, directoryservice::DirectoryService};
+use snix_castore::{
+    blobservice::{self, BlobService},
+    directoryservice::{self, DirectoryService},
+    proto::{
+        blob_service_client::BlobServiceClient, directory_service_client::DirectoryServiceClient,
+    },
+};
+use snix_castore::{
+    composition::{CompositionContext, ServiceBuilder},
+    directoryservice::GRPCDirectoryService,
+};
 use std::sync::Arc;
 use tokio::io::{self, AsyncRead};
-use tonic::async_trait;
+use tonic::{async_trait, transport::Channel};
 use tracing::{Span, instrument, warn};
 use url::Url;
 
@@ -36,7 +45,7 @@ mod castore_infused;
 /// [DirectoryService], so able to fetch referred Directories and Blobs.
 /// [PathInfoService::put] is not implemented and returns an error if called.
 /// TODO: what about reading from nix-cache-info?
-pub struct NixHTTPPathInfoService<BS, DS> {
+pub struct NixHTTPPathInfoService<BS: Clone, DS> {
     instance_name: String,
     base_url: url::Url,
     http_client: reqwest_middleware::ClientWithMiddleware,
@@ -44,13 +53,26 @@ pub struct NixHTTPPathInfoService<BS, DS> {
     blob_service: BS,
     directory_service: DS,
 
+    /// A BlobService Cache with 'far' talking to the configured endpoint over gRPC.
+    /// This is used when validating castore-infused NAR URLs in NARInfos.
+    /// We rely on Cache to *insert* into 'near'.
+    layered_blob_service: blobservice::Cache<BS, blobservice::GRPCBlobService<Channel>>,
+    /// A DirectoryService Cache with 'far' talking to the configured endpoint over gRPC.
+    /// This is used when validating castore-infused NAR URLs in NARInfos.
+    /// We rely on Cache to *insert* into 'near'.
+    layered_directory_service: directoryservice::Cache<DS, GRPCDirectoryService<Channel>>,
+
     /// An optional list of [narinfo::VerifyingKey].
     /// If the list is not empty, the .narinfo files received need to have
     /// correct signature by at least one of these.
     trusted_public_keys: Vec<narinfo::VerifyingKey>,
 }
 
-impl<BS, DS> NixHTTPPathInfoService<BS, DS> {
+impl<BS, DS> NixHTTPPathInfoService<BS, DS>
+where
+    BS: Clone,
+    DS: DirectoryService + Clone,
+{
     pub fn try_build(
         instance_name: String,
         config: NixHTTPPathInfoServiceConfig,
@@ -63,6 +85,38 @@ impl<BS, DS> NixHTTPPathInfoService<BS, DS> {
                 narinfo::VerifyingKey::parse(&s).map_err(|e| Error::ParseTrustedPublicKey(s, e))?,
             )
         }
+
+        let (layered_blob_service, layered_directory_service) = {
+            let grpc_url = {
+                let url_str = format!("grpc+{}", config.base_url);
+                let mut url: Url = url_str.parse().expect("url to parse");
+                url.set_path("");
+                url
+            };
+
+            let channel =
+                snix_castore::tonic::TonicConnector::from_url(&grpc_url)?.connect_expect_lazy();
+
+            let instance_name_layered = format!("{}-layered", &instance_name);
+            let instance_name_grpc = format!("{}-grpc", &instance_name);
+
+            (
+                blobservice::Cache::new(
+                    instance_name_layered.clone(),
+                    blob_service.clone(),
+                    blobservice::GRPCBlobService::from_client(
+                        instance_name_grpc.clone(),
+                        BlobServiceClient::new(channel.clone()),
+                    ),
+                ),
+                directoryservice::Cache::new(instance_name_layered, directory_service.clone(), {
+                    GRPCDirectoryService::from_client(
+                        instance_name_grpc,
+                        DirectoryServiceClient::new(channel),
+                    )
+                }),
+            )
+        };
 
         Ok(Self {
             instance_name,
@@ -77,6 +131,9 @@ impl<BS, DS> NixHTTPPathInfoService<BS, DS> {
             .build(),
             blob_service,
             directory_service,
+
+            layered_blob_service,
+            layered_directory_service,
 
             trusted_public_keys,
         })
@@ -99,6 +156,8 @@ pub enum Error {
     SerdeQS(#[from] serde_qs::Error),
     #[error("unable to parse pubkey {0}")]
     ParseTrustedPublicKey(String, nix_compat::narinfo::VerifyingKeyError),
+    #[error("unable to construct tonic channel: {0}")]
+    TonicChannel(#[from] snix_castore::tonic::Error),
 
     #[error("unable to join URL {0} with {1}")]
     JoinUrl(Url, String, url::ParseError),
@@ -192,12 +251,10 @@ where
         // We can use a shortcut - if the NAR URL is castore-infused we can try
         // that route and maybe save some downloading, as we can leverage already locally present castore subnodes.
         // Get the root node, either by using the infused nar path or by ingesting the entire NAR.
-        //
-        // TODO: compose BS/DS with a gRPC one for the same URL
         let root_node = if let Some(root_node) = try_infused_nar_path(
             &narinfo,
-            self.blob_service.clone(),
-            self.directory_service.clone(),
+            self.layered_blob_service.clone(),
+            &self.layered_directory_service,
         )
         .await
         .unwrap_or_else(|err| {
