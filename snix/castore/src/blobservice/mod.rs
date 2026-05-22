@@ -18,7 +18,7 @@ mod object_store;
 pub mod tests;
 
 pub use self::chunked_reader::ChunkedReader;
-pub use self::combinator::{CombinedBlobService, CombinedBlobServiceConfig};
+pub use self::combinator::{Cache, CacheBlobServiceConfig};
 pub use self::from_addr::from_addr;
 pub use self::grpc::{GRPCBlobService, GRPCBlobServiceConfig};
 pub use self::memory::{MemoryBlobService, MemoryBlobServiceConfig};
@@ -87,6 +87,6 @@ impl BlobReader for tokio::fs::File {}
 pub(crate) fn register_blob_services(reg: &mut Registry) {
     reg.register::<Box<dyn ServiceBuilder<Output = dyn BlobService>>, super::blobservice::ObjectStoreBlobServiceConfig>("objectstore");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn BlobService>>, super::blobservice::MemoryBlobServiceConfig>("memory");
-    reg.register::<Box<dyn ServiceBuilder<Output = dyn BlobService>>, super::blobservice::CombinedBlobServiceConfig>("combined");
+    reg.register::<Box<dyn ServiceBuilder<Output = dyn BlobService>>, super::blobservice::CacheBlobServiceConfig>("cache");
     reg.register::<Box<dyn ServiceBuilder<Output = dyn BlobService>>, super::blobservice::GRPCBlobServiceConfig>("grpc");
 }

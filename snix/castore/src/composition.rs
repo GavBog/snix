@@ -63,7 +63,7 @@
 //!     "type": "memory"
 //!   },
 //!   "root": {
-//!     "type": "combined",
+//!     "type": "cache",
 //!     "near": "&blobstore1",
 //!     "far": "&blobstore2"
 //!   }
@@ -575,12 +575,12 @@ mod test {
     async fn reject_recursion() {
         let blob_services_configs_json = serde_json::json!({
             "root": {
-                "type": "combined",
+                "type": "cache",
                 "near": "&other",
                 "far": "&other"
             },
             "other": {
-                "type": "combined",
+                "type": "cache",
                 "near": "&root",
                 "far": "&root"
             }
