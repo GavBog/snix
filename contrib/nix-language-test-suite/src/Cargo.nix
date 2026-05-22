@@ -5801,11 +5801,23 @@ rec {
           "std"
         ];
       };
-      "foldhash" = rec {
+      "foldhash 0.1.5" = rec {
         crateName = "foldhash";
         version = "0.1.5";
         edition = "2021";
         sha256 = "1wisr1xlc2bj7hk4rgkcjkz3j2x4dhd1h9lwk7mj8p71qpdgbi6r";
+        authors = [
+          "Orson Peters <orsonpeters@gmail.com>"
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
+      };
+      "foldhash 0.2.0" = rec {
+        crateName = "foldhash";
+        version = "0.2.0";
+        edition = "2021";
+        sha256 = "1nvgylb099s11xpfm1kn2wcsql080nqmnhj1l25bp3r2b35j9kkp";
         authors = [
           "Orson Peters <orsonpeters@gmail.com>"
         ];
@@ -7224,7 +7236,7 @@ rec {
           }
           {
             name = "foldhash";
-            packageId = "foldhash";
+            packageId = "foldhash 0.1.5";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -7266,6 +7278,27 @@ rec {
         version = "0.17.1";
         edition = "2024";
         sha256 = "0jmqz7i4yl6cm7rbn0i2ffkfrmwi6xkmzkaldr2v8bcsx2v0jngd";
+        dependencies = [
+          {
+            name = "allocator-api2";
+            packageId = "allocator-api2";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "alloc" ];
+          }
+          {
+            name = "equivalent";
+            packageId = "equivalent";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "foldhash";
+            packageId = "foldhash 0.2.0";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
         features = {
           "alloc" = [ "dep:alloc" ];
           "allocator-api2" = [ "dep:allocator-api2" ];
@@ -7295,6 +7328,14 @@ rec {
             "dep:serde"
           ];
         };
+        resolvedDefaultFeatures = [
+          "allocator-api2"
+          "default"
+          "default-hasher"
+          "equivalent"
+          "inline-more"
+          "raw-entry"
+        ];
       };
       "heck" = rec {
         crateName = "heck";
@@ -10626,6 +10667,11 @@ rec {
             packageId = "data-encoding";
           }
           {
+            name = "digest";
+            packageId = "digest 0.10.7";
+            optional = true;
+          }
+          {
             name = "ed25519";
             packageId = "ed25519";
           }
@@ -10640,7 +10686,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.5";
+            packageId = "hashbrown 0.17.1";
             optional = true;
           }
           {
@@ -10702,6 +10748,12 @@ rec {
             ];
           }
           {
+            name = "tokio-util";
+            packageId = "tokio-util";
+            optional = true;
+            features = [ "io" ];
+          }
+          {
             name = "tracing";
             packageId = "tracing";
           }
@@ -10722,7 +10774,12 @@ rec {
           }
         ];
         features = {
-          "async" = [ "tokio" ];
+          "async" = [
+            "digest"
+            "futures"
+            "tokio"
+            "tokio-util"
+          ];
           "bytes" = [ "dep:bytes" ];
           "daemon" = [
             "tokio"
@@ -10736,6 +10793,7 @@ rec {
             "wire"
             "nix-compat-derive"
           ];
+          "digest" = [ "dep:digest" ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
           "hashbrown" = [ "dep:hashbrown" ];
@@ -10747,6 +10805,7 @@ rec {
             "dep:serde_with"
           ];
           "tokio" = [ "dep:tokio" ];
+          "tokio-util" = [ "dep:tokio-util" ];
           "url" = [ "dep:url" ];
           "wire" = [
             "tokio"
@@ -10759,6 +10818,7 @@ rec {
           "bytes"
           "daemon"
           "default"
+          "digest"
           "flakeref"
           "futures"
           "hashbrown"
@@ -10766,6 +10826,7 @@ rec {
           "pin-project-lite"
           "serde"
           "tokio"
+          "tokio-util"
           "url"
           "wire"
         ];
@@ -17774,7 +17835,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.5";
+            packageId = "hashbrown 0.17.1";
           }
           {
             name = "hyper-util";
@@ -18011,7 +18072,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.5";
+            packageId = "hashbrown 0.17.1";
           }
           {
             name = "itertools";
@@ -18232,7 +18293,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.5";
+            packageId = "hashbrown 0.17.1";
           }
           {
             name = "md-5";

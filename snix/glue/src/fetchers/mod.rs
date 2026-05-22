@@ -2,17 +2,18 @@ use data_encoding::HEXLOWER;
 use futures::TryStreamExt;
 use md5::{Md5, digest::DynDigest};
 use nix_compat::{
+    hashing::hash,
     nixhash::{CAHash, HashAlgo, NixHash},
     store_path::{BuildStorePathError, StorePathRef, build_ca_path},
 };
 use sha1::Sha1;
-use sha2::{Digest, Sha256, Sha512, digest::Output};
+use sha2::{Digest, Sha256, Sha512};
 use snix_castore::{Node, blobservice::BlobService, directoryservice::DirectoryService};
 use snix_store::{
     nar::{NarCalculationService, NarIngestionError},
     pathinfoservice::{PathInfo, PathInfoService},
 };
-use tokio::io::{AsyncBufRead, AsyncRead, AsyncWrite, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufRead, AsyncWriteExt, BufReader};
 use tokio_util::io::{InspectReader, InspectWriter};
 use tracing::{Span, instrument, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
@@ -322,23 +323,6 @@ impl<BS, DS, PS, NS> Fetcher<BS, DS, PS, NS> {
         }
         self.do_download(url).await
     }
-}
-
-/// Copies all data from the passed reader to the passed writer.
-/// Afterwards, it also returns the resulting [Digest], as well as the number of
-/// bytes copied.
-/// The exact hash function used is left generic over all [Digest].
-async fn hash<D: Digest + std::io::Write>(
-    mut r: impl AsyncRead + Unpin,
-    mut w: impl AsyncWrite + Unpin,
-) -> std::io::Result<(Output<D>, u64)> {
-    let mut hasher = D::new();
-    let bytes_copied = tokio::io::copy(
-        &mut InspectReader::new(&mut r, |d| hasher.write_all(d).unwrap()),
-        &mut w,
-    )
-    .await?;
-    Ok((hasher.finalize(), bytes_copied))
 }
 
 impl<BS, DS, PS, NS> Fetcher<BS, DS, PS, NS>

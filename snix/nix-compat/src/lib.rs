@@ -31,6 +31,9 @@ pub mod nixhash;
 pub mod path_info;
 pub mod store_path;
 
+#[cfg(feature = "async")]
+pub mod hashing;
+
 #[cfg(feature = "wire")]
 pub mod wire;
 

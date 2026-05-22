@@ -12976,6 +12976,11 @@ rec {
             packageId = "data-encoding";
           }
           {
+            name = "digest";
+            packageId = "digest";
+            optional = true;
+          }
+          {
             name = "ed25519";
             packageId = "ed25519";
           }
@@ -13052,6 +13057,12 @@ rec {
             ];
           }
           {
+            name = "tokio-util";
+            packageId = "tokio-util";
+            optional = true;
+            features = [ "io" ];
+          }
+          {
             name = "tracing";
             packageId = "tracing";
           }
@@ -13117,7 +13128,12 @@ rec {
           }
         ];
         features = {
-          "async" = [ "tokio" ];
+          "async" = [
+            "digest"
+            "futures"
+            "tokio"
+            "tokio-util"
+          ];
           "bytes" = [ "dep:bytes" ];
           "daemon" = [
             "tokio"
@@ -13131,6 +13147,7 @@ rec {
             "wire"
             "nix-compat-derive"
           ];
+          "digest" = [ "dep:digest" ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
           "hashbrown" = [ "dep:hashbrown" ];
@@ -13142,6 +13159,7 @@ rec {
             "dep:serde_with"
           ];
           "tokio" = [ "dep:tokio" ];
+          "tokio-util" = [ "dep:tokio-util" ];
           "url" = [ "dep:url" ];
           "wire" = [
             "tokio"
@@ -13154,6 +13172,7 @@ rec {
           "bytes"
           "daemon"
           "default"
+          "digest"
           "flakeref"
           "futures"
           "hashbrown"
@@ -13162,6 +13181,7 @@ rec {
           "serde"
           "test"
           "tokio"
+          "tokio-util"
           "url"
           "wire"
         ];

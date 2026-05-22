@@ -3459,7 +3459,12 @@ rec {
           }
         ];
         features = {
-          "async" = [ "tokio" ];
+          "async" = [
+            "digest"
+            "futures"
+            "tokio"
+            "tokio-util"
+          ];
           "bytes" = [ "dep:bytes" ];
           "daemon" = [
             "tokio"
@@ -3473,6 +3478,7 @@ rec {
             "wire"
             "nix-compat-derive"
           ];
+          "digest" = [ "dep:digest" ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
           "hashbrown" = [ "dep:hashbrown" ];
@@ -3484,6 +3490,7 @@ rec {
             "dep:serde_with"
           ];
           "tokio" = [ "dep:tokio" ];
+          "tokio-util" = [ "dep:tokio-util" ];
           "url" = [ "dep:url" ];
           "wire" = [
             "tokio"

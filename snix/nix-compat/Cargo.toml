@@ -5,8 +5,9 @@ edition = "2024"
 rust-version.workspace = true
 
 [features]
-# async NAR writer. Also needs the `wire` feature.
-async = ["tokio"]
+# async NAR writers and hashing tooling.
+# The NAR writer also needs the `wire` feature.
+async = ["digest", "futures", "tokio", "tokio-util"]
 # hashbrown::Equivalent impls
 hashbrown = ["dep:hashbrown"]
 # code emitting low-level packets used in the daemon protocol.
@@ -25,6 +26,7 @@ default = ["async", "daemon", "hashbrown", "wire", "nix-compat-derive"]
 bitflags.workspace = true
 bstr = { workspace = true, features = ["alloc", "unicode", "serde"] }
 data-encoding.workspace = true
+digest = { workspace = true, optional = true }
 ed25519.workspace = true
 ed25519-dalek.workspace = true
 futures = { workspace = true, optional = true }
@@ -43,6 +45,7 @@ tokio = { workspace = true, features = [
   "macros",
   "sync",
 ], optional = true }
+tokio-util = { workspace = true, features = ["io"], optional = true }
 pin-project-lite = { workspace = true, optional = true }
 num_enum = "0.7.3"
 url = { workspace = true, optional = true }
