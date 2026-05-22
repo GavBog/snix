@@ -19,14 +19,14 @@ use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
 /// which is useful when far does not support accessing intermediate directories (but near does).
 /// There is no negative cache.
 /// Inserts and listings are not implemented for now.
-pub struct Cache<DS1, DS2> {
+pub struct Cache<DN, DF> {
     instance_name: String,
-    near: DS1,
-    far: DS2,
+    near: DN,
+    far: DF,
 }
 
-impl<DS1, DS2> Cache<DS1, DS2> {
-    pub fn new(instance_name: String, near: DS1, far: DS2) -> Self {
+impl<DN, DF> Cache<DN, DF> {
+    pub fn new(instance_name: String, near: DN, far: DF) -> Self {
         Self {
             instance_name,
             near,
@@ -36,10 +36,10 @@ impl<DS1, DS2> Cache<DS1, DS2> {
 }
 
 #[async_trait]
-impl<DS1, DS2> DirectoryService for Cache<DS1, DS2>
+impl<DN, DF> DirectoryService for Cache<DN, DF>
 where
-    DS1: DirectoryService + Clone + 'static,
-    DS2: DirectoryService + Clone + 'static,
+    DN: DirectoryService + Clone + 'static,
+    DF: DirectoryService + Clone + 'static,
 {
     #[instrument(skip(self, digest), fields(directory.digest = %digest, instance_name = %self.instance_name))]
     async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, super::Error> {
