@@ -17,5 +17,6 @@
   };
 }).rootCrate.build.overrideAttrs
   {
-    meta.ci.extraSteps.crate2nix-check = depot.snix.utils.mkCrate2nixCheck ./Cargo.nix;
+    meta.ci.targets = [ "crate2nix-check" ];
+    passthru.crate2nix-check = depot.snix.utils.mkCrate2nixFastCheck ./Cargo.nix;
   }

@@ -206,6 +206,18 @@ in
       };
     };
 
+  mkCrate2nixFastCheck =
+    path: # The path to the Cargo.nix to be checked.
+    let
+      crate2nix-check = depot.snix.utils.mkCrate2nixCheck path;
+    in
+    crate2nix-check.command.overrideAttrs {
+      meta.ci.extraSteps = {
+        inherit crate2nix-check;
+      };
+      meta.ci.fast = true;
+    };
+
   # This creates an extraStep in CI to check whether the Cargo.nix file is up-to-date.
   mkCrate2nixCheck =
     path: # The path to the Cargo.nix to be checked.

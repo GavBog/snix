@@ -126,15 +126,7 @@ in
     }
   );
 
-  crate2nix-check =
-    let
-      crate2nix-check = here.utils.mkCrate2nixCheck ./Cargo.nix;
-    in
-    crate2nix-check.command.overrideAttrs {
-      meta.ci.extraSteps = {
-        inherit crate2nix-check;
-      };
-    };
+  crate2nix-check = here.utils.mkCrate2nixFastCheck ./Cargo.nix;
 
   meta.ci.targets = [
     "clippy"
