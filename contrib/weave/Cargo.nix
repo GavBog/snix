@@ -2203,6 +2203,18 @@ rec {
           "rust_backend"
         ];
       };
+      "foldhash" = rec {
+        crateName = "foldhash";
+        version = "0.2.0";
+        edition = "2021";
+        sha256 = "1nvgylb099s11xpfm1kn2wcsql080nqmnhj1l25bp3r2b35j9kkp";
+        authors = [
+          "Orson Peters <orsonpeters@gmail.com>"
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
+      };
       "foreign_vec" = rec {
         crateName = "foreign_vec";
         version = "0.1.0";
@@ -2864,6 +2876,70 @@ rec {
           ];
           "serde" = [ "dep:serde" ];
         };
+      };
+      "hashbrown 0.17.1" = rec {
+        crateName = "hashbrown";
+        version = "0.17.1";
+        edition = "2024";
+        sha256 = "0jmqz7i4yl6cm7rbn0i2ffkfrmwi6xkmzkaldr2v8bcsx2v0jngd";
+        dependencies = [
+          {
+            name = "allocator-api2";
+            packageId = "allocator-api2";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "alloc" ];
+          }
+          {
+            name = "equivalent";
+            packageId = "equivalent";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "foldhash";
+            packageId = "foldhash";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "alloc" = [ "dep:alloc" ];
+          "allocator-api2" = [ "dep:allocator-api2" ];
+          "core" = [ "dep:core" ];
+          "default" = [
+            "default-hasher"
+            "inline-more"
+            "allocator-api2"
+            "equivalent"
+            "raw-entry"
+          ];
+          "default-hasher" = [ "dep:foldhash" ];
+          "equivalent" = [ "dep:equivalent" ];
+          "nightly" = [
+            "foldhash?/nightly"
+            "bumpalo/allocator_api"
+          ];
+          "rayon" = [ "dep:rayon" ];
+          "rustc-dep-of-std" = [
+            "nightly"
+            "core"
+            "alloc"
+            "rustc-internal-api"
+          ];
+          "serde" = [
+            "dep:serde_core"
+            "dep:serde"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "allocator-api2"
+          "default"
+          "default-hasher"
+          "equivalent"
+          "inline-more"
+          "raw-entry"
+        ];
       };
       "heck 0.4.1" = rec {
         crateName = "heck";
@@ -3612,11 +3688,6 @@ rec {
             ];
           }
           {
-            name = "bytes";
-            packageId = "bytes";
-            optional = true;
-          }
-          {
             name = "data-encoding";
             packageId = "data-encoding";
           }
@@ -3629,18 +3700,8 @@ rec {
             packageId = "ed25519-dalek";
           }
           {
-            name = "futures";
-            packageId = "futures";
-            optional = true;
-          }
-          {
             name = "mimalloc";
             packageId = "mimalloc";
-          }
-          {
-            name = "nix-compat-derive";
-            packageId = "nix-compat-derive";
-            optional = true;
           }
           {
             name = "nom";
@@ -3651,11 +3712,6 @@ rec {
             packageId = "num_enum";
           }
           {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
-            optional = true;
-          }
-          {
             name = "sha2";
             packageId = "sha2";
           }
@@ -3664,25 +3720,11 @@ rec {
             packageId = "thiserror 2.0.11";
           }
           {
-            name = "tokio";
-            packageId = "tokio";
-            optional = true;
-            features = [
-              "io-util"
-              "macros"
-              "sync"
-            ];
-          }
-          {
             name = "tracing";
             packageId = "tracing";
           }
         ];
         devDependencies = [
-          {
-            name = "futures";
-            packageId = "futures";
-          }
           {
             name = "mimalloc";
             packageId = "mimalloc";
@@ -3699,11 +3741,13 @@ rec {
           "default" = [
             "async"
             "daemon"
+            "hashbrown"
             "wire"
             "nix-compat-derive"
           ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
+          "hashbrown" = [ "dep:hashbrown" ];
           "nix-compat-derive" = [ "dep:nix-compat-derive" ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
           "serde" = [
@@ -3719,49 +3763,6 @@ rec {
             "bytes"
           ];
         };
-        resolvedDefaultFeatures = [
-          "async"
-          "bytes"
-          "daemon"
-          "default"
-          "futures"
-          "nix-compat-derive"
-          "pin-project-lite"
-          "tokio"
-          "wire"
-        ];
-      };
-      "nix-compat-derive" = rec {
-        crateName = "nix-compat-derive";
-        version = "0.1.0";
-        edition = "2024";
-        src = lib.cleanSourceWith {
-          filter = sourceFilter;
-          src = ../../snix/nix-compat-derive;
-        };
-        procMacro = true;
-        libName = "nix_compat_derive";
-        dependencies = [
-          {
-            name = "proc-macro2";
-            packageId = "proc-macro2";
-            features = [ "proc-macro" ];
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-            features = [ "proc-macro" ];
-          }
-          {
-            name = "syn";
-            packageId = "syn 2.0.87";
-            features = [
-              "full"
-              "extra-traits"
-            ];
-          }
-        ];
-
       };
       "nom" = rec {
         crateName = "nom";
@@ -8914,7 +8915,7 @@ rec {
             "dep:opentelemetry_sdk"
             "dep:opentelemetry-http"
             "dep:opentelemetry-semantic-conventions"
-            "reqwest-tracing?/opentelemetry_0_30"
+            "reqwest-tracing?/opentelemetry_0_31"
           ];
           "reqwest" = [ "dep:reqwest-tracing" ];
           "tonic" = [
@@ -10678,11 +10679,12 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.14.5";
+            packageId = "hashbrown 0.17.1";
           }
           {
             name = "nix-compat";
             packageId = "nix-compat";
+            usesDefaultFeatures = false;
           }
           {
             name = "polars";

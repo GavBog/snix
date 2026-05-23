@@ -588,6 +588,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "foldhash"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
+
+[[package]]
 name = "foreign_vec"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -733,6 +739,17 @@ name = "hashbrown"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
+
+[[package]]
+name = "hashbrown"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash",
+]
 
 [[package]]
 name = "heck"
@@ -977,29 +994,15 @@ version = "0.1.0"
 dependencies = [
  "bitflags",
  "bstr",
- "bytes",
  "data-encoding",
  "ed25519",
  "ed25519-dalek",
- "futures",
  "mimalloc",
- "nix-compat-derive",
  "nom",
  "num_enum",
- "pin-project-lite",
  "sha2",
  "thiserror 2.0.11",
- "tokio",
  "tracing",
-]
-
-[[package]]
-name = "nix-compat-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.87",
 ]
 
 [[package]]
@@ -2305,7 +2308,7 @@ name = "weave"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "hashbrown 0.14.5",
+ "hashbrown 0.17.1",
  "nix-compat",
  "polars",
  "rayon",
