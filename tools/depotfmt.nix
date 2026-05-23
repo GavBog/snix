@@ -95,5 +95,6 @@ depotfmt.overrideAttrs (_: {
       command = check;
       alwaysRun = true;
     };
+    meta.ci.fast = true;
   };
 })
