@@ -34,7 +34,16 @@ let
   # Any build target that contains `meta.ci.skip = true` or is marked
   # broken will be skipped.
   # Is this tree node eligible for build inclusion?
-  eligible = node: (node ? outPath) && !(node.meta.ci.skip or (node.meta.broken or false));
+  commonEligible = node: (node ? outPath) && !(node.meta.ci.skip or (node.meta.broken or false));
+
+  # To have a faster build pipeline some simple checks are evaluated and run
+  # first. This is because the full eval of all targets takes a while and
+  # for these trivial targets we want to fail as fast as possible.
+  fastEligible = node: (commonEligible node) && (node.meta.ci.fast or false);
+
+  # All targets that are not fast are eligible for the normal full build
+  # pipeline.
+  eligible = node: (commonEligible node) && !(node.meta.ci.fast or false);
 
 in
 readTree.fix (
@@ -70,6 +79,22 @@ readTree.fix (
     # list below.
     ci.excluded = [
     ];
+
+    # List of fast evaluating and buildable targets, for CI purposes.
+    #
+    # Note: To prevent infinite recursion, this *must* be a nested
+    # attribute set (which does not have a __readTree attribute).
+    ci.fastTargets = readTree.gather (t: (fastEligible t) && (!builtins.elem t self.ci.excluded)) (
+      self
+      // {
+        # remove the pipelines themselves from the set over which to
+        # generate pipelines because that also leads to infinite
+        # recursion.
+        ops = self.ops // {
+          pipelines = null;
+        };
+      }
+    );
 
     # List of all buildable targets, for CI purposes.
     #

@@ -7,11 +7,11 @@
 env:
   BUILDKITE_TOKEN_PATH: /run/agenix/buildkite-graphql-token
 steps:
-  # Generate & upload dynamic build steps
-  - label: ":llama:"
-    key: "pipeline-gen"
-    priority: 1
-    concurrency_group: 'depot/pipeline-gen'
+  # Generate & upload dynamic fast build steps
+  - label: ":racehorse:"
+    key: "fast-pipeline-gen"
+    priority: 1000
+    concurrency_group: 'depot/fast-pipeline-gen'
     concurrency: 3 # much more than this and our builder will OOM
     agents:
         large: true
@@ -22,6 +22,44 @@ steps:
         echo "This is a build of [cl/$$GERRIT_CHANGE_ID]($$GERRIT_CHANGE_URL) (at patchset #$$GERRIT_PATCHSET)" | \
           buildkite-agent annotate --context cl-annotation
       fi
+
+      # Attempt to fetch a target map from a parent commit on canon,
+      # except on builds of canon itself.
+      [ "${BUILDKITE_BRANCH}" != "refs/heads/canon" ] && \
+        nix/buildkite/fetch-parent-targets.sh
+
+      PIPELINE_ARGS=""
+      if [[ -f tmp/parent-target-map.json ]]; then
+        PIPELINE_ARGS="--arg parentTargetMap tmp/parent-target-map.json"
+      fi
+
+      nix-build --option restrict-eval true --include "depot=$${PWD}" \
+        --include "store=/nix/store" \
+        --allowed-uris 'https:// git+https://' \
+        -A ops.pipelines.fast-checks \
+        -o fast-pipeline --show-trace $$PIPELINE_ARGS
+
+      # Steps need to be uploaded in reverse order because pipeline
+      # upload prepends instead of appending.
+      ls fast-pipeline/build-chunk-*.json | tac | while read chunk; do
+        buildkite-agent pipeline upload $$chunk
+      done
+
+      buildkite-agent artifact upload "fast-pipeline/*"
+
+  # Wait for all previous steps to complete.
+  - wait: null
+
+  # Generate & upload dynamic build steps
+  - label: ":llama:"
+    key: "pipeline-gen"
+    priority: 1
+    concurrency_group: 'depot/pipeline-gen'
+    concurrency: 3 # much more than this and our builder will OOM
+    agents:
+        large: true
+    command: |
+      set -ue
 
       # Attempt to fetch a target map from a parent commit on canon,
       # except on builds of canon itself.
