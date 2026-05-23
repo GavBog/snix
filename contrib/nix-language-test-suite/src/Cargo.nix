@@ -10634,6 +10634,57 @@ rec {
           "user"
         ];
       };
+      "nix 0.31.3" = rec {
+        crateName = "nix";
+        version = "0.31.3";
+        edition = "2021";
+        sha256 = "0gbwnjfny9rq9hl5bz4ry520n9rnfknna4bg88n66f7zx3yx486g";
+        dependencies = [
+          {
+            name = "bitflags";
+            packageId = "bitflags 2.11.1";
+          }
+          {
+            name = "cfg-if";
+            packageId = "cfg-if";
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            features = [ "extra_traits" ];
+          }
+        ];
+        buildDependencies = [
+          {
+            name = "cfg_aliases";
+            packageId = "cfg_aliases";
+          }
+        ];
+        features = {
+          "aio" = [ "pin-utils" ];
+          "dir" = [ "fs" ];
+          "event" = [ "poll" ];
+          "memoffset" = [ "dep:memoffset" ];
+          "mount" = [ "uio" ];
+          "mqueue" = [ "fs" ];
+          "net" = [ "socket" ];
+          "pin-utils" = [ "dep:pin-utils" ];
+          "ptrace" = [ "process" ];
+          "sched" = [ "process" ];
+          "signal" = [ "process" ];
+          "socket" = [ "memoffset" ];
+          "ucontext" = [ "signal" ];
+          "user" = [ "feature" ];
+          "zerocopy" = [
+            "fs"
+            "uio"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "fs"
+        ];
+      };
       "nix-compat" = rec {
         crateName = "nix-compat";
         version = "0.1.0";
@@ -10877,6 +10928,11 @@ rec {
           {
             name = "knus";
             packageId = "knus";
+          }
+          {
+            name = "nix";
+            packageId = "nix 0.31.3";
+            features = [ "fs" ];
           }
           {
             name = "serde";

@@ -1,0 +1,9 @@
+lang {
+  builtins "filterSource" "baseNameOf"
+}
+
+environment {
+  fixtures {
+    socket "a_socket"
+  }
+}

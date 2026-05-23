@@ -1,6 +1,10 @@
+use nix::errno::Errno;
+use nix::sys::stat;
+use nix::unistd;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::fs;
+use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf};
 
 #[derive(knus::Decode, Debug)]
@@ -89,6 +93,9 @@ pub enum Fixture {
     Dir(DirFixture),
     Symlink(SymlinkFixture),
     Device(DeviceFixture),
+    Fifo(FifoFixture),
+    Socket(SocketFixture),
+    Char(CharFixture),
 }
 
 #[derive(knus::Decode, Debug)]
@@ -128,6 +135,24 @@ pub struct SymlinkFixture {
 pub struct DeviceFixture {
     #[knus(argument)]
     _path: PathBuf,
+}
+
+#[derive(knus::Decode, Debug)]
+pub struct FifoFixture {
+    #[knus(argument)]
+    path: PathBuf,
+}
+
+#[derive(knus::Decode, Debug)]
+pub struct SocketFixture {
+    #[knus(argument)]
+    path: PathBuf,
+}
+
+#[derive(knus::Decode, Debug)]
+pub struct CharFixture {
+    #[knus(argument)]
+    path: PathBuf,
 }
 
 #[derive(Deserialize, Debug, Default)]
@@ -296,6 +321,29 @@ fn setup_fixtures(case_path: &Path, parent: &Path, fixtures: &[Fixture]) {
             Fixture::Symlink(symlink) => {
                 let full_path = parent.join(&symlink.source);
                 std::os::unix::fs::symlink(&symlink.target, full_path).unwrap();
+            }
+            Fixture::Fifo(fifo) => {
+                let full_path = parent.join(&fifo.path);
+                unistd::mkfifo(&full_path, stat::Mode::S_IRWXU).expect("Failed to create the FIFO");
+            }
+            Fixture::Socket(socket) => {
+                let full_path = parent.join(&socket.path);
+                UnixListener::bind(full_path).expect("Failed to create the socket");
+            }
+            Fixture::Char(char) => {
+                let full_path = parent.join(&char.path);
+
+                stat::mknod(&full_path, stat::SFlag::S_IFCHR, stat::Mode::S_IRWXU, 0)
+                    .inspect_err(|e| {
+                        if *e == Errno::EPERM {
+                            eprintln!(
+                                "\
+                Missing permissions to create a character device node with mknod(2).
+                Please run this test as root or set CAP_MKNOD."
+                            );
+                        }
+                    })
+                    .expect("Failed to create a character device node");
             }
             Fixture::Device(_) => {}
         }

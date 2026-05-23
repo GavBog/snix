@@ -8,5 +8,6 @@ path = "lib.rs"
 
 [dependencies]
 knus = "3.3.1"
+nix = { version = "0.31.3", features = ["fs"] }
 serde = { workspace = true, features = ["derive"] }
 tempfile = "3.27.0"

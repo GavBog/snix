@@ -3,7 +3,7 @@ paths = [
   "eval-okay-parser-flake-ref",
 
   # Nix changed how filterSource works,
-  # so the output of latest Nix ans Snix differs
+  # so the output of latest Nix and Snix differs
   #
   # Related issue: https://github.com/NixOS/nix/issues/7761
   "filterSource-symlink-dir",

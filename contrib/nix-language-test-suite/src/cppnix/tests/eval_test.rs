@@ -213,16 +213,13 @@ fn eval_test(
 // having smarter regexp is preferred
 fn matches_expected_error(version: NixVersion, error_string: &str, expected: &ErrorKind) -> bool {
     let must_contain = match expected {
-        ErrorKind::NotCoercibleToString => "cannot coerce",
+        ErrorKind::NotCoercibleToString => &["cannot coerce"][..],
         ErrorKind::IO => match version {
-            NixVersion::CppNixLatest => "does not exist",
-            _ => "No such file or directory",
+            NixVersion::CppNixLatest => &["does not exist", "has an unsupported type"][..],
+            _ => &["No such file or directory", "has an unsupported type"][..],
         },
-        // FUTUREWORK: obviously, there are more error messages
-        // for this kind of error, will probably refactor that function
-        // as new cases arise
-        ErrorKind::TypeError => "requires a function",
+        ErrorKind::TypeError => &["requires a function"][..],
     };
 
-    error_string.contains(must_contain)
+    must_contain.iter().any(|x| error_string.contains(x))
 }

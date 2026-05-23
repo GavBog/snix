@@ -1,0 +1,13 @@
+lang {
+  builtins "filterSource" "baseNameOf"
+}
+
+environment {
+  fixtures {
+    dir "import_fixtures" {
+      fifo "a_fifo"
+      socket "a_socket"
+      char "a_charnode"
+    }
+  }
+}

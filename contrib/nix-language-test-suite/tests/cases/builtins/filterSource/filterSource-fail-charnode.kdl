@@ -1,0 +1,9 @@
+lang {
+  builtins "filterSource" "baseNameOf"
+}
+
+environment {
+  fixtures {
+    char "a_charnode"
+  }
+}

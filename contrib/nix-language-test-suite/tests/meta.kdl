@@ -72,6 +72,13 @@ environment {
     // `symlink` properties are mutually exclusive
     //
     // file "ambigous" ref="path/to/asset" content="hello"
+
+    // Fixtures with "unknown" file type. Their only purpose so far
+    // is to tell the test runner to create them and check how various
+    // builtins handle "unknown" file types.
+    fifo "name"
+    socket "name"
+    char "name"
   }
 
   // A working directory where the test must be executed. This is required for
