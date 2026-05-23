@@ -127,9 +127,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "825bd26e5e14f8906f9314be1ba6734a753341d1",
-      "url": "https://github.com/RustSec/advisory-db/archive/825bd26e5e14f8906f9314be1ba6734a753341d1.tar.gz",
-      "hash": "sha256-VPfsy7Iymk/Gs/sRgAiy5vkZmnJb1r9GmuF46/aiXNg="
+      "revision": "130152155e1184c441b0e6924d21d7cbfb23f297",
+      "url": "https://github.com/RustSec/advisory-db/archive/130152155e1184c441b0e6924d21d7cbfb23f297.tar.gz",
+      "hash": "sha256-Jif9KekGYlh2bMe6Wh+7toEdteRZFJnkAEEt8t9ZTJA="
     },
     "srvos": {
       "type": "Git",
