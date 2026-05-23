@@ -2872,78 +2872,6 @@ rec {
           "no-panic" = [ "dep:no-panic" ];
         };
       };
-      "jemalloc-sys" = rec {
-        crateName = "jemalloc-sys";
-        version = "0.5.4+5.3.0-patched";
-        edition = "2018";
-        links = "jemalloc";
-        sha256 = "1wpbpwhfs6wd484cdfpl0zdf441ann9wj0fypy67i8ffw531jv5c";
-        libName = "jemalloc_sys";
-        authors = [
-          "Alex Crichton <alex@alexcrichton.com>"
-          "Gonzalo Brito Gadeschi <gonzalobg88@gmail.com>"
-          "The TiKV Project Developers"
-        ];
-        dependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-            usesDefaultFeatures = false;
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "cc";
-            packageId = "cc";
-          }
-        ];
-        features = {
-          "background_threads" = [ "background_threads_runtime_support" ];
-          "default" = [ "background_threads_runtime_support" ];
-        };
-        resolvedDefaultFeatures = [ "background_threads_runtime_support" ];
-      };
-      "jemallocator" = rec {
-        crateName = "jemallocator";
-        version = "0.5.4";
-        edition = "2018";
-        sha256 = "1g6k9ly6wxj53bp8lz9lg9nj4s662k6612jydw71aqwfkx53gpm0";
-        authors = [
-          "Alex Crichton <alex@alexcrichton.com>"
-          "Gonzalo Brito Gadeschi <gonzalobg88@gmail.com>"
-          "Simon Sapin <simon.sapin@exyr.org>"
-          "Steven Fackler <sfackler@gmail.com>"
-          "The TiKV Project Developers"
-        ];
-        dependencies = [
-          {
-            name = "jemalloc-sys";
-            packageId = "jemalloc-sys";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "libc";
-            packageId = "libc";
-            usesDefaultFeatures = false;
-          }
-        ];
-        features = {
-          "background_threads" = [ "jemalloc-sys/background_threads" ];
-          "background_threads_runtime_support" = [ "jemalloc-sys/background_threads_runtime_support" ];
-          "debug" = [ "jemalloc-sys/debug" ];
-          "default" = [ "background_threads_runtime_support" ];
-          "disable_initial_exec_tls" = [ "jemalloc-sys/disable_initial_exec_tls" ];
-          "profiling" = [ "jemalloc-sys/profiling" ];
-          "stats" = [ "jemalloc-sys/stats" ];
-          "unprefixed_malloc_on_supported_platforms" = [
-            "jemalloc-sys/unprefixed_malloc_on_supported_platforms"
-          ];
-        };
-        resolvedDefaultFeatures = [
-          "background_threads_runtime_support"
-          "default"
-        ];
-      };
       "jobserver" = rec {
         crateName = "jobserver";
         version = "0.1.27";
@@ -3435,12 +3363,13 @@ rec {
             features = [ "raw" ];
           }
           {
-            name = "jemallocator";
-            packageId = "jemallocator";
+            name = "mimalloc";
+            packageId = "mimalloc";
           }
           {
             name = "nix-compat";
             packageId = "nix-compat";
+            usesDefaultFeatures = false;
           }
           {
             name = "polars";
@@ -3487,11 +3416,6 @@ rec {
             ];
           }
           {
-            name = "bytes";
-            packageId = "bytes";
-            optional = true;
-          }
-          {
             name = "data-encoding";
             packageId = "data-encoding";
           }
@@ -3504,18 +3428,8 @@ rec {
             packageId = "ed25519-dalek";
           }
           {
-            name = "futures";
-            packageId = "futures";
-            optional = true;
-          }
-          {
             name = "mimalloc";
             packageId = "mimalloc";
-          }
-          {
-            name = "nix-compat-derive";
-            packageId = "nix-compat-derive";
-            optional = true;
           }
           {
             name = "nom";
@@ -3526,11 +3440,6 @@ rec {
             packageId = "num_enum";
           }
           {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
-            optional = true;
-          }
-          {
             name = "sha2";
             packageId = "sha2";
           }
@@ -3539,25 +3448,11 @@ rec {
             packageId = "thiserror 2.0.11";
           }
           {
-            name = "tokio";
-            packageId = "tokio";
-            optional = true;
-            features = [
-              "io-util"
-              "macros"
-              "sync"
-            ];
-          }
-          {
             name = "tracing";
             packageId = "tracing";
           }
         ];
         devDependencies = [
-          {
-            name = "futures";
-            packageId = "futures";
-          }
           {
             name = "mimalloc";
             packageId = "mimalloc";
@@ -3574,11 +3469,13 @@ rec {
           "default" = [
             "async"
             "daemon"
+            "hashbrown"
             "wire"
             "nix-compat-derive"
           ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
+          "hashbrown" = [ "dep:hashbrown" ];
           "nix-compat-derive" = [ "dep:nix-compat-derive" ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
           "serde" = [
@@ -3594,49 +3491,6 @@ rec {
             "bytes"
           ];
         };
-        resolvedDefaultFeatures = [
-          "async"
-          "bytes"
-          "daemon"
-          "default"
-          "futures"
-          "nix-compat-derive"
-          "pin-project-lite"
-          "tokio"
-          "wire"
-        ];
-      };
-      "nix-compat-derive" = rec {
-        crateName = "nix-compat-derive";
-        version = "0.1.0";
-        edition = "2024";
-        src = lib.cleanSourceWith {
-          filter = sourceFilter;
-          src = ../../snix/nix-compat-derive;
-        };
-        procMacro = true;
-        libName = "nix_compat_derive";
-        dependencies = [
-          {
-            name = "proc-macro2";
-            packageId = "proc-macro2";
-            features = [ "proc-macro" ];
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-            features = [ "proc-macro" ];
-          }
-          {
-            name = "syn";
-            packageId = "syn 2.0.87";
-            features = [
-              "full"
-              "extra-traits"
-            ];
-          }
-        ];
-
       };
       "nom" = rec {
         crateName = "nom";
@@ -9232,11 +9086,6 @@ rec {
             features = [ "all" ];
           }
           {
-            name = "tokio-macros";
-            packageId = "tokio-macros";
-            optional = true;
-          }
-          {
             name = "windows-sys";
             packageId = "windows-sys 0.52.0";
             optional = true;
@@ -9334,7 +9183,6 @@ rec {
           "default"
           "io-util"
           "libc"
-          "macros"
           "mio"
           "net"
           "rt"
@@ -9342,36 +9190,8 @@ rec {
           "socket2"
           "sync"
           "time"
-          "tokio-macros"
           "windows-sys"
         ];
-      };
-      "tokio-macros" = rec {
-        crateName = "tokio-macros";
-        version = "2.4.0";
-        edition = "2021";
-        sha256 = "0lnpg14h1v3fh2jvnc8cz7cjf0m7z1xgkwfpcyy632g829imjgb9";
-        procMacro = true;
-        libName = "tokio_macros";
-        authors = [
-          "Tokio Contributors <team@tokio.rs>"
-        ];
-        dependencies = [
-          {
-            name = "proc-macro2";
-            packageId = "proc-macro2";
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-          }
-          {
-            name = "syn";
-            packageId = "syn 2.0.87";
-            features = [ "full" ];
-          }
-        ];
-
       };
       "tokio-util" = rec {
         crateName = "tokio-util";

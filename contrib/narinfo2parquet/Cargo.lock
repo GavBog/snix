@@ -761,26 +761,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af150ab688ff2122fcef229be89cb50dd66af9e01a4ff320cc137eecc9bacc38"
 
 [[package]]
-name = "jemalloc-sys"
-version = "0.5.4+5.3.0-patched"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac6c1946e1cea1788cbfde01c993b52a10e2da07f4bac608228d1bed20bfebf2"
-dependencies = [
- "cc",
- "libc",
-]
-
-[[package]]
-name = "jemallocator"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0de374a9f8e63150e6f5e8a60cc14c668226d7a347d8aee1a45766e3c4dd3bc"
-dependencies = [
- "jemalloc-sys",
- "libc",
-]
-
-[[package]]
 name = "jobserver"
 version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -934,7 +914,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "hashbrown 0.14.5",
- "jemallocator",
+ "mimalloc",
  "nix-compat",
  "polars",
  "tempfile-fast",
@@ -947,29 +927,15 @@ version = "0.1.0"
 dependencies = [
  "bitflags 2.6.0",
  "bstr",
- "bytes",
  "data-encoding",
  "ed25519",
  "ed25519-dalek",
- "futures",
  "mimalloc",
- "nix-compat-derive",
  "nom",
  "num_enum",
- "pin-project-lite",
  "sha2",
  "thiserror 2.0.11",
- "tokio",
  "tracing",
-]
-
-[[package]]
-name = "nix-compat-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.87",
 ]
 
 [[package]]
@@ -1882,19 +1848,7 @@ dependencies = [
  "mio",
  "pin-project-lite",
  "socket2",
- "tokio-macros",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "tokio-macros"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "693d596312e88961bc67d7f1f97af8a70227d9f90c31bba5806eec004978d752"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.87",
 ]
 
 [[package]]

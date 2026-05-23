@@ -8,7 +8,7 @@
 //! ```
 
 use anyhow::{Context, Result, bail};
-use jemallocator::Jemalloc;
+use mimalloc::MiMalloc;
 use nix_compat::{
     narinfo::{self, NarInfo},
     nixbase32,
@@ -23,7 +23,7 @@ use std::{
 use tempfile_fast::PersistableTempFile;
 
 #[global_allocator]
-static GLOBAL: Jemalloc = Jemalloc;
+static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() -> Result<()> {
     let file_name = std::env::args().nth(1).expect("file name missing");
