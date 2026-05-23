@@ -1,7 +1,12 @@
-{ depot, pkgs, ... }:
+{ pkgs, depot, ... }:
 
-depot.third_party.naersk.buildPackage {
-  src = ./.;
-  nativeBuildInputs = [ pkgs.pkg-config ];
-  buildInputs = [ pkgs.openssl ];
-}
+(pkgs.callPackage ./Cargo.nix {
+  defaultCrateOverrides = (depot.snix.utils.defaultCrateOverridesForPkgs pkgs) // {
+    gerrit-autosubmit = prev: {
+      src = depot.snix.utils.filterRustCrateSrc { root = prev.src.origSrc; };
+    };
+  };
+}).rootCrate.build.overrideAttrs
+  {
+    meta.ci.extraSteps.crate2nix = depot.snix.utils.mkCrate2nixCheck ./Cargo.nix;
+  }

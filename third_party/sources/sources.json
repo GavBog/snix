@@ -65,19 +65,6 @@
       "url": "https://github.com/adisbladis/korora/archive/f7d8f17c4f20b69bc77189d4202c59c680400623.tar.gz",
       "hash": "sha256-66ZETvOP/+ss6AYl+fehFRvhWRvfofGQCNaMf6o+NZY="
     },
-    "naersk": {
-      "type": "Git",
-      "repository": {
-        "type": "GitHub",
-        "owner": "nmattia",
-        "repo": "naersk"
-      },
-      "branch": "master",
-      "submodules": false,
-      "revision": "e5130d37369bfa600144c2424270c96f0ef0e11d",
-      "url": "https://github.com/nmattia/naersk/archive/e5130d37369bfa600144c2424270c96f0ef0e11d.tar.gz",
-      "hash": "sha256-fcNrCMUWVLMG3gKC5M9CBqVOAnJtyRvGPxptQFl5mVg="
-    },
     "nix-gerrit": {
       "type": "Git",
       "repository": {
