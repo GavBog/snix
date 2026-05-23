@@ -1,8 +1,19 @@
 { pkgs, depot, ... }:
 
-# Run crate2nix generate in the current working directory, then
+# Regenerate Cargo.lock in current directory, then run crate2nix generate, then
 # format the generated file with depotfmt.
 pkgs.writeShellScriptBin "crate2nix-generate" ''
-  ${pkgs.crate2nix}/bin/crate2nix generate --all-features
-  ${depot.tools.depotfmt}/bin/depotfmt Cargo.nix
+  export PATH="${
+    pkgs.lib.makeBinPath [
+      pkgs.jq
+      pkgs.crate2nix
+      pkgs.findutils
+      pkgs.cargo
+      depot.tools.depotfmt
+    ]
+  }:$PATH"
+
+  cargo metadata --offline --no-deps --format-version 1 | jq -r '.packages[] | .id' | xargs cargo update --offline
+  crate2nix generate --all-features
+  depotfmt Cargo.nix
 ''

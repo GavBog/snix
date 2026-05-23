@@ -221,9 +221,9 @@ in
       command = pkgs.writeShellScript "crate2nix-check-for-${lib.replaceStrings [ "/" ] [ "-" ] relCrateRoot}" ''
         (cd $(git rev-parse --show-toplevel)/${relCrateRoot} &&
           ${depot.tools.crate2nix-generate}/bin/crate2nix-generate &&
-          if [[ -n "$(git status --porcelain -unormal Cargo.nix)" ]]; then
+          if [[ -n "$(git status --porcelain -unormal Cargo.nix Cargo.lock)" ]]; then
               echo "----------------------------------------------------------------------------------------------------"
-              echo "Cargo.nix needs to be updated, run 'mg run //tools/crate2nix-generate' in ${relCrateRoot}"
+              echo "Cargo.nix or Cargo.lock needs to be updated, run 'mg run //tools/crate2nix-generate' in ${relCrateRoot}"
               echo "----------------------------------------------------------------------------------------------------"
               exit 1
           fi
