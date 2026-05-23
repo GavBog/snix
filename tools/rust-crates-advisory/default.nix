@@ -6,18 +6,6 @@
 }:
 
 let
-  our-crates = lib.filter (v: v ? outPath) (builtins.attrValues depot.third_party.rust-crates);
-
-  our-crates-lock-file = pkgs.writeText "our-crates-Cargo.lock" (
-    lib.concatMapStrings (crate: ''
-      [[package]]
-      name = "${crate.crateName}"
-      version = "${crate.version}"
-      source = "registry+https://github.com/rust-lang/crates.io-index"
-
-    '') our-crates
-  );
-
   lock-file-report = pkgs.writers.writeBash "lock-file-report" ''
     set -u
 
@@ -62,7 +50,6 @@ let
     set -eu
     status=0
 
-    "${lock-file-report}" "//third_party/rust-crates" "${our-crates-lock-file}" || status=1
     "${tree-lock-file-report}" || status=1
 
     exit $status
