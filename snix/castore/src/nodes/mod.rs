@@ -10,7 +10,11 @@ pub use symlink_target::{SymlinkTarget, SymlinkTargetError};
 /// Nodes themselves don't have names, what gives them names is either them
 /// being inside a [Directory], or a root node with a name attached adjacently.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Serialize),
+    serde(tag = "type", rename_all = "lowercase")
+)]
 pub enum Node {
     /// A DirectoryNode is a pointer to a [Directory], by its [Directory::digest].
     /// It also records a`size`.
