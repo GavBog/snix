@@ -2954,6 +2954,18 @@ rec {
           "std"
         ];
       };
+      "foldhash" = rec {
+        crateName = "foldhash";
+        version = "0.2.0";
+        edition = "2021";
+        sha256 = "1nvgylb099s11xpfm1kn2wcsql080nqmnhj1l25bp3r2b35j9kkp";
+        authors = [
+          "Orson Peters <orsonpeters@gmail.com>"
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
+      };
       "foreign_vec" = rec {
         crateName = "foreign_vec";
         version = "0.1.0";
@@ -3744,6 +3756,70 @@ rec {
           ];
           "serde" = [ "dep:serde" ];
         };
+      };
+      "hashbrown 0.17.1" = rec {
+        crateName = "hashbrown";
+        version = "0.17.1";
+        edition = "2024";
+        sha256 = "0jmqz7i4yl6cm7rbn0i2ffkfrmwi6xkmzkaldr2v8bcsx2v0jngd";
+        dependencies = [
+          {
+            name = "allocator-api2";
+            packageId = "allocator-api2";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "alloc" ];
+          }
+          {
+            name = "equivalent";
+            packageId = "equivalent";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "foldhash";
+            packageId = "foldhash";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "alloc" = [ "dep:alloc" ];
+          "allocator-api2" = [ "dep:allocator-api2" ];
+          "core" = [ "dep:core" ];
+          "default" = [
+            "default-hasher"
+            "inline-more"
+            "allocator-api2"
+            "equivalent"
+            "raw-entry"
+          ];
+          "default-hasher" = [ "dep:foldhash" ];
+          "equivalent" = [ "dep:equivalent" ];
+          "nightly" = [
+            "foldhash?/nightly"
+            "bumpalo/allocator_api"
+          ];
+          "rayon" = [ "dep:rayon" ];
+          "rustc-dep-of-std" = [
+            "nightly"
+            "core"
+            "alloc"
+            "rustc-internal-api"
+          ];
+          "serde" = [
+            "dep:serde_core"
+            "dep:serde"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "allocator-api2"
+          "default"
+          "default-hasher"
+          "equivalent"
+          "inline-more"
+          "raw-entry"
+        ];
       };
       "heck 0.4.1" = rec {
         crateName = "heck";
@@ -5059,6 +5135,11 @@ rec {
             packageId = "data-encoding";
           }
           {
+            name = "digest";
+            packageId = "digest 0.10.7";
+            optional = true;
+          }
+          {
             name = "ed25519";
             packageId = "ed25519";
           }
@@ -5069,6 +5150,11 @@ rec {
           {
             name = "futures";
             packageId = "futures";
+            optional = true;
+          }
+          {
+            name = "hashbrown";
+            packageId = "hashbrown 0.17.1";
             optional = true;
           }
           {
@@ -5112,6 +5198,12 @@ rec {
             ];
           }
           {
+            name = "tokio-util";
+            packageId = "tokio-util";
+            optional = true;
+            features = [ "io" ];
+          }
+          {
             name = "tracing";
             packageId = "tracing";
           }
@@ -5127,7 +5219,12 @@ rec {
           }
         ];
         features = {
-          "async" = [ "tokio" ];
+          "async" = [
+            "digest"
+            "futures"
+            "tokio"
+            "tokio-util"
+          ];
           "bytes" = [ "dep:bytes" ];
           "daemon" = [
             "tokio"
@@ -5137,11 +5234,14 @@ rec {
           "default" = [
             "async"
             "daemon"
+            "hashbrown"
             "wire"
             "nix-compat-derive"
           ];
+          "digest" = [ "dep:digest" ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
+          "hashbrown" = [ "dep:hashbrown" ];
           "nix-compat-derive" = [ "dep:nix-compat-derive" ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
           "serde" = [
@@ -5150,6 +5250,7 @@ rec {
             "dep:serde_with"
           ];
           "tokio" = [ "dep:tokio" ];
+          "tokio-util" = [ "dep:tokio-util" ];
           "url" = [ "dep:url" ];
           "wire" = [
             "tokio"
@@ -5162,10 +5263,13 @@ rec {
           "bytes"
           "daemon"
           "default"
+          "digest"
           "futures"
+          "hashbrown"
           "nix-compat-derive"
           "pin-project-lite"
           "tokio"
+          "tokio-util"
           "wire"
         ];
       };

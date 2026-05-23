@@ -7137,7 +7137,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -7642,11 +7642,23 @@ rec {
           "std"
         ];
       };
-      "foldhash" = rec {
+      "foldhash 0.1.5" = rec {
         crateName = "foldhash";
         version = "0.1.5";
         edition = "2021";
         sha256 = "1wisr1xlc2bj7hk4rgkcjkz3j2x4dhd1h9lwk7mj8p71qpdgbi6r";
+        authors = [
+          "Orson Peters <orsonpeters@gmail.com>"
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
+      };
+      "foldhash 0.2.0" = rec {
+        crateName = "foldhash";
+        version = "0.2.0";
+        edition = "2021";
+        sha256 = "1nvgylb099s11xpfm1kn2wcsql080nqmnhj1l25bp3r2b35j9kkp";
         authors = [
           "Orson Peters <orsonpeters@gmail.com>"
         ];
@@ -9056,7 +9068,7 @@ rec {
           }
           {
             name = "foldhash";
-            packageId = "foldhash";
+            packageId = "foldhash 0.1.5";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -9130,6 +9142,70 @@ rec {
             "dep:serde"
           ];
         };
+      };
+      "hashbrown 0.17.1" = rec {
+        crateName = "hashbrown";
+        version = "0.17.1";
+        edition = "2024";
+        sha256 = "0jmqz7i4yl6cm7rbn0i2ffkfrmwi6xkmzkaldr2v8bcsx2v0jngd";
+        dependencies = [
+          {
+            name = "allocator-api2";
+            packageId = "allocator-api2";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "alloc" ];
+          }
+          {
+            name = "equivalent";
+            packageId = "equivalent";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "foldhash";
+            packageId = "foldhash 0.2.0";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "alloc" = [ "dep:alloc" ];
+          "allocator-api2" = [ "dep:allocator-api2" ];
+          "core" = [ "dep:core" ];
+          "default" = [
+            "default-hasher"
+            "inline-more"
+            "allocator-api2"
+            "equivalent"
+            "raw-entry"
+          ];
+          "default-hasher" = [ "dep:foldhash" ];
+          "equivalent" = [ "dep:equivalent" ];
+          "nightly" = [
+            "foldhash?/nightly"
+            "bumpalo/allocator_api"
+          ];
+          "rayon" = [ "dep:rayon" ];
+          "rustc-dep-of-std" = [
+            "nightly"
+            "core"
+            "alloc"
+            "rustc-internal-api"
+          ];
+          "serde" = [
+            "dep:serde_core"
+            "dep:serde"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "allocator-api2"
+          "default"
+          "default-hasher"
+          "equivalent"
+          "inline-more"
+          "raw-entry"
+        ];
       };
       "headers" = rec {
         crateName = "headers";
@@ -10823,7 +10899,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -12914,7 +12990,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.5";
+            packageId = "hashbrown 0.17.1";
             optional = true;
           }
           {
@@ -13328,7 +13404,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             rename = "windows";
             target = { target, features }: (target."windows" or false);
             features = [
@@ -16766,7 +16842,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.60.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19417,7 +19493,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19830,7 +19906,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -21533,7 +21609,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.5";
+            packageId = "hashbrown 0.17.1";
           }
           {
             name = "hyper-util";
@@ -22823,7 +22899,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.5";
+            packageId = "hashbrown 0.17.1";
           }
           {
             name = "itertools";
@@ -23073,7 +23149,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.5";
+            packageId = "hashbrown 0.17.1";
           }
           {
             name = "md-5";
@@ -24325,7 +24401,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -28186,7 +28262,7 @@ rec {
         dependencies = [
           {
             name = "windows-targets";
-            packageId = "windows-targets 0.48.5";
+            packageId = "windows-targets 0.52.6";
             target = { target, features }: (target."windows" or false);
           }
         ];
@@ -31215,7 +31291,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.48.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -32884,10 +32960,8 @@ rec {
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Pipes"
-          "Win32_System_SystemInformation"
           "Win32_System_WindowsProgramming"
           "default"
         ];
@@ -33410,16 +33484,9 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
-          "Win32_Networking"
-          "Win32_Networking_WinSock"
-          "Win32_Security"
-          "Win32_Security_Cryptography"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "default"
         ];
@@ -33690,11 +33757,14 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
+          "Win32_Networking"
+          "Win32_Networking_WinSock"
           "Win32_Security"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
           "Win32_System_Console"
+          "Win32_System_IO"
           "Win32_System_Threading"
           "Win32_UI"
           "Win32_UI_Input"
@@ -33983,6 +34053,8 @@ rec {
           "Win32_System"
           "Win32_System_Com"
           "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_LibraryLoader"
           "Win32_System_Memory"

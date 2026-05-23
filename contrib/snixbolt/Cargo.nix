@@ -741,9 +741,9 @@ rec {
       };
       "foldhash" = rec {
         crateName = "foldhash";
-        version = "0.1.5";
+        version = "0.2.0";
         edition = "2021";
-        sha256 = "1wisr1xlc2bj7hk4rgkcjkz3j2x4dhd1h9lwk7mj8p71qpdgbi6r";
+        sha256 = "1nvgylb099s11xpfm1kn2wcsql080nqmnhj1l25bp3r2b35j9kkp";
         authors = [
           "Orson Peters <orsonpeters@gmail.com>"
         ];
@@ -2925,14 +2925,11 @@ rec {
           "raw"
         ];
       };
-      "hashbrown 0.15.4" = rec {
+      "hashbrown 0.17.1" = rec {
         crateName = "hashbrown";
-        version = "0.15.4";
-        edition = "2021";
-        sha256 = "1mg045sm1nm00cwjm7ndi80hcmmv1v3z7gnapxyhd9qxc62sqwar";
-        authors = [
-          "Amanieu d'Antras <amanieu@gmail.com>"
-        ];
+        version = "0.17.1";
+        edition = "2024";
+        sha256 = "0jmqz7i4yl6cm7rbn0i2ffkfrmwi6xkmzkaldr2v8bcsx2v0jngd";
         dependencies = [
           {
             name = "allocator-api2";
@@ -2967,7 +2964,10 @@ rec {
           ];
           "default-hasher" = [ "dep:foldhash" ];
           "equivalent" = [ "dep:equivalent" ];
-          "nightly" = [ "bumpalo/allocator_api" ];
+          "nightly" = [
+            "foldhash?/nightly"
+            "bumpalo/allocator_api"
+          ];
           "rayon" = [ "dep:rayon" ];
           "rustc-dep-of-std" = [
             "nightly"
@@ -2975,7 +2975,10 @@ rec {
             "alloc"
             "rustc-internal-api"
           ];
-          "serde" = [ "dep:serde" ];
+          "serde" = [
+            "dep:serde_core"
+            "dep:serde"
+          ];
         };
         resolvedDefaultFeatures = [
           "allocator-api2"
@@ -5275,7 +5278,7 @@ rec {
           }
           {
             name = "hashbrown";
-            packageId = "hashbrown 0.15.4";
+            packageId = "hashbrown 0.17.1";
           }
           {
             name = "itertools";

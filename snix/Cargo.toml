@@ -89,7 +89,7 @@ fastcdc = "3.1.0"
 fuse-backend-rs = "=0.12.0"
 futures = "0.3.30"
 genawaiter = { version = "0.99.1", default-features = false }
-hashbrown = "0.15.4"
+hashbrown = "0.17.1"
 hex-literal = "0.4.1"
 http = "1.1.0"
 hyper-util = "0.1.7"
