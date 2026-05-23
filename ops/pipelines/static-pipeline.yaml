@@ -11,6 +11,8 @@ steps:
   - label: ":llama:"
     key: "pipeline-gen"
     priority: 1
+    concurrency_group: 'depot/pipeline-gen'
+    concurrency: 3 # much more than this and our builder will OOM
     agents:
         large: true
     command: |
