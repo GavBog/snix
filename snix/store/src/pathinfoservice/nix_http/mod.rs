@@ -197,7 +197,12 @@ where
     BS: BlobService + Send + Sync + Clone + 'static,
     DS: DirectoryService + Send + Sync + Clone + 'static,
 {
-    #[instrument(skip_all, err, fields(path.digest=nixbase32::encode(&digest), instance_name=%self.instance_name))]
+    #[instrument(skip_all, err, fields(
+        path.digest=nixbase32::encode(&digest),
+        instance_name=%self.instance_name,
+        narinfo.url=tracing::field::Empty,
+        nar.url=tracing::field::Empty,
+    ))]
     async fn get(&self, digest: [u8; 20]) -> Result<Option<PathInfo>, pathinfoservice::Error> {
         let narinfo_url = self.derive_narinfo_url(digest)?;
 
@@ -344,7 +349,11 @@ where
         }))
     }
 
-    #[instrument(skip_all, err, fields(path.digest=nixbase32::encode(&digest), instance_name=%self.instance_name))]
+    #[instrument(skip_all, err, fields(
+        path.digest=nixbase32::encode(&digest),
+        instance_name=%self.instance_name,
+        narinfo.url=tracing::field::Empty,
+    ))]
     async fn has(&self, digest: [u8; 20]) -> Result<bool, pathinfoservice::Error> {
         let narinfo_url = self.derive_narinfo_url(digest)?;
 
