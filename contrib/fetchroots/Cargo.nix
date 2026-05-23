@@ -4553,6 +4553,7 @@ rec {
           {
             name = "nix-compat";
             packageId = "nix-compat";
+            usesDefaultFeatures = false;
           }
           {
             name = "polars";
@@ -6779,11 +6780,6 @@ rec {
             ];
           }
           {
-            name = "bytes";
-            packageId = "bytes";
-            optional = true;
-          }
-          {
             name = "data-encoding";
             packageId = "data-encoding";
           }
@@ -6796,18 +6792,8 @@ rec {
             packageId = "ed25519-dalek";
           }
           {
-            name = "futures";
-            packageId = "futures";
-            optional = true;
-          }
-          {
             name = "mimalloc";
             packageId = "mimalloc";
-          }
-          {
-            name = "nix-compat-derive";
-            packageId = "nix-compat-derive";
-            optional = true;
           }
           {
             name = "nom";
@@ -6818,11 +6804,6 @@ rec {
             packageId = "num_enum";
           }
           {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
-            optional = true;
-          }
-          {
             name = "sha2";
             packageId = "sha2";
           }
@@ -6831,25 +6812,11 @@ rec {
             packageId = "thiserror 2.0.11";
           }
           {
-            name = "tokio";
-            packageId = "tokio";
-            optional = true;
-            features = [
-              "io-util"
-              "macros"
-              "sync"
-            ];
-          }
-          {
             name = "tracing";
             packageId = "tracing";
           }
         ];
         devDependencies = [
-          {
-            name = "futures";
-            packageId = "futures";
-          }
           {
             name = "mimalloc";
             packageId = "mimalloc";
@@ -6866,11 +6833,13 @@ rec {
           "default" = [
             "async"
             "daemon"
+            "hashbrown"
             "wire"
             "nix-compat-derive"
           ];
           "flakeref" = [ "url" ];
           "futures" = [ "dep:futures" ];
+          "hashbrown" = [ "dep:hashbrown" ];
           "nix-compat-derive" = [ "dep:nix-compat-derive" ];
           "pin-project-lite" = [ "dep:pin-project-lite" ];
           "serde" = [
@@ -6886,49 +6855,6 @@ rec {
             "bytes"
           ];
         };
-        resolvedDefaultFeatures = [
-          "async"
-          "bytes"
-          "daemon"
-          "default"
-          "futures"
-          "nix-compat-derive"
-          "pin-project-lite"
-          "tokio"
-          "wire"
-        ];
-      };
-      "nix-compat-derive" = rec {
-        crateName = "nix-compat-derive";
-        version = "0.1.0";
-        edition = "2024";
-        src = lib.cleanSourceWith {
-          filter = sourceFilter;
-          src = ../../snix/nix-compat-derive;
-        };
-        procMacro = true;
-        libName = "nix_compat_derive";
-        dependencies = [
-          {
-            name = "proc-macro2";
-            packageId = "proc-macro2";
-            features = [ "proc-macro" ];
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-            features = [ "proc-macro" ];
-          }
-          {
-            name = "syn";
-            packageId = "syn 2.0.87";
-            features = [
-              "full"
-              "extra-traits"
-            ];
-          }
-        ];
-
       };
       "nom" = rec {
         crateName = "nom";

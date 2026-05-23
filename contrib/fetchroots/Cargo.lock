@@ -1684,29 +1684,15 @@ version = "0.1.0"
 dependencies = [
  "bitflags 2.6.0",
  "bstr",
- "bytes",
  "data-encoding",
  "ed25519",
  "ed25519-dalek",
- "futures",
  "mimalloc",
- "nix-compat-derive",
  "nom",
  "num_enum",
- "pin-project-lite",
  "sha2",
  "thiserror 2.0.11",
- "tokio",
  "tracing",
-]
-
-[[package]]
-name = "nix-compat-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.87",
 ]
 
 [[package]]
