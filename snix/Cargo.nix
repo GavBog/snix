@@ -16978,9 +16978,9 @@ rec {
       };
       "quinn-proto" = rec {
         crateName = "quinn-proto";
-        version = "0.11.13";
+        version = "0.11.14";
         edition = "2021";
-        sha256 = "0cca3mgja9p4w66f6sl1kfhj8rdf4mwsg1jxzssh9g63n14np47i";
+        sha256 = "1660jkxhzi1pnywzs13ifczwrlv6ds9qds111vsnxjciqpz44js3";
         libName = "quinn_proto";
         dependencies = [
           {
