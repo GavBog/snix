@@ -22662,10 +22662,6 @@ rec {
         libName = "snix_cli_eval";
         dependencies = [
           {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
             name = "clap";
             packageId = "clap";
             features = [
@@ -22685,16 +22681,8 @@ rec {
             optional = true;
           }
           {
-            name = "rand";
-            packageId = "rand 0.8.5";
-          }
-          {
             name = "rnix";
             packageId = "rnix";
-          }
-          {
-            name = "rowan";
-            packageId = "rowan";
           }
           {
             name = "rustc-hash";
@@ -22734,10 +22722,6 @@ rec {
             packageId = "tempfile";
           }
           {
-            name = "thiserror";
-            packageId = "thiserror 2.0.17";
-          }
-          {
             name = "tokio";
             packageId = "tokio";
           }
@@ -22752,10 +22736,6 @@ rec {
           {
             name = "url";
             packageId = "url";
-          }
-          {
-            name = "wu-manber";
-            packageId = "wu-manber";
           }
         ];
         devDependencies = [

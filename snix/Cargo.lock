@@ -5152,14 +5152,11 @@ dependencies = [
 name = "snix-cli-eval"
 version = "0.1.0"
 dependencies = [
- "bytes",
  "clap",
  "dirs",
  "expect-test",
  "mimalloc",
- "rand 0.8.5",
  "rnix",
- "rowan",
  "rustc-hash 2.1.1",
  "rustyline",
  "smol_str",
@@ -5169,12 +5166,10 @@ dependencies = [
  "snix-store",
  "snix-tracing",
  "tempfile",
- "thiserror 2.0.17",
  "tokio",
  "tracing",
  "tracing-indicatif",
  "url",
- "wu-manber",
 ]
 
 [[package]]

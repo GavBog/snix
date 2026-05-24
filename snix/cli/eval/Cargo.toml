@@ -14,23 +14,18 @@ snix-store = { path = "../../store", default-features = false, features = [] }
 snix-eval = { path = "../../eval" }
 snix-glue = { path = "../../glue" }
 snix-tracing = { path = "../../tracing" }
-bytes.workspace = true
 clap = { workspace = true, features = ["derive", "env", "cargo", "string"] }
 dirs.workspace = true
 rustyline.workspace = true
 rnix.workspace = true
-rowan.workspace = true
 smol_str.workspace = true
 tempfile.workspace = true
-thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-indicatif.workspace = true
 rustc-hash.workspace = true
 mimalloc = { workspace = true, optional = true }
-wu-manber.workspace = true
 url.workspace = true
-rand = "0.8.5"
 
 [dev-dependencies]
 expect-test.workspace = true
