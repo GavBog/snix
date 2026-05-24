@@ -49,6 +49,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # Set up a group for all Buildkite agent users
+    users.groups.buildkite-agents = { };
+
     # Run the Buildkite agents using the default upstream module.
     services.buildkite-agents = builtins.listToAttrs (
       map (n: rec {
@@ -56,6 +59,10 @@ in
         value = {
           inherit name;
           enable = true;
+          extraGroups = [
+            "buildkite-agents"
+            "docker"
+          ];
           tokenPath = config.age.secretsDir + "/buildkite-agent-token";
           privateSshKeyPath = config.age.secretsDir + "/buildkite-private-key";
           hooks.post-command = "${buildkiteHooks}/bin/post-command";
@@ -89,23 +96,5 @@ in
         };
       }) agents
     );
-
-    # Set up a group for all Buildkite agent users
-    users = {
-      groups.buildkite-agents = { };
-      users = builtins.listToAttrs (
-        map (n: rec {
-          name = "buildkite-agent-${hostname}-${toString n}";
-          value = {
-            isSystemUser = true;
-            group = lib.mkForce "buildkite-agents";
-            extraGroups = [
-              name
-              "docker"
-            ];
-          };
-        }) agents
-      );
-    };
   };
 }
