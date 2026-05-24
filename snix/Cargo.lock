@@ -5186,8 +5186,6 @@ dependencies = [
  "snix-tracing",
  "tokio",
  "tokio-listener",
- "tower 0.4.13",
- "tower-http",
  "tracing",
 ]
 

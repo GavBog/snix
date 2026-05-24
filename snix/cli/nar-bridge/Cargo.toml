@@ -24,8 +24,6 @@ tokio-listener = { workspace = true, features = [
   "multi-listener",
   "sd_listen",
 ] }
-tower.workspace = true
-tower-http = { workspace = true, features = ["compression-zstd", "trace"] }
 tracing.workspace = true
 
 [features]

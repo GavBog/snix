@@ -22836,18 +22836,6 @@ rec {
             ];
           }
           {
-            name = "tower";
-            packageId = "tower 0.4.13";
-          }
-          {
-            name = "tower-http";
-            packageId = "tower-http";
-            features = [
-              "compression-zstd"
-              "trace"
-            ];
-          }
-          {
             name = "tracing";
             packageId = "tracing";
           }
