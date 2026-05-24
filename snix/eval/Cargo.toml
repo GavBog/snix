@@ -73,3 +73,6 @@ harness = false
 
 [package.metadata.docs.rs]
 all-features = true
+
+[package.metadata.cargo-machete]
+ignored = ["md-5"]
