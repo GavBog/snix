@@ -2,44 +2,33 @@
 
 pkgs.mkShell {
   name = "snix-rust-dev-env";
-  packages =
-    let
-      # The binutils addr2line is timing out on our large binaries,
-      # using the addr2line rust rewrite solves the issue.
-      # See: https://github.com/flamegraph-rs/flamegraph/issues/341#issuecomment-2483294165
-      perf = (
-        pkgs.perf.override ({
-          binutils-unwrapped = pkgs.writeShellScriptBin "addr2line" "exec ${pkgs.rust-addr2line}/bin/addr2line \"$@\"";
-        })
-      );
-    in
-    [
-      pkgs.buf
-      pkgs.cargo
-      pkgs.cargo-machete
-      pkgs.cargo-expand
-      (pkgs.cargo-flamegraph.override { inherit perf; })
-      pkgs.clippy
-      pkgs.evans
-      pkgs.fuse
-      pkgs.go
-      pkgs.grpcurl
-      pkgs.hyperfine
-      pkgs.pkg-config
-      pkgs.rust-addr2line
-      pkgs.rust-analyzer
-      pkgs.rustc
-      pkgs.rustfmt
-      pkgs.protobuf
-      pkgs.tracy_0_13
-    ]
-    ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
-      perf
-      pkgs.bubblewrap
-      pkgs.cbtemulator
-      pkgs.google-cloud-bigtable-tool
-      pkgs.runc
-    ];
+  packages = [
+    pkgs.buf
+    pkgs.cargo
+    pkgs.cargo-machete
+    pkgs.cargo-expand
+    pkgs.cargo-flamegraph
+    pkgs.clippy
+    pkgs.evans
+    pkgs.fuse
+    pkgs.go
+    pkgs.grpcurl
+    pkgs.hyperfine
+    pkgs.perf-with-rust-addr2line
+    pkgs.pkg-config
+    pkgs.rust-addr2line
+    pkgs.rust-analyzer
+    pkgs.rustc
+    pkgs.rustfmt
+    pkgs.protobuf
+    pkgs.tracy_0_13
+  ]
+  ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+    pkgs.bubblewrap
+    pkgs.cbtemulator
+    pkgs.google-cloud-bigtable-tool
+    pkgs.runc
+  ];
 
   # Set SNIX_BENCH_NIX_PATH to a somewhat pinned nixpkgs path.
   # This is for invoking `cargo bench` imperatively on the developer machine.
