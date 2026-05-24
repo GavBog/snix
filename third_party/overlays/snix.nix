@@ -7,26 +7,26 @@
   ...
 }:
 
-self: super:
+final: prev:
 depot.nix.readTree.drvTargets {
   # Avoid builds of mkShell derivations in CI.
-  mkShell = super.lib.makeOverridable (
+  mkShell = prev.lib.makeOverridable (
     args:
-    (super.mkShell args).overrideAttrs (_: {
+    (prev.mkShell args).overrideAttrs (_: {
       passthru = {
         meta.ci.skip = true;
       };
     })
   );
 
-  crate2nix = super.crate2nix.overrideAttrs (old: {
+  crate2nix = prev.crate2nix.overrideAttrs (old: {
     patches = old.patches or [ ] ++ [
       # https://github.com/nix-community/crate2nix/pull/301
       ./patches/crate2nix-tests-debug.patch
     ];
   });
 
-  evans = super.evans.overrideAttrs (old: {
+  evans = prev.evans.overrideAttrs (old: {
     patches = old.patches or [ ] ++ [
       # add support for unix domain sockets
       # https://github.com/ktr0731/evans/pull/680
@@ -36,10 +36,10 @@ depot.nix.readTree.drvTargets {
 
   # Use an old version of hugo, else the website only shows
   # "This line is from layouts/index.html."
-  hugo = super.hugo.overrideAttrs (old: {
+  hugo = prev.hugo.overrideAttrs (old: {
     version = "0.145.0";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "gohugoio";
       repo = "hugo";
       tag = "v0.145.0";
@@ -49,5 +49,5 @@ depot.nix.readTree.drvTargets {
     vendorHash = "sha256-aynhBko6ecYyyMG9XO5315kLerWDFZ6V8LQ/WIkvC70=";
   });
 
-  watch-store = super.callPackage ./pkgs/watch-store.nix { };
+  watch-store = prev.callPackage ./pkgs/watch-store.nix { };
 }
