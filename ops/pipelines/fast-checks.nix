@@ -17,6 +17,10 @@ let
         builtins.fromJSON (builtins.readFile externalArgs.parentTargetMap)
       else
         { };
+    defaultStepOverrides = {
+      # Ensure that fast lint checks are run before :llama: steps
+      priority = 100;
+    };
   };
 
   drvmap = depot.nix.buildkite.mkDrvmap depot.ci.fastTargets;

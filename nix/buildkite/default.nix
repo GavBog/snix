@@ -123,6 +123,7 @@ rec {
       targetDepMap,
       target,
       cancelOnBuildFailing,
+      defaultStepOverrides,
     }:
     let
       label = mkLabel target;
@@ -148,6 +149,7 @@ rec {
       ++ getTargetPipelineDeps targetDepMap drvPath
       ++ lib.optionals (target ? meta.ci.buildkiteExtraDeps) target.meta.ci.buildkiteExtraDeps;
     }
+    // defaultStepOverrides
     // lib.optionalAttrs (target ? meta.timeout) {
       timeout_in_minutes = target.meta.timeout / 60;
       # Additional arguments to set on the step.
@@ -249,6 +251,9 @@ rec {
       # To enable this feature one should enable "Fail Fast" setting
       # at Buildkite pipeline or on organization level.
       cancelOnBuildFailing ? false,
+
+      # Arguments to add to all steps created by this pipeline.
+      defaultStepOverrides ? { },
     }:
     let
       # List of phases to include.
@@ -284,6 +289,7 @@ rec {
               targetDepMap
               target
               cancelOnBuildFailing
+              defaultStepOverrides
               ;
           };
           step = mkStep mkStepArgs;
@@ -301,7 +307,7 @@ rec {
           );
 
           extraSteps = mapAttrs (
-            _: steps: map (mkExtraStep (targetAttrPath target) buildEnabled) steps
+            _: steps: map (mkExtraStep (targetAttrPath target) buildEnabled defaultStepOverrides) steps
           ) splitExtraSteps;
         in
         if !buildEnabled then
@@ -485,7 +491,7 @@ rec {
   # Create the Buildkite configuration for an extra step, optionally
   # wrapping it in a gate group.
   mkExtraStep =
-    parentAttrPath: buildEnabled: cfg:
+    parentAttrPath: buildEnabled: defaultStepOverrides: cfg:
     let
       # ATTN: needs to match an entry in .gitignore so that the tree won't get dirty
       commandScriptLink = "nix-buildkite-extra-step-command-script";
@@ -537,6 +543,7 @@ rec {
 
         soft_fail = cfg.softFail;
       }
+      // defaultStepOverrides
       // (lib.optionalAttrs (cfg.agents != null) { inherit (cfg) agents; })
       // (lib.optionalAttrs (cfg.branches != null) {
         branches = lib.concatStringsSep " " cfg.branches;

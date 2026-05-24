@@ -57,14 +57,19 @@ in
             "with-features-${lib.concatStringsSep "-" featuresPowerset}"
           else
             "no-features";
-        value = depot.snix.crates.workspaceMembers.${crateName}.build.override (
-          old:
-          {
-            runTests = true;
-            features = featuresPowerset;
-          }
-          // (if lib.isFunction override then override old else override)
-        );
+        value =
+          (depot.snix.crates.workspaceMembers.${crateName}.build.override (
+            old:
+            {
+              runTests = true;
+              features = featuresPowerset;
+            }
+            // (if lib.isFunction override then override old else override)
+          )).overrideAttrs
+            ({
+              # Ensure that powerset CI steps run with low priority
+              meta.ci.buildkiteExtraStepArgs.priority = -100;
+            });
       }) (powerset features)
     );
 
