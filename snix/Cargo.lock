@@ -5122,8 +5122,6 @@ dependencies = [
  "tonic-health",
  "tonic-reflection",
  "tonic-tracing-opentelemetry",
- "tower 0.4.13",
- "tower-http",
  "tracing",
 ]
 
