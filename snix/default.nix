@@ -74,14 +74,6 @@ in
   # workspace too.
   shell = (import ./shell.nix { inherit pkgs; });
 
-  # Shell, but with tools necessary to run the integration tests
-  shell-integration = (
-    import ./shell.nix {
-      inherit pkgs;
-      withIntegration = true;
-    }
-  );
-
   # Build the Rust documentation for publishing on snix.dev/rustdoc.
   rust-docs = depot.third_party.crane.cargoDocsRs (
     commonCraneArgs
