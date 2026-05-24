@@ -60,9 +60,12 @@ impl RedbDirectoryService {
             }
 
             if config.read_only {
-                let db =
-                    tokio::task::spawn_blocking(|| redb::Database::builder().open_read_only(path))
-                        .await??;
+                let db = tokio::task::spawn_blocking(move || {
+                    let mut builder = redb::Database::builder();
+                    configure_builder(&mut builder, &config);
+                    builder.open_read_only(path)
+                })
+                .await??;
 
                 return Ok(Self {
                     instance_name,
