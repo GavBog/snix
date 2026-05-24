@@ -63,3 +63,11 @@ axum = ["dep:axum"]
 
 [package.metadata.docs.rs]
 all-features = true
+
+[package.metadata.cargo-machete]
+ignored = [
+  "axum",
+  "http",
+  "opentelemetry-http",
+  "opentelemetry-semantic-conventions",
+]
