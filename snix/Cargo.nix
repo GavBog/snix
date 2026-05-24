@@ -12798,14 +12798,6 @@ rec {
             ];
           }
           {
-            name = "tonic";
-            packageId = "tonic";
-            features = [
-              "tls-aws-lc"
-              "tls-native-roots"
-            ];
-          }
-          {
             name = "tower-http";
             packageId = "tower-http";
             features = [

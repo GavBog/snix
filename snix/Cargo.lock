@@ -3114,7 +3114,6 @@ dependencies = [
  "snix-store",
  "tokio",
  "tokio-util",
- "tonic",
  "tower-http",
  "tracing",
  "tracing-test",
