@@ -320,3 +320,119 @@ impl ServiceBuilder for RedbPathInfoServiceConfig {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use tempfile::TempDir;
+
+    use crate::fixtures::{DUMMY_PATH_DIGEST, PATH_INFO};
+    use crate::pathinfoservice::{PathInfoService, RedbPathInfoService, RedbPathInfoServiceConfig};
+
+    #[tokio::test]
+    async fn reopen_as_read_only() {
+        let tempdir = TempDir::new().unwrap();
+        let path = tempdir.path().join("data.redb");
+
+        let config = RedbPathInfoServiceConfig {
+            path: Some(path),
+            cache_size: None,
+            read_only: false,
+        };
+
+        // Create a read-write path info service and insert some data.
+        {
+            let path_info_service = RedbPathInfoService::new("rw".to_string(), config.clone())
+                .await
+                .expect("to construct");
+
+            path_info_service
+                .put(PATH_INFO.clone())
+                .await
+                .expect("to insert");
+        } // we drop the rw database here.
+
+        // Re-open the same path in ro mode (twice)
+        let ro_config = RedbPathInfoServiceConfig {
+            read_only: true,
+            ..config
+        };
+
+        let path_info_service_ro_1 = RedbPathInfoService::new("ro1".to_string(), ro_config.clone())
+            .await
+            .expect("to construct");
+        let path_info_service_ro_2 = RedbPathInfoService::new("ro2".to_string(), ro_config)
+            .await
+            .expect("to construct");
+
+        assert_eq!(
+            path_info_service_ro_1
+                .get(DUMMY_PATH_DIGEST)
+                .await
+                .expect("get to succeed")
+                .expect("to be Some(_)")
+                .store_path
+                .digest(),
+            &DUMMY_PATH_DIGEST,
+        );
+        assert_eq!(
+            path_info_service_ro_2
+                .get(DUMMY_PATH_DIGEST)
+                .await
+                .expect("get to succeed")
+                .expect("to be Some(_)")
+                .store_path
+                .digest(),
+            &DUMMY_PATH_DIGEST,
+        );
+    }
+
+    #[tokio::test]
+    async fn read_only_nonexistent() {
+        let tempdir = TempDir::new().unwrap();
+        let path = tempdir.path().join("data.redb");
+
+        let config = RedbPathInfoServiceConfig {
+            path: Some(path),
+            cache_size: None,
+            read_only: true,
+        };
+
+        // Opening a read-only redb should fail if the path doesn't exist.
+        assert!(
+            RedbPathInfoService::new("test".to_string(), config)
+                .await
+                .is_err(),
+            "opening new path r/o should fail"
+        );
+    }
+
+    #[tokio::test]
+    async fn open_rw_and_ro() {
+        let tempdir = TempDir::new().unwrap();
+        let path = tempdir.path().join("data.redb");
+
+        let config = RedbPathInfoServiceConfig {
+            path: Some(path),
+            cache_size: None,
+            read_only: false,
+        };
+
+        let _path_info_service = RedbPathInfoService::new("rw".to_string(), config.clone())
+            .await
+            .expect("to construct");
+
+        // Opening a read-only redb should fail if it's already opened read-write.
+        assert!(
+            RedbPathInfoService::new(
+                "ro".to_string(),
+                RedbPathInfoServiceConfig {
+                    read_only: true,
+                    ..config
+                }
+            )
+            .await
+            .is_err(),
+            "opening r/o should fail if still open r/w"
+        );
+    }
+}
