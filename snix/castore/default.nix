@@ -23,7 +23,6 @@
           [
             "cloud"
             "fuse"
-            "tonic-reflection"
             "xp-composition-url-refs"
           ]
           # virtiofs feature currently fails to build on Darwin

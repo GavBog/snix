@@ -62,7 +62,6 @@ toml = { version = "0.8.19", optional = true }
 tonic-health.workspace = true
 redb = { workspace = true, features = ["logging"] }
 mimalloc.workspace = true
-tonic-reflection = { workspace = true, optional = true }
 bigtable_rs = { workspace = true, optional = true }
 auto_impl = "1.2.0"
 
@@ -79,10 +78,9 @@ tokio-retry.workspace = true
 hex-literal.workspace = true
 
 [features]
-default = ["cloud", "fuse", "tonic-reflection"]
+default = ["cloud", "fuse"]
 cloud = ["dep:bigtable_rs", "snix-castore/cloud"]
 fuse = ["snix-castore/fuse"]
-tonic-reflection = ["dep:tonic-reflection", "snix-castore/tonic-reflection"]
 virtiofs = ["snix-castore/virtiofs"]
 xp-composition-cli = [
   "toml",
@@ -96,4 +94,4 @@ integration = []
 
 [package.metadata.docs.rs]
 # Everything but virtiofs since that doesn't build on MacOS
-features = ["cloud", "fuse", "tonic-reflection", "xp-composition-cli"]
+features = ["cloud", "fuse", "xp-composition-cli"]

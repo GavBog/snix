@@ -21819,11 +21819,6 @@ rec {
             packageId = "tonic-prost";
           }
           {
-            name = "tonic-reflection";
-            packageId = "tonic-reflection";
-            optional = true;
-          }
-          {
             name = "tracing";
             packageId = "tracing";
           }
@@ -21859,15 +21854,8 @@ rec {
           }
         ];
         features = {
-          "tonic-reflection" = [
-            "dep:tonic-reflection"
-            "snix-castore/tonic-reflection"
-          ];
         };
-        resolvedDefaultFeatures = [
-          "default"
-          "tonic-reflection"
-        ];
+        resolvedDefaultFeatures = [ "default" ];
       };
       "snix-castore" = rec {
         crateName = "snix-castore";
@@ -22092,11 +22080,6 @@ rec {
             packageId = "tonic-prost";
           }
           {
-            name = "tonic-reflection";
-            packageId = "tonic-reflection";
-            optional = true;
-          }
-          {
             name = "tower";
             packageId = "tower 0.4.13";
             features = [ "util" ];
@@ -22221,7 +22204,6 @@ rec {
           ];
           "fuse" = [ "fs" ];
           "toml" = [ "dep:toml" ];
-          "tonic-reflection" = [ "dep:tonic-reflection" ];
           "virtiofs" = [
             "fs"
             "dep:vhost"
@@ -22246,7 +22228,6 @@ rec {
           "integration"
           "serde"
           "toml"
-          "tonic-reflection"
           "virtiofs"
           "xp-composition-cli"
           "xp-composition-url-refs"
@@ -22469,11 +22450,7 @@ rec {
         features = {
           "default" = [ "otlp" ];
           "otlp" = [ "snix-tracing/otlp" ];
-          "tonic-reflection" = [
-            "dep:tonic-reflection"
-            "snix-build/tonic-reflection"
-            "snix-castore/tonic-reflection"
-          ];
+          "tonic-reflection" = [ "dep:tonic-reflection" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "xp-store-composition-cli" = [ "snix-castore/xp-composition-cli" ];
         };
@@ -22583,10 +22560,7 @@ rec {
         ];
         features = {
           "fuse" = [ "snix-castore/fuse" ];
-          "tonic-reflection" = [
-            "snix-castore/tonic-reflection"
-            "dep:tonic-reflection"
-          ];
+          "tonic-reflection" = [ "dep:tonic-reflection" ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
           "xp-store-composition-cli" = [ "snix-castore/xp-composition-cli" ];
         };
@@ -23196,10 +23170,7 @@ rec {
           ];
           "fuse" = [ "snix-castore/fuse" ];
           "otlp" = [ "snix-tracing/otlp" ];
-          "tonic-reflection" = [
-            "dep:tonic-reflection"
-            "snix-castore/tonic-reflection"
-          ];
+          "tonic-reflection" = [ "dep:tonic-reflection" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracing-tracy" = [ "snix-tracing/tracy" ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
@@ -23898,11 +23869,6 @@ rec {
             packageId = "tonic-prost";
           }
           {
-            name = "tonic-reflection";
-            packageId = "tonic-reflection";
-            optional = true;
-          }
-          {
             name = "tower";
             packageId = "tower 0.4.13";
           }
@@ -23974,14 +23940,9 @@ rec {
           "default" = [
             "cloud"
             "fuse"
-            "tonic-reflection"
           ];
           "fuse" = [ "snix-castore/fuse" ];
           "toml" = [ "dep:toml" ];
-          "tonic-reflection" = [
-            "dep:tonic-reflection"
-            "snix-castore/tonic-reflection"
-          ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
           "xp-composition-cli" = [
             "toml"
@@ -23995,7 +23956,6 @@ rec {
           "fuse"
           "integration"
           "toml"
-          "tonic-reflection"
           "virtiofs"
           "xp-composition-cli"
         ];

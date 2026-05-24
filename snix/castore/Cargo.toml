@@ -51,7 +51,6 @@ tokio-util = { workspace = true, features = ["io", "io-util", "codec"] }
 toml = { version = "0.8.19", optional = true }
 tonic.workspace = true
 tonic-health.workspace = true
-tonic-reflection = { workspace = true, optional = true }
 tonic-prost.workspace = true
 tower = { workspace = true, features = ["util"] }
 tower-http = { workspace = true, features = ["trace"] }
@@ -104,7 +103,6 @@ virtiofs = [
 ]
 fuse = ["fs"]
 serde = []
-tonic-reflection = ["dep:tonic-reflection"]
 xp-composition-cli = ["toml", "xp-composition-url-refs"]
 # This feature enables anonymous url syntax which might inherently expose
 # arbitrary composition possibilities to the user.
@@ -120,7 +118,6 @@ features = [
   "cloud",
   "fs",
   "fuse",
-  "tonic-reflection",
   "xp-composition-cli",
   "xp-composition-url-refs",
 ]

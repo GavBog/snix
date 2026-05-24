@@ -17787,10 +17787,6 @@ rec {
           }
         ];
         features = {
-          "tonic-reflection" = [
-            "dep:tonic-reflection"
-            "snix-castore/tonic-reflection"
-          ];
         };
       };
       "snix-castore" = rec {
@@ -18066,7 +18062,6 @@ rec {
           ];
           "fuse" = [ "fs" ];
           "toml" = [ "dep:toml" ];
-          "tonic-reflection" = [ "dep:tonic-reflection" ];
           "virtiofs" = [
             "fs"
             "dep:vhost"
@@ -18710,14 +18705,9 @@ rec {
           "default" = [
             "cloud"
             "fuse"
-            "tonic-reflection"
           ];
           "fuse" = [ "snix-castore/fuse" ];
           "toml" = [ "dep:toml" ];
-          "tonic-reflection" = [
-            "dep:tonic-reflection"
-            "snix-castore/tonic-reflection"
-          ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
           "xp-composition-cli" = [
             "toml"

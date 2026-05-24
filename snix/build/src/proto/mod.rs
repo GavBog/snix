@@ -12,7 +12,6 @@ use crate::buildservice::BuildResult;
 
 tonic::include_proto!("snix.build.v1");
 
-#[cfg(feature = "tonic-reflection")]
 /// Compiled file descriptors for implementing [gRPC
 /// reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md) with e.g.
 /// [`tonic_reflection`](https://docs.rs/tonic-reflection).

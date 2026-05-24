@@ -14,7 +14,6 @@ pub use url::{parse_infused_nar_path, parse_urlsafe_proto, write_infused_nar_pat
 
 tonic::include_proto!("snix.castore.v1");
 
-#[cfg(feature = "tonic-reflection")]
 /// Compiled file descriptors for implementing [gRPC
 /// reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md) with e.g.
 /// [`tonic_reflection`](https://docs.rs/tonic-reflection).

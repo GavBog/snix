@@ -24,9 +24,5 @@ tracing.workspace = true
 default = ["otlp"]
 otlp = ["snix-tracing/otlp"]
 tracing-chrome = ["snix-tracing/chrome"]
-tonic-reflection = [
-  "dep:tonic-reflection",
-  "snix-build/tonic-reflection",
-  "snix-castore/tonic-reflection",
-]
+tonic-reflection = ["dep:tonic-reflection"]
 xp-store-composition-cli = ["snix-castore/xp-composition-cli"]

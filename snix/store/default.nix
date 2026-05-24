@@ -31,7 +31,6 @@
             "cloud"
             "fuse"
             "otlp"
-            "tonic-reflection"
             "xp-composition-cli"
           ]
           # virtiofs feature currently fails to build on Darwin
