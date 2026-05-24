@@ -10996,6 +10996,10 @@ rec {
             packageId = "clap";
           }
           {
+            name = "nix-compat";
+            packageId = "nix-compat";
+          }
+          {
             name = "nix-language-test-suite-common";
             packageId = "nix-language-test-suite-common";
           }

@@ -1,0 +1,16 @@
+lang {
+  builtins "path" "baseNameOf"
+}
+
+environment {
+  fixtures {
+    file "data" content="foo\n"
+    dir "dir1" {
+      file "a.nix" content="\"a\"\n"
+    }
+  }
+}
+
+runtime-opts {
+  eval-strict
+}

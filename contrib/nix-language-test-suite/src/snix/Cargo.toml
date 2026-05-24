@@ -12,6 +12,7 @@ snix-eval = { path = "../../../../snix/eval" }
 snix-glue = { path = "../../../../snix/glue" }
 snix-build = { path = "../../../../snix/build", default-features = false }
 snix-store = { path = "../../../../snix/store", default-features = false }
+nix-compat = { path = "../../../../snix/nix-compat" }
 clap = "4.6.1"
 
 [dependencies]

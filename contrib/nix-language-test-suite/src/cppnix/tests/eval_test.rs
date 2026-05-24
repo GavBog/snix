@@ -219,6 +219,12 @@ fn matches_expected_error(version: NixVersion, error_string: &str, expected: &Er
             _ => &["No such file or directory", "has an unsupported type"][..],
         },
         ErrorKind::TypeError => &["requires a function"][..],
+        ErrorKind::InvalidStorePath => match version {
+            NixVersion::CppNixLatest => &["is not a valid store path"][..],
+            NixVersion::CppNix23 => &["Path names are alphanumeric"],
+            NixVersion::LixLatest => &["store path"][..],
+        },
+        ErrorKind::HashMismatch => &["store path mismatch"][..],
     };
 
     must_contain.iter().any(|x| error_string.contains(x))

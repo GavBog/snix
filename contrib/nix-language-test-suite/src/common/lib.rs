@@ -72,6 +72,8 @@ pub enum ErrorKind {
     IO,
     NotCoercibleToString,
     TypeError,
+    InvalidStorePath,
+    HashMismatch,
 }
 
 impl std::str::FromStr for ErrorKind {
@@ -82,6 +84,8 @@ impl std::str::FromStr for ErrorKind {
             "IO" => Ok(ErrorKind::IO),
             "NotCoercibleToString" => Ok(ErrorKind::NotCoercibleToString),
             "TypeError" => Ok(ErrorKind::TypeError),
+            "InvalidStorePath" => Ok(ErrorKind::InvalidStorePath),
+            "HashMismatch" => Ok(ErrorKind::HashMismatch),
             other => Err(format!("unknown error kind: {other}")),
         }
     }

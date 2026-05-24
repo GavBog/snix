@@ -1,0 +1,15 @@
+lang {
+  builtins "path"
+}
+
+environment {
+  fixtures {
+    dir "te st dir" {
+      file "test" content=""
+    }
+  }
+}
+
+runtime-opts {
+  eval-strict
+}

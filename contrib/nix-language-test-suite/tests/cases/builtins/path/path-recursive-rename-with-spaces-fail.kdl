@@ -1,0 +1,9 @@
+lang {
+  builtins "path"
+}
+
+environment {
+  fixtures {
+    file "te st" content=""
+  }
+}

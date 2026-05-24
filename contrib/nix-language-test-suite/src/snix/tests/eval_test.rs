@@ -13,6 +13,7 @@ use nix_language_test_suite_common::{
 use serde::Deserialize;
 use snix_build::buildservice::DummyBuildService;
 use snix_eval::{EvalIO, EvalMode, Evaluation, Value};
+use snix_glue::builtins::ImportError;
 use snix_glue::{
     builtins::{add_derivation_builtins, add_fetcher_builtins, add_import_builtins},
     configure_nix_path,
@@ -205,6 +206,22 @@ fn matches_expected_error(result: &snix_eval::EvaluationResult, exp_kind: &Error
             matches!(snix_kind, snix_eval::ErrorKind::NotCoercibleToString { .. })
         }
         ErrorKind::TypeError => matches!(snix_kind, snix_eval::ErrorKind::TypeError { .. }),
+        ErrorKind::HashMismatch => {
+            let snix_eval::ErrorKind::SnixError(err) = snix_kind else {
+                return false;
+            };
+            matches!(
+                err.downcast_ref::<ImportError>(),
+                Some(ImportError::HashMismatch(..))
+            )
+        }
+        ErrorKind::InvalidStorePath => {
+            let snix_eval::ErrorKind::SnixError(err) = snix_kind else {
+                return false;
+            };
+            err.downcast_ref::<nix_compat::store_path::Error>()
+                .is_some()
+        }
     }
 }
 
