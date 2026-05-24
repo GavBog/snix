@@ -17688,14 +17688,6 @@ rec {
             packageId = "bytes";
           }
           {
-            name = "clap";
-            packageId = "clap";
-            features = [
-              "derive"
-              "env"
-            ];
-          }
-          {
             name = "data-encoding";
             packageId = "data-encoding";
           }
@@ -17706,10 +17698,6 @@ rec {
           {
             name = "itertools";
             packageId = "itertools 0.12.1";
-          }
-          {
-            name = "mimalloc";
-            packageId = "mimalloc";
           }
           {
             name = "nix";
