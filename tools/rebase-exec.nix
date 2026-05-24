@@ -1,4 +1,4 @@
-{ pkgs, depot, ... }:
+{ pkgs, ... }:
 
 # Run a command for each commit since canon and include the files it changes in
 # the commit
