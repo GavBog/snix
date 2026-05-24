@@ -423,9 +423,9 @@ rec {
       };
       "astral-tokio-tar" = rec {
         crateName = "astral-tokio-tar";
-        version = "0.5.6";
+        version = "0.6.2";
         edition = "2021";
-        sha256 = "1rdvgsxmpb7acg8591437hwddcydgm6fgjz2w511x6vnq439l5zc";
+        sha256 = "0xq2p64x75zfmhz4vrlp1iwip5plfv1jp0v7n1avy0sax2mafl6b";
         libName = "tokio_tar";
         authors = [
           "Alex Crichton <alex@alexcrichton.com>"
