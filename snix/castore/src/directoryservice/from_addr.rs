@@ -13,7 +13,7 @@ use super::DirectoryService;
 /// The following URIs are supported:
 /// - `redb+memory:`
 ///   Uses a in-memory implementation.
-/// - `redb:///absolute/path/to/somewhere`
+/// - `redb:/absolute/path/to/somewhere`
 ///   Uses redb, using a path on the disk for persistency. Can be only opened
 ///   from one process at the same time.
 /// - `grpc+unix:///absolute/path/to/somewhere`

@@ -12,7 +12,7 @@ use url::Url;
 /// The following URIs are supported:
 /// - `redb+memory:`
 ///   Uses a in-memory implementation.
-/// - `redb:///absolute/path/to/somewhere`
+/// - `redb:/absolute/path/to/somewhere`
 ///   Uses redb, using a path on the disk for persistency. Can be only opened
 ///   from one process at the same time.
 /// - `nix+https://cache.nixos.org?trusted_public_keys[0]=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=`

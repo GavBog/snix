@@ -36,8 +36,8 @@ Now, spin up snix-daemon, connecting to some (local) backends:
 ```
 snix store daemon \
   --blob-service-addr=objectstore+file://$PWD/blobs \
-  --directory-service-addr=redb://$PWD/directories.redb \
-  --path-info-service-addr=redb://$PWD/pathinfo.redb &
+  --directory-service-addr=redb:$PWD/directories.redb \
+  --path-info-service-addr=redb:$PWD/pathinfo.redb &
 ```
 
 Copy some data into snix-store (we use `nar-bridge` for this for now):
@@ -58,8 +58,8 @@ In case you want to have `snix store virtiofs` open the stores directly, kill
 ```
 pkill snix-store
 export BLOB_SERVICE_ADDR=objectstore+file://$PWD/blobs
-export DIRECTORY_SERVICE_ADDR=redb://$PWD/directories.redb
-export PATH_INFO_SERVICE_ADDR=redb://$PWD/pathinfo.redb
+export DIRECTORY_SERVICE_ADDR=redb:$PWD/directories.redb
+export PATH_INFO_SERVICE_ADDR=redb:$PWD/pathinfo.redb
 ```
 
 #### Interactive shell
