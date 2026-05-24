@@ -22059,11 +22059,6 @@ rec {
             ];
           }
           {
-            name = "tonic-health";
-            packageId = "tonic-health";
-            usesDefaultFeatures = false;
-          }
-          {
             name = "tonic-prost";
             packageId = "tonic-prost";
           }
@@ -22071,11 +22066,6 @@ rec {
             name = "tower";
             packageId = "tower 0.4.13";
             features = [ "util" ];
-          }
-          {
-            name = "tower-http";
-            packageId = "tower-http";
-            features = [ "trace" ];
           }
           {
             name = "tracing";

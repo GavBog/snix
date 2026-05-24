@@ -50,10 +50,8 @@ tokio-tar.workspace = true
 tokio-util = { workspace = true, features = ["io", "io-util", "codec"] }
 toml = { version = "0.8.19", optional = true }
 tonic.workspace = true
-tonic-health.workspace = true
 tonic-prost.workspace = true
 tower = { workspace = true, features = ["util"] }
-tower-http = { workspace = true, features = ["trace"] }
 tracing.workspace = true
 tracing-indicatif.workspace = true
 url.workspace = true
@@ -121,3 +119,6 @@ features = [
   "xp-composition-cli",
   "xp-composition-url-refs",
 ]
+
+[package.metadata.cargo-machete]
+ignored = ["tonic-prost"]
