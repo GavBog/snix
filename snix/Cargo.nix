@@ -23575,10 +23575,6 @@ rec {
         libName = "snix_store";
         dependencies = [
           {
-            name = "anyhow";
-            packageId = "anyhow";
-          }
-          {
             name = "async-compression";
             packageId = "async-compression";
             features = [
@@ -23601,14 +23597,6 @@ rec {
             name = "bigtable_rs";
             packageId = "bigtable_rs";
             optional = true;
-          }
-          {
-            name = "blake3";
-            packageId = "blake3";
-            features = [
-              "rayon"
-              "std"
-            ];
           }
           {
             name = "bstr";
@@ -23639,10 +23627,6 @@ rec {
             packageId = "ed25519";
           }
           {
-            name = "ed25519-dalek";
-            packageId = "ed25519-dalek";
-          }
-          {
             name = "futures";
             packageId = "futures";
           }
@@ -23659,20 +23643,12 @@ rec {
             packageId = "md-5";
           }
           {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
-          {
             name = "nix-compat";
             packageId = "nix-compat";
             features = [
               "async"
               "serde"
             ];
-          }
-          {
-            name = "parking_lot";
-            packageId = "parking_lot";
           }
           {
             name = "pin-project-lite";
@@ -23780,22 +23756,12 @@ rec {
             ];
           }
           {
-            name = "tonic-health";
-            packageId = "tonic-health";
-            usesDefaultFeatures = false;
-          }
-          {
             name = "tonic-prost";
             packageId = "tonic-prost";
           }
           {
             name = "tower";
             packageId = "tower 0.4.13";
-          }
-          {
-            name = "tower-http";
-            packageId = "tower-http";
-            features = [ "trace" ];
           }
           {
             name = "tracing";
@@ -23809,10 +23775,6 @@ rec {
             name = "url";
             packageId = "url";
             features = [ "serde" ];
-          }
-          {
-            name = "walkdir";
-            packageId = "walkdir";
           }
         ];
         buildDependencies = [

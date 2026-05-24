@@ -4162,25 +4162,20 @@ dependencies = [
 name = "snix-store"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "async-compression",
  "async-stream",
  "auto_impl",
- "blake3",
  "bstr",
  "bytes",
  "clap",
  "count-write",
  "data-encoding",
  "ed25519",
- "ed25519-dalek",
  "futures",
  "hyper-util",
  "lru",
  "md-5",
- "mimalloc",
  "nix-compat",
- "parking_lot",
  "pin-project-lite",
  "prost",
  "redb",
@@ -4199,15 +4194,12 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tonic",
- "tonic-health",
  "tonic-prost",
  "tonic-prost-build",
  "tower 0.4.13",
- "tower-http",
  "tracing",
  "tracing-indicatif",
  "url",
- "walkdir",
 ]
 
 [[package]]
@@ -4584,7 +4576,6 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
- "tokio-util",
 ]
 
 [[package]]
@@ -4730,19 +4721,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tonic-health"
-version = "0.14.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcfab99db777fba2802f0dfa861d1628d1ae916fb199d29819941f139ae85082"
-dependencies = [
- "prost",
- "tokio",
- "tokio-stream",
- "tonic",
- "tonic-prost",
-]
-
-[[package]]
 name = "tonic-prost"
 version = "0.14.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4818,7 +4796,6 @@ dependencies = [
  "tower 0.5.3",
  "tower-layer",
  "tower-service",
- "tracing",
  "url",
 ]
 

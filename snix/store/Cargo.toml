@@ -5,7 +5,6 @@ edition = "2024"
 rust-version.workspace = true
 
 [dependencies]
-anyhow.workspace = true
 async-compression = { workspace = true, features = [
   "tokio",
   "bzip2",
@@ -14,14 +13,12 @@ async-compression = { workspace = true, features = [
   "zstd",
 ] }
 async-stream.workspace = true
-blake3 = { workspace = true, features = ["rayon", "std"] }
 bstr.workspace = true
 bytes.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 count-write.workspace = true
 data-encoding.workspace = true
 ed25519.workspace = true
-ed25519-dalek.workspace = true
 futures.workspace = true
 nix-compat = { path = "../nix-compat", features = ["async", "serde"] }
 pin-project-lite.workspace = true
@@ -46,22 +43,17 @@ tokio-util = { workspace = true, features = ["io", "io-util", "compat"] }
 tonic.workspace = true
 tonic-prost.workspace = true
 tower.workspace = true
-tower-http = { workspace = true, features = ["trace"] }
 snix-castore = { path = "../castore" }
 url = { workspace = true, features = ["serde"] }
-walkdir.workspace = true
 reqwest = { workspace = true, features = ["stream"] }
 reqwest-middleware.workspace = true
 lru.workspace = true
-parking_lot.workspace = true
 snix-tracing = { path = "../tracing", features = ["clap", "reqwest", "tonic"] }
 tracing.workspace = true
 tracing-indicatif.workspace = true
 hyper-util.workspace = true
 toml = { version = "0.8.19", optional = true }
-tonic-health.workspace = true
 redb = { workspace = true, features = ["logging"] }
-mimalloc.workspace = true
 bigtable_rs = { workspace = true, optional = true }
 auto_impl = "1.2.0"
 
@@ -95,3 +87,6 @@ integration = []
 [package.metadata.docs.rs]
 # Everything but virtiofs since that doesn't build on MacOS
 features = ["cloud", "fuse", "xp-composition-cli"]
+
+[package.metadata.cargo-machete]
+ignored = ["md-5", "tonic-prost"]

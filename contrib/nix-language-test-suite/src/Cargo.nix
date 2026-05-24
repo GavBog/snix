@@ -18439,10 +18439,6 @@ rec {
         libName = "snix_store";
         dependencies = [
           {
-            name = "anyhow";
-            packageId = "anyhow";
-          }
-          {
             name = "async-compression";
             packageId = "async-compression";
             features = [
@@ -18460,14 +18456,6 @@ rec {
           {
             name = "auto_impl";
             packageId = "auto_impl";
-          }
-          {
-            name = "blake3";
-            packageId = "blake3";
-            features = [
-              "rayon"
-              "std"
-            ];
           }
           {
             name = "bstr";
@@ -18498,10 +18486,6 @@ rec {
             packageId = "ed25519";
           }
           {
-            name = "ed25519-dalek";
-            packageId = "ed25519-dalek";
-          }
-          {
             name = "futures";
             packageId = "futures";
           }
@@ -18518,20 +18502,12 @@ rec {
             packageId = "md-5";
           }
           {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
-          {
             name = "nix-compat";
             packageId = "nix-compat";
             features = [
               "async"
               "serde"
             ];
-          }
-          {
-            name = "parking_lot";
-            packageId = "parking_lot";
           }
           {
             name = "pin-project-lite";
@@ -18634,22 +18610,12 @@ rec {
             ];
           }
           {
-            name = "tonic-health";
-            packageId = "tonic-health";
-            usesDefaultFeatures = false;
-          }
-          {
             name = "tonic-prost";
             packageId = "tonic-prost";
           }
           {
             name = "tower";
             packageId = "tower 0.4.13";
-          }
-          {
-            name = "tower-http";
-            packageId = "tower-http";
-            features = [ "trace" ];
           }
           {
             name = "tracing";
@@ -18663,10 +18629,6 @@ rec {
             name = "url";
             packageId = "url";
             features = [ "serde" ];
-          }
-          {
-            name = "walkdir";
-            packageId = "walkdir";
           }
         ];
         buildDependencies = [
@@ -20095,11 +20057,6 @@ rec {
             packageId = "tokio";
             features = [ "sync" ];
           }
-          {
-            name = "tokio-util";
-            packageId = "tokio-util";
-            optional = true;
-          }
         ];
         devDependencies = [
           {
@@ -20136,9 +20093,7 @@ rec {
           "default"
           "fs"
           "net"
-          "sync"
           "time"
-          "tokio-util"
         ];
       };
       "tokio-util" = rec {
@@ -20844,55 +20799,6 @@ rec {
         };
         resolvedDefaultFeatures = [ "transport" ];
       };
-      "tonic-health" = rec {
-        crateName = "tonic-health";
-        version = "0.14.6";
-        edition = "2024";
-        sha256 = "10jhx2d167wl36cd56didy8sxl982qfqdyhd5y0a5yvpnyfvkypw";
-        libName = "tonic_health";
-        authors = [
-          "James Nugent <james@jen20.com>"
-        ];
-        dependencies = [
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [ "sync" ];
-          }
-          {
-            name = "tokio-stream";
-            packageId = "tokio-stream";
-            usesDefaultFeatures = false;
-            features = [ "sync" ];
-          }
-          {
-            name = "tonic";
-            packageId = "tonic";
-            usesDefaultFeatures = false;
-            features = [ "codegen" ];
-          }
-          {
-            name = "tonic-prost";
-            packageId = "tonic-prost";
-            usesDefaultFeatures = false;
-          }
-        ];
-        devDependencies = [
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [
-              "rt-multi-thread"
-              "macros"
-            ];
-          }
-        ];
-
-      };
       "tonic-prost" = rec {
         crateName = "tonic-prost";
         version = "0.14.6";
@@ -21438,12 +21344,6 @@ rec {
             packageId = "tower-service";
           }
           {
-            name = "tracing";
-            packageId = "tracing";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
-          {
             name = "url";
             packageId = "url";
             optional = true;
@@ -21649,12 +21549,9 @@ rec {
           "validate-request" = [ "mime" ];
         };
         resolvedDefaultFeatures = [
-          "default"
           "follow-redirect"
           "futures-util"
           "tower"
-          "trace"
-          "tracing"
         ];
       };
       "tower-layer" = rec {
