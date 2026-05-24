@@ -487,7 +487,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.60.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_System_Console"
@@ -515,7 +515,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.60.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_System_Console"
@@ -1222,9 +1222,9 @@ rec {
       };
       "aws-config" = rec {
         crateName = "aws-config";
-        version = "1.8.15";
+        version = "1.8.17";
         edition = "2021";
-        sha256 = "1g3x0jzw2v45mkg9lh654hcsk6sjvnba116jibxp0chlml5knj8i";
+        sha256 = "18ipmp36k6xyq72fdr6s5x0jh8rpq7hsbnnn4gp1b45xv1ia0yji";
         libName = "aws_config";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -1278,6 +1278,10 @@ rec {
             name = "aws-smithy-runtime-api";
             packageId = "aws-smithy-runtime-api";
             features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-schema";
+            packageId = "aws-smithy-schema";
           }
           {
             name = "aws-smithy-types";
@@ -1546,9 +1550,9 @@ rec {
       };
       "aws-runtime" = rec {
         crateName = "aws-runtime";
-        version = "1.7.2";
+        version = "1.7.4";
         edition = "2021";
-        sha256 = "05wdp71rs6fzbrhlgmq3k3hkd6aap1h14g0m8wp21173awf6bh2z";
+        sha256 = "0rhmf8r3m0mv1wcjq9mlh2bixxv3wrzn85czmn827p6jaa68xvbp";
         libName = "aws_runtime";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -1676,9 +1680,9 @@ rec {
       };
       "aws-sdk-sso" = rec {
         crateName = "aws-sdk-sso";
-        version = "1.97.0";
+        version = "1.99.0";
         edition = "2021";
-        sha256 = "0rr57z58am10kf7va3w1y2p1pz37ca6b5bxylsm1ql44w5lwdbcs";
+        sha256 = "0iabn2h7jisrc747b4l004b6qc6fzyzrn3fwmdjc4blv17k5ah4z";
         libName = "aws_sdk_sso";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -1784,9 +1788,9 @@ rec {
       };
       "aws-sdk-ssooidc" = rec {
         crateName = "aws-sdk-ssooidc";
-        version = "1.99.0";
+        version = "1.101.0";
         edition = "2021";
-        sha256 = "1a5hzhmhnw263p6593c47674axg8ah5pl06jmvh3v39mizdsfhhk";
+        sha256 = "166md0xcpbjdg6jvfha0dxrgb2diqpfb9msz8abddic40ax0kw02";
         libName = "aws_sdk_ssooidc";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -1892,9 +1896,9 @@ rec {
       };
       "aws-sdk-sts" = rec {
         crateName = "aws-sdk-sts";
-        version = "1.101.0";
+        version = "1.104.0";
         edition = "2021";
-        sha256 = "12j2ijkipsk3d6g29pg1hwrfi4ashhbnlbc0xazcl7h5wijashdb";
+        sha256 = "114z5hpsxd1slmj38d28rlvcfwa7vn2j0mlhnrv6m7p1k0kn59ka";
         libName = "aws_sdk_sts";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -2014,6 +2018,7 @@ rec {
         ];
         features = {
           "default" = [
+            "sigv4a"
             "rustls"
             "default-https-client"
             "rt-tokio"
@@ -2024,6 +2029,7 @@ rec {
             "aws-smithy-types/rt-tokio"
           ];
           "rustls" = [ "aws-smithy-runtime/tls-rustls" ];
+          "sigv4a" = [ "aws-runtime/sigv4a" ];
           "test-util" = [
             "aws-credential-types/test-util"
             "aws-smithy-runtime/test-util"
@@ -2032,9 +2038,9 @@ rec {
       };
       "aws-sigv4" = rec {
         crateName = "aws-sigv4";
-        version = "1.4.2";
+        version = "1.4.4";
         edition = "2021";
-        sha256 = "1x6inl28qk6a9i5j0s2zy3yl8iw53wgy4y3pg4isp0v6780n1dmh";
+        sha256 = "19g9xxhyqfmlcwb5zb7lg5ld74l7zilqmgzzcnn7915k32wky25p";
         libName = "aws_sigv4";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -2093,7 +2099,7 @@ rec {
           }
           {
             name = "sha2";
-            packageId = "sha2";
+            packageId = "sha2 0.11.0";
           }
           {
             name = "time";
@@ -2149,7 +2155,6 @@ rec {
             "dep:crypto-bigint"
             "dep:subtle"
             "dep:zeroize"
-            "dep:ring"
           ];
         };
         resolvedDefaultFeatures = [
@@ -2539,15 +2544,24 @@ rec {
       };
       "aws-smithy-json" = rec {
         crateName = "aws-smithy-json";
-        version = "0.62.5";
+        version = "0.62.6";
         edition = "2021";
-        sha256 = "0sl553j1frrnd3vgprfy7a71ybc238mavijj822dvvm2haxv0j4n";
+        sha256 = "1xgazg8jas91jvrwksk8w6rbpfrrn668h0iybbf4maqqbwh8jw2i";
         libName = "aws_smithy_json";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
           "John DiSanti <jdisanti@amazon.com>"
         ];
         dependencies = [
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-schema";
+            packageId = "aws-smithy-schema";
+          }
           {
             name = "aws-smithy-types";
             packageId = "aws-smithy-types";
@@ -2597,9 +2611,9 @@ rec {
       };
       "aws-smithy-runtime" = rec {
         crateName = "aws-smithy-runtime";
-        version = "1.10.3";
+        version = "1.11.3";
         edition = "2021";
-        sha256 = "0411mz9d3nky19ljgwqwlxrwyhx6qkpgjckjd65dabrddl2rk282";
+        sha256 = "10i1sgibk600zbldnv222f8dmz3whnsilm064a66za7yyv5gbrmq";
         libName = "aws_smithy_runtime";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -2626,6 +2640,10 @@ rec {
           {
             name = "aws-smithy-runtime-api";
             packageId = "aws-smithy-runtime-api";
+          }
+          {
+            name = "aws-smithy-schema";
+            packageId = "aws-smithy-schema";
           }
           {
             name = "aws-smithy-types";
@@ -2762,9 +2780,9 @@ rec {
       };
       "aws-smithy-runtime-api" = rec {
         crateName = "aws-smithy-runtime-api";
-        version = "1.11.6";
+        version = "1.12.1";
         edition = "2021";
-        sha256 = "1rkr79rw6wjj2y5jc2fsmcywc7p294q0ly1bl15vm4cpqb4v6sl7";
+        sha256 = "0ckcfypk6fgqk5wifwnignnsf9mcx40gcj9z18macffgkqbpq4fw";
         libName = "aws_smithy_runtime_api";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -2774,6 +2792,10 @@ rec {
           {
             name = "aws-smithy-async";
             packageId = "aws-smithy-async";
+          }
+          {
+            name = "aws-smithy-runtime-api-macros";
+            packageId = "aws-smithy-runtime-api-macros";
           }
           {
             name = "aws-smithy-types";
@@ -2839,11 +2861,65 @@ rec {
           "test-util"
         ];
       };
+      "aws-smithy-runtime-api-macros" = rec {
+        crateName = "aws-smithy-runtime-api-macros";
+        version = "1.0.0";
+        edition = "2021";
+        sha256 = "1dx7m2lcg329bwxyqmafjdsd7fkinvn8gsb0wii9wn00jpyrcwwd";
+        procMacro = true;
+        libName = "aws_smithy_runtime_api_macros";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "proc-macro2";
+            packageId = "proc-macro2";
+          }
+          {
+            name = "quote";
+            packageId = "quote";
+          }
+          {
+            name = "syn";
+            packageId = "syn 2.0.117";
+            features = [ "full" ];
+          }
+        ];
+
+      };
+      "aws-smithy-schema" = rec {
+        crateName = "aws-smithy-schema";
+        version = "0.1.0";
+        edition = "2021";
+        sha256 = "1xclkkh4mlr8jvlzb3ix140slmk70iy102hlg21fpw1qhckcnhkl";
+        libName = "aws_smithy_schema";
+        authors = [
+          "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
+        ];
+        dependencies = [
+          {
+            name = "aws-smithy-runtime-api";
+            packageId = "aws-smithy-runtime-api";
+            features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-types";
+            packageId = "aws-smithy-types";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "http";
+            packageId = "http 1.4.0";
+          }
+        ];
+
+      };
       "aws-smithy-types" = rec {
         crateName = "aws-smithy-types";
-        version = "1.4.7";
+        version = "1.4.8";
         edition = "2021";
-        sha256 = "0p69816m27cfznmn18q96n179ljqp607c4s5j1xwajwfmbxxnwwx";
+        sha256 = "02q5lklvlnyxz876b7a760sqm3xm5r0bn19b3q6cr09grvdncsq5";
         libName = "aws_smithy_types";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -2979,9 +3055,9 @@ rec {
       };
       "aws-types" = rec {
         crateName = "aws-types";
-        version = "1.3.14";
+        version = "1.3.16";
         edition = "2021";
-        sha256 = "1nb2b5rdhk9pz21chmwr2zymivydx4d0a4rwbf6kr6yxk4v35j27";
+        sha256 = "0cc50v5pgh6ldg8zm02fgnggwgw79sbcsivx7dmixh530c5z2syi";
         libName = "aws_types";
         authors = [
           "AWS Rust SDK Team <aws-sdk-rust@amazon.com>"
@@ -3000,6 +3076,10 @@ rec {
             name = "aws-smithy-runtime-api";
             packageId = "aws-smithy-runtime-api";
             features = [ "client" ];
+          }
+          {
+            name = "aws-smithy-schema";
+            packageId = "aws-smithy-schema";
           }
           {
             name = "aws-smithy-types";
@@ -4272,7 +4352,7 @@ rec {
           }
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
             optional = true;
             features = [ "mac" ];
           }
@@ -4310,7 +4390,7 @@ rec {
           "traits-preview"
         ];
       };
-      "block-buffer" = rec {
+      "block-buffer 0.10.4" = rec {
         crateName = "block-buffer";
         version = "0.10.4";
         edition = "2018";
@@ -4326,6 +4406,25 @@ rec {
           }
         ];
 
+      };
+      "block-buffer 0.12.0" = rec {
+        crateName = "block-buffer";
+        version = "0.12.0";
+        edition = "2024";
+        sha256 = "1glh8w49a7cj0wlkalyn9j605jzf2ss0lg8dqq5xh8cr2q451lyd";
+        libName = "block_buffer";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "hybrid-array";
+            packageId = "hybrid-array";
+          }
+        ];
+        features = {
+          "zeroize" = [ "dep:zeroize" ];
+        };
       };
       "blocking" = rec {
         crateName = "blocking";
@@ -5107,6 +5206,16 @@ rec {
         ];
 
       };
+      "cmov" = rec {
+        crateName = "cmov";
+        version = "0.5.3";
+        edition = "2024";
+        sha256 = "0ipp2fzpcz2z9l4ywks98bd1viwpw81lfd5pdj3sdi0z04ys921z";
+        authors = [
+          "RustCrypto Developers"
+        ];
+
+      };
       "codemap" = rec {
         crateName = "codemap";
         version = "0.1.3";
@@ -5430,7 +5539,20 @@ rec {
           "unicode-width"
         ];
       };
-      "const-oid" = rec {
+      "const-oid 0.10.2" = rec {
+        crateName = "const-oid";
+        version = "0.10.2";
+        edition = "2024";
+        sha256 = "0p7m286mp8aai4sa72g7ji6qm0d4ns8wg4i4b2hj9p9615zm3vx6";
+        libName = "const_oid";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        features = {
+          "arbitrary" = [ "dep:arbitrary" ];
+        };
+      };
+      "const-oid 0.9.6" = rec {
         crateName = "const-oid";
         version = "0.9.6";
         edition = "2021";
@@ -5636,7 +5758,7 @@ rec {
           "rustc-hash" = [ "dep:rustc-hash" ];
         };
       };
-      "cpufeatures" = rec {
+      "cpufeatures 0.2.17" = rec {
         crateName = "cpufeatures";
         version = "0.2.17";
         edition = "2018";
@@ -5650,6 +5772,48 @@ rec {
             packageId = "libc";
             usesDefaultFeatures = false;
             target = { target, features }: (target.name == "aarch64-linux-android");
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+            target =
+              { target, features }: (("aarch64" == target."arch" or null) && ("linux" == target."os" or null));
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              (("aarch64" == target."arch" or null) && ("apple" == target."vendor" or null));
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+            target =
+              { target, features }:
+              (("loongarch64" == target."arch" or null) && ("linux" == target."os" or null));
+          }
+        ];
+
+      };
+      "cpufeatures 0.3.0" = rec {
+        crateName = "cpufeatures";
+        version = "0.3.0";
+        edition = "2024";
+        sha256 = "00fjhygsqmh4kbxxlb99mcsbspxcai6hjydv4c46pwb67wwl2alb";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+            target =
+              { target, features }: (("aarch64" == target."arch" or null) && ("android" == target."os" or null));
           }
           {
             name = "libc";
@@ -5959,7 +6123,7 @@ rec {
           "limit_128"
         ];
       };
-      "crypto-common" = rec {
+      "crypto-common 0.1.7" = rec {
         crateName = "crypto-common";
         version = "0.1.7";
         edition = "2018";
@@ -5985,6 +6149,48 @@ rec {
         };
         resolvedDefaultFeatures = [ "std" ];
       };
+      "crypto-common 0.2.2" = rec {
+        crateName = "crypto-common";
+        version = "0.2.2";
+        edition = "2024";
+        sha256 = "0lql5wjlrjkd3r0w32rwbgqfmgg84ms3h65ldnlckmkc3nb4qvnf";
+        libName = "crypto_common";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "hybrid-array";
+            packageId = "hybrid-array";
+          }
+        ];
+        features = {
+          "getrandom" = [
+            "rand_core"
+            "dep:getrandom"
+          ];
+          "rand_core" = [ "dep:rand_core" ];
+          "zeroize" = [ "hybrid-array/zeroize" ];
+        };
+      };
+      "ctutils" = rec {
+        crateName = "ctutils";
+        version = "0.4.2";
+        edition = "2024";
+        sha256 = "17m2s9jv7i780k26cq2fcyslg0pakv9plwdrmygdwha1hfiiambx";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "cmov";
+            packageId = "cmov";
+          }
+        ];
+        features = {
+          "subtle" = [ "dep:subtle" ];
+        };
+      };
       "curve25519-dalek" = rec {
         crateName = "curve25519-dalek";
         version = "4.1.3";
@@ -6002,7 +6208,7 @@ rec {
           }
           {
             name = "cpufeatures";
-            packageId = "cpufeatures";
+            packageId = "cpufeatures 0.2.17";
             target = { target, features }: ("x86_64" == target."arch" or null);
           }
           {
@@ -6018,7 +6224,7 @@ rec {
           }
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -6332,7 +6538,7 @@ rec {
         dependencies = [
           {
             name = "const-oid";
-            packageId = "const-oid";
+            packageId = "const-oid 0.9.6";
             optional = true;
           }
           {
@@ -6524,7 +6730,7 @@ rec {
         ];
 
       };
-      "digest" = rec {
+      "digest 0.10.7" = rec {
         crateName = "digest";
         version = "0.10.7";
         edition = "2018";
@@ -6535,12 +6741,12 @@ rec {
         dependencies = [
           {
             name = "block-buffer";
-            packageId = "block-buffer";
+            packageId = "block-buffer 0.10.4";
             optional = true;
           }
           {
             name = "crypto-common";
-            packageId = "crypto-common";
+            packageId = "crypto-common 0.1.7";
           }
           {
             name = "subtle";
@@ -6573,6 +6779,61 @@ rec {
           "mac"
           "std"
           "subtle"
+        ];
+      };
+      "digest 0.11.3" = rec {
+        crateName = "digest";
+        version = "0.11.3";
+        edition = "2024";
+        sha256 = "1hnmhd4rkybr11292w42pz9ppzx1h49glrhqg107k4s1b2xnvpgi";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "block-buffer";
+            packageId = "block-buffer 0.12.0";
+            optional = true;
+          }
+          {
+            name = "const-oid";
+            packageId = "const-oid 0.10.2";
+            optional = true;
+          }
+          {
+            name = "crypto-common";
+            packageId = "crypto-common 0.2.2";
+            rename = "common";
+          }
+          {
+            name = "ctutils";
+            packageId = "ctutils";
+            optional = true;
+          }
+        ];
+        features = {
+          "blobby" = [ "dep:blobby" ];
+          "block-api" = [ "dep:block-buffer" ];
+          "default" = [ "block-api" ];
+          "dev" = [ "blobby" ];
+          "getrandom" = [
+            "common/getrandom"
+            "rand_core"
+          ];
+          "mac" = [ "dep:ctutils" ];
+          "oid" = [ "dep:const-oid" ];
+          "rand_core" = [ "common/rand_core" ];
+          "zeroize" = [
+            "dep:zeroize"
+            "block-buffer?/zeroize"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "alloc"
+          "block-api"
+          "default"
+          "mac"
+          "oid"
         ];
       };
       "dirs" = rec {
@@ -6798,7 +7059,7 @@ rec {
           }
           {
             name = "sha2";
-            packageId = "sha2";
+            packageId = "sha2 0.10.9";
             usesDefaultFeatures = false;
           }
           {
@@ -7137,7 +7398,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -9323,28 +9584,28 @@ rec {
       };
       "hmac" = rec {
         crateName = "hmac";
-        version = "0.12.1";
-        edition = "2018";
-        sha256 = "0pmbr069sfg76z7wsssfk5ddcqd9ncp79fyz6zcm6yn115yc6jbc";
+        version = "0.13.0";
+        edition = "2024";
+        sha256 = "0gw6avmix6ah63lf70dapxhml4dlcakl9f2lnm6b0hdf6abvq0v3";
         authors = [
           "RustCrypto Developers"
         ];
         dependencies = [
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.11.3";
             features = [ "mac" ];
           }
         ];
         devDependencies = [
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.11.3";
             features = [ "dev" ];
           }
         ];
         features = {
-          "std" = [ "digest/std" ];
+          "zeroize" = [ "digest/zeroize" ];
         };
       };
       "home" = rec {
@@ -9545,6 +9806,32 @@ rec {
         edition = "2021";
         sha256 = "092lpipp32ayz4kyyn4k3vz59j9blng36wprm5by0g2ykqr14nqk";
         features = {
+        };
+      };
+      "hybrid-array" = rec {
+        crateName = "hybrid-array";
+        version = "0.4.12";
+        edition = "2024";
+        sha256 = "1njpm3mmsb6lgr9nn97ld5aavwjzrvijjb4nav0anhnimf1aamci";
+        libName = "hybrid_array";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "typenum";
+            packageId = "typenum";
+            features = [ "const-generics" ];
+          }
+        ];
+        features = {
+          "arbitrary" = [ "dep:arbitrary" ];
+          "bytemuck" = [ "dep:bytemuck" ];
+          "ctutils" = [ "dep:ctutils" ];
+          "serde" = [ "dep:serde" ];
+          "subtle" = [ "dep:subtle" ];
+          "zerocopy" = [ "dep:zerocopy" ];
+          "zeroize" = [ "dep:zeroize" ];
         };
       };
       "hyper" = rec {
@@ -9949,7 +10236,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.3";
+            packageId = "socket2 0.5.10";
             optional = true;
             features = [ "all" ];
           }
@@ -10899,7 +11186,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -12017,13 +12304,13 @@ rec {
           }
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
           }
         ];
         devDependencies = [
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
             features = [ "dev" ];
           }
         ];
@@ -12546,7 +12833,7 @@ rec {
           }
           {
             name = "sha2";
-            packageId = "sha2";
+            packageId = "sha2 0.10.9";
           }
           {
             name = "tracing-test";
@@ -12977,7 +13264,7 @@ rec {
           }
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
             optional = true;
           }
           {
@@ -13040,7 +13327,7 @@ rec {
           }
           {
             name = "sha2";
-            packageId = "sha2";
+            packageId = "sha2 0.10.9";
           }
           {
             name = "thiserror";
@@ -13424,7 +13711,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             rename = "windows";
             target = { target, features }: (target."windows" or false);
             features = [
@@ -16576,7 +16863,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.3";
+            packageId = "socket2 0.5.10";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -16848,7 +17135,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.6.3";
+            packageId = "socket2 0.5.10";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -19513,7 +19800,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -19926,7 +20213,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -21116,7 +21403,7 @@ rec {
           }
           {
             name = "cpufeatures";
-            packageId = "cpufeatures";
+            packageId = "cpufeatures 0.2.17";
             target =
               { target, features }:
               (
@@ -21127,13 +21414,13 @@ rec {
           }
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
           }
         ];
         devDependencies = [
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
             features = [ "dev" ];
           }
         ];
@@ -21149,7 +21436,7 @@ rec {
           "std"
         ];
       };
-      "sha2" = rec {
+      "sha2 0.10.9" = rec {
         crateName = "sha2";
         version = "0.10.9";
         edition = "2018";
@@ -21164,7 +21451,7 @@ rec {
           }
           {
             name = "cpufeatures";
-            packageId = "cpufeatures";
+            packageId = "cpufeatures 0.2.17";
             target =
               { target, features }:
               (
@@ -21175,13 +21462,13 @@ rec {
           }
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
           }
         ];
         devDependencies = [
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
             features = [ "dev" ];
           }
         ];
@@ -21196,6 +21483,57 @@ rec {
         resolvedDefaultFeatures = [
           "default"
           "std"
+        ];
+      };
+      "sha2 0.11.0" = rec {
+        crateName = "sha2";
+        version = "0.11.0";
+        edition = "2024";
+        sha256 = "1x15x22c5yf54ac0np5bfqnq5x0hdw4wqzpi48zwn94ma0bsfss4";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "cfg-if";
+            packageId = "cfg-if";
+          }
+          {
+            name = "cpufeatures";
+            packageId = "cpufeatures 0.3.0";
+            target =
+              { target, features }:
+              (
+                ("aarch64" == target."arch" or null)
+                || ("x86_64" == target."arch" or null)
+                || ("x86" == target."arch" or null)
+              );
+          }
+          {
+            name = "digest";
+            packageId = "digest 0.11.3";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "digest";
+            packageId = "digest 0.11.3";
+            features = [ "dev" ];
+          }
+        ];
+        features = {
+          "alloc" = [ "digest/alloc" ];
+          "default" = [
+            "alloc"
+            "oid"
+          ];
+          "oid" = [ "digest/oid" ];
+          "zeroize" = [ "digest/zeroize" ];
+        };
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "oid"
         ];
       };
       "sharded-slab" = rec {
@@ -21607,7 +21945,7 @@ rec {
           }
           {
             name = "digest";
-            packageId = "digest";
+            packageId = "digest 0.10.7";
           }
           {
             name = "erased-serde";
@@ -22991,7 +23329,7 @@ rec {
           }
           {
             name = "sha2";
-            packageId = "sha2";
+            packageId = "sha2 0.10.9";
           }
           {
             name = "smol_str";
@@ -23209,7 +23547,7 @@ rec {
           }
           {
             name = "sha2";
-            packageId = "sha2";
+            packageId = "sha2 0.10.9";
           }
           {
             name = "snix-build";
@@ -23493,7 +23831,7 @@ rec {
           }
           {
             name = "sha2";
-            packageId = "sha2";
+            packageId = "sha2 0.10.9";
           }
           {
             name = "snix-castore";
@@ -23886,7 +24224,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.60.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -24421,7 +24759,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.59.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -28282,7 +28620,7 @@ rec {
         dependencies = [
           {
             name = "windows-targets";
-            packageId = "windows-targets 0.52.6";
+            packageId = "windows-targets 0.48.5";
             target = { target, features }: (target."windows" or false);
           }
         ];
@@ -28433,9 +28771,9 @@ rec {
       };
       "typenum" = rec {
         crateName = "typenum";
-        version = "1.19.0";
+        version = "1.20.0";
         edition = "2018";
-        sha256 = "1fw2mpbn2vmqan56j1b3fbpcdg80mz26fm53fs16bq5xcq84hban";
+        sha256 = "1pj35y6q11d3y55gdl6g1h2dfhmybjming0jdi9bh0bpnqm11kj0";
         authors = [
           "Paho Lurie-Gregg <paho@paholg.com>"
           "Andre Bogus <bogusandre@gmail.com>"
@@ -28444,6 +28782,7 @@ rec {
           "scale-info" = [ "dep:scale-info" ];
           "scale_info" = [ "scale-info/derive" ];
         };
+        resolvedDefaultFeatures = [ "const-generics" ];
       };
       "typetag" = rec {
         crateName = "typetag";
@@ -31311,7 +31650,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.61.2";
+            packageId = "windows-sys 0.48.0";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -32980,8 +33319,10 @@ rec {
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Pipes"
+          "Win32_System_SystemInformation"
           "Win32_System_WindowsProgramming"
           "default"
         ];
@@ -33504,9 +33845,16 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
+          "Win32_Networking"
+          "Win32_Networking_WinSock"
+          "Win32_Security"
+          "Win32_Security_Cryptography"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
+          "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "default"
         ];
@@ -33786,6 +34134,7 @@ rec {
           "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Threading"
+          "Win32_System_WindowsProgramming"
           "Win32_UI"
           "Win32_UI_Input"
           "Win32_UI_Input_KeyboardAndMouse"
@@ -34073,8 +34422,6 @@ rec {
           "Win32_System"
           "Win32_System_Com"
           "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_LibraryLoader"
           "Win32_System_Memory"
