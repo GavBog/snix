@@ -16,6 +16,7 @@ pkgs.mkShell {
     pkgs.hyperfine
     pkgs.perf-with-rust-addr2line
     pkgs.pkg-config
+    pkgs.prek
     pkgs.rust-addr2line
     pkgs.rust-analyzer
     pkgs.rustc

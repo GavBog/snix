@@ -12,6 +12,9 @@ depot.nix.lazy-deps {
   npins.attr = "third_party.nixpkgs.npins";
   nixfmt.attr = "third_party.nixpkgs.nixfmt";
 
+  protoc-gen-go.attr = "third_party.nixpkgs.protoc-gen-go";
+  protoc-gen-go-grpc.attr = "third_party.nixpkgs.protoc-gen-go-grpc";
+
   tf-buildkite = {
     attr = "ops.buildkite.terraform";
     cmd = "terraform";

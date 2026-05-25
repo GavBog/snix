@@ -85,6 +85,32 @@ If you already have some local commits without `Change-Id` field, `git commit
 --amend` them after installing the `commit-msg` hook to add them.
 {{< /callout >}}
 
+### Setting up pre-commit hooks
+We use [Prek](https://prek.j178.dev) to run some pre-commit hooks automatically.
+This reduces the amount of back-and-forth with CI.
+
+`prek` is shipped with the shell you enter, you still need to enable the hooks by running:
+
+```bash
+prek install
+```
+
+Ideally, hooks should only run when necessary, for staged files. Hooks should
+only run when relevant files have been staged.
+
+If an error during the pre-commit occurs, it will show the hook output.
+Formatters / code generators will also update files, allowing you to stage them
+as well.
+
+During longer rebases, running the hooks might take a long time.
+
+If you're confident that these commits are fine, you might want to temporarily
+disable it entirely by invoking `git rebase` with the `--no-verify` option.
+
+Alternatively, you can export `PREK_SKIP=` with a comma-separated list of hook
+ids to skip. Example: `PREK_SKIP=crate2nix-generate-all`.
+
+
 ### Push your changes
 Do some local changes, and push them to Gerrit as follows:
 

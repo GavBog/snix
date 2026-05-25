@@ -1,0 +1,52 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "depotfmt"
+name = "depotfmt"
+entry = "depotfmt"
+language = "system"
+types = ["text"]
+
+[[repos.hooks]]
+id = "crate2nix-generate-all"
+name = "crate2nix-generate-all"
+entry = "mg run //tools:crate2nix-generate-all"
+language = "system"
+files.glob = "**/Cargo.{lock,nix,toml}"
+pass_filenames = false
+
+[[repos.hooks]]
+id = "buf-lint"
+name = "buf lint"
+entry = "buf lint"
+language = "system"
+files.glob = "**/*.proto"
+pass_filenames = false
+fail_fast = true
+
+[[repos.hooks]]
+id = "buf-format"
+name = "buf format"
+entry = "buf format"
+language = "system"
+files.glob = "**/*.proto"
+pass_filenames = false
+fail_fast = true
+priority = 10
+
+# Skipped for now, buf outputs to the same directory as the protos themselves,
+# while we'd like them to live in `snix/{{ca,}store,build}-go/`.
+# Probably needs a bit more shell scripting.
+# [[repos.hooks]]
+# id = "buf-generate"
+# name = "buf generate"
+# entry = "buf generate --path snix/build/protos,snix/castore/protos,snix/store/protos"
+# language = "system"
+# files.glob = "**/*.proto"
+# pass_filenames = false
+# priority = 20
