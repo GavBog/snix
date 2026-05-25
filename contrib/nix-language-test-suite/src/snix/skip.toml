@@ -9,6 +9,6 @@ paths = [
   "filterSource-symlink-dir",
 ]
 
-builtins = ["readFileType", "readFile", "__nixPath"]
+builtins = ["readFileType", "readFile", "__nixPath", "unsafeGetAttrPos"]
 
 features = ["pipe-operators"]

@@ -13,11 +13,25 @@ paths = [
   #
   # Related issue: https://github.com/NixOS/nix/issues/7761
   "filterSource-symlink-dir",
+
+  # getAttrPos gains support for functionArgs-returned sets after 2.3
+  "eval-okay-getattrpos-functionargs",
+
+  # getAttrPos calculates columns differently in 2.3
+  "eval-okay-inherit-attr-pos",
+
+  # Newer Nix versions return an attr set, while 2.3 returns null
+  "unsafeGetAttrPos-corepkgs",
 ]
 builtins = ["readFileType"]
 features = ["flakes", "pipe-operators", "path-interpolation"]
 
 [lix_latest]
-paths = ["filterSource-symlink-dir"]
+paths = [
+  "filterSource-symlink-dir",
+
+  # Newer Nix versions return an attr set, while Lix returns null
+  "unsafeGetAttrPos-corepkgs",
+]
 
 [nix_latest]

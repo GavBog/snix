@@ -1,0 +1,8 @@
+lang {
+  builtins "unsafeGetAttrPos"
+  features "corepkgs"
+}
+
+runtime-opts {
+  eval-strict
+}
