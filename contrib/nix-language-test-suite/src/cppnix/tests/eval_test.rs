@@ -59,10 +59,10 @@ impl SkipConfig {
             .filter_map(|s| s.parse::<nix_language_test_suite_common::Feature>().ok())
             .any(|f| test_case.lang.features.contains(&f));
 
-        let skip_path = config
-            .paths
-            .iter()
-            .any(|s| test_path.to_string_lossy().contains(s));
+        let skip_path = config.paths.iter().any(|s| {
+            let file_name = test_path.file_stem().expect("test path should have a name");
+            file_name.to_string_lossy() == s.as_str()
+        });
 
         skip_sandbox || skip_builtins || skip_feature || skip_path
     }

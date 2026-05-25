@@ -43,10 +43,10 @@ impl SkipConfig {
             .iter()
             .any(|x| self.builtins.contains(x));
 
-        let skip_path = self
-            .paths
-            .iter()
-            .any(|s| test_path.to_string_lossy().contains(s));
+        let skip_path = self.paths.iter().any(|s| {
+            let file_name = test_path.file_stem().expect("test path should have a name");
+            file_name.to_string_lossy() == s.as_str()
+        });
 
         skip_feature || skip_path || skip_builtins
     }
