@@ -121,13 +121,14 @@ where
                 .map_err(Error::Tonic)?
                 .into_inner();
 
-            while let Some(proto_directory) = directories.message().await? {
+            while let Some(proto_directory) = directories.message().await.map_err(Error::Tonic)? {
                 let directory = Directory::try_from(proto_directory).map_err(Error::DirectoryValidation)?;
                 order_validator.try_accept(&directory).map_err(Error::DirectoryOrdering)?;
 
                 yield directory;
             }
-        }.boxed()
+        }
+        .boxed()
     }
 
     #[instrument(skip_all)]
@@ -197,7 +198,10 @@ impl DirectoryPutter for GRPCPutter {
         // close directory_sender, so blocking on task will finish.
         drop(directory_sender);
 
-        let resp = task.await?.map_err(Error::Tonic)?;
+        let resp = task
+            .await
+            .map_err(Error::TokioJoin)?
+            .map_err(Error::Tonic)?;
 
         Ok(B3Digest::try_from(resp.root_digest).map_err(|_| Error::InvalidDigestLen)?)
     }
@@ -205,7 +209,7 @@ impl DirectoryPutter for GRPCPutter {
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("Directory Graph ordering error")]
+    #[error("Directory Graph ordering error: {0}")]
     DirectoryOrdering(#[from] crate::directoryservice::OrderingError),
 
     #[error("DirectoryPutter already closed")]
@@ -232,6 +236,12 @@ pub enum Error {
     TokioJoin(#[from] tokio::task::JoinError),
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
+}
+
+impl From<Error> for super::Error {
+    fn from(value: Error) -> Self {
+        Self(Box::new(value))
+    }
 }
 
 #[derive(serde::Deserialize, Debug)]

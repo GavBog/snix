@@ -13,8 +13,11 @@ pub enum IngestionError<E: std::fmt::Display> {
     #[error("invalid symlink target")]
     InvalidSymlinkTarget(PathBuf, #[source] crate::SymlinkTargetError),
 
-    #[error("failed to upload directory at {0}")]
+    #[error("failed to upload directory: {0}")]
     UploadDirectoryError(PathBuf, #[source] crate::directoryservice::Error),
+
+    #[error("failed to add node at {0} to directory: {1}")]
+    ConstructDirectoryError(PathBuf, crate::DirectoryError),
 
     #[error("failed to finalize directory upload: {0}")]
     FinalizeDirectoryUpload(#[source] crate::directoryservice::Error),

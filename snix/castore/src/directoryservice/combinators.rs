@@ -60,7 +60,9 @@ where
 
         let mut resp_directory = None;
         while let Some(directory) = directories.try_next().await.map_err(Error::FarGet)? {
-            graph_builder.try_insert(directory.clone())?;
+            graph_builder
+                .try_insert(directory.clone())
+                .map_err(Error::DirectoryOrdering)?;
             if resp_directory.is_none() {
                 resp_directory = Some(directory);
             }
@@ -68,7 +70,7 @@ where
 
         // If far had the directory, put into near.
         if let Some(resp_directory) = resp_directory {
-            let directory_graph = graph_builder.build()?;
+            let directory_graph = graph_builder.build().map_err(Error::DirectoryOrdering)?;
             // Drain into near
             let mut near_putter = self.near.put_multiple_start();
             for directory in directory_graph.drain_leaves_to_root() {
@@ -117,7 +119,7 @@ where
 
             // Return to the client, while inserting to the graph builder.
             while let Some(directory) = directories.try_next().await.map_err(Error::FarGet)? {
-                builder.try_insert(directory.clone())?;
+                builder.try_insert(directory.clone()).map_err(Error::DirectoryOrdering)?;
                 yield directory;
             }
 
@@ -132,7 +134,7 @@ where
                     debug_assert_eq!(digest, actual_digest);
                 }
                 Err(crate::directoryservice::OrderingError::EmptySet) => return,
-                Err(e) => Err(e)?
+                Err(err) => Err(Error::DirectoryOrdering(err))?
             }
         }
         .boxed()
@@ -148,6 +150,8 @@ where
 pub enum Error {
     #[error("wrong arguments: {0}")]
     WrongConfig(&'static str),
+    #[error("Directory Graph ordering error: {0}")]
+    DirectoryOrdering(#[from] crate::directoryservice::OrderingError),
     #[error("serde-qs error: {0}")]
     SerdeQS(#[from] serde_qs::Error),
 
@@ -160,6 +164,12 @@ pub enum Error {
 
     #[error("puts are unimplemented")]
     Unimplemented,
+}
+
+impl From<Error> for super::Error {
+    fn from(value: Error) -> Self {
+        Self(Box::new(value))
+    }
 }
 
 #[derive(serde::Deserialize, Debug)]

@@ -34,7 +34,9 @@ impl<DS: DirectoryService + 'static> DirectoryPutter for SimplePutter<'_, DS> {
     async fn put(&mut self, directory: Directory) -> Result<(), super::Error> {
         let builder = self.builder.as_mut().ok_or_else(|| Error::AlreadyClosed)?;
 
-        builder.try_insert(directory)?;
+        builder
+            .try_insert(directory)
+            .map_err(Error::OrderingError)?;
 
         Ok(())
     }
@@ -44,7 +46,7 @@ impl<DS: DirectoryService + 'static> DirectoryPutter for SimplePutter<'_, DS> {
         let builder = self.builder.take().ok_or_else(|| Error::AlreadyClosed)?;
 
         // Retrieve the validated directories.
-        let directory_graph = builder.build()?;
+        let directory_graph = builder.build().map_err(Error::OrderingError)?;
         let root_digest = directory_graph.root().digest();
 
         for directory in directory_graph.drain_leaves_to_root() {
@@ -75,5 +77,11 @@ pub enum Error {
         actual: B3Digest,
     },
     #[error("failure during graph validation")]
-    GraphValidation(#[from] super::OrderingError),
+    OrderingError(#[from] super::OrderingError),
+}
+
+impl From<Error> for super::Error {
+    fn from(value: Error) -> Self {
+        Self(Box::new(value))
+    }
 }

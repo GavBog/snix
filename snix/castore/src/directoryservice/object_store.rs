@@ -209,6 +209,11 @@ enum Error {
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
 }
+impl From<Error> for super::Error {
+    fn from(value: Error) -> Self {
+        Self(Box::new(value))
+    }
+}
 
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -303,7 +308,9 @@ impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
             .as_mut()
             .ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
 
-        builder.try_insert(directory)?;
+        builder
+            .try_insert(directory)
+            .map_err(Error::DirectoryOrdering)?;
 
         Ok(())
     }
@@ -316,7 +323,7 @@ impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
             .ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
 
         // Retrieve the validated directories.
-        let directory_graph = builder.build()?;
+        let directory_graph = builder.build().map_err(Error::DirectoryOrdering)?;
         let root_digest = directory_graph.root().digest();
 
         let dir_path = derive_dirs_path(self.base_path, &root_digest);
@@ -344,11 +351,12 @@ impl DirectoryPutter for ObjectStoreDirectoryPutter<'_> {
                 for directory in directory_graph.drain_root_to_leaves() {
                     directories_sink
                         .send(proto::Directory::from(directory).encode_to_vec().into())
-                        .await?;
+                        .await
+                        .map_err(Error::IO)?;
                 }
 
                 let mut compressed_writer = directories_sink.into_inner();
-                compressed_writer.shutdown().await?;
+                compressed_writer.shutdown().await.map_err(Error::IO)?;
             }
             // other error
             Err(err) => Err(Error::ObjectStore(err))?,

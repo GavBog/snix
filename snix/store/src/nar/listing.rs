@@ -43,11 +43,7 @@ where
     if let Node::Directory { digest, .. } = root_node {
         let mut directories_stream = directory_service.get_recursive(digest);
         let mut validator = RootToLeavesValidator::new_with_root_digest(digest.to_owned());
-        while let Some(directory) = directories_stream
-            .try_next()
-            .await
-            .map_err(Error::DirectoryService)?
-        {
+        while let Some(directory) = directories_stream.try_next().await? {
             validator.try_accept(&directory)?;
             directories.insert(directory.digest(), directory);
         }
@@ -148,7 +144,7 @@ pub enum Error {
     #[error("path component is not a string")]
     PathComponentIsNoString,
     #[error("from directoryservice: {0}")]
-    DirectoryService(Box<dyn std::error::Error + Send + Sync>),
+    DirectoryService(#[from] snix_castore::directoryservice::Error),
     #[error("ordering error from directoryservice: {0}")]
     OrderingError(#[from] OrderingError),
 }

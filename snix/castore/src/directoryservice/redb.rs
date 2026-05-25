@@ -156,7 +156,8 @@ impl DirectoryService for RedbDirectoryService {
             let table = txn.open_table(DIRECTORY_TABLE)?;
             Ok(table.get(*digest)?)
         })
-        .await??
+        .await
+        .map_err(Error::TokioJoin)??
         {
             // The Directory was not found, return None.
             None => return Ok(None),
@@ -200,7 +201,8 @@ impl DirectoryService for RedbDirectoryService {
 
             Ok(digest)
         })
-        .await??;
+        .await
+        .map_err(Error::TokioJoin)??;
 
         Ok(digest)
     }
@@ -218,7 +220,7 @@ impl DirectoryService for RedbDirectoryService {
             let svc = svc.clone();
             async move { svc.get(&digest).await }
         })
-        .map_err(|err| Box::new(Error::DirectoryTraversal(err)))
+        .map_err(Error::DirectoryTraversal)
         .err_into()
         .boxed()
     }
@@ -286,7 +288,8 @@ impl DirectoryPutter for RedbDirectoryPutter {
 
             Ok::<_, Error>(root_digest)
         })
-        .await??;
+        .await
+        .map_err(Error::TokioJoin)??;
 
         Ok(root_digest)
     }
@@ -337,6 +340,12 @@ pub enum Error {
     TokioJoin(#[from] tokio::task::JoinError),
     #[error("io error: {0}")]
     IO(#[from] std::io::Error),
+}
+
+impl From<Error> for super::Error {
+    fn from(value: Error) -> Self {
+        Self(Box::new(value))
+    }
 }
 
 #[derive(Clone, Default, serde::Deserialize)]

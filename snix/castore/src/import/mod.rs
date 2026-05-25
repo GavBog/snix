@@ -139,7 +139,7 @@ where
                 .entry_ref(parent)
                 .or_default()
                 .add(name, node)
-                .map_err(|e| IngestionError::UploadDirectoryError(path, Box::new(e)))?;
+                .map_err(|e| IngestionError::ConstructDirectoryError(path, e))?;
         }
     };
 

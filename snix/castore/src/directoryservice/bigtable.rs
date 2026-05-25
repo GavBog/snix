@@ -314,7 +314,7 @@ impl DirectoryService for BigtableDirectoryService {
             let svc = svc.clone();
             async move { svc.get(&digest).await }
         })
-        .map_err(|err| Box::new(Error::DirectoryTraversal(err)))
+        .map_err(Error::DirectoryTraversal)
         .err_into()
         .boxed()
     }
@@ -354,6 +354,12 @@ pub enum Error {
         #[source]
         source: bigtable::Error,
     },
+}
+
+impl From<Error> for super::Error {
+    fn from(value: Error) -> Self {
+        Self(Box::new(value))
+    }
 }
 
 /// Represents configuration of [BigtableDirectoryService].
