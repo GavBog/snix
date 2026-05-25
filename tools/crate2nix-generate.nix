@@ -15,5 +15,5 @@ pkgs.writeShellScriptBin "crate2nix-generate" ''
 
   cargo metadata --offline --no-deps --format-version 1 | jq -r '.packages[] | .id' | xargs cargo update --offline
   crate2nix generate --all-features
-  depotfmt Cargo.nix
+  depotfmt --no-cache Cargo.nix
 ''

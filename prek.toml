@@ -19,6 +19,7 @@ entry = "mg run //tools:crate2nix-generate-all"
 language = "system"
 files.glob = "**/Cargo.{lock,nix,toml}"
 pass_filenames = false
+priority = 10                                   # run after depotfmt
 
 [[repos.hooks]]
 id = "buf-lint"
