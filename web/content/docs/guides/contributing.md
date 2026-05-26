@@ -95,8 +95,8 @@ This reduces the amount of back-and-forth with CI.
 prek install
 ```
 
-Ideally, hooks should only run when necessary, for staged files. Hooks should
-only run when relevant files have been staged.
+Hooks are only run on staged files, and only if files relevant to the hook are
+being touched.
 
 If an error during the pre-commit occurs, it will show the hook output.
 Formatters / code generators will also update files, allowing you to stage them
