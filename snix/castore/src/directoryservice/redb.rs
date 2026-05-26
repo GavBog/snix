@@ -224,16 +224,16 @@ impl DirectoryService for RedbDirectoryService {
     }
 
     #[instrument(skip_all)]
-    fn put_multiple_start(&self) -> Box<dyn DirectoryPutter + '_> {
+    fn put_multiple_start(&self) -> Box<dyn DirectoryPutter> {
         Box::new(RedbDirectoryPutter {
-            db: &self.db,
+            db: self.db.clone(),
             builder: Some(DirectoryGraphBuilder::new_leaves_to_root()),
         })
     }
 }
 
-pub struct RedbDirectoryPutter<'a> {
-    db: &'a Db,
+pub struct RedbDirectoryPutter {
+    db: Arc<Db>,
 
     /// The directories (inside the directory validator) that we insert later,
     /// or None, if they were already inserted.
@@ -241,7 +241,7 @@ pub struct RedbDirectoryPutter<'a> {
 }
 
 #[async_trait]
-impl DirectoryPutter for RedbDirectoryPutter<'_> {
+impl DirectoryPutter for RedbDirectoryPutter {
     #[instrument(level = "trace", skip_all, fields(directory.digest=%directory.digest()), err)]
     async fn put(&mut self, directory: Directory) -> Result<(), super::Error> {
         let builder = self
@@ -264,28 +264,27 @@ impl DirectoryPutter for RedbDirectoryPutter<'_> {
             .ok_or_else(|| Error::DirectoryPutterAlreadyClosed)?;
 
         // Insert all directories as a batch.
-        let root_digest = tokio::task::spawn_blocking({
-            let txn = self.db.begin_write()?;
-            move || {
-                // Retrieve the validated directories.
-                let directory_graph = builder.build().map_err(Error::DirectoryOrdering)?;
-                let root_digest = directory_graph.root().digest();
+        let db = self.db.clone();
+        let root_digest = tokio::task::spawn_blocking(move || {
+            // Retrieve the validated directories.
+            let directory_graph = builder.build().map_err(Error::DirectoryOrdering)?;
+            let root_digest = directory_graph.root().digest();
 
-                // Looping over all the verified directories, queuing them up for a
-                // batch insertion.
-                {
-                    let mut table = txn.open_table(DIRECTORY_TABLE)?;
-                    for directory in directory_graph.drain_leaves_to_root() {
-                        table.insert(
-                            directory.digest().as_ref(),
-                            proto::Directory::from(directory).encode_to_vec(),
-                        )?;
-                    }
+            let txn = db.begin_write()?;
+            // Looping over all the verified directories, queuing them up for a
+            // batch insertion.
+            {
+                let mut table = txn.open_table(DIRECTORY_TABLE)?;
+                for directory in directory_graph.drain_leaves_to_root() {
+                    table.insert(
+                        directory.digest().as_ref(),
+                        proto::Directory::from(directory).encode_to_vec(),
+                    )?;
                 }
-                txn.commit()?;
-
-                Ok::<_, Error>(root_digest)
             }
+            txn.commit()?;
+
+            Ok::<_, Error>(root_digest)
         })
         .await??;
 
