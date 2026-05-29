@@ -270,7 +270,7 @@ mod pure_builtins {
 
         for value in lists.to_list()? {
             let list = try_value!(generators::request_force(&co, value).await).to_list()?;
-            out.extend(list.into_iter());
+            out.extend(list);
         }
 
         Ok(Value::List(out.into()))
@@ -298,7 +298,7 @@ mod pure_builtins {
 
         let mut context = NixContext::new();
         if let Some(sep_context) = separator.take_context() {
-            context.extend(sep_context.into_iter())
+            context.extend(*sep_context)
         }
         let list = list.to_list()?;
         let mut res = BString::default();
@@ -319,7 +319,7 @@ mod pure_builtins {
             );
             res.push_str(&s);
             if let Some(other_context) = s.take_context() {
-                context.extend(other_context.into_iter());
+                context.extend(*other_context);
             }
         }
         // FIXME: pass immediately the string res.
@@ -524,7 +524,7 @@ mod pure_builtins {
             )
             .await;
 
-            work_set.extend(op_result.to_list()?.into_iter());
+            work_set.extend(op_result.to_list()?);
         }
 
         Ok(Value::List(NixList::from(res)))
@@ -691,7 +691,7 @@ mod pure_builtins {
                     )));
                 }
 
-                (key.clone(), Value::attrs(NixAttrs::from_iter(vec_attrs.into_iter())))
+                (key.clone(), Value::attrs(NixAttrs::from_iter(vec_attrs)))
             });
 
         Ok(Value::attrs(NixAttrs::from_iter(elements)))
@@ -1044,9 +1044,10 @@ mod pure_builtins {
             .split_first()
             .map(|x| core::str::from_utf8(x.1))
             .unwrap_or(Ok(""))?;
-        Ok(Value::attrs(NixAttrs::from_iter(
-            [("name", core::str::from_utf8(name)?), ("version", version)].into_iter(),
-        )))
+        Ok(Value::attrs(NixAttrs::from_iter([
+            ("name", core::str::from_utf8(name)?),
+            ("version", version),
+        ])))
     }
 
     #[builtin("partition")]
@@ -1070,7 +1071,7 @@ mod pure_builtins {
             ("wrong", Value::List(NixList::from(wrong))),
         ];
 
-        Ok(Value::attrs(NixAttrs::from_iter(res.into_iter())))
+        Ok(Value::attrs(NixAttrs::from_iter(res)))
     }
 
     #[builtin("removeAttrs")]
@@ -1121,7 +1122,7 @@ mod pure_builtins {
         let mut context = NixContext::new();
 
         if let Some(string_context) = string.take_context() {
-            context.extend(string_context.into_iter());
+            context.extend(*string_context);
         }
 
         // This can't be implemented using Rust's string.replace() as
@@ -1152,7 +1153,7 @@ mod pure_builtins {
                     res.push_str(&to);
                     i += from.len();
                     if let Some(to_ctx) = to.take_context() {
-                        context.extend(to_ctx.into_iter());
+                        context.extend(*to_ctx);
                     }
 
                     // remember if we applied the empty from->to
@@ -1184,7 +1185,7 @@ mod pure_builtins {
             if from.is_empty() {
                 res.push_str(&to);
                 if let Some(to_ctx) = to.take_context() {
-                    context.extend(to_ctx.into_iter());
+                    context.extend(*to_ctx);
                 }
                 break;
             }
@@ -1505,7 +1506,7 @@ mod pure_builtins {
             value => [("value", value), ("success", true.into())],
         };
 
-        Ok(Value::attrs(NixAttrs::from_iter(res.into_iter())))
+        Ok(Value::attrs(NixAttrs::from_iter(res)))
     }
 
     #[builtin("typeOf")]
@@ -1699,7 +1700,7 @@ mod placeholder_builtins {
             ("column", 42.into()),
             ("file", Value::String("/deep/thought".into())),
         ];
-        Ok(Value::attrs(NixAttrs::from_iter(res.into_iter())))
+        Ok(Value::attrs(NixAttrs::from_iter(res)))
     }
 }
 

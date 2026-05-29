@@ -102,7 +102,7 @@ rec {
     # spin up cloud_hypervisor
     ${pkgs.cloud-hypervisor}/bin/cloud-hypervisor \
      --cpus boot=$CH_NUM_CPU \
-     --memory mergeable=on,shared=on,size=$CH_MEM_SIZE \
+     --memory shared=on,size=$CH_MEM_SIZE \
      --console null \
      --serial tty \
      --kernel ${kernel}/${pkgs.stdenv.hostPlatform.linux-kernel.target} \
