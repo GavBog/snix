@@ -22,6 +22,10 @@ paths = [
 
   # Newer Nix versions return an attr set, while 2.3 returns null
   "unsafeGetAttrPos-corepkgs",
+
+  # Nix2.3 produces a path below:
+  #   /nix/store/lc5bhdsagh8mrxkdbvdkmw9nv1vykavn-foo.drv
+  "derivation-invalid-structured-attrs",
 ]
 builtins = ["readFileType"]
 features = ["flakes", "pipe-operators", "path-interpolation"]
@@ -32,6 +36,10 @@ paths = [
 
   # Newer Nix versions return an attr set, while Lix returns null
   "unsafeGetAttrPos-corepkgs",
+
+  # Lix produces a path below:
+  #   /nix/store/lc5bhdsagh8mrxkdbvdkmw9nv1vykavn-foo.drv
+  "derivation-invalid-structured-attrs",
 ]
 
 [nix_latest]

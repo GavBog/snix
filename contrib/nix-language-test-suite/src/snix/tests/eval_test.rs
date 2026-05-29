@@ -213,6 +213,9 @@ fn matches_expected_error(result: &snix_eval::EvaluationResult, exp_kind: &Error
             matches!(
                 err.downcast_ref::<ImportError>(),
                 Some(ImportError::HashMismatch(..))
+            ) || matches!(
+                err.downcast_ref::<snix_glue::builtins::DerivationError>(),
+                Some(snix_glue::builtins::DerivationError::InvalidOutputHash(_))
             )
         }
         ErrorKind::InvalidStorePath => {
@@ -222,6 +225,13 @@ fn matches_expected_error(result: &snix_eval::EvaluationResult, exp_kind: &Error
             err.downcast_ref::<nix_compat::store_path::Error>()
                 .is_some()
         }
+        ErrorKind::DerivationError => match snix_kind {
+            snix_eval::ErrorKind::Abort(err) => err.contains("derivation has empty name"),
+            snix_eval::ErrorKind::SnixError(err) => err
+                .downcast_ref::<snix_glue::builtins::DerivationError>()
+                .is_some(),
+            _ => false,
+        },
     }
 }
 

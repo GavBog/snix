@@ -104,16 +104,6 @@ mod tests {
         eval.evaluate(str, None)
     }
 
-    /// a derivation with an empty name is an error.
-    #[test]
-    fn derivation_empty_name_fail() {
-        let result = eval(
-            r#"(derivation { name = ""; builder = "/bin/sh"; system = "x86_64-linux";}).outPath"#,
-        );
-
-        assert!(!result.errors.is_empty(), "expect evaluation to fail");
-    }
-
     /// construct some calls to builtins.derivation and compare produced output
     /// paths.
     #[rstest]
@@ -145,33 +135,6 @@ mod tests {
                    }).outPath
         "#, "/nix/store/5vyvcwah9l9kf07d52rcgdk70g2f4y13-foo")]
     #[case::pass_as_file(r#"(builtins.derivation { "name" = "foo"; passAsFile = ["bar"]; bar = "baz"; system = ":"; builder = ":";}).outPath"#, "/nix/store/25gf0r1ikgmh4vchrn8qlc4fnqlsa5a1-foo")]
-    // __ignoreNulls = true, but nothing set to null
-    #[case::ignore_nulls_true_no_arg_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = true; }).drvPath"#, "/nix/store/xa96w6d7fxrlkk60z1fmx2ffp2wzmbqx-foo.drv")]
-    #[case::ignore_nulls_true_no_arg_outpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = true; }).outPath"#, "/nix/store/pk2agn9za8r9bxsflgh1y7fyyrmwcqkn-foo")]
-    // __ignoreNulls = true, with a null arg, same paths
-    #[case::ignore_nulls_true_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = true; ignoreme = null; }).drvPath"#, "/nix/store/xa96w6d7fxrlkk60z1fmx2ffp2wzmbqx-foo.drv")]
-    #[case::ignore_nulls_true_outpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = true; ignoreme = null; }).outPath"#, "/nix/store/pk2agn9za8r9bxsflgh1y7fyyrmwcqkn-foo")]
-    // __ignoreNulls = false
-    #[case::ignore_nulls_false_no_arg_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = false; }).drvPath"#, "/nix/store/xa96w6d7fxrlkk60z1fmx2ffp2wzmbqx-foo.drv")]
-    #[case::ignore_nulls_false_no_arg_outpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = false; }).outPath"#, "/nix/store/pk2agn9za8r9bxsflgh1y7fyyrmwcqkn-foo")]
-    // __ignoreNulls = false, with a null arg
-    #[case::ignore_nulls_fales_arg_path_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = false; foo = null; }).drvPath"#, "/nix/store/xwkwbajfiyhdqmksrbzm0s4g4ib8d4ms-foo.drv")]
-    #[case::ignore_nulls_fales_arg_path_outpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = false; foo = null; }).outPath"#, "/nix/store/2n2jqm6l7r2ahi19m58pl896ipx9cyx6-foo")]
-    // structured attrs set to false will render an empty string inside env
-    #[case::structured_attrs_false_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __structuredAttrs = false; foo = "bar"; }).drvPath"#, "/nix/store/qs39krwr2lsw6ac910vqx4pnk6m63333-foo.drv")]
-    #[case::structured_attrs_false_outpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __structuredAttrs = false; foo = "bar"; }).outPath"#, "/nix/store/9yy3764rdip3fbm8ckaw4j9y7vh4d231-foo")]
-    // simple structured attrs
-    #[case::structured_attrs_simple_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __structuredAttrs = true; foo = "bar"; }).drvPath"#, "/nix/store/k6rlb4k10cb9iay283037ml1nv3xma2f-foo.drv")]
-    #[case::structured_attrs_simple_outpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __structuredAttrs = true; foo = "bar"; }).outPath"#, "/nix/store/6lmv3hyha1g4cb426iwjyifd7nrdv1xn-foo")]
-    // structured attrs with outputsCheck
-    #[case::structured_attrs_output_checks_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __structuredAttrs = true; foo = "bar"; outputChecks = {out = {maxClosureSize = 256 * 1024 * 1024; disallowedRequisites = [ "dev" ];};}; }).drvPath"#, "/nix/store/fx9qzpchh5wchchhy39bwsml978d6wp1-foo.drv")]
-    #[case::structured_attrs_output_checks_outpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __structuredAttrs = true; foo = "bar"; outputChecks = {out = {maxClosureSize = 256 * 1024 * 1024; disallowedRequisites = [ "dev" ];};}; }).outPath"#, "/nix/store/pcywah1nwym69rzqdvpp03sphfjgyw1l-foo")]
-    // structured attrs and __ignoreNulls. ignoreNulls is inactive (so foo ends up in __json, yet __ignoreNulls itself is not present.
-    #[case::structured_attrs_and_ignore_nulls_drvpath(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __ignoreNulls = false; foo = null; __structuredAttrs = true; }).drvPath"#, "/nix/store/rldskjdcwa3p7x5bqy3r217va1jsbjsc-foo.drv")]
-    // structured attrs, setting outputs.
-    #[case::structured_attrs_outputs_drvpath(r#"(builtins.derivation { name = "test"; system = "aarch64-linux"; builder = "/bin/sh"; __structuredAttrs = true; outputs = [ "out"]; }).drvPath"#, "/nix/store/6sgawp30zibsh525p7c948xxd22y2ngy-test.drv")]
-    // structured attrs, setting __json, which will show up as an encoded __json key inside the __json.
-    #[case::structured_attrs_json(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; __structuredAttrs = true; foo = "bar"; __json = "foo";}).drvPath"#, "/nix/store/98yvz8z0i6kzdcsv6zq8cv60dd784yxf-foo.drv")]
     fn test_drvpath(#[case] code: &str, #[case] expected_path: &str) {
         let value = eval(code).value.expect("must succeed");
 
@@ -181,21 +144,6 @@ mod tests {
             }
             _ => panic!("unexpected value type: {value:?}"),
         }
-    }
-
-    /// construct some calls to builtins.derivation that should be rejected
-    #[rstest]
-    #[case::invalid_outputhash(r#"(builtins.derivation { name = "foo"; builder = "/bin/sh"; system = "x86_64-linux"; outputHashMode = "recursive"; outputHashAlgo = "sha256"; outputHash = "sha256-00"; }).outPath"#)]
-    #[case::sha1_and_sha256(r#"(builtins.derivation { name = "foo"; builder = "/bin/sh"; system = "x86_64-linux"; outputHashMode = "recursive"; outputHashAlgo = "sha1"; outputHash = "sha256-Q3QXOoy+iN4VK2CflvRulYvPZXYgF0dO7FoF7CvWFTA="; }).outPath"#)]
-    #[case::duplicate_output_names(r#"(builtins.derivation { name = "foo"; builder = "/bin/sh"; outputs = ["foo" "foo"]; system = "x86_64-linux"; }).outPath"#)]
-    #[case::unstructured_attrs_json(r#"(builtins.derivation { name = "foo"; system = ":"; builder = ":"; foo = "bar"; __json = "foo";}).drvPath"#)]
-    fn test_invalid(#[case] code: &str) {
-        let resp = eval(code);
-        assert!(resp.value.is_none(), "Value should be None");
-        assert!(
-            !resp.errors.is_empty(),
-            "There should have been some errors"
-        );
     }
 
     /// Construct two FODs with the same name, and same known output (but

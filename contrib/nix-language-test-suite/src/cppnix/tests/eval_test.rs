@@ -193,13 +193,15 @@ fn eval_test(
 
     if let Some(exp_err) = load_expected_error(&test_case_path) {
         let error_string = str::from_utf8(&result.stderr).unwrap();
+        let output = str::from_utf8(&result.stdout).unwrap();
 
         if !matches_expected_error(nix_version, error_string, &exp_err) {
             panic!(
-                "{}: invalid error kind. Expected {:?}, got stderr:\n{}",
+                "{}: invalid error kind. Expected {:?}, got stderr:\n{}\nstdout:\n{}",
                 test_case_path.display(),
                 exp_err,
-                error_string
+                error_string,
+                output,
             );
         }
 
@@ -224,7 +226,21 @@ fn matches_expected_error(version: NixVersion, error_string: &str, expected: &Er
             NixVersion::CppNix23 => &["Path names are alphanumeric"],
             NixVersion::LixLatest => &["store path"][..],
         },
-        ErrorKind::HashMismatch => &["store path mismatch"][..],
+        ErrorKind::HashMismatch => &["store path mismatch", "invalid SRI hash"][..],
+        ErrorKind::DerivationError => match version {
+            NixVersion::LixLatest => &["trace involved the following derivations"][..],
+            NixVersion::CppNix23 => &[
+                "Path names are alphanumeric",
+                "should have type",
+                "duplicate derivation output",
+            ],
+            _ => &[
+                "invalid derivation name",
+                "should have type",
+                "duplicate derivation output",
+                "cannot process __json attribute",
+            ][..],
+        },
     };
 
     must_contain.iter().any(|x| error_string.contains(x))
