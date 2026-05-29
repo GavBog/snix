@@ -94,7 +94,9 @@ mg build //contrib/nix-language-test-suite/src/cppnix:nix_latest_verified
 mg build //contrib/nix-language-test-suite/src/cppnix:lix_latest
 
 # or impure by invoking `cargo test`:
-cargo test --package=nix-language-test-suite-cppnix --manifest-path=contrib/nix-language-test-suite/src/Cargo.toml
+NIX_VERSION=lix-2.94.2 cargo test --package=nix-language-test-suite-cppnix --manifest-path=contrib/nix-language-test-suite/src/Cargo.toml
+# This still times out for some test cases, so you might want to filter
+# which tests to run by passing a substring as an additional argument.
 ```
 
 ### Snix Runner
