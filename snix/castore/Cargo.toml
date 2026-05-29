@@ -21,6 +21,7 @@ erased-serde.workspace = true
 fastcdc = { workspace = true, features = ["tokio"] }
 fuse-backend-rs = { workspace = true, optional = true }
 futures.workspace = true
+googleapis-tonic-google-bigtable-v2 = { workspace = true, optional = true }
 hashbrown.workspace = true
 hyper-util.workspace = true
 libc = { workspace = true, optional = true }
@@ -83,6 +84,7 @@ xattr.workspace = true
 default = ["cloud"]
 cloud = [
   "dep:bigtable_rs",
+  "dep:googleapis-tonic-google-bigtable-v2",
   "object_store/aws",
   "object_store/azure",
   "object_store/gcp",

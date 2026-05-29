@@ -55,6 +55,7 @@ hyper-util.workspace = true
 toml = { version = "0.8.19", optional = true }
 redb = { workspace = true, features = ["logging"] }
 bigtable_rs = { workspace = true, optional = true }
+googleapis-tonic-google-bigtable-v2 = { workspace = true, optional = true }
 auto_impl = "1.2.0"
 
 [build-dependencies]
@@ -71,7 +72,11 @@ hex-literal.workspace = true
 
 [features]
 default = ["cloud", "fuse"]
-cloud = ["dep:bigtable_rs", "snix-castore/cloud"]
+cloud = [
+  "dep:bigtable_rs",
+  "dep:googleapis-tonic-google-bigtable-v2",
+  "snix-castore/cloud",
+]
 fuse = ["snix-castore/fuse"]
 virtiofs = ["snix-castore/virtiofs"]
 xp-composition-cli = [

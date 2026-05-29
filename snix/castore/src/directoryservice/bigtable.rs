@@ -1,7 +1,8 @@
-use bigtable_rs::{bigtable, google::bigtable::v2 as bigtable_v2};
+use bigtable_rs::bigtable;
 use data_encoding::HEXLOWER;
 use futures::stream::BoxStream;
 use futures::{StreamExt, TryStreamExt};
+use googleapis_tonic_google_bigtable_v2::google::bigtable::v2 as bigtable_v2;
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationSeconds, serde_as};

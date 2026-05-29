@@ -2873,9 +2873,9 @@ rec {
       };
       "bigtable_rs" = rec {
         crateName = "bigtable_rs";
-        version = "0.2.21";
+        version = "0.3.0";
         edition = "2021";
-        sha256 = "17as4xnm617qd0vprqw7r9f0bsiahwlyhf0ls54im7laga49gv0x";
+        sha256 = "0jlgcl6fr6hxry3ybihiq742k9gwsd801rq6f1lxmhnn54p38a8s";
         authors = [
           "Fuyang Liu <liufuyang@users.noreply.github.com>"
         ];
@@ -2889,6 +2889,10 @@ rec {
             packageId = "gcp_auth";
           }
           {
+            name = "googleapis-tonic-google-bigtable-v2";
+            packageId = "googleapis-tonic-google-bigtable-v2";
+          }
+          {
             name = "http";
             packageId = "http 1.4.0";
           }
@@ -2900,32 +2904,6 @@ rec {
           {
             name = "log";
             packageId = "log";
-          }
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "prost-types";
-            packageId = "prost-types";
-          }
-          {
-            name = "prost-wkt";
-            packageId = "prost-wkt";
-          }
-          {
-            name = "prost-wkt-types";
-            packageId = "prost-wkt-types";
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-            features = [ "derive" ];
-          }
-          {
-            name = "serde_with";
-            packageId = "serde_with";
-            features = [ "base64" ];
           }
           {
             name = "thiserror";
@@ -2970,6 +2948,10 @@ rec {
           {
             name = "futures-util";
             packageId = "futures-util";
+          }
+          {
+            name = "googleapis-tonic-google-bigtable-v2";
+            packageId = "googleapis-tonic-google-bigtable-v2";
           }
           {
             name = "tokio";
@@ -7044,6 +7026,206 @@ rec {
         ];
 
       };
+      "googleapis-tonic-google-api" = rec {
+        crateName = "googleapis-tonic-google-api";
+        version = "0.27.0";
+        edition = "2021";
+        sha256 = "07y1hcqsk17sw0s9ydpvdlha8x82mhzh488gvicnqya0rb56ahic";
+        libName = "googleapis_tonic_google_api";
+        authors = [
+          "bouzuya <m@bouzuya.net>"
+        ];
+        dependencies = [
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "default" = [
+            "hash-map"
+            "vec-u8"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "hash-map"
+          "vec-u8"
+        ];
+      };
+      "googleapis-tonic-google-bigtable-v2" = rec {
+        crateName = "googleapis-tonic-google-bigtable-v2";
+        version = "0.36.0";
+        edition = "2021";
+        sha256 = "1162kbw9w2wgw2r1186918bgrc3dbndkpm393gjaknn87c1yn5j4";
+        libName = "googleapis_tonic_google_bigtable_v2";
+        authors = [
+          "bouzuya <m@bouzuya.net>"
+        ];
+        dependencies = [
+          {
+            name = "googleapis-tonic-google-api";
+            packageId = "googleapis-tonic-google-api";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "googleapis-tonic-google-rpc";
+            packageId = "googleapis-tonic-google-rpc";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "googleapis-tonic-google-type";
+            packageId = "googleapis-tonic-google-type";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "btree-map" = [
+            "googleapis-tonic-google-api/btree-map"
+            "googleapis-tonic-google-rpc/btree-map"
+            "googleapis-tonic-google-type/btree-map"
+          ];
+          "bytes" = [
+            "googleapis-tonic-google-api/bytes"
+            "googleapis-tonic-google-rpc/bytes"
+            "googleapis-tonic-google-type/bytes"
+          ];
+          "default" = [
+            "hash-map"
+            "vec-u8"
+          ];
+          "hash-map" = [
+            "googleapis-tonic-google-api/hash-map"
+            "googleapis-tonic-google-rpc/hash-map"
+            "googleapis-tonic-google-type/hash-map"
+          ];
+          "vec-u8" = [
+            "googleapis-tonic-google-api/vec-u8"
+            "googleapis-tonic-google-rpc/vec-u8"
+            "googleapis-tonic-google-type/vec-u8"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "hash-map"
+          "vec-u8"
+        ];
+      };
+      "googleapis-tonic-google-rpc" = rec {
+        crateName = "googleapis-tonic-google-rpc";
+        version = "0.23.0";
+        edition = "2021";
+        sha256 = "0mm0k6y2a9aacjxvcv3s6dnxj50kcv5qclf25mgm6a6jh01dwz1f";
+        libName = "googleapis_tonic_google_rpc";
+        authors = [
+          "bouzuya <m@bouzuya.net>"
+        ];
+        dependencies = [
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "default" = [
+            "hash-map"
+            "vec-u8"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "hash-map"
+          "vec-u8"
+        ];
+      };
+      "googleapis-tonic-google-type" = rec {
+        crateName = "googleapis-tonic-google-type";
+        version = "0.21.0";
+        edition = "2021";
+        sha256 = "1nvrx63id58pph61lnv7m692yg1hx05nsma44qznkjin7z54s739";
+        libName = "googleapis_tonic_google_type";
+        authors = [
+          "bouzuya <m@bouzuya.net>"
+        ];
+        dependencies = [
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "default" = [
+            "hash-map"
+            "vec-u8"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "hash-map"
+          "vec-u8"
+        ];
+      };
       "h2" = rec {
         crateName = "h2";
         version = "0.4.14";
@@ -8881,29 +9063,6 @@ rec {
           "vt100"
           "wasmbind"
         ];
-      };
-      "inventory" = rec {
-        crateName = "inventory";
-        version = "0.3.24";
-        edition = "2021";
-        sha256 = "16y3vbab2ld8ykjap1xxwk001jliyqsj8np57zpcrx7jfq6c7w54";
-        authors = [
-          "David Tolnay <dtolnay@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "rustversion";
-            packageId = "rustversion";
-            target = { target, features }: (builtins.elem "wasm" target."family");
-          }
-        ];
-        devDependencies = [
-          {
-            name = "rustversion";
-            packageId = "rustversion";
-          }
-        ];
-
       };
       "ipnet" = rec {
         crateName = "ipnet";
@@ -10778,7 +10937,10 @@ rec {
             packageId = "serde_with";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "macros" ];
+            features = [
+              "macros"
+              "std"
+            ];
           }
           {
             name = "sha2";
@@ -12673,49 +12835,6 @@ rec {
           "std"
         ];
       };
-      "prost-wkt" = rec {
-        crateName = "prost-wkt";
-        version = "0.7.1";
-        edition = "2021";
-        sha256 = "0i8lqqfv0av2svqpnxwcpjl1bri37ll8wjr0z9gcnkz8r7lyagfd";
-        libName = "prost_wkt";
-        authors = [
-          "fdeantoni <fdeantoni@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "chrono";
-            packageId = "chrono";
-            usesDefaultFeatures = false;
-            features = [ "serde" ];
-          }
-          {
-            name = "inventory";
-            packageId = "inventory";
-          }
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-          }
-          {
-            name = "serde_derive";
-            packageId = "serde_derive";
-          }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
-          }
-          {
-            name = "typetag";
-            packageId = "typetag";
-          }
-        ];
-
-      };
       "prost-wkt-build" = rec {
         crateName = "prost-wkt-build";
         version = "0.7.1";
@@ -12748,78 +12867,6 @@ rec {
           }
         ];
 
-      };
-      "prost-wkt-types" = rec {
-        crateName = "prost-wkt-types";
-        version = "0.7.1";
-        edition = "2021";
-        sha256 = "0pj17zdhq4s91x4nsjyp276ws0b2j9qq604rx033v0qmgsm7x00k";
-        libName = "prost_wkt_types";
-        authors = [
-          "fdeantoni <fdeantoni@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "chrono";
-            packageId = "chrono";
-            usesDefaultFeatures = false;
-            features = [ "serde" ];
-          }
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "prost-wkt";
-            packageId = "prost-wkt";
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-          }
-          {
-            name = "serde_derive";
-            packageId = "serde_derive";
-          }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "prost-build";
-            packageId = "prost-build";
-          }
-          {
-            name = "prost-types";
-            packageId = "prost-types";
-          }
-          {
-            name = "prost-wkt-build";
-            packageId = "prost-wkt-build";
-          }
-          {
-            name = "regex";
-            packageId = "regex";
-          }
-        ];
-        features = {
-          "default" = [ "std" ];
-          "protobuf-src" = [ "dep:protobuf-src" ];
-          "protox" = [ "dep:protox" ];
-          "schemars" = [ "dep:schemars" ];
-          "vendored-protoc" = [ "protobuf-src" ];
-          "vendored-protox" = [ "protox" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "std"
-        ];
       };
       "pulldown-cmark" = rec {
         crateName = "pulldown-cmark";
@@ -17248,8 +17295,6 @@ rec {
         };
         resolvedDefaultFeatures = [
           "alloc"
-          "base64"
-          "default"
           "macros"
           "std"
         ];
@@ -17878,6 +17923,11 @@ rec {
             packageId = "futures";
           }
           {
+            name = "googleapis-tonic-google-bigtable-v2";
+            packageId = "googleapis-tonic-google-bigtable-v2";
+            optional = true;
+          }
+          {
             name = "hashbrown";
             packageId = "hashbrown 0.17.1";
           }
@@ -17933,7 +17983,10 @@ rec {
             name = "serde_with";
             packageId = "serde_with";
             usesDefaultFeatures = false;
-            features = [ "macros" ];
+            features = [
+              "macros"
+              "std"
+            ];
           }
           {
             name = "snix-tracing";
@@ -18032,6 +18085,7 @@ rec {
         features = {
           "cloud" = [
             "dep:bigtable_rs"
+            "dep:googleapis-tonic-google-bigtable-v2"
             "object_store/aws"
             "object_store/azure"
             "object_store/gcp"
@@ -18553,7 +18607,10 @@ rec {
             name = "serde_with";
             packageId = "serde_with";
             usesDefaultFeatures = false;
-            features = [ "macros" ];
+            features = [
+              "macros"
+              "std"
+            ];
           }
           {
             name = "sha1";
@@ -18644,6 +18701,7 @@ rec {
         features = {
           "cloud" = [
             "dep:bigtable_rs"
+            "dep:googleapis-tonic-google-bigtable-v2"
             "snix-castore/cloud"
           ];
           "default" = [
@@ -22081,74 +22139,6 @@ rec {
           "scale_info" = [ "scale-info/derive" ];
         };
         resolvedDefaultFeatures = [ "const-generics" ];
-      };
-      "typetag" = rec {
-        crateName = "typetag";
-        version = "0.2.21";
-        edition = "2021";
-        sha256 = "1gw69cvsr2z9kn11psjrz9frmkwlhjci9pi442izrg5rm74148my";
-        authors = [
-          "David Tolnay <dtolnay@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "erased-serde";
-            packageId = "erased-serde";
-            usesDefaultFeatures = false;
-            features = [ "alloc" ];
-          }
-          {
-            name = "inventory";
-            packageId = "inventory";
-          }
-          {
-            name = "once_cell";
-            packageId = "once_cell";
-            usesDefaultFeatures = false;
-            features = [ "alloc" ];
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-            usesDefaultFeatures = false;
-            features = [
-              "alloc"
-              "derive"
-            ];
-          }
-          {
-            name = "typetag-impl";
-            packageId = "typetag-impl";
-          }
-        ];
-
-      };
-      "typetag-impl" = rec {
-        crateName = "typetag-impl";
-        version = "0.2.21";
-        edition = "2021";
-        sha256 = "0ip87p4cmdpbrfn71p2xvfp43b2cc22jnqy3yvqzc8d15fvsk9r7";
-        procMacro = true;
-        libName = "typetag_impl";
-        authors = [
-          "David Tolnay <dtolnay@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "proc-macro2";
-            packageId = "proc-macro2";
-          }
-          {
-            name = "quote";
-            packageId = "quote";
-          }
-          {
-            name = "syn";
-            packageId = "syn 2.0.117";
-            features = [ "full" ];
-          }
-        ];
-
       };
       "unarray" = rec {
         crateName = "unarray";

@@ -487,7 +487,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.60.2";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_System_Console"
@@ -515,7 +515,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.60.2";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_System_Console"
@@ -4171,9 +4171,9 @@ rec {
       };
       "bigtable_rs" = rec {
         crateName = "bigtable_rs";
-        version = "0.2.21";
+        version = "0.3.0";
         edition = "2021";
-        sha256 = "17as4xnm617qd0vprqw7r9f0bsiahwlyhf0ls54im7laga49gv0x";
+        sha256 = "0jlgcl6fr6hxry3ybihiq742k9gwsd801rq6f1lxmhnn54p38a8s";
         authors = [
           "Fuyang Liu <liufuyang@users.noreply.github.com>"
         ];
@@ -4187,6 +4187,10 @@ rec {
             packageId = "gcp_auth";
           }
           {
+            name = "googleapis-tonic-google-bigtable-v2";
+            packageId = "googleapis-tonic-google-bigtable-v2";
+          }
+          {
             name = "http";
             packageId = "http 1.4.0";
           }
@@ -4198,32 +4202,6 @@ rec {
           {
             name = "log";
             packageId = "log";
-          }
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "prost-types";
-            packageId = "prost-types";
-          }
-          {
-            name = "prost-wkt";
-            packageId = "prost-wkt";
-          }
-          {
-            name = "prost-wkt-types";
-            packageId = "prost-wkt-types";
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-            features = [ "derive" ];
-          }
-          {
-            name = "serde_with";
-            packageId = "serde_with";
-            features = [ "base64" ];
           }
           {
             name = "thiserror";
@@ -4268,6 +4246,10 @@ rec {
           {
             name = "futures-util";
             packageId = "futures-util";
+          }
+          {
+            name = "googleapis-tonic-google-bigtable-v2";
+            packageId = "googleapis-tonic-google-bigtable-v2";
           }
           {
             name = "tokio";
@@ -7398,7 +7380,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -9109,6 +9091,206 @@ rec {
         ];
 
       };
+      "googleapis-tonic-google-api" = rec {
+        crateName = "googleapis-tonic-google-api";
+        version = "0.27.0";
+        edition = "2021";
+        sha256 = "07y1hcqsk17sw0s9ydpvdlha8x82mhzh488gvicnqya0rb56ahic";
+        libName = "googleapis_tonic_google_api";
+        authors = [
+          "bouzuya <m@bouzuya.net>"
+        ];
+        dependencies = [
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "default" = [
+            "hash-map"
+            "vec-u8"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "hash-map"
+          "vec-u8"
+        ];
+      };
+      "googleapis-tonic-google-bigtable-v2" = rec {
+        crateName = "googleapis-tonic-google-bigtable-v2";
+        version = "0.36.0";
+        edition = "2021";
+        sha256 = "1162kbw9w2wgw2r1186918bgrc3dbndkpm393gjaknn87c1yn5j4";
+        libName = "googleapis_tonic_google_bigtable_v2";
+        authors = [
+          "bouzuya <m@bouzuya.net>"
+        ];
+        dependencies = [
+          {
+            name = "googleapis-tonic-google-api";
+            packageId = "googleapis-tonic-google-api";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "googleapis-tonic-google-rpc";
+            packageId = "googleapis-tonic-google-rpc";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "googleapis-tonic-google-type";
+            packageId = "googleapis-tonic-google-type";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "btree-map" = [
+            "googleapis-tonic-google-api/btree-map"
+            "googleapis-tonic-google-rpc/btree-map"
+            "googleapis-tonic-google-type/btree-map"
+          ];
+          "bytes" = [
+            "googleapis-tonic-google-api/bytes"
+            "googleapis-tonic-google-rpc/bytes"
+            "googleapis-tonic-google-type/bytes"
+          ];
+          "default" = [
+            "hash-map"
+            "vec-u8"
+          ];
+          "hash-map" = [
+            "googleapis-tonic-google-api/hash-map"
+            "googleapis-tonic-google-rpc/hash-map"
+            "googleapis-tonic-google-type/hash-map"
+          ];
+          "vec-u8" = [
+            "googleapis-tonic-google-api/vec-u8"
+            "googleapis-tonic-google-rpc/vec-u8"
+            "googleapis-tonic-google-type/vec-u8"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "hash-map"
+          "vec-u8"
+        ];
+      };
+      "googleapis-tonic-google-rpc" = rec {
+        crateName = "googleapis-tonic-google-rpc";
+        version = "0.23.0";
+        edition = "2021";
+        sha256 = "0mm0k6y2a9aacjxvcv3s6dnxj50kcv5qclf25mgm6a6jh01dwz1f";
+        libName = "googleapis_tonic_google_rpc";
+        authors = [
+          "bouzuya <m@bouzuya.net>"
+        ];
+        dependencies = [
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "default" = [
+            "hash-map"
+            "vec-u8"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "hash-map"
+          "vec-u8"
+        ];
+      };
+      "googleapis-tonic-google-type" = rec {
+        crateName = "googleapis-tonic-google-type";
+        version = "0.21.0";
+        edition = "2021";
+        sha256 = "1nvrx63id58pph61lnv7m692yg1hx05nsma44qznkjin7z54s739";
+        libName = "googleapis_tonic_google_type";
+        authors = [
+          "bouzuya <m@bouzuya.net>"
+        ];
+        dependencies = [
+          {
+            name = "prost";
+            packageId = "prost";
+          }
+          {
+            name = "prost-types";
+            packageId = "prost-types";
+          }
+          {
+            name = "tonic";
+            packageId = "tonic";
+            usesDefaultFeatures = false;
+            features = [ "codegen" ];
+          }
+          {
+            name = "tonic-prost";
+            packageId = "tonic-prost";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "default" = [
+            "hash-map"
+            "vec-u8"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "hash-map"
+          "vec-u8"
+        ];
+      };
       "h2" = rec {
         crateName = "h2";
         version = "0.4.14";
@@ -10236,7 +10418,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.5.10";
+            packageId = "socket2 0.6.3";
             optional = true;
             features = [ "all" ];
           }
@@ -11186,7 +11368,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -13315,7 +13497,10 @@ rec {
             packageId = "serde_with";
             optional = true;
             usesDefaultFeatures = false;
-            features = [ "macros" ];
+            features = [
+              "macros"
+              "std"
+            ];
           }
           {
             name = "sha2";
@@ -13703,7 +13888,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             rename = "windows";
             target = { target, features }: (target."windows" or false);
             features = [
@@ -16573,49 +16758,6 @@ rec {
           "std"
         ];
       };
-      "prost-wkt" = rec {
-        crateName = "prost-wkt";
-        version = "0.7.1";
-        edition = "2021";
-        sha256 = "0i8lqqfv0av2svqpnxwcpjl1bri37ll8wjr0z9gcnkz8r7lyagfd";
-        libName = "prost_wkt";
-        authors = [
-          "fdeantoni <fdeantoni@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "chrono";
-            packageId = "chrono";
-            usesDefaultFeatures = false;
-            features = [ "serde" ];
-          }
-          {
-            name = "inventory";
-            packageId = "inventory";
-          }
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-          }
-          {
-            name = "serde_derive";
-            packageId = "serde_derive";
-          }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
-          }
-          {
-            name = "typetag";
-            packageId = "typetag";
-          }
-        ];
-
-      };
       "prost-wkt-build" = rec {
         crateName = "prost-wkt-build";
         version = "0.7.1";
@@ -16648,78 +16790,6 @@ rec {
           }
         ];
 
-      };
-      "prost-wkt-types" = rec {
-        crateName = "prost-wkt-types";
-        version = "0.7.1";
-        edition = "2021";
-        sha256 = "0pj17zdhq4s91x4nsjyp276ws0b2j9qq604rx033v0qmgsm7x00k";
-        libName = "prost_wkt_types";
-        authors = [
-          "fdeantoni <fdeantoni@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "chrono";
-            packageId = "chrono";
-            usesDefaultFeatures = false;
-            features = [ "serde" ];
-          }
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "prost-wkt";
-            packageId = "prost-wkt";
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-          }
-          {
-            name = "serde_derive";
-            packageId = "serde_derive";
-          }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "prost";
-            packageId = "prost";
-          }
-          {
-            name = "prost-build";
-            packageId = "prost-build";
-          }
-          {
-            name = "prost-types";
-            packageId = "prost-types";
-          }
-          {
-            name = "prost-wkt-build";
-            packageId = "prost-wkt-build";
-          }
-          {
-            name = "regex";
-            packageId = "regex";
-          }
-        ];
-        features = {
-          "default" = [ "std" ];
-          "protobuf-src" = [ "dep:protobuf-src" ];
-          "protox" = [ "dep:protox" ];
-          "schemars" = [ "dep:schemars" ];
-          "vendored-protoc" = [ "protobuf-src" ];
-          "vendored-protox" = [ "protox" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "std"
-        ];
       };
       "pulldown-cmark" = rec {
         crateName = "pulldown-cmark";
@@ -16855,7 +16925,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.5.10";
+            packageId = "socket2 0.6.3";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -17127,7 +17197,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.5.10";
+            packageId = "socket2 0.6.3";
             target =
               { target, features }:
               (!((builtins.elem "wasm" target."family") && ("unknown" == target."os" or null)));
@@ -19792,7 +19862,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -20205,7 +20275,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             usesDefaultFeatures = false;
             target = { target, features }: (target."windows" or false);
             features = [
@@ -20574,11 +20644,11 @@ rec {
         };
         resolvedDefaultFeatures = [ "std" ];
       };
-      "schemars 1.1.0" = rec {
+      "schemars 1.2.1" = rec {
         crateName = "schemars";
-        version = "1.1.0";
+        version = "1.2.1";
         edition = "2021";
-        sha256 = "12bjw76926x47l3fpmm3harq8gyn5i5hr1wpp8v3flz8sirf2n4m";
+        sha256 = "1k16qzpdpy6p9hrh18q2l6cwawxzyqi25f8masa13l0wm8v2zd52";
         authors = [
           "Graham Esau <gesau@hotmail.co.uk>"
         ];
@@ -20631,6 +20701,7 @@ rec {
           "semver1" = [ "dep:semver1" ];
           "smallvec1" = [ "dep:smallvec1" ];
           "smol_str02" = [ "dep:smol_str02" ];
+          "smol_str03" = [ "dep:smol_str03" ];
           "url2" = [ "dep:url2" ];
           "uuid1" = [ "dep:uuid1" ];
         };
@@ -21204,7 +21275,7 @@ rec {
           }
           {
             name = "schemars";
-            packageId = "schemars 1.1.0";
+            packageId = "schemars 1.2.1";
             rename = "schemars_1";
             optional = true;
             usesDefaultFeatures = false;
@@ -21242,7 +21313,7 @@ rec {
           }
           {
             name = "schemars";
-            packageId = "schemars 1.1.0";
+            packageId = "schemars 1.2.1";
             rename = "schemars_1";
           }
           {
@@ -21339,8 +21410,6 @@ rec {
         };
         resolvedDefaultFeatures = [
           "alloc"
-          "base64"
-          "default"
           "macros"
           "std"
         ];
@@ -21934,6 +22003,11 @@ rec {
             packageId = "futures";
           }
           {
+            name = "googleapis-tonic-google-bigtable-v2";
+            packageId = "googleapis-tonic-google-bigtable-v2";
+            optional = true;
+          }
+          {
             name = "hashbrown";
             packageId = "hashbrown 0.17.1";
           }
@@ -21989,7 +22063,10 @@ rec {
             name = "serde_with";
             packageId = "serde_with";
             usesDefaultFeatures = false;
-            features = [ "macros" ];
+            features = [
+              "macros"
+              "std"
+            ];
           }
           {
             name = "snix-tracing";
@@ -22162,6 +22239,7 @@ rec {
         features = {
           "cloud" = [
             "dep:bigtable_rs"
+            "dep:googleapis-tonic-google-bigtable-v2"
             "object_store/aws"
             "object_store/azure"
             "object_store/gcp"
@@ -23007,7 +23085,10 @@ rec {
             name = "serde_with";
             packageId = "serde_with";
             usesDefaultFeatures = false;
-            features = [ "macros" ];
+            features = [
+              "macros"
+              "std"
+            ];
           }
           {
             name = "snix-castore";
@@ -23631,6 +23712,11 @@ rec {
             packageId = "futures";
           }
           {
+            name = "googleapis-tonic-google-bigtable-v2";
+            packageId = "googleapis-tonic-google-bigtable-v2";
+            optional = true;
+          }
+          {
             name = "hyper-util";
             packageId = "hyper-util";
           }
@@ -23690,7 +23776,10 @@ rec {
             name = "serde_with";
             packageId = "serde_with";
             usesDefaultFeatures = false;
-            features = [ "macros" ];
+            features = [
+              "macros"
+              "std"
+            ];
           }
           {
             name = "sha1";
@@ -23817,6 +23906,7 @@ rec {
         features = {
           "cloud" = [
             "dep:bigtable_rs"
+            "dep:googleapis-tonic-google-bigtable-v2"
             "snix-castore/cloud"
           ];
           "default" = [
@@ -24066,7 +24156,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.60.2";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -24601,7 +24691,7 @@ rec {
           }
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.59.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Storage_FileSystem"
@@ -28460,7 +28550,7 @@ rec {
         dependencies = [
           {
             name = "windows-targets";
-            packageId = "windows-targets 0.48.5";
+            packageId = "windows-targets 0.52.6";
             target = { target, features }: (target."windows" or false);
           }
         ];
@@ -31490,7 +31580,7 @@ rec {
         dependencies = [
           {
             name = "windows-sys";
-            packageId = "windows-sys 0.48.0";
+            packageId = "windows-sys 0.61.2";
             target = { target, features }: (target."windows" or false);
             features = [
               "Win32_Foundation"
@@ -33159,10 +33249,8 @@ rec {
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Pipes"
-          "Win32_System_SystemInformation"
           "Win32_System_WindowsProgramming"
           "default"
         ];
@@ -33685,16 +33773,9 @@ rec {
         resolvedDefaultFeatures = [
           "Win32"
           "Win32_Foundation"
-          "Win32_Networking"
-          "Win32_Networking_WinSock"
-          "Win32_Security"
-          "Win32_Security_Cryptography"
           "Win32_Storage"
           "Win32_Storage_FileSystem"
           "Win32_System"
-          "Win32_System_Console"
-          "Win32_System_Diagnostics"
-          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "default"
         ];
@@ -33974,7 +34055,6 @@ rec {
           "Win32_System_Console"
           "Win32_System_IO"
           "Win32_System_Threading"
-          "Win32_System_WindowsProgramming"
           "Win32_UI"
           "Win32_UI_Input"
           "Win32_UI_Input_KeyboardAndMouse"
@@ -34262,6 +34342,8 @@ rec {
           "Win32_System"
           "Win32_System_Com"
           "Win32_System_Console"
+          "Win32_System_Diagnostics"
+          "Win32_System_Diagnostics_Debug"
           "Win32_System_IO"
           "Win32_System_LibraryLoader"
           "Win32_System_Memory"

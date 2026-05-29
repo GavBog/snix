@@ -1,9 +1,10 @@
 use super::{PathInfo, PathInfoService};
 use crate::{pathinfoservice, proto};
 use async_stream::try_stream;
-use bigtable_rs::{bigtable, google::bigtable::v2 as bigtable_v2};
+use bigtable_rs::bigtable;
 use data_encoding::HEXLOWER;
 use futures::{StreamExt, TryStreamExt, stream::BoxStream};
+use googleapis_tonic_google_bigtable_v2::google::bigtable::v2 as bigtable_v2;
 use nix_compat::nixbase32;
 use prost::Message;
 use serde::{Deserialize, Serialize};
