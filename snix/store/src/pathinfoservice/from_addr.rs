@@ -93,6 +93,10 @@ mod tests {
         "nix+https://cache.nixos.org?trusted_public_keys[0]=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=",
         true
     )]
+    #[case::nix_http_force_download_nar(
+        "nix+https://cache.nixos.org?trusted_public_keys[0]=cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=&force_download_nar=true",
+        true
+    )]
     /// Correct scheme for unix socket.
     #[case::grpc_valid_unix_socket("grpc+unix:/path/to/somewhere", true)]
     /// Scheme to connect to a unix socket, but with authority.

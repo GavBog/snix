@@ -66,6 +66,9 @@ pub struct NixHTTPPathInfoService<BS: Clone, DS> {
     /// If the list is not empty, the .narinfo files received need to have
     /// correct signature by at least one of these.
     trusted_public_keys: Vec<narinfo::VerifyingKey>,
+
+    /// Force the download of NAR files, even if there's castore-infused NAR URLs.
+    force_download_nar: bool,
 }
 
 impl<BS, DS> NixHTTPPathInfoService<BS, DS>
@@ -136,6 +139,7 @@ where
             layered_directory_service,
 
             trusted_public_keys,
+            force_download_nar: config.params.force_download_nar,
         })
     }
 
@@ -256,16 +260,17 @@ where
         // We can use a shortcut - if the NAR URL is castore-infused we can try
         // that route and maybe save some downloading, as we can leverage already locally present castore subnodes.
         // Get the root node, either by using the infused nar path or by ingesting the entire NAR.
-        let root_node = if let Some(root_node) = try_infused_nar_path(
-            &narinfo,
-            self.layered_blob_service.clone(),
-            &self.layered_directory_service,
-        )
-        .await
-        .unwrap_or_else(|err| {
-            warn!(%err, "unable to use infused store path");
-            None
-        }) {
+        let root_node = if !self.force_download_nar
+            && let Some(root_node) = try_infused_nar_path(
+                &narinfo,
+                self.layered_blob_service.clone(),
+                &self.layered_directory_service,
+            )
+            .await
+            .unwrap_or_else(|err| {
+                warn!(%err, "unable to use infused store path");
+                None
+            }) {
             root_node
         } else {
             // create a request for the NAR file itself.
@@ -409,6 +414,10 @@ struct NixHTTPPathInfoServiceParams {
     /// An optional list of [narinfo::VerifyingKey].
     /// If not empty, the .narinfo files received need to have correct signature by at least one of these.
     trusted_public_keys: Vec<String>,
+
+    #[serde(default)]
+    /// Force the download of NAR files, even if there's castore-infused NAR URLs.
+    force_download_nar: bool,
 }
 
 fn default_blob_service() -> String {
@@ -493,7 +502,8 @@ mod tests {
             params: NixHTTPPathInfoServiceParams {
                 blob_service: "&root".to_string(),
                 directory_service: "&root".to_string(),
-                trusted_public_keys: vec![]
+                trusted_public_keys: vec![],
+                force_download_nar: false,
             }
         }
     ))]
@@ -504,7 +514,8 @@ mod tests {
             params: NixHTTPPathInfoServiceParams {
                 blob_service: "&root".to_string(),
                 directory_service: "&root".to_string(),
-                trusted_public_keys: vec![]
+                trusted_public_keys: vec![],
+                force_download_nar: false,
             }
         }
     ))]
@@ -515,7 +526,8 @@ mod tests {
             params: NixHTTPPathInfoServiceParams {
                 blob_service: "&root".to_string(),
                 directory_service: "&root".to_string(),
-                trusted_public_keys: vec![]
+                trusted_public_keys: vec![],
+                force_download_nar: false,
             }
         }
     ))]
@@ -526,7 +538,8 @@ mod tests {
             params: NixHTTPPathInfoServiceParams {
                 blob_service: "&root".to_string(),
                 directory_service: "&root".to_string(),
-                trusted_public_keys: vec![]
+                trusted_public_keys: vec![],
+                force_download_nar: false,
             }
         }
 
@@ -541,7 +554,8 @@ mod tests {
                 directory_service: "&root".to_string(),
                 trusted_public_keys: vec![
                     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=".to_string()
-                ]
+                ],
+                force_download_nar: false,
             }
         }
     ))]
@@ -556,7 +570,8 @@ mod tests {
                 trusted_public_keys: vec![
                     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=".to_string(),
                     "foo:jp4fCEx9tBEId/L0ZsVJ26k0wC0fu7vJqLjjIGFkup8=".to_string()
-                ]
+                ],
+                force_download_nar: false,
             }
         }
     ))]
