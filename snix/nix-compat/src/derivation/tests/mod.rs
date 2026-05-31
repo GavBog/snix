@@ -314,6 +314,8 @@ fn output_paths(#[case] name: &str, #[case] drv_path_str: &str) {
 /// it, then continues with the foo derivation.
 ///
 /// The code ensures the resulting Derivations match our fixtures.
+///
+/// This logic is mirrored in `derivation-output-path-construction` case in nix-language-test-suite
 #[cfg(feature = "serde")]
 #[test]
 fn output_path_construction() {

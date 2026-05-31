@@ -1,0 +1,7 @@
+lang {
+  builtins "derivation"
+}
+
+runtime-opts {
+  eval-strict
+}
