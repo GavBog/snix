@@ -220,7 +220,10 @@ fn matches_expected_error(version: NixVersion, error_string: &str, expected: &Er
             NixVersion::CppNixLatest => &["does not exist", "has an unsupported type"][..],
             _ => &["No such file or directory", "has an unsupported type"][..],
         },
-        ErrorKind::TypeError => &["requires a function"][..],
+        ErrorKind::TypeError => match version {
+            NixVersion::CppNix23 => &["requires a function", "was expected"][..],
+            _ => &["requires a function", "expected a"][..],
+        },
         ErrorKind::InvalidStorePath => match version {
             NixVersion::CppNixLatest => &["is not a valid store path"][..],
             NixVersion::CppNix23 => &["Path names are alphanumeric"],

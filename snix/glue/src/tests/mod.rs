@@ -148,34 +148,6 @@ fn nix_eval_okay(#[files("src/tests/nix_tests/eval-okay-*.nix")] code_path: Path
     eval_test(code_path, true)
 }
 
-// eval-okay-* tests from the original Nix test suite which do not yet pass for snix
-//
-// Eventually there will be none of these left, and this function
-// will disappear :) Until then, to run these tests, use `cargo test
-// --features expected_failures`.
-//
-// Please don't submit failing tests unless they're in
-// notyetpassing; this makes the test suite much more useful for
-// regression testing, since there should always be zero non-ignored
-// failing tests.
-//
-// NOTE: There's no such test anymore. `rstest` does not handle empty directories, so, we
-// just comment it for now.
-//
-// #[rstest]
-// fn nix_eval_okay_currently_failing(
-//     #[files("src/tests/nix_tests/notyetpassing/eval-okay-*.nix")] code_path: PathBuf,
-// ) {
-//     eval_test(code_path, false)
-// }
-
-#[rstest]
-fn nix_eval_okay_currently_failing(
-    #[files("src/tests/snix_tests/notyetpassing/eval-okay-*.nix")] code_path: PathBuf,
-) {
-    eval_test(code_path, false)
-}
-
 // eval-fail-* tests contain a snippet of Nix code, which is
 // expected to fail evaluation.  The exact type of failure
 // (assertion, parse error, etc) is not currently checked.
