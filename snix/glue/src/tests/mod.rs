@@ -141,13 +141,6 @@ fn eval_okay(#[files("src/tests/snix_tests/eval-okay-*.nix")] code_path: PathBuf
     eval_test(code_path, true)
 }
 
-// eval-okay-* tests from the original Nix test suite.
-#[cfg(feature = "nix_tests")]
-#[rstest]
-fn nix_eval_okay(#[files("src/tests/nix_tests/eval-okay-*.nix")] code_path: PathBuf) {
-    eval_test(code_path, true)
-}
-
 // eval-fail-* tests contain a snippet of Nix code, which is
 // expected to fail evaluation.  The exact type of failure
 // (assertion, parse error, etc) is not currently checked.

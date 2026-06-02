@@ -1,0 +1,7 @@
+lang {
+  builtins "derivation" "unsafeDiscardStringContext" "getContext" "appendContext" "unsafeDiscardOutputDependency"
+}
+
+runtime-opts {
+  eval-strict
+}
