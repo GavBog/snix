@@ -7,10 +7,6 @@ paths = [
   #
   # Related issue: https://github.com/NixOS/nix/issues/7761
   "filterSource-symlink-dir",
-
-  "placeholder-drv-name",
-  "placeholder-empty-name",
-  "placeholder-invalid-chars",
 ]
 
 builtins = ["readFileType", "readFile", "__nixPath", "unsafeGetAttrPos"]
