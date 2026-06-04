@@ -6,3 +6,4 @@ members = ["common", "cppnix", "snix"]
 rstest = "0.26.1"
 serde = "1.0.228"
 toml = "1.1.2"
+pretty_assertions = "1.4.0"

@@ -1,3 +1,4 @@
+use pretty_assertions::assert_eq;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;

@@ -8,6 +8,7 @@ rstest.workspace = true
 nix-language-test-suite-common = { path = "../common" }
 serde.workspace = true
 toml.workspace = true
+pretty_assertions.workspace = true
 snix-eval = { path = "../../../../snix/eval" }
 snix-glue = { path = "../../../../snix/glue" }
 snix-build = { path = "../../../../snix/build", default-features = false }

@@ -8,3 +8,4 @@ nix-language-test-suite-common = { path = "../common" }
 rstest.workspace = true
 serde.workspace = true
 toml.workspace = true
+pretty_assertions.workspace = true
