@@ -13,6 +13,7 @@ use nix_compat::{
 use serde_with::{DefaultOnNull, serde_as};
 use snix_castore::import::fs::ingest_path;
 use snix_cli::shutdown_signal;
+use snix_store::decompression::DecompressedReader;
 use snix_store::nar::NarCalculationService;
 use snix_store::utils::ServiceUrls;
 use std::path::PathBuf;
@@ -411,13 +412,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     let directory_service = &directory_service;
                     let mut stdout_writer = stdout_writer.clone();
                     async move {
-                        let mut reader = snix_cli::reader_for_path(path).await?;
-                        let root_node = snix_store::nar::ingest_nar(
-                            blob_service,
-                            directory_service,
-                            &mut reader,
-                        )
-                        .await?;
+                        let reader = snix_cli::reader_for_path(path).await?;
+
+                        // Transparently decompress the NAR if it is compressed.
+                        let mut reader = DecompressedReader::new(reader).await?;
+
+                        let root_node = if let Some(reader) = reader.as_unknown_inner() {
+                            snix_store::nar::ingest_nar(blob_service, directory_service, reader)
+                                .await?
+                        } else {
+                            snix_store::nar::ingest_nar(
+                                blob_service,
+                                directory_service,
+                                &mut tokio::io::BufReader::new(reader),
+                            )
+                            .await?
+                        };
+
                         writeln!(
                             &mut stdout_writer,
                             "{}",
