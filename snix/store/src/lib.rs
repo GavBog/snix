@@ -1,6 +1,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod composition;
+pub mod decompression;
 pub mod fixtures;
 pub mod import;
 pub mod nar;

@@ -18386,17 +18386,6 @@ rec {
         libName = "snix_glue";
         dependencies = [
           {
-            name = "async-compression";
-            packageId = "async-compression";
-            features = [
-              "tokio"
-              "gzip"
-              "bzip2"
-              "xz"
-              "zstd"
-            ];
-          }
-          {
             name = "async-stream";
             packageId = "async-stream";
           }
@@ -18435,10 +18424,6 @@ rec {
               "flakeref"
               "hashbrown"
             ];
-          }
-          {
-            name = "pin-project";
-            packageId = "pin-project";
           }
           {
             name = "regex";
@@ -18608,6 +18593,10 @@ rec {
               "async"
               "serde"
             ];
+          }
+          {
+            name = "pin-project";
+            packageId = "pin-project";
           }
           {
             name = "pin-project-lite";

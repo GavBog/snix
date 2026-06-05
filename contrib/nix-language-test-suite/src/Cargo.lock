@@ -4150,7 +4150,6 @@ dependencies = [
 name = "snix-glue"
 version = "0.1.0"
 dependencies = [
- "async-compression",
  "async-stream",
  "bstr",
  "bytes",
@@ -4160,7 +4159,6 @@ dependencies = [
  "hashbrown 0.17.1",
  "md-5",
  "nix-compat",
- "pin-project",
  "regex",
  "reqwest 0.13.3",
  "serde",
@@ -4199,6 +4197,7 @@ dependencies = [
  "lru",
  "md-5",
  "nix-compat",
+ "pin-project",
  "pin-project-lite",
  "prost",
  "redb",

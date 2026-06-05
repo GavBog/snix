@@ -10,6 +10,7 @@ use sha1::Sha1;
 use sha2::{Digest, Sha256, Sha512};
 use snix_castore::{Node, blobservice::BlobService, directoryservice::DirectoryService};
 use snix_store::{
+    decompression::DecompressedReader,
     nar::{NarCalculationService, NarIngestionError},
     pathinfoservice::{PathInfo, PathInfoService},
 };
@@ -20,9 +21,6 @@ use tracing_indicatif::span_ext::IndicatifSpanExt;
 use url::Url;
 
 use crate::builtins::FetcherError;
-
-mod decompression;
-use decompression::DecompressedReader;
 
 /// Representing options for doing a fetch.
 #[derive(Clone, Eq, PartialEq)]

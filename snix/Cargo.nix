@@ -23434,17 +23434,6 @@ rec {
         libName = "snix_glue";
         dependencies = [
           {
-            name = "async-compression";
-            packageId = "async-compression";
-            features = [
-              "tokio"
-              "gzip"
-              "bzip2"
-              "xz"
-              "zstd"
-            ];
-          }
-          {
             name = "async-stream";
             packageId = "async-stream";
           }
@@ -23483,10 +23472,6 @@ rec {
               "flakeref"
               "hashbrown"
             ];
-          }
-          {
-            name = "pin-project";
-            packageId = "pin-project";
           }
           {
             name = "regex";
@@ -23733,6 +23718,10 @@ rec {
             ];
           }
           {
+            name = "pin-project";
+            packageId = "pin-project";
+          }
+          {
             name = "pin-project-lite";
             packageId = "pin-project-lite";
           }
@@ -23869,6 +23858,11 @@ rec {
           }
         ];
         devDependencies = [
+          {
+            name = "astral-tokio-tar";
+            packageId = "astral-tokio-tar";
+            rename = "tokio-tar";
+          }
           {
             name = "async-process";
             packageId = "async-process";

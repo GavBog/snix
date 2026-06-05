@@ -5,13 +5,6 @@ edition = "2024"
 rust-version.workspace = true
 
 [dependencies]
-async-compression = { workspace = true, features = [
-  "tokio",
-  "gzip",
-  "bzip2",
-  "xz",
-  "zstd",
-] }
 async-stream.workspace = true
 bstr.workspace = true
 bytes.workspace = true
@@ -19,7 +12,6 @@ data-encoding.workspace = true
 futures.workspace = true
 hashbrown.workspace = true
 nix-compat = { path = "../nix-compat", features = ["flakeref", "hashbrown"] }
-pin-project.workspace = true
 regex.workspace = true
 reqwest = { workspace = true }
 snix-build = { path = "../build", default-features = false, features = [] }

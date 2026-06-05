@@ -5299,7 +5299,6 @@ name = "snix-glue"
 version = "0.1.0"
 dependencies = [
  "astral-tokio-tar",
- "async-compression",
  "async-stream",
  "bstr",
  "bytes",
@@ -5313,7 +5312,6 @@ dependencies = [
  "mimalloc",
  "nix 0.27.1",
  "nix-compat",
- "pin-project",
  "pretty_assertions",
  "regex",
  "reqwest 0.13.1",
@@ -5350,6 +5348,7 @@ dependencies = [
 name = "snix-store"
 version = "0.1.0"
 dependencies = [
+ "astral-tokio-tar",
  "async-compression",
  "async-process",
  "async-stream",
@@ -5369,6 +5368,7 @@ dependencies = [
  "lru",
  "md-5",
  "nix-compat",
+ "pin-project",
  "pin-project-lite",
  "prost",
  "redb",
