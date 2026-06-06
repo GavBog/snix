@@ -245,6 +245,7 @@ fn matches_expected_error(version: NixVersion, error_string: &str, expected: &Er
                 "cannot process __json attribute",
             ][..],
         },
+        ErrorKind::UnexpectedArgument => &["unsupported argument"][..],
     };
 
     must_contain.iter().any(|x| error_string.contains(x))

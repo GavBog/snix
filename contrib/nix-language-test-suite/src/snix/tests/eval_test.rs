@@ -233,6 +233,10 @@ fn matches_expected_error(result: &snix_eval::EvaluationResult, exp_kind: &Error
                 .is_some(),
             _ => false,
         },
+        ErrorKind::UnexpectedArgument => matches!(
+            snix_kind,
+            snix_eval::ErrorKind::UnexpectedArgumentBuiltin(_)
+        ),
     }
 }
 

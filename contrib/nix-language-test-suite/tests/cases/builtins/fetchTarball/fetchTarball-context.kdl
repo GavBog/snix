@@ -1,0 +1,7 @@
+lang {
+  builtins "fetchTarball" "getContext"
+}
+
+environment {
+  network
+}

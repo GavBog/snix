@@ -75,6 +75,7 @@ pub enum ErrorKind {
     InvalidStorePath,
     HashMismatch,
     DerivationError,
+    UnexpectedArgument,
 }
 
 impl std::str::FromStr for ErrorKind {
@@ -88,6 +89,7 @@ impl std::str::FromStr for ErrorKind {
             "InvalidStorePath" => Ok(ErrorKind::InvalidStorePath),
             "HashMismatch" => Ok(ErrorKind::HashMismatch),
             "DerivationError" => Ok(ErrorKind::DerivationError),
+            "UnexpectedArgument" => Ok(ErrorKind::UnexpectedArgument),
             other => Err(format!("unknown error kind: {other}")),
         }
     }
