@@ -10,6 +10,7 @@ async-compression = { workspace = true, features = [
   "gzip",
   "bzip2",
   "xz",
+  "zstd",
 ] }
 async-stream.workspace = true
 bstr.workspace = true

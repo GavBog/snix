@@ -4,7 +4,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use async_compression::tokio::bufread::{BzDecoder, GzipDecoder, XzDecoder};
+use async_compression::tokio::bufread::{BzDecoder, GzipDecoder, XzDecoder, ZstdDecoder};
 use futures::ready;
 use pin_project::pin_project;
 use tokio::io::{AsyncBufRead, AsyncRead, BufReader, ReadBuf};
@@ -12,6 +12,7 @@ use tokio::io::{AsyncBufRead, AsyncRead, BufReader, ReadBuf};
 const GZIP_MAGIC: [u8; 2] = [0x1f, 0x8b];
 const BZIP2_MAGIC: [u8; 3] = *b"BZh";
 const XZ_MAGIC: [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00];
+const ZSTD_MAGIC: [u8; 4] = [0x28, 0xb5, 0x2f, 0xfd];
 const BYTES_NEEDED: usize = 6;
 
 #[derive(Debug, Clone, Copy)]
@@ -19,6 +20,7 @@ enum Algorithm {
     Gzip,
     Bzip2,
     Xz,
+    Zstd,
 }
 
 impl Algorithm {
@@ -29,6 +31,8 @@ impl Algorithm {
             Some(Self::Bzip2)
         } else if magic.starts_with(&XZ_MAGIC) {
             Some(Self::Xz)
+        } else if magic.starts_with(&ZSTD_MAGIC) {
+            Some(Self::Zstd)
         } else {
             None
         }
@@ -71,6 +75,7 @@ enum DecompressedReaderInner<R> {
     Gzip(#[pin] GzipDecoder<BufReader<WithPreexistingBuffer<R>>>),
     Bzip2(#[pin] BzDecoder<BufReader<WithPreexistingBuffer<R>>>),
     Xz(#[pin] XzDecoder<BufReader<WithPreexistingBuffer<R>>>),
+    Zstd(#[pin] ZstdDecoder<BufReader<WithPreexistingBuffer<R>>>),
 }
 
 impl<R> DecompressedReaderInner<R>
@@ -84,7 +89,8 @@ where
             }
             DecompressedReaderInner::Gzip(_)
             | DecompressedReaderInner::Bzip2(_)
-            | DecompressedReaderInner::Xz(_) => unreachable!(),
+            | DecompressedReaderInner::Xz(_)
+            | DecompressedReaderInner::Zstd(_) => unreachable!(),
         };
         let inner = BufReader::new(WithPreexistingBuffer { buffer, inner });
 
@@ -92,6 +98,7 @@ where
             Algorithm::Gzip => Self::Gzip(GzipDecoder::new(inner)),
             Algorithm::Bzip2 => Self::Bzip2(BzDecoder::new(inner)),
             Algorithm::Xz => Self::Xz(XzDecoder::new(inner)),
+            Algorithm::Zstd => Self::Zstd(ZstdDecoder::new(inner)),
         }
     }
 }
@@ -112,6 +119,7 @@ where
             DecompressedReaderInnerProj::Gzip(inner) => inner.poll_read(cx, buf),
             DecompressedReaderInnerProj::Bzip2(inner) => inner.poll_read(cx, buf),
             DecompressedReaderInnerProj::Xz(inner) => inner.poll_read(cx, buf),
+            DecompressedReaderInnerProj::Zstd(inner) => inner.poll_read(cx, buf),
         }
     }
 }
@@ -149,6 +157,7 @@ where
             DecompressedReaderInnerProj::Gzip(inner) => return inner.poll_read(cx, buf),
             DecompressedReaderInnerProj::Bzip2(inner) => return inner.poll_read(cx, buf),
             DecompressedReaderInnerProj::Xz(inner) => return inner.poll_read(cx, buf),
+            DecompressedReaderInnerProj::Zstd(inner) => return inner.poll_read(cx, buf),
             DecompressedReaderInnerProj::Unknown { buffer, inner } => (buffer, inner),
         };
 
@@ -162,7 +171,7 @@ where
             } else {
                 return Poll::Ready(Err(io::Error::new(
                     io::ErrorKind::InvalidData,
-                    "data not gz, bzip2, or xz compressed",
+                    "data not gz, bzip2, xz, or zstd compressed",
                 )));
             }
             this.inner.poll_read(cx, buf)
@@ -203,6 +212,7 @@ mod tests {
     #[case::gzip(include_bytes!("../tests/blob.tar.gz"))]
     #[case::bzip2(include_bytes!("../tests/blob.tar.bz2"))]
     #[case::xz(include_bytes!("../tests/blob.tar.xz"))]
+    #[case::zstd(include_bytes!("../tests/blob.tar.zst"))]
     #[tokio::test]
     async fn compressed_tar(#[case] data: &[u8]) {
         let reader = DecompressedReader::new(BufReader::new(data));

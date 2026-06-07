@@ -23446,6 +23446,7 @@ rec {
               "gzip"
               "bzip2"
               "xz"
+              "zstd"
             ];
           }
           {
