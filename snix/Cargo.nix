@@ -699,9 +699,9 @@ rec {
       };
       "async-compression" = rec {
         crateName = "async-compression";
-        version = "0.4.35";
+        version = "0.4.42";
         edition = "2018";
-        sha256 = "06dmij2cajd3pcs80x24klrajm4fn3fwmycpa4sjv3qppzg2da87";
+        sha256 = "1b59jb3y26pmxdshyjb7slxrp184ydlzq80ryfc2ik6cg653z6z7";
         libName = "async_compression";
         authors = [
           "Wim Looman <wim@nemo157.com>"
@@ -715,11 +715,6 @@ rec {
           {
             name = "compression-core";
             packageId = "compression-core";
-          }
-          {
-            name = "futures-core";
-            packageId = "futures-core";
-            usesDefaultFeatures = false;
           }
           {
             name = "pin-project-lite";
@@ -5319,9 +5314,9 @@ rec {
       };
       "compression-codecs" = rec {
         crateName = "compression-codecs";
-        version = "0.4.34";
+        version = "0.4.38";
         edition = "2018";
-        sha256 = "08y31f3j51wla6xrb7ynflvfsz5jslw6kgy4lprrdjkfifxwp8rl";
+        sha256 = "1kqq2b8hpv7y3jnakkp66cdlrzl6my02dapn3g12j6cw3qwlh9ff";
         libName = "compression_codecs";
         authors = [
           "Wim Looman <wim@nemo157.com>"
@@ -5424,9 +5419,9 @@ rec {
       };
       "compression-core" = rec {
         crateName = "compression-core";
-        version = "0.4.31";
+        version = "0.4.32";
         edition = "2018";
-        sha256 = "13cxnh46qvli55aqv04i3l6kiw2835ngp6mr5paa00nidvxlx63m";
+        sha256 = "12bp209x76flr67jm5fql4hq8d14nkjzkk24g9gi0yh2rxjza56c";
         libName = "compression_core";
         authors = [
           "Wim Looman <wim@nemo157.com>"

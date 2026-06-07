@@ -57,7 +57,7 @@ rust-version = "1.94.1"
 
 [workspace.dependencies]
 anyhow = "1.0.86"
-async-compression = "0.4.12"
+async-compression = "0.4.42"
 async-process = "2.2.4"
 async-stream = "0.3.5"
 aws-config = "1.8.15"
