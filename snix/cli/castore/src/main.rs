@@ -9,7 +9,6 @@ use std::error::Error;
 use std::io::Write;
 use std::path::PathBuf;
 use tokio::fs::{self, File};
-use tokio_tar::Archive;
 use tonic::transport::Server;
 
 #[derive(Parser)]
@@ -170,9 +169,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 ingest_path::<_, _, _, &[u8]>(&blob_service, &directory_service, &input, None)
                     .await?
             } else {
-                let file = File::open(&input).await?;
-                let archive_instance = Archive::new(file);
-                ingest_archive(blob_service.clone(), &directory_service, archive_instance).await?
+                let mut file = File::open(&input).await?;
+                ingest_archive(blob_service.clone(), &directory_service, &mut file).await?
             };
             let digest = match node {
                 Node::Directory { digest, .. } => digest,

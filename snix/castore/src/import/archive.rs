@@ -7,7 +7,6 @@ use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::visit::{DfsPostOrder, EdgeRef};
 use tokio::io::AsyncRead;
 use tokio_stream::StreamExt;
-use tokio_tar::Archive;
 use tracing::{Level, instrument, warn};
 
 use crate::Node;
@@ -55,19 +54,22 @@ pub enum Error {
     BlobUploadError(#[from] blobs::Error),
 }
 
-/// Ingests elements from the given tar [`Archive`] into a the passed [`BlobService`] and
-/// [`DirectoryService`].
+/// Ingests elements from the archive readable at the passed reader into a the
+/// passed [`BlobService`] and [`DirectoryService`].
 #[instrument(skip_all, ret(level = Level::TRACE), err)]
 pub async fn ingest_archive<BS, DS, R>(
     blob_service: BS,
     directory_service: DS,
-    mut archive: Archive<R>,
+    mut r: R,
 ) -> Result<Node, IngestionError<Error>>
 where
     BS: BlobService + Clone + 'static,
     DS: DirectoryService,
     R: AsyncRead + Unpin,
 {
+    // Open the archive.
+    let mut archive = tokio_tar::Archive::new(&mut r);
+
     // Since tarballs can have entries in any arbitrary order, we need to
     // buffer all of the directory metadata so we can reorder directory
     // contents and entries to meet the requires of the castore.

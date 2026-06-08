@@ -22522,11 +22522,6 @@ rec {
         };
         dependencies = [
           {
-            name = "astral-tokio-tar";
-            packageId = "astral-tokio-tar";
-            rename = "tokio-tar";
-          }
-          {
             name = "clap";
             packageId = "clap";
             features = [
@@ -23434,11 +23429,6 @@ rec {
         libName = "snix_glue";
         dependencies = [
           {
-            name = "astral-tokio-tar";
-            packageId = "astral-tokio-tar";
-            rename = "tokio-tar";
-          }
-          {
             name = "async-compression";
             packageId = "async-compression";
             features = [
@@ -23574,6 +23564,11 @@ rec {
           }
         ];
         devDependencies = [
+          {
+            name = "astral-tokio-tar";
+            packageId = "astral-tokio-tar";
+            rename = "tokio-tar";
+          }
           {
             name = "criterion";
             packageId = "criterion";

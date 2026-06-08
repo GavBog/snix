@@ -14,7 +14,6 @@ snix-castore.path = "../../castore"
 snix-cli.path = "../base"
 snix-tracing = { path = "../../tracing", features = ["clap", "tonic"] }
 tokio.workspace = true
-tokio-tar.workspace = true
 tokio-listener = { workspace = true, features = [
   "clap",
   "multi-listener",

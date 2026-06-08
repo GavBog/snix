@@ -30,7 +30,6 @@ snix-tracing = { path = "../tracing" }
 tracing.workspace = true
 tracing-indicatif.workspace = true
 tokio.workspace = true
-tokio-tar.workspace = true
 tokio-util = { workspace = true, features = ["io", "io-util", "compat"] }
 thiserror.workspace = true
 serde.workspace = true
@@ -50,6 +49,7 @@ nix = { workspace = true, features = ["fs"] }
 pretty_assertions.workspace = true
 rstest.workspace = true
 tempfile.workspace = true
+tokio-tar.workspace = true
 
 [features]
 default = ["nix_tests"]

@@ -401,14 +401,11 @@ where
                 // Pop compression, if it exists.
                 let r = DecompressedReader::new(r).await?;
 
-                // Open the archive.
-                let archive = tokio_tar::Archive::new(r);
-
                 // Ingest the archive, get the root node.
                 let node = snix_castore::import::archive::ingest_archive(
                     self.blob_service.clone(),
                     self.directory_service.clone(),
-                    archive,
+                    r,
                 )
                 .await?;
 

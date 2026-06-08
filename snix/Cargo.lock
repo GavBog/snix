@@ -5123,7 +5123,6 @@ dependencies = [
 name = "snix-cli-castore"
 version = "0.1.0"
 dependencies = [
- "astral-tokio-tar",
  "clap",
  "snix-castore",
  "snix-cli",
