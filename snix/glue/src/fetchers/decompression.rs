@@ -114,6 +114,18 @@ impl<R: AsyncBufRead + Unpin> DecompressedReader<R> {
             None => Self::Unknown(r),
         })
     }
+
+    /// The decoders don't implement [AsyncBufRead], so we cannot implement it for [DecompressedReader].
+    /// However, in the unknown case we only wrap R (and the buffer we read so far), they are [AsyncBufRead].
+    /// This provides a way to get a mutable reference to it.
+    #[allow(unused)]
+    pub fn as_unknown_inner(&mut self) -> Option<&mut WithPreexistingBuffer<R>> {
+        if let Self::Unknown(r) = self {
+            Some(r)
+        } else {
+            None
+        }
+    }
 }
 
 impl<R> AsyncRead for DecompressedReader<R>
@@ -142,7 +154,7 @@ mod tests {
     use async_compression::tokio::bufread::GzipEncoder;
     use futures::TryStreamExt;
     use rstest::rstest;
-    use tokio::io::{AsyncReadExt, BufReader};
+    use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
     use tokio_tar::Archive;
 
     use super::*;
@@ -181,5 +193,26 @@ mod tests {
         let mut data = String::new();
         entries[0].read_to_string(&mut data).await.unwrap();
         assert_eq!(data, "");
+    }
+
+    #[tokio::test]
+    async fn unknown() {
+        let data = b"abcdefghijk";
+        let mut reader = DecompressedReader::new(BufReader::new(Cursor::new(data)))
+            .await
+            .expect("new to succeed");
+
+        // this is expected to implement AsyncBufRead, so we can do the following:
+        let inner_reader = reader.as_unknown_inner().expect("to be some");
+        let _ = inner_reader.fill_buf().await;
+
+        // ... but we should also be able to just read from the outer:
+        let mut buf = Vec::new();
+        reader
+            .read_to_end(&mut buf)
+            .await
+            .expect("read_to_end to not fail");
+
+        assert_eq!(data[..], buf[..], "read data should match");
     }
 }
