@@ -398,8 +398,9 @@ where
                 // NOTE: For Fetch::Tarball, the expected NAR SHA256 is specified, so we cannot use the hashed_mirrors mechanism.
                 let r = self.download(url.clone(), None).await?;
 
-                // Pop compression.
-                let r = DecompressedReader::new(r);
+                // Pop compression, if it exists.
+                let r = DecompressedReader::new(r).await?;
+
                 // Open the archive.
                 let archive = tokio_tar::Archive::new(r);
 
@@ -447,8 +448,8 @@ where
                 // Construct a AsyncRead reading from the data as its downloaded.
                 let r = self.download(url.clone(), Some(&exp_hash)).await?;
 
-                // Pop compression.
-                let mut r = DecompressedReader::new(r);
+                // Pop compression, if it exists.
+                let mut r = DecompressedReader::new(r).await?;
 
                 // Ingest the NAR, get the root node.
                 let (root_node, _actual_nar_sha256, actual_nar_size) =

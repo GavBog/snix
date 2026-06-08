@@ -1,13 +1,12 @@
 use std::{
-    io, mem,
+    io::{self, Cursor},
     pin::Pin,
     task::{Context, Poll},
 };
 
 use async_compression::tokio::bufread::{BzDecoder, GzipDecoder, XzDecoder, ZstdDecoder};
-use futures::ready;
 use pin_project::pin_project;
-use tokio::io::{AsyncBufRead, AsyncRead, BufReader, ReadBuf};
+use tokio::io::{AsyncBufRead, AsyncRead, AsyncReadExt, ReadBuf};
 
 const GZIP_MAGIC: [u8; 2] = [0x1f, 0x8b];
 const BZIP2_MAGIC: [u8; 3] = *b"BZh";
@@ -39,71 +38,85 @@ impl Algorithm {
     }
 }
 
-#[pin_project]
-struct WithPreexistingBuffer<R> {
-    buffer: Vec<u8>,
-    #[pin]
-    inner: R,
+#[derive(Clone)]
+pub struct SmallBuf<const N: usize> {
+    data_len: u8,
+    buf: [u8; N],
 }
 
-impl<R> AsyncRead for WithPreexistingBuffer<R>
-where
-    R: AsyncRead,
-{
-    fn poll_read(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<io::Result<()>> {
-        let this = self.project();
-        if !this.buffer.is_empty() {
-            // TODO: check if the buffer fits first
-            buf.put_slice(this.buffer);
-            this.buffer.clear();
-        }
-        this.inner.poll_read(cx, buf)
+impl<const N: usize> AsRef<[u8]> for SmallBuf<N> {
+    fn as_ref(&self) -> &[u8] {
+        &self.buf[..self.data_len as usize]
     }
 }
 
-#[pin_project(project = DecompressedReaderInnerProj)]
-enum DecompressedReaderInner<R> {
-    Unknown {
-        buffer: Vec<u8>,
-        #[pin]
-        inner: Option<R>,
-    },
-    Gzip(#[pin] GzipDecoder<BufReader<WithPreexistingBuffer<R>>>),
-    Bzip2(#[pin] BzDecoder<BufReader<WithPreexistingBuffer<R>>>),
-    Xz(#[pin] XzDecoder<BufReader<WithPreexistingBuffer<R>>>),
-    Zstd(#[pin] ZstdDecoder<BufReader<WithPreexistingBuffer<R>>>),
+impl<const N: usize> std::ops::Deref for SmallBuf<N> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.buf[..self.data_len as usize]
+    }
 }
 
-impl<R> DecompressedReaderInner<R>
-where
-    R: AsyncBufRead,
-{
-    fn switch_to(&mut self, algorithm: Algorithm) {
-        let (buffer, inner) = match self {
-            DecompressedReaderInner::Unknown { buffer, inner } => {
-                (mem::take(buffer), inner.take().unwrap())
+type WithPreexistingBuffer<R> = tokio::io::Chain<io::Cursor<SmallBuf<BYTES_NEEDED>>, R>;
+
+#[pin_project(project = DecompressedReaderProj)]
+pub enum DecompressedReader<R> {
+    Unknown(#[pin] WithPreexistingBuffer<R>),
+    Gzip(#[pin] GzipDecoder<WithPreexistingBuffer<R>>),
+    Bzip(#[pin] BzDecoder<WithPreexistingBuffer<R>>),
+    Xz(#[pin] XzDecoder<WithPreexistingBuffer<R>>),
+    Zstd(#[pin] ZstdDecoder<WithPreexistingBuffer<R>>),
+}
+
+impl<R: AsyncRead + Unpin> DecompressedReader<R> {
+    /// Reads up to `BYTES_NEEDED` bytes from the underlying reader,
+    /// and returns those Bytes as a SmallBuf, as well as a reader allowing to read all data
+    async fn buffer_magic(
+        mut r: R,
+    ) -> std::io::Result<(SmallBuf<BYTES_NEEDED>, WithPreexistingBuffer<R>)> {
+        let mut buf = [0; BYTES_NEEDED];
+        let mut buf_filled = 0;
+
+        while buf_filled < BYTES_NEEDED {
+            let bytes_read = r.read(&mut buf).await?;
+            // EOF while filling buf
+            if bytes_read == 0 {
+                tracing::trace!("got EOF while filling buffer");
+                break;
             }
-            DecompressedReaderInner::Gzip(_)
-            | DecompressedReaderInner::Bzip2(_)
-            | DecompressedReaderInner::Xz(_)
-            | DecompressedReaderInner::Zstd(_) => unreachable!(),
-        };
-        let inner = BufReader::new(WithPreexistingBuffer { buffer, inner });
-
-        *self = match algorithm {
-            Algorithm::Gzip => Self::Gzip(GzipDecoder::new(inner)),
-            Algorithm::Bzip2 => Self::Bzip2(BzDecoder::new(inner)),
-            Algorithm::Xz => Self::Xz(XzDecoder::new(inner)),
-            Algorithm::Zstd => Self::Zstd(ZstdDecoder::new(inner)),
+            buf_filled += bytes_read;
         }
+
+        let buf = SmallBuf {
+            data_len: buf_filled as u8,
+            buf,
+        };
+
+        Ok((buf.clone(), Cursor::new(buf).chain(r)))
     }
 }
 
-impl<R> AsyncRead for DecompressedReaderInner<R>
+impl<R: AsyncBufRead + Unpin> DecompressedReader<R> {
+    /// Checks the passed reader for a suitable compression magic to be present,
+    /// pulling up to 6 bytes of data.
+    /// If there is, returns a reader which allows reading decompressed data.
+    /// Else, returns a reader that reads the uncompressed/undetected data (including the up to 6 bytes).
+    pub async fn new(reader: R) -> std::io::Result<Self> {
+        let (buffer, r) = Self::buffer_magic(reader).await?;
+
+        // r.buffer is guaranteed to have at least BYTES_NEEDED bytes if not EOF before.
+        Ok(match Algorithm::from_magic(&buffer) {
+            Some(Algorithm::Gzip) => Self::Gzip(GzipDecoder::new(r)),
+            Some(Algorithm::Bzip2) => Self::Bzip(BzDecoder::new(r)),
+            Some(Algorithm::Xz) => Self::Xz(XzDecoder::new(r)),
+            Some(Algorithm::Zstd) => Self::Zstd(ZstdDecoder::new(r)),
+            None => Self::Unknown(r),
+        })
+    }
+}
+
+impl<R> AsyncRead for DecompressedReader<R>
 where
     R: AsyncBufRead,
 {
@@ -113,71 +126,11 @@ where
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
         match self.project() {
-            DecompressedReaderInnerProj::Unknown { .. } => {
-                unreachable!("Can't call poll_read on Unknown")
-            }
-            DecompressedReaderInnerProj::Gzip(inner) => inner.poll_read(cx, buf),
-            DecompressedReaderInnerProj::Bzip2(inner) => inner.poll_read(cx, buf),
-            DecompressedReaderInnerProj::Xz(inner) => inner.poll_read(cx, buf),
-            DecompressedReaderInnerProj::Zstd(inner) => inner.poll_read(cx, buf),
-        }
-    }
-}
-
-#[pin_project]
-pub struct DecompressedReader<R> {
-    #[pin]
-    inner: DecompressedReaderInner<R>,
-    switch_to: Option<Algorithm>,
-}
-
-impl<R> DecompressedReader<R> {
-    pub fn new(inner: R) -> Self {
-        Self {
-            inner: DecompressedReaderInner::Unknown {
-                buffer: vec![0; BYTES_NEEDED],
-                inner: Some(inner),
-            },
-            switch_to: None,
-        }
-    }
-}
-
-impl<R> AsyncRead for DecompressedReader<R>
-where
-    R: AsyncBufRead + Unpin,
-{
-    fn poll_read(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<io::Result<()>> {
-        let mut this = self.project();
-        let (buffer, inner) = match this.inner.as_mut().project() {
-            DecompressedReaderInnerProj::Gzip(inner) => return inner.poll_read(cx, buf),
-            DecompressedReaderInnerProj::Bzip2(inner) => return inner.poll_read(cx, buf),
-            DecompressedReaderInnerProj::Xz(inner) => return inner.poll_read(cx, buf),
-            DecompressedReaderInnerProj::Zstd(inner) => return inner.poll_read(cx, buf),
-            DecompressedReaderInnerProj::Unknown { buffer, inner } => (buffer, inner),
-        };
-
-        let mut our_buf = ReadBuf::new(buffer);
-        ready!(inner.as_pin_mut().unwrap().poll_read(cx, &mut our_buf))?;
-
-        let data = our_buf.filled();
-        if data.len() >= BYTES_NEEDED {
-            if let Some(algorithm) = Algorithm::from_magic(data) {
-                this.inner.as_mut().switch_to(algorithm);
-            } else {
-                return Poll::Ready(Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "data not gz, bzip2, xz, or zstd compressed",
-                )));
-            }
-            this.inner.poll_read(cx, buf)
-        } else {
-            cx.waker().wake_by_ref();
-            Poll::Pending
+            DecompressedReaderProj::Unknown(inner) => inner.poll_read(cx, buf),
+            DecompressedReaderProj::Gzip(inner) => inner.poll_read(cx, buf),
+            DecompressedReaderProj::Bzip(inner) => inner.poll_read(cx, buf),
+            DecompressedReaderProj::Xz(inner) => inner.poll_read(cx, buf),
+            DecompressedReaderProj::Zstd(inner) => inner.poll_read(cx, buf),
         }
     }
 }
@@ -201,7 +154,9 @@ mod tests {
         let mut gzipped = vec![];
         enc.read_to_end(&mut gzipped).await.unwrap();
 
-        let mut reader = DecompressedReader::new(BufReader::new(&gzipped[..]));
+        let mut reader = DecompressedReader::new(BufReader::new(&gzipped[..]))
+            .await
+            .expect("open to succeed");
         let mut round_tripped = vec![];
         reader.read_to_end(&mut round_tripped).await.unwrap();
 
@@ -215,7 +170,9 @@ mod tests {
     #[case::zstd(include_bytes!("../tests/blob.tar.zst"))]
     #[tokio::test]
     async fn compressed_tar(#[case] data: &[u8]) {
-        let reader = DecompressedReader::new(BufReader::new(data));
+        let reader = DecompressedReader::new(BufReader::new(data))
+            .await
+            .expect("open to succeed");
         let mut archive = Archive::new(reader);
         let mut entries: Vec<_> = archive.entries().unwrap().try_collect().await.unwrap();
 
