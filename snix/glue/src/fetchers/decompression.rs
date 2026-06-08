@@ -156,7 +156,7 @@ mod tests {
 
         let mut reader = DecompressedReader::new(BufReader::new(&gzipped[..]))
             .await
-            .expect("open to succeed");
+            .expect("new to succeed");
         let mut round_tripped = vec![];
         reader.read_to_end(&mut round_tripped).await.unwrap();
 
@@ -172,7 +172,7 @@ mod tests {
     async fn compressed_tar(#[case] data: &[u8]) {
         let reader = DecompressedReader::new(BufReader::new(data))
             .await
-            .expect("open to succeed");
+            .expect("new to succeed");
         let mut archive = Archive::new(reader);
         let mut entries: Vec<_> = archive.entries().unwrap().try_collect().await.unwrap();
 
