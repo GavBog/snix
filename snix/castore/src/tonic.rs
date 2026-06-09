@@ -2,20 +2,13 @@ use hyper_util::rt::TokioIo;
 use tokio::net::UnixStream;
 use tonic::transport::{Channel, Endpoint};
 
-pub enum TonicConnector {
-    Endpoint {
-        endpoint: Endpoint,
-        wait_connect: bool,
-    },
-    EndpointAndConnector {
-        endpoint: Endpoint,
-        connector: tower::util::BoxCloneService<
-            tonic::transport::Uri,
-            TokioIo<UnixStream>,
-            std::io::Error,
-        >,
-        wait_connect: bool,
-    },
+pub struct TonicConnector {
+    endpoint: Endpoint,
+    connector: Option<
+        tower::util::BoxCloneService<tonic::transport::Uri, TokioIo<UnixStream>, std::io::Error>,
+    >,
+    /// Whether there's a `wait_connect` in the query string.
+    wait_connect: bool,
 }
 
 impl TonicConnector {
@@ -37,9 +30,9 @@ impl TonicConnector {
                 });
 
                 // the URL doesn't matter, but we need a custom connector
-                Ok(TonicConnector::EndpointAndConnector {
+                Ok(Self {
                     endpoint: Endpoint::from_static("http://[::]:50051"),
-                    connector: tower::util::BoxCloneService::new(connector),
+                    connector: Some(tower::util::BoxCloneService::new(connector)),
                     wait_connect: url_wants_wait_connect(url),
                 })
             }
@@ -68,8 +61,9 @@ impl TonicConnector {
                     endpoint
                 };
 
-                Ok(TonicConnector::Endpoint {
+                Ok(Self {
                     endpoint,
+                    connector: None,
                     wait_connect: url_wants_wait_connect(url),
                 })
             }
@@ -80,48 +74,34 @@ impl TonicConnector {
     // Will panic if `wait-connect=1` was set in the URL, as connecting
     // non-lazily needs to be async, use [Self::connect] for that.
     pub fn connect_expect_lazy(self) -> Channel {
-        match self {
-            TonicConnector::Endpoint {
-                endpoint,
-                wait_connect,
-            } => {
-                assert!(!wait_connect, "wait-connect URL called with connect_lazy");
-                endpoint.connect_lazy()
-            }
-            TonicConnector::EndpointAndConnector {
-                endpoint,
-                connector,
-                wait_connect,
-            } => {
-                assert!(!wait_connect, "wait-connect URL called with connect_lazy");
-                endpoint.connect_with_connector_lazy(connector)
-            }
+        if let Some(connector) = self.connector {
+            assert!(
+                !self.wait_connect,
+                "wait-connect URL called with connect_lazy"
+            );
+            self.endpoint.connect_with_connector_lazy(connector)
+        } else {
+            assert!(
+                !self.wait_connect,
+                "wait-connect URL called with connect_lazy"
+            );
+            self.endpoint.connect_lazy()
         }
     }
 
     // Tries to connect.
     pub async fn connect(self) -> Result<Channel, Error> {
-        Ok(match self {
-            TonicConnector::Endpoint {
-                endpoint,
-                wait_connect,
-            } => {
-                if !wait_connect {
-                    endpoint.connect_lazy()
-                } else {
-                    endpoint.connect().await?
-                }
+        Ok(if let Some(connector) = self.connector {
+            if !self.wait_connect {
+                self.endpoint.connect_with_connector_lazy(connector)
+            } else {
+                self.endpoint.connect_with_connector(connector).await?
             }
-            TonicConnector::EndpointAndConnector {
-                endpoint,
-                connector,
-                wait_connect,
-            } => {
-                if !wait_connect {
-                    endpoint.connect_with_connector_lazy(connector)
-                } else {
-                    endpoint.connect_with_connector(connector).await?
-                }
+        } else {
+            if !self.wait_connect {
+                self.endpoint.connect_lazy()
+            } else {
+                self.endpoint.connect().await?
             }
         })
     }
