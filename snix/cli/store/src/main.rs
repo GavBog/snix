@@ -214,7 +214,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .handle_tracing_args(&args.tracing_args)
         .build()?;
 
-    let stdout_writer = tracing_handle.get_stdout_writer();
+    let mut stdout_writer = tracing_handle.get_stdout_writer();
 
     match args.command {
         Commands::Daemon {
@@ -404,13 +404,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let (blob_service, directory_service) =
                 snix_castore::utils::construct_services(service_addrs).await?;
 
-            // Ingest each NAR concurrently.
-            futures::stream::iter(paths)
+            // Ingest each NAR concurrently, producing the formatted output line.
+            let mut imports = futures::stream::iter(paths)
                 .map(|path| {
-                    use std::io::Write;
                     let blob_service = blob_service.clone();
                     let directory_service = &directory_service;
-                    let mut stdout_writer = stdout_writer.clone();
                     async move {
                         let reader = snix_cli::reader_for_path(path).await?;
 
@@ -429,35 +427,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                             .await?
                         };
 
-                        writeln!(
-                            &mut stdout_writer,
-                            "{}",
-                            match format {
-                                ImportNarOutputFormats::UrlsafeBase64
-                                | ImportNarOutputFormats::Base64 => {
-                                    use prost::Message;
-                                    let proto_node =
-                                        snix_castore::proto::Entry::from_name_and_node(
-                                            "".into(),
-                                            root_node,
-                                        )
-                                        .encode_to_vec();
-                                    if *format == ImportNarOutputFormats::UrlsafeBase64 {
-                                        data_encoding::BASE64URL_NOPAD.encode(&proto_node)
-                                    } else {
-                                        data_encoding::BASE64.encode(&proto_node)
-                                    }
+                        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(match format {
+                            ImportNarOutputFormats::UrlsafeBase64
+                            | ImportNarOutputFormats::Base64 => {
+                                use prost::Message;
+                                let proto_node = snix_castore::proto::Entry::from_name_and_node(
+                                    "".into(),
+                                    root_node,
+                                )
+                                .encode_to_vec();
+                                if *format == ImportNarOutputFormats::UrlsafeBase64 {
+                                    data_encoding::BASE64URL_NOPAD.encode(&proto_node)
+                                } else {
+                                    data_encoding::BASE64.encode(&proto_node)
                                 }
-                                ImportNarOutputFormats::Json =>
-                                    serde_json::to_string(&root_node).expect("serialize"),
-                            },
-                        )?;
-                        Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+                            }
+                            ImportNarOutputFormats::Json => {
+                                serde_json::to_string(&root_node).expect("serialize")
+                            }
+                        })
                     }
                 })
-                .buffered(concurrency)
-                .try_collect::<Vec<()>>()
-                .await?;
+                .buffered(concurrency);
+
+            // `buffered` yields in input order, so printing here preserves it.
+            use std::io::Write;
+            while let Some(output) = imports.try_next().await? {
+                writeln!(&mut stdout_writer, "{output}")?;
+            }
         }
 
         Commands::Copy {
