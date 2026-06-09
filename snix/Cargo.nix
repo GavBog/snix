@@ -22202,6 +22202,11 @@ rec {
             packageId = "hex-literal";
           }
           {
+            name = "pretty_assertions";
+            packageId = "pretty_assertions";
+            features = [ "unstable" ];
+          }
+          {
             name = "rstest";
             packageId = "rstest";
             usesDefaultFeatures = false;
