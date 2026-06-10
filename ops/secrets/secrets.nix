@@ -79,4 +79,8 @@ in
   "tf-hcloud.age" = terraform;
   "tf-hetzner-s3.age" = terraform;
   "tf-buildkite.age" = terraform;
+
+  "mtls-build03.infra.snix.dev.age" = {
+    publicKeys = [ build03 ];
+  };
 }

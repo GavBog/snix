@@ -15,6 +15,7 @@ in
     (mod "harmonia.nix")
     (mod "known-hosts.nix")
 
+    ./snix-copy.nix
     ./watch-store.nix
 
     (depot.third_party.agenix.src + "/modules/age.nix")
@@ -121,7 +122,9 @@ in
         mode = "0440";
         group = "buildkite-agents";
       };
+      mtls-private-key.file = secretFile "mtls-build03.infra.snix.dev";
     };
+
   systemd.tmpfiles.rules = [
     "d '/nix/var/nix/gcroots/buildkite' 0770 - buildkite-agents - -"
     "z '/nix/var/nix/gcroots' 0771 - - - -"
