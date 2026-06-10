@@ -29,15 +29,21 @@ let
     error_page 501 = @grpc_internal; # Not implemented
   '';
   passToSnixStoreDaemonTrusted = ''
-    # build03
-    allow 116.202.234.220;
-    allow 2a01:4f8:241:4de7::1;
+    # Trusted endpoints need mTLS
+    if ($ssl_client_verify != SUCCESS) {
+      return 401;
+    }
 
-    deny all;
+    # We only allow certain DNs to talk to it
+    if ($ssl_client_s_dn != "CN=build03.infra.snix.dev") {
+      return 401;
+    }
+
     ${passToSnixStoreDaemonAll}
   '';
 
 in
+{ depot, ... }:
 {
   imports = [
     ./base.nix
@@ -47,6 +53,9 @@ in
     forceSSL = true;
     enableACME = true;
     extraConfig = ''
+      ssl_client_certificate ${depot.ops.pki.ca_certificate};
+      ssl_verify_client optional;
+
       # gRPC error responses
       # Ref: https://github.com/grpc/grpc-go/blob/master/codes/codes.go
       #
