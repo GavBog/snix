@@ -21,8 +21,6 @@ use tracing::instrument;
 /// generic (see [nix_compat::narinfo::SigningKey] documentation).
 ///
 /// The [PathInfo] with the added signature is then put into the inner [PathInfoService].
-///
-/// The service signs the [PathInfo] **only if it has a narinfo attribute**
 pub struct SigningPathInfoService<T, S> {
     instance_name: String,
     /// The inner [PathInfoService]
