@@ -25,7 +25,8 @@ in
     enableACME = true;
     locations."/".proxyPass = "http://build03.infra.snix.dev:5000";
 
-    locations."/grpc.reflection.v1alpha.ServerReflection".extraConfig = passToSnixStoreDaemonTrusted;
+    locations."/grpc.reflection.v1alpha.ServerReflection".extraConfig = passToSnixStoreDaemonAll;
+    locations."/grpc.reflection.v1.ServerReflection".extraConfig = passToSnixStoreDaemonAll;
     locations."/snix.castore.v1.BlobService/Stat".extraConfig = passToSnixStoreDaemonAll;
     locations."/snix.castore.v1.BlobService/Read".extraConfig = passToSnixStoreDaemonAll;
     locations."/snix.castore.v1.BlobService/Put".extraConfig = passToSnixStoreDaemonTrusted;
