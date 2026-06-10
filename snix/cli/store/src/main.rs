@@ -3,6 +3,7 @@ use clap::Subcommand;
 
 use futures::StreamExt;
 use futures::TryStreamExt;
+use nix_compat::nixbase32;
 use nix_compat::store_path;
 use nix_compat::store_path::StorePath;
 use nix_compat::wire::de::Error;
@@ -545,10 +546,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                                 warn!(?err, "failed to parse line");
                             })?;
 
-                            let span = tracing::info_span!(
-                                "copy_path",
-                                "indicatif.pb_show" = tracing::field::Empty
-                            );
+                            let span = Span::current();
+                            span.record("path_info.name", store_path.name());
+                            span.record("path_info.digest", nixbase32::encode(store_path.digest()));
                             span.pb_set_style(&snix_tracing::PB_SPINNER_STYLE);
                             span.pb_set_message(&format!("Ingesting {}", &store_path.to_string()));
                             span.pb_start();
@@ -592,12 +592,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                                 .await
                                 .map_err(std::io::Error::other)?;
 
-                            drop(span);
+                            info!("uploaded path");
 
                             Ok::<_, std::io::Error>(())
                         }
                     }
-                    .instrument(copy_paths_span.clone())
+                    .instrument(tracing::info_span!(
+                        parent: &copy_paths_span,
+                        "copy_path",
+                        "indicatif.pb_show" = tracing::field::Empty,
+                        path_info.name = tracing::field::Empty,
+                        path_info.digest = tracing::field::Empty,
+                    ))
                 })
                 .buffer_unordered(10)
                 // Increment total progress once we uploaded the PathInfo.
