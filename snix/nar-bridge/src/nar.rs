@@ -3,6 +3,7 @@ use axum::http::{Response, StatusCode};
 use axum::{body::Body, response::IntoResponse};
 use axum_extra::{TypedHeader, headers::Range};
 use axum_range::{KnownSize, Ranged};
+use bstr::ByteSlice;
 use futures::TryStreamExt;
 use nix_compat::{nix_http, nixbase32};
 use serde::Deserialize;
@@ -121,7 +122,8 @@ pub async fn head_root_nodes(
 
     // No paths with compression suffix are supported.
     if !compression_suffix.is_empty() {
-        warn!(%compression_suffix, "invalid compression suffix requested");
+        let compression_suffix = compression_suffix.as_bstr();
+        warn!(%compression_suffix, "invalid compression suffix");
         return Err(StatusCode::UNAUTHORIZED);
     }
 
@@ -150,7 +152,8 @@ pub async fn put(
 
     // No paths with compression suffix are supported.
     if !compression_suffix.is_empty() {
-        warn!(%compression_suffix, "invalid compression suffix requested");
+        let compression_suffix = compression_suffix.as_bstr();
+        warn!(%compression_suffix, "invalid compression suffix");
         return Err(StatusCode::UNAUTHORIZED);
     }
 

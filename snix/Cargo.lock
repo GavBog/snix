@@ -3143,6 +3143,7 @@ dependencies = [
  "axum-extra 0.12.5",
  "axum-range",
  "axum-test",
+ "bstr",
  "bytes",
  "data-encoding",
  "futures",

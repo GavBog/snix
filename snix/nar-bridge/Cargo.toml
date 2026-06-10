@@ -8,6 +8,7 @@ rust-version.workspace = true
 axum = { workspace = true, features = ["http2"] }
 axum-extra = { workspace = true, features = ["typed-header"] }
 axum-range.workspace = true
+bstr.workspace = true
 bytes.workspace = true
 futures.workspace = true
 lru.workspace = true

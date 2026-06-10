@@ -12914,6 +12914,10 @@ rec {
             packageId = "axum-range";
           }
           {
+            name = "bstr";
+            packageId = "bstr";
+          }
+          {
             name = "bytes";
             packageId = "bytes";
           }

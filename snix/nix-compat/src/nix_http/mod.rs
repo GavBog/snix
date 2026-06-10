@@ -1,3 +1,4 @@
+use bstr::ByteSlice;
 use tracing::trace;
 
 use crate::nixbase32;
@@ -11,33 +12,37 @@ pub const MIME_TYPE_CACHE_INFO: &str = "text/x-nix-cache-info";
 /// The mime type used for `$outhash.ls` files
 pub const MIME_TYPE_NAR_LISTING: &str = "application/json";
 
-/// Parses a `14cx20k6z4hq508kqi2lm79qfld5f9mf7kiafpqsjs3zlmycza0k.nar`
+/// Parses a `14cx20k6z4hq508kqi2lm79qfld5f9mf7kiafpqsjs3zlmycza0k.nar.xz`
 /// string and returns the nixbase32-decoded digest, as well as the compression
 /// suffix (which might be empty).
-pub fn parse_nar_str(s: &str) -> Option<([u8; 32], &str)> {
-    if !s.is_char_boundary(52) {
-        trace!("invalid string, no char boundary at 52");
+pub fn parse_nar_str<S>(s: &S) -> Option<([u8; 32], &[u8])>
+where
+    S: AsRef<[u8]> + ?Sized,
+{
+    if s.as_ref().len() < 52 + 4 {
+        trace!("nar_str too short");
         return None;
     }
+    let (hash_str, suffix) = s.as_ref().split_at(52);
+    // we know this is 52 bytes, so it's ok to unwrap here.
+    let hash_str_fixed: [u8; 52] = hash_str.try_into().unwrap();
 
-    let (hash_str, suffix) = s.split_at(52);
+    // suffix needs to start with ".nar".
+    let compression_suffix = suffix
+        .as_bstr()
+        .strip_prefix(b".nar")
+        .ok_or_else(|| {
+            trace!("suffix does not start with .nar");
+        })
+        .ok()?;
 
-    // we know hash_str is 52 bytes, so it's ok to unwrap here.
-    let hash_str_fixed: [u8; 52] = hash_str.as_bytes().try_into().unwrap();
+    let digest = nixbase32::decode_fixed(hash_str_fixed)
+        .inspect_err(|err| {
+            trace!(%err, "invalid nixbase32 encoding");
+        })
+        .ok()?;
 
-    match suffix.strip_prefix(".nar") {
-        Some(compression_suffix) => match nixbase32::decode_fixed(hash_str_fixed) {
-            Err(e) => {
-                trace!(err=%e, "invalid nixbase32 encoding");
-                None
-            }
-            Ok(digest) => Some((digest, compression_suffix)),
-        },
-        None => {
-            trace!("no .nar suffix");
-            None
-        }
-    }
+    Some((digest, compression_suffix))
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -88,7 +93,7 @@ mod test {
         assert_eq!(
             (
                 hex!("13a8cf7ca57f68a9f1752acee36a72a55187d3a954443c112818926f26109d91"),
-                ""
+                "".as_bytes()
             ),
             parse_nar_str("14cx20k6z4hq508kqi2lm79qfld5f9mf7kiafpqsjs3zlmycza0k.nar").unwrap()
         );
@@ -96,7 +101,7 @@ mod test {
         assert_eq!(
             (
                 hex!("13a8cf7ca57f68a9f1752acee36a72a55187d3a954443c112818926f26109d91"),
-                ".xz"
+                ".xz".as_bytes()
             ),
             parse_nar_str("14cx20k6z4hq508kqi2lm79qfld5f9mf7kiafpqsjs3zlmycza0k.nar.xz").unwrap()
         )
