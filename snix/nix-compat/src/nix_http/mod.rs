@@ -48,37 +48,32 @@ pub enum RequestType {
 
 /// Parses a `3mzh8lvgbynm9daj7c82k2sfsfhrsfsy.narinfo` or `3mzh8lvgbynm9daj7c82k2sfsfhrsfsy.ls`
 /// string and returns the nixbase32-decoded digest, and what was requested.
-pub fn parse_outhash_str(s: &str) -> Option<([u8; 20], RequestType)> {
-    if !s.is_char_boundary(32) {
-        trace!("invalid string, no char boundary at 32");
+pub fn parse_outhash_str(s: impl AsRef<[u8]>) -> Option<([u8; 20], RequestType)> {
+    if s.as_ref().len() < 32 + 3 {
+        trace!("outhash_str too short");
         return None;
     }
 
-    match s.split_at(32) {
-        (hash_str, suffix @ ".narinfo") | (hash_str, suffix @ ".ls") => {
-            // we know this is 32 bytes, so it's ok to unwrap here.
-            let hash_str_fixed: [u8; 32] = hash_str.as_bytes().try_into().unwrap();
+    let (hash_str, suffix) = s.as_ref().split_at(32);
+    // we know this is 32 bytes, so it's ok to unwrap here.
+    let hash_str_fixed: [u8; 32] = hash_str.try_into().unwrap();
 
-            match nixbase32::decode_fixed(hash_str_fixed) {
-                Err(e) => {
-                    trace!(err=%e, "invalid nixbase32 encoding");
-                    None
-                }
-                Ok(digest) => Some((
-                    digest,
-                    match suffix {
-                        ".narinfo" => RequestType::Narinfo,
-                        ".ls" => RequestType::Listing,
-                        _ => unreachable!(),
-                    },
-                )),
-            }
-        }
+    let request_type = match suffix {
+        b".narinfo" => RequestType::Narinfo,
+        b".ls" => RequestType::Listing,
         _ => {
-            trace!("invalid string, no .narinfo suffix");
-            None
+            trace!("invalid string, no .narinfo or .ls suffix");
+            return None;
         }
-    }
+    };
+
+    let digest = nixbase32::decode_fixed(hash_str_fixed)
+        .inspect_err(|err| {
+            trace!(%err, "invalid nixbase32 encoding");
+        })
+        .ok()?;
+
+    Some((digest, request_type))
 }
 
 #[cfg(test)]
