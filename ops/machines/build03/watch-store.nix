@@ -15,6 +15,8 @@
       ProtectKernelModules = true;
       ProtectKernelTunables = true;
       RestrictNamespaces = true;
+      Restart = "on-failure";
+      RestartSec = 5;
       RestrictRealtime = true;
       SystemCallArchitectures = "native";
       SystemCallFilter = [
