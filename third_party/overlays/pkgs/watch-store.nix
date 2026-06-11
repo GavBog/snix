@@ -10,8 +10,8 @@ buildGoModule (finalAttrs: {
   src = fetchFromCodeberg {
     owner = "flokli";
     repo = "watch-store-go";
-    rev = "2f3a2ccc0a823d660d2366de2dbe65515e099c95";
-    hash = "sha256-VIpGEln34uTdWozmzRN7mq+aYf294IHjtm7lfypHKj0=";
+    rev = "c586348b519e6c3b6f02b2ac63ba2279d81d4041";
+    hash = "sha256-bJgcKLaa41FAqi9M+IN8zKuDIs48hePbVXyYQrZskQI=";
   };
 
   vendorHash = "sha256-m8YS9qoIxMHejgjSKglnIr1uln1LEaHh1b/WBlege8A=";
