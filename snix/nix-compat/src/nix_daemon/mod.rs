@@ -4,7 +4,7 @@ use std::io::Result;
 
 use tokio::io::AsyncRead;
 use tracing::warn;
-use types::{AddToStoreNarRequest, QueryValidPaths, UnkeyedValidPathInfo};
+use types::{QueryValidPaths, UnkeyedValidPathInfo, ValidPathInfo};
 
 use crate::store_path::StorePath;
 
@@ -70,8 +70,10 @@ pub trait NixDaemonIO: Sync {
     #[cfg_attr(test, mockall::concretize)]
     fn add_to_store_nar<R>(
         &self,
-        request: AddToStoreNarRequest,
+        info: ValidPathInfo,
         reader: &mut R,
+        repair: bool,
+        dont_check_sigs: bool,
     ) -> impl std::future::Future<Output = Result<()>> + Send
     where
         R: AsyncRead + Send + Unpin;
@@ -80,7 +82,10 @@ pub trait NixDaemonIO: Sync {
 #[cfg(test)]
 mod tests {
 
-    use crate::{nix_daemon::types::QueryValidPaths, store_path::StorePath};
+    use crate::{
+        nix_daemon::types::{NarHash, QueryValidPaths},
+        store_path::StorePath,
+    };
 
     use super::{NixDaemonIO, types::UnkeyedValidPathInfo};
 
@@ -107,8 +112,10 @@ mod tests {
 
         async fn add_to_store_nar<R>(
             &self,
-            _request: super::types::AddToStoreNarRequest,
+            _info: super::types::ValidPathInfo,
             _reader: &mut R,
+            _repair: bool,
+            _dont_check_sigs: bool,
         ) -> std::io::Result<()>
         where
             R: tokio::io::AsyncRead + Send + Unpin,
@@ -123,7 +130,16 @@ mod tests {
             StorePath::<String>::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes())
                 .unwrap();
         let io = MockNixDaemonIO {
-            query_path_info_result: Some(UnkeyedValidPathInfo::default()),
+            query_path_info_result: Some(UnkeyedValidPathInfo {
+                deriver: Some("00000000000000000000000000000000-_.drv".parse().unwrap()),
+                nar_hash: NarHash::from_digest([0u8; 32]),
+                references: Vec::new(),
+                registration_time: 0,
+                nar_size: 0,
+                ultimate: true,
+                signatures: Vec::new(),
+                ca: None,
+            }),
         };
 
         let result = io
@@ -174,7 +190,16 @@ mod tests {
             StorePath::<String>::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes())
                 .unwrap();
         let io = MockNixDaemonIO {
-            query_path_info_result: Some(UnkeyedValidPathInfo::default()),
+            query_path_info_result: Some(UnkeyedValidPathInfo {
+                deriver: Some("00000000000000000000000000000000-_.drv".parse().unwrap()),
+                nar_hash: NarHash::from_digest([0u8; 32]),
+                references: Vec::new(),
+                registration_time: 0,
+                nar_size: 0,
+                ultimate: true,
+                signatures: Vec::new(),
+                ca: None,
+            }),
         };
 
         let result = io
@@ -215,7 +240,7 @@ mod tests {
         let io = MockNixDaemonIO {
             query_path_info_result: Some(UnkeyedValidPathInfo {
                 deriver: Some(deriver.clone()),
-                nar_hash: "".to_owned(),
+                nar_hash: NarHash::from_digest([0u8; 32]),
                 references: vec![],
                 registration_time: 0,
                 nar_size: 1,

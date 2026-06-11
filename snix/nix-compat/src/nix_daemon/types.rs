@@ -1,3 +1,4 @@
+use crate::nixbase32;
 use crate::wire::de::Error;
 use crate::{
     narinfo::Signature,
@@ -225,10 +226,10 @@ impl NixSerialize for Option<StorePath<String>> {
     }
 }
 
-#[derive(NixSerialize, Debug, Clone, Default, PartialEq)]
+#[derive(NixSerialize, NixDeserialize, Debug, Clone, PartialEq)]
 pub struct UnkeyedValidPathInfo {
     pub deriver: Option<StorePath<String>>,
-    pub nar_hash: String,
+    pub nar_hash: NarHash,
     pub references: Vec<StorePath<String>>,
     pub registration_time: u64,
     pub nar_size: u64,
@@ -249,8 +250,14 @@ pub struct QueryValidPaths {
 }
 
 /// newtype wrapper for the byte array that correctly implements NixSerialize, NixDeserialize.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NarHash([u8; 32]);
+
+impl NarHash {
+    pub fn from_digest(digest: [u8; 32]) -> Self {
+        NarHash(digest)
+    }
+}
 
 impl std::ops::Deref for NarHash {
     type Target = [u8; 32];
@@ -278,29 +285,21 @@ impl NixDeserialize for NarHash {
     }
 }
 
-/// Request type for [super::worker_protocol::Operation::AddToStoreNar]
+impl NixSerialize for NarHash {
+    async fn serialize<W>(&self, writer: &mut W) -> Result<(), W::Error>
+    where
+        W: NixWrite,
+    {
+        nixbase32::encode(&self.0).serialize(writer).await
+    }
+}
+
+/// Info type used by [super::worker_protocol::Operation::AddToStoreNar] and [super::worker_protocol::Operation::AddMultipleToStore]
+///
+/// See: [ValidPathInfo reference](https://snix.dev/docs/reference/nix-daemon-protocol/types/#validpathinfo)
 #[derive(NixDeserialize, Debug)]
-pub struct AddToStoreNarRequest {
+pub struct ValidPathInfo {
     // - path :: [StorePath][se-StorePath]
     pub path: StorePath<String>,
-    // - deriver :: [OptStorePath][se-OptStorePath]
-    pub deriver: Option<StorePath<String>>,
-    // - narHash :: [NARHash][se-NARHash] - always sha256
-    pub nar_hash: NarHash,
-    // - references :: [Set][se-Set] of [StorePath][se-StorePath]
-    pub references: Vec<StorePath<String>>,
-    // - registrationTime :: [Time][se-Time]
-    pub registration_time: u64,
-    // - narSize :: [UInt64][se-UInt64]
-    pub nar_size: u64,
-    // - ultimate :: [Bool64][se-Bool64]
-    pub ultimate: bool,
-    // - signatures :: [Set][se-Set] of [Signature][se-Signature]
-    pub signatures: Vec<Signature<String>>,
-    // - ca :: [OptContentAddress][se-OptContentAddress]
-    pub ca: Option<CAHash>,
-    // - repair :: [Bool64][se-Bool64]
-    pub repair: bool,
-    // - dontCheckSigs :: [Bool64][se-Bool64]
-    pub dont_check_sigs: bool,
+    pub info: UnkeyedValidPathInfo,
 }

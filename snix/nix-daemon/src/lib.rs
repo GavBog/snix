@@ -8,7 +8,7 @@ use std::{
 use nix_compat::{
     nix_daemon::{
         NixDaemonIO,
-        types::{AddToStoreNarRequest, UnkeyedValidPathInfo},
+        types::{NarHash, UnkeyedValidPathInfo, ValidPathInfo},
     },
     nixbase32,
     store_path::{StorePath, build_ca_path},
@@ -74,7 +74,13 @@ impl NixDaemonIO for SnixDaemon {
     }
 
     #[instrument(skip_all, fields(request), level = "debug", ret(Debug))]
-    async fn add_to_store_nar<R>(&self, request: AddToStoreNarRequest, reader: &mut R) -> Result<()>
+    async fn add_to_store_nar<R>(
+        &self,
+        info: ValidPathInfo,
+        reader: &mut R,
+        _repair: bool,
+        _dont_check_sigs: bool,
+    ) -> Result<()>
     where
         R: tokio::io::AsyncRead + Send + Unpin,
     {
@@ -82,14 +88,14 @@ impl NixDaemonIO for SnixDaemon {
             self.blob_service.clone(),
             &self.directory_service,
             reader,
-            &request.ca,
+            &info.info.ca,
         )
         .await
         .map_err(|e| Error::other(e.to_string()))?;
 
-        if nar_size != request.nar_size || nar_sha256 != *request.nar_hash {
+        if nar_size != info.info.nar_size || nar_sha256 != *info.info.nar_hash {
             warn!(
-                nar_hash.expected = nixbase32::encode(&*request.nar_hash),
+                nar_hash.expected = nixbase32::encode(&*info.info.nar_hash),
                 nar_hash.actual = nixbase32::encode(&nar_sha256),
                 "nar hash mismatch"
             );
@@ -98,28 +104,28 @@ impl NixDaemonIO for SnixDaemon {
             ));
         }
 
-        if let Some(cahash) = &request.ca {
+        if let Some(cahash) = &info.info.ca {
             let actual_path: StorePath<String> = build_ca_path(
-                request.path.name(),
+                info.path.name(),
                 cahash,
-                request.references.iter().map(|p| p.to_absolute_path()),
+                info.info.references.iter().map(|p| p.to_absolute_path()),
                 false,
             )
             .map_err(Error::other)?;
-            if actual_path != request.path {
+            if actual_path != info.path {
                 return Err(Error::other("path mismatch"));
             }
         }
 
         let path_info = PathInfo {
-            store_path: request.path,
+            store_path: info.path,
             node: root_node,
-            references: request.references,
+            references: info.info.references,
             nar_size,
             nar_sha256,
-            signatures: request.signatures,
-            deriver: request.deriver,
-            ca: request.ca,
+            signatures: info.info.signatures,
+            deriver: info.info.deriver,
+            ca: info.info.ca,
         };
         self.path_info_service
             .put(path_info)
@@ -135,7 +141,7 @@ impl NixDaemonIO for SnixDaemon {
 fn into_unkeyed_path_info(info: PathInfo) -> UnkeyedValidPathInfo {
     UnkeyedValidPathInfo {
         deriver: info.deriver,
-        nar_hash: nixbase32::encode(&info.nar_sha256),
+        nar_hash: NarHash::from_digest(info.nar_sha256),
         references: info.references,
         registration_time: 0,
         nar_size: info.nar_size,

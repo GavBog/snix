@@ -10,7 +10,7 @@ use tracing::{debug, warn};
 use super::{
     NixDaemonIO,
     framing::{NixFramedReader, StderrReadFramedReader},
-    types::{AddToStoreNarRequest, QueryValidPaths},
+    types::{QueryValidPaths, ValidPathInfo},
     worker_protocol::{ClientSettings, Operation, STDERR_LAST, Trust, server_handshake_client},
 };
 
@@ -168,7 +168,10 @@ where
                         .await?
                     }
                     Operation::AddToStoreNar => {
-                        let request: AddToStoreNarRequest = self.reader.read_value().await?;
+                        let info = self.reader.read_value::<ValidPathInfo>().await?;
+                        let repair = self.reader.read_value::<bool>().await?;
+                        let dont_check_sigs = self.reader.read_value::<bool>().await?;
+
                         let minor_version = self.protocol_version.minor();
                         match minor_version {
                             ..21 => {
@@ -176,7 +179,12 @@ where
                                 // pass the reader directly to the operation.
                                 Self::handle(
                                     &self.writer,
-                                    self.io.add_to_store_nar(request, &mut self.reader),
+                                    self.io.add_to_store_nar(
+                                        info,
+                                        &mut self.reader,
+                                        repair,
+                                        dont_check_sigs,
+                                    ),
                                 )
                                 .await?
                             }
@@ -188,7 +196,14 @@ where
                                         &mut self.reader,
                                         writer.deref_mut(),
                                     );
-                                    self.io.add_to_store_nar(request, &mut reader).await
+                                    self.io
+                                        .add_to_store_nar(
+                                            info,
+                                            &mut reader,
+                                            repair,
+                                            dont_check_sigs,
+                                        )
+                                        .await
                                     // TODO(edef): enforce framing synchronisation
                                 })
                                 .await?
@@ -198,7 +213,14 @@ where
                                 let mut framed = NixFramedReader::new(&mut self.reader);
 
                                 Self::handle(&self.writer, async {
-                                    self.io.add_to_store_nar(request, &mut framed).await
+                                    self.io
+                                        .add_to_store_nar(
+                                            info,
+                                            &mut framed,
+                                            repair,
+                                            dont_check_sigs,
+                                        )
+                                        .await
                                 })
                                 .await?;
 
