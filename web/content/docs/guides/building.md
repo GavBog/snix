@@ -61,7 +61,7 @@ This uses [crate2nix][] to build each crate dependency individually.
 #### Binary cache for Development
 
 If you want to fetch store paths built by CI, you can configure our
-[Harmonia](https://github.com/nix-community/harmonia) deployment as a Nix substituter:
+CI binary cache as a Nix substituter:
 
 ```nix
 {
@@ -74,8 +74,12 @@ If you want to fetch store paths built by CI, you can configure our
 }
 ```
 
-Keep in mind there's no guarantees on paths being available, they get GC'ed
-eventually.
+The cache is provided by `snix-store daemon` and `nar-bridge`.
+We also expose the `snix-[ca]store` gRPC interfaces on the same domain
+(read-only, no listing).
+
+Keep in mind there's no guarantees on paths being available, they might get
+GC'ed eventually.
 
 
 ### Further reading

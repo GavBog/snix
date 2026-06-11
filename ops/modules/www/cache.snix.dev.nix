@@ -43,7 +43,7 @@ let
   '';
 
 in
-{ depot, ... }:
+{ depot, pkgs, ... }:
 {
   imports = [
     ./base.nix
@@ -103,7 +103,64 @@ in
       }
     '';
 
-    locations."/".proxyPass = "http://build03.infra.snix.dev:5000";
+    locations."=/" = {
+      tryFiles = "$uri $uri/index.html =404";
+      root =
+        let
+          readme = builtins.toFile "README.md" ''
+            # cache.snix.dev
+            This is the binary cache for everything built by the Snix CI.
+
+            Set it as a substituter if you want to reuse CI artifacts:
+
+            ```nix
+            nix.settings.trusted-public-keys = [
+              "cache.snix.dev-1:miTqzIzmCbX/DyK2tLNXDROk77CbbvcRdWA4y2F8pno="
+            ];
+            nix.settings.substituters = [
+              "https://cache.snix.dev"
+            ];
+            ```
+
+            The cache is provided by `snix-store daemon` and `nar-bridge`.
+            We also expose the `snix-[ca]store` gRPC interfaces on the same domain
+            (read-only, no listing).
+
+            Keep in mind there's no guarantees on paths being available, they might get
+            GC'ed eventually.
+          '';
+        in
+        pkgs.runCommand "index"
+          {
+            nativeBuildInputs = [ pkgs.markdown2html-converter ];
+          }
+          ''
+            mkdir -p $out
+            markdown2html-converter ${readme} -o $out/index.html
+          '';
+    };
+
+    locations."/" = {
+      proxyPass = "http://unix:/run/nar-bridge.sock:/";
+      extraConfig = ''
+        # Restrict allowed HTTP methods
+        limit_except GET HEAD {
+          # nar bridge allows to upload nars via PUT
+          deny all;
+        }
+
+        # Propagate content-encoding to the backend
+        proxy_set_header Accept-Encoding $http_accept_encoding;
+
+        # Enable CORS from everywhere, same as c.n.o
+        add_header Access-Control-Allow-Origin *;
+      '';
+    };
+
+    # Old harmonia NAR URLs (castore ones start with `nar/snix-castore/` and don't end with `.nar`)
+    # See `narinfo-cache-positive-ttl` (defaults to 4 weeks)
+    locations."~ /nar/([0-9abcdfghijklmnpqrsvwxyz]+)\\.nar".proxyPass =
+      "http://build03.infra.snix.dev:5000";
 
     locations."/grpc.reflection.v1alpha.ServerReflection".extraConfig = passToSnixStoreDaemonAll;
     locations."/grpc.reflection.v1.ServerReflection".extraConfig = passToSnixStoreDaemonAll;

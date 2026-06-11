@@ -12,7 +12,7 @@ in
 {
   imports = [
     ./disko.nix
-    ./snix-store-daemon.nix
+    ./snix-ci-cache.nix
 
     (mod "hetzner-cloud.nix")
     (mod "forgejo.nix")
