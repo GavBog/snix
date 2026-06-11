@@ -23,19 +23,15 @@ in
     package = depot.snix.cli.store.with-features-xp-store-composition-cli-otlp;
 
     settings = {
-      blobservices = {
-        root = {
-          type = "objectstore";
-          object_store_url = "file:///tank/snix-castore/blobs.object_store";
-          object_store_options = { };
-        };
+      blobservices.root = {
+        type = "objectstore";
+        object_store_url = "file:///tank/snix-castore/blobs.object_store";
+        object_store_options = { };
       };
 
-      directoryservices = {
-        root = {
-          type = "redb";
-          path = "/var/lib/snix-store/directories.redb";
-        };
+      directoryservices.root = {
+        type = "redb";
+        path = "/var/lib/snix-store/directories.redb";
       };
 
       pathinfoservices = {
@@ -62,35 +58,38 @@ in
       };
     };
   };
-  systemd.services.snix-store-daemon.environment.TRACER = "otlp";
+  systemd.services.snix-store-daemon = {
+    environment.TRACER = "otlp";
+    # Ensure /tank is mounted, which is where we the blobservice reads from.
+    unitConfig.RequiresMountsFor = "/tank";
+
+    # twice the normal allowed limit, same as nix-daemon
+    serviceConfig.LimitNOFILE = "1048576";
+  };
 
   services.nar-bridge = {
     enable = true;
     package = depot.snix.cli.nar-bridge.with-features-xp-store-composition-cli-otlp;
 
+    # FUTUREWORK: the nar-bridge module doesn't allow us to NOT pass in store composition
     settings = {
-      blobservices = {
-        root = {
-          type = "grpc";
-          url = "grpc+unix:/run/snix-store-daemon.sock";
-        };
+      blobservices.root = {
+        type = "grpc";
+        url = "grpc+unix:/run/snix-store-daemon.sock";
       };
 
-      directoryservices = {
-        root = {
-          type = "grpc";
-          url = "grpc+unix:/run/snix-store-daemon.sock";
-        };
+      directoryservices.root = {
+        type = "grpc";
+        url = "grpc+unix:/run/snix-store-daemon.sock";
       };
 
-      pathinfoservices = {
-        root = {
-          type = "grpc";
-          url = "grpc+unix:/run/snix-store-daemon.sock";
-        };
+      pathinfoservices.root = {
+        type = "grpc";
+        url = "grpc+unix:/run/snix-store-daemon.sock";
       };
     };
   };
+  systemd.services.nar-bridge.environment.TRACER = "otlp";
 
   systemd.tmpfiles.rules = [
     # Cache responses on NVME
@@ -100,14 +99,4 @@ in
     "v /tank/snix-castore                    0755 snix-store-daemon snix-store-daemon -"
     "v /tank/snix-castore/blobs.object_store 0755 snix-store-daemon snix-store-daemon -"
   ];
-
-  systemd.services.nar-bridge = {
-    environment.TRACER = "otlp";
-
-    # Ensure /tank is mounted, which is where we the blobservice reads from.
-    unitConfig.RequiresMountsFor = "/tank";
-
-    # twice the normal allowed limit, same as nix-daemon
-    serviceConfig.LimitNOFILE = "1048576";
-  };
 }
