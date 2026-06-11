@@ -29,7 +29,7 @@
               }
               ''
                 mkdir -p $out
-                markdown2html-converter ${../../machines/snix-cache/README.md} -o $out/index.html
+                markdown2html-converter ${../../machines/snix-cache/README.md} -t nixos.snix.store -o $out/index.html
               '';
         };
         locations."/" = {

@@ -136,7 +136,7 @@ in
           }
           ''
             mkdir -p $out
-            markdown2html-converter ${readme} -o $out/index.html
+            markdown2html-converter ${readme} -t cache.snix.dev -o $out/index.html
           '';
     };
 
