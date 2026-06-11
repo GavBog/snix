@@ -60,19 +60,6 @@ in
 
     systemd.network.networks."10-uplink".networkConfig.Address = "2a01:4f9:2a:2597::2/64";
 
-    services.nginx.virtualHosts."nixos.snix.store".locations."=/" = {
-      tryFiles = "$uri $uri/index.html =404";
-      root =
-        pkgs.runCommand "index"
-          {
-            nativeBuildInputs = [ pkgs.markdown2html-converter ];
-          }
-          ''
-            mkdir -p $out
-            markdown2html-converter ${./README.md} -o $out/index.html
-          '';
-    };
-
     # Enable SSH and add some keys
     services.openssh.enable = true;
 

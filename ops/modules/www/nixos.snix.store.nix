@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   imports = [
     ./base.nix
@@ -19,6 +19,19 @@
       {
         enableACME = true;
         forceSSL = true;
+
+        locations."=/" = {
+          tryFiles = "$uri $uri/index.html =404";
+          root =
+            pkgs.runCommand "index"
+              {
+                nativeBuildInputs = [ pkgs.markdown2html-converter ];
+              }
+              ''
+                mkdir -p $out
+                markdown2html-converter ${../../machines/snix-cache/README.md} -o $out/index.html
+              '';
+        };
         locations."/" = {
           proxyPass = "http://unix:/run/nar-bridge.sock:/";
           extraConfig = ''
