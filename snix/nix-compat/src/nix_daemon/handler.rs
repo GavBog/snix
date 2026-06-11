@@ -167,6 +167,34 @@ where
                         })
                         .await?
                     }
+                    Operation::AddMultipleToStore => {
+                        let repair = self.reader.read_value::<bool>().await?;
+                        let dont_check_sigs = self.reader.read_value::<bool>().await?;
+
+                        let builder = NixReader::builder().set_version(self.reader.version());
+                        let mut framed = NixFramedReader::new(&mut self.reader);
+                        Self::handle(&self.writer, async {
+                            let mut source = builder.build(&mut framed);
+                            let count = source.read_number().await?;
+                            for _ in 0..count {
+                                let info = source.read_value::<ValidPathInfo>().await?;
+                                self.io
+                                    .add_to_store_nar(info, &mut source, repair, dont_check_sigs)
+                                    .await?;
+                            }
+                            Ok(())
+                        })
+                        .await?;
+
+                        // framing desynchronisation
+                        // this MUST kill the connection
+                        if !framed.is_eof_unpin().await? {
+                            return Err(std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "payload was not fully consumed",
+                            ));
+                        }
+                    }
                     Operation::AddToStoreNar => {
                         let info = self.reader.read_value::<ValidPathInfo>().await?;
                         let repair = self.reader.read_value::<bool>().await?;
