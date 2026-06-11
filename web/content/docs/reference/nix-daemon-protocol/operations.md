@@ -36,7 +36,7 @@ its expected input and output types.
 | [BuildDerivation](#buildderivation)                         | 36 |
 | [AddSignatures](#addsignatures)                             | 37 |
 | [NarFromPath](#narfrompath)                                 | 38 |
-| [AddToStoreNar](#addtostore)                                | 39 |
+| [AddToStoreNar](#addtostorenar)                             | 39 |
 | [QueryMissing](#querymissing)                               | 40 |
 | [QueryDerivationOutputMap](#queryderivationoutputmap)       | 41 |
 | [RegisterDrvOutput](#registerdrvoutput)                     | 42 |
@@ -733,15 +733,7 @@ NAR dumped straight to the stream.
 Dumps a path as a NAR
 
 ### Inputs
-- path :: [StorePath][se-StorePath]
-- deriver :: [OptStorePath][se-OptStorePath]
-- narHash :: [NARHash][se-NARHash]
-- references :: [Set][se-Set] of [StorePath][se-StorePath]
-- registrationTime :: [Time][se-Time]
-- narSize :: [UInt64][se-UInt64]
-- ultimate :: [Bool64][se-Bool64]
-- signatures :: [Set][se-Set] of [Signature][se-Signature]
-- ca :: [OptContentAddress][se-OptContentAddress]
+- info :: [ValidPathInfo][se-ValidPathInfo]
 - repair :: [Bool64][se-Bool64]
 - dontCheckSigs :: [Bool64][se-Bool64]
 
