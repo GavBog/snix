@@ -1,0 +1,13 @@
+lang {
+  builtins "fetchurl"
+}
+
+// The network is required for Nix because it's trying
+// to resolve hostname
+environment {
+  network
+}
+
+runtime-opts {
+  eval-strict
+}
