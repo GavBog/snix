@@ -12,10 +12,10 @@ help: the trait `FromStr` is not implemented for `Test`
   = help: the following other types implement trait `FromStr`:
             ByteString
             CString
+            DerivedPath
             HashAlgo
             IpAddr
             Ipv4Addr
             Ipv6Addr
-            NonZero<i128>
-            NonZero<i16>
+            LegacyDerivedPath
           and $N others

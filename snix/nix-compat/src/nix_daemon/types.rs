@@ -1,3 +1,4 @@
+use crate::derived_path::{DerivedPath, LegacyDerivedPath};
 use crate::nixbase32;
 use crate::wire::de::Error;
 use crate::{
@@ -212,6 +213,15 @@ where
         async move { writer.write_display(fmt).await }
     }
 }
+
+nix_compat_derive::nix_serialize_remote!(
+    #[nix(into = "LegacyDerivedPath", from = "LegacyDerivedPath")]
+    DerivedPath
+);
+nix_compat_derive::nix_serialize_remote!(
+    #[nix(from_str, display)]
+    LegacyDerivedPath
+);
 
 // Writes StorePath or an empty string.
 impl NixSerialize for Option<StorePath<String>> {

@@ -37,6 +37,7 @@ pub mod hashing;
 #[cfg(feature = "wire")]
 pub mod wire;
 
+pub mod derived_path;
 #[cfg(feature = "daemon")]
 pub mod nix_daemon;
 #[cfg(feature = "daemon")]
