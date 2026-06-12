@@ -164,16 +164,20 @@ impl Derivation {
         let out_output = self.outputs.get("out")?;
         let ca_hash = out_output.ca_hash.as_ref()?;
 
-        Some(sha256!(
-            "fixed:out:{}{}:{}",
-            ca_kind_prefix(ca_hash),
-            ca_hash.hash().to_nix_lowerhex_string(),
-            out_output
-                .path
-                .as_ref()
-                .map(StorePath::to_absolute_path)
-                .unwrap_or_default(),
-        ))
+        Some(if let Some(out_output_path) = out_output.path.as_ref() {
+            sha256!(
+                "fixed:out:{}{}:{}",
+                ca_kind_prefix(ca_hash),
+                ca_hash.hash().to_nix_lowerhex_string(),
+                out_output_path.as_absolute_path_fmt(),
+            )
+        } else {
+            sha256!(
+                "fixed:out:{}{}:",
+                ca_kind_prefix(ca_hash),
+                ca_hash.hash().to_nix_lowerhex_string(),
+            )
+        })
     }
 
     /// Calculates the hash of a derivation modulo fixed-output subderivations.

@@ -11,7 +11,7 @@ pub fn fingerprint<'a, R: Iterator<Item = &'a StorePathRef<'a>>>(
 ) -> String {
     format!(
         "1;{};sha256:{};{};{}",
-        store_path.to_absolute_path(),
+        store_path.as_absolute_path_fmt(),
         nixbase32::encode(nar_sha256),
         nar_size,
         // references are absolute paths, joined with `,`.

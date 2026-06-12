@@ -208,8 +208,8 @@ where
     where
         W: NixWrite,
     {
-        let sp = self.to_absolute_path();
-        async move { writer.write_value(&sp).await }
+        let fmt = self.as_absolute_path_fmt();
+        async move { writer.write_display(fmt).await }
     }
 }
 

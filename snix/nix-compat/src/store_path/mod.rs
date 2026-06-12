@@ -209,11 +209,21 @@ where
         Ok((store_path, components.as_path()))
     }
 
-    /// Returns an absolute store path string.
-    /// That is just the string representation, prefixed with the store prefix
-    /// ([STORE_DIR_WITH_SLASH]),
+    /// Returns as an absolute store path (prefixed with [STORE_DIR_WITH_SLASH]).
     pub fn to_absolute_path(&self) -> String {
-        format!("{STORE_DIR_WITH_SLASH}{self}")
+        format!("{}", self.as_absolute_path_fmt())
+    }
+
+    /// Returns a formatter writing an absolute store path (prefixed with [STORE_DIR_WITH_SLASH]).
+    pub fn as_absolute_path_fmt(&self) -> impl std::fmt::Display + '_ {
+        struct WithAbsolutePath<'a>(StorePathRef<'a>);
+
+        impl std::fmt::Display for WithAbsolutePath<'_> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(f, "{STORE_DIR_WITH_SLASH}{}", self.0)
+            }
+        }
+        WithAbsolutePath(self.as_ref())
     }
 }
 

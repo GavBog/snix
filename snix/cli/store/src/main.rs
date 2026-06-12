@@ -379,8 +379,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                             // If the import was successful, print the path to stdout.
                             Ok(path_info) => {
                                 use std::io::Write;
-                                debug!(store_path=%path_info.store_path.to_absolute_path(), "imported path");
-                                writeln!(&mut stdout_writer, "{}", path_info.store_path.to_absolute_path())?;
+                                debug!(store_path=%path_info.store_path.as_absolute_path_fmt(), "imported path");
+                                writeln!(&mut stdout_writer, "{}", path_info.store_path.as_absolute_path_fmt())?;
                                 imports_span.pb_inc(1);
                                 Ok(())
                             }

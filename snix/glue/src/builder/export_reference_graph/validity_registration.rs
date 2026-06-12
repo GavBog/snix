@@ -21,11 +21,11 @@ pub fn make_validity_registration<
         write!(
             w,
             "{0}\n\n{num_references}\n",
-            store_path.to_absolute_path()
+            store_path.as_absolute_path_fmt()
         )?;
 
         for reference in references {
-            writeln!(w, "{}", reference.to_absolute_path())?;
+            writeln!(w, "{}", reference.as_absolute_path_fmt())?;
         }
     }
 
