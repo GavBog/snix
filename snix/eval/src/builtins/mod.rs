@@ -614,19 +614,7 @@ mod pure_builtins {
             return Ok(e);
         }
 
-        // also forces the value
-        let span = generators::request_span(&co).await;
-        let v = e
-            .coerce_to_string(
-                co,
-                CoercionKind {
-                    strong: true,
-                    import_paths: true,
-                },
-                span,
-            )
-            .await?;
-        let s = v.to_contextful_str()?;
+        let s = e.to_contextful_str()?;
 
         let groups = s
             .iter_context()
