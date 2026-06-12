@@ -61,11 +61,14 @@ impl Derivation {
     }
 
     /// Like `serialize` but allow replacing the input_derivations for hash calculations.
-    fn serialize_with_replacements(
+    fn serialize_with_replacements<S>(
         &self,
         writer: &mut impl std::io::Write,
-        input_derivations: &BTreeMap<impl AtermWriteable, BTreeSet<String>>,
-    ) -> Result<(), io::Error> {
+        input_derivations: &BTreeMap<S, BTreeSet<String>>,
+    ) -> Result<(), io::Error>
+    where
+        S: AtermWriteable,
+    {
         use write::*;
 
         writer.write_all(write::DERIVATION_PREFIX.as_bytes())?;
