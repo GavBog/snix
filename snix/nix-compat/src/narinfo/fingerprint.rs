@@ -9,17 +9,25 @@ pub fn fingerprint<'a, R: Iterator<Item = &'a StorePathRef<'a>>>(
     nar_size: u64,
     references: R,
 ) -> String {
-    format!(
-        "1;{};sha256:{};{};{}",
+    // format everything except the references
+    let mut output = format!(
+        "1;{};sha256:{};{};",
         store_path.as_absolute_path_fmt(),
         nixbase32::encode(nar_sha256),
         nar_size,
-        // references are absolute paths, joined with `,`.
-        references
-            .map(|r| r.to_absolute_path())
-            .collect::<Vec<String>>()
-            .join(",")
-    )
+    );
+
+    // append references, which are absolute paths, joined with `,`.
+    use std::fmt::Write;
+    let mut it = references.peekable();
+    while let Some(reference) = it.next() {
+        write!(&mut output, "{}", reference.as_absolute_path_fmt()).unwrap();
+        if it.peek().is_some() {
+            output.write_char(',').unwrap();
+        }
+    }
+
+    output
 }
 
 #[cfg(test)]
