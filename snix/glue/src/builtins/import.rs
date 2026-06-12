@@ -188,7 +188,9 @@ mod import_builtins {
                     .to_str()?;
 
                 nix_compat::store_path::validate_name(&nix_str)
-                    .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?
+                    .map_err(|err| {
+                        ErrorKind::SnixError(Arc::new(nix_compat::store_path::Error::from(err)))
+                    })?
                     .to_owned()
             }
             None => nix_compat::store_path::validate_name_as_os_str(path.file_name().ok_or_else(

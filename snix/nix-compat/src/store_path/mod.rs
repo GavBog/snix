@@ -20,6 +20,24 @@ pub const ENCODED_DIGEST_SIZE: usize = nixbase32::encode_len(DIGEST_SIZE);
 pub const STORE_DIR: &str = "/nix/store";
 pub const STORE_DIR_WITH_SLASH: &str = "/nix/store/";
 
+/// Error returned by [`validate_name`].
+#[derive(Debug, PartialEq, Eq, Clone, thiserror::Error)]
+pub enum ValidateNameError {
+    #[error("Invalid length")]
+    InvalidLength,
+    #[error("Invalid name")]
+    InvalidName,
+}
+
+impl From<ValidateNameError> for Error {
+    fn from(value: ValidateNameError) -> Self {
+        match value {
+            ValidateNameError::InvalidLength => Error::InvalidLength,
+            ValidateNameError::InvalidName => Error::InvalidName,
+        }
+    }
+}
+
 /// Errors that can occur when parsing a literal store path
 #[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
@@ -314,12 +332,12 @@ static NAME_CHARS: [bool; 256] = {
 
 /// Checks a given &[u8] to match the restrictions for [StorePath::name], and
 /// returns the name as &str if successful.
-pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, Error> {
+pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, ValidateNameError> {
     let s = s.as_ref();
 
     // Empty or excessively long names are not allowed.
     if s.is_empty() || s.len() > 211 {
-        return Err(Error::InvalidLength);
+        return Err(ValidateNameError::InvalidLength);
     }
 
     let mut valid = true;
@@ -330,7 +348,7 @@ pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, Error> {
     if !valid {
         for &c in s.iter() {
             if !NAME_CHARS[c as usize] {
-                return Err(Error::InvalidName);
+                return Err(ValidateNameError::InvalidName);
             }
         }
 
@@ -343,8 +361,10 @@ pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, Error> {
 
 /// Checks a given OsStr to match the restrictions for [StorePath::name], and
 /// returns the name as &str if successful.
-pub fn validate_name_as_os_str(s: &(impl AsRef<std::ffi::OsStr> + ?Sized)) -> Result<&str, Error> {
-    let s = s.as_ref().to_str().ok_or(Error::InvalidName)?;
+pub fn validate_name_as_os_str(
+    s: &(impl AsRef<std::ffi::OsStr> + ?Sized),
+) -> Result<&str, ValidateNameError> {
+    let s = s.as_ref().to_str().ok_or(ValidateNameError::InvalidName)?;
 
     validate_name(s)
 }
