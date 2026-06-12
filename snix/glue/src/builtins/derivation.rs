@@ -253,7 +253,7 @@ pub(crate) mod derivation_builtins {
         // Peek at the STRUCTURED_ATTRS argument.
         // If it's set and true, provide a BTreeMap that gets populated while looking at the arguments.
         // We need it to be a BTreeMap, so iteration order of keys is reproducible.
-        let mut structured_attrs: Option<BTreeMap<String, serde_json::Value>> =
+        let mut structured_attrs: Option<BTreeMap<&str, serde_json::Value>> =
             match input.select(STRUCTURED_ATTRS_ENABLE_KEY) {
                 Some(b) => generators::request_force(&co, b.clone())
                     .await
@@ -323,7 +323,7 @@ pub(crate) mod derivation_builtins {
                     match structured_attrs.as_mut() {
                         // add outputs to the json itself (as a list of strings)
                         Some(structured_attrs) => {
-                            structured_attrs.insert(arg_name.into(), output_names.into());
+                            structured_attrs.insert(arg_name, output_names.into());
                         }
                         // add drv.environment["outputs"] as a space-separated list
                         None => {
@@ -349,8 +349,7 @@ pub(crate) mod derivation_builtins {
                     // Either populate drv.environment or structured_attrs.
                     if let Some(ref mut structured_attrs) = structured_attrs {
                         // No need to check for dups, we only iterate over every attribute name once
-                        structured_attrs
-                            .insert(arg_name.to_owned(), val_str.to_str()?.to_owned().into());
+                        structured_attrs.insert(arg_name, val_str.to_str()?.to_owned().into());
                     } else {
                         insert_env(&mut drv, arg_name, val_str.as_bytes().into())?;
                     }
@@ -376,7 +375,7 @@ pub(crate) mod derivation_builtins {
                             input_context.extend(context);
 
                             // No need to check for dups, we only iterate over every attribute name once
-                            structured_attrs.insert(arg_name.to_owned(), val_json);
+                            structured_attrs.insert(arg_name, val_json);
                         }
                         // In non-SA case, coerce to string and add to env.
                         None => {
