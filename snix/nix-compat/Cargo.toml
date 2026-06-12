@@ -68,7 +68,7 @@ tokio-test.workspace = true
 zstd.workspace = true
 
 [[bench]]
-name = "derivation_parse_aterm"
+name = "derivation_aterm"
 harness = false
 
 [[bench]]
