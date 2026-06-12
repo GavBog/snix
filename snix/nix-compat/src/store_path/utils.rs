@@ -1,6 +1,6 @@
 use crate::nixbase32;
 use crate::nixhash::{CAHash, NixHash};
-use crate::store_path::{Error, STORE_DIR, StorePath};
+use crate::store_path::{Error, STORE_DIR, StorePath, StorePathRef};
 use data_encoding::HEXLOWER;
 use sha2::{Digest, Sha256};
 use thiserror;
@@ -43,15 +43,13 @@ pub fn compress_hash<const OUTPUT_SIZE: usize>(input: &[u8]) -> [u8; OUTPUT_SIZE
 /// derivation or a literal text file that may contain references.
 /// If you don't want to have to pass the entire contents, you might want to use
 /// [build_ca_path] instead.
-pub fn build_text_path<'a, S, SP, I, C>(
+pub fn build_text_path<'a, SP, C>(
     name: &'a str,
     content: C,
-    references: I,
+    references: impl IntoIterator<Item = StorePathRef<'a>>,
 ) -> Result<StorePath<SP>, BuildStorePathError>
 where
-    S: AsRef<str>,
     SP: AsRef<str> + std::convert::From<&'a str>,
-    I: IntoIterator<Item = S>,
     C: AsRef<[u8]>,
 {
     // produce the sha256 digest of the contents
@@ -61,16 +59,14 @@ where
 }
 
 /// This builds a store path from a [CAHash] and a list of references.
-pub fn build_ca_path<'a, S, SP, I>(
+pub fn build_ca_path<'a, SP>(
     name: &'a str,
     ca_hash: &CAHash,
-    references: I,
+    references: impl IntoIterator<Item = StorePathRef<'a>>,
     self_reference: bool,
 ) -> Result<StorePath<SP>, BuildStorePathError>
 where
-    S: AsRef<str>,
     SP: AsRef<str> + std::convert::From<&'a str>,
-    I: IntoIterator<Item = S>,
 {
     // self references are only allowed for CAHash::Nar(NixHash::Sha256(_)).
     if self_reference && matches!(ca_hash, CAHash::Nar(NixHash::Sha256(_))) {
@@ -172,16 +168,17 @@ where
 ///  - the nix_hash_string representation of the sha256 digest of some contents
 ///  - the value of `storeDir`
 ///  - the name
-fn make_references_string<S: AsRef<str>, I: IntoIterator<Item = S>>(
+fn make_references_string<'a>(
     ty: &str,
-    references: I,
+    references: impl IntoIterator<Item = StorePathRef<'a>>,
     self_ref: bool,
 ) -> String {
     let mut s = String::from(ty);
+    use std::fmt::Write;
 
     for reference in references {
         s.push(':');
-        s.push_str(reference.as_ref());
+        write!(&mut s, "{}", reference.as_absolute_path_fmt()).unwrap();
     }
 
     if self_ref {
@@ -218,8 +215,8 @@ mod test {
         // nix-repl> builtins.toFile "foo" "bar"
         // "/nix/store/vxjiwkjkn7x4079qvh1jkl5pn05j2aw0-foo"
 
-        let store_path: StorePathRef = build_text_path("foo", "bar", Vec::<String>::new())
-            .expect("build_store_path() should succeed");
+        let store_path: StorePathRef =
+            build_text_path("foo", "bar", []).expect("build_store_path() should succeed");
 
         assert_eq!(
             store_path.to_absolute_path().as_str(),
@@ -234,11 +231,10 @@ mod test {
         // nix-repl> builtins.toFile "baz" "${builtins.toFile "foo" "bar"}"
         // "/nix/store/5xd714cbfnkz02h2vbsj4fm03x3f15nf-baz"
 
-        let inner: StorePathRef = build_text_path("foo", "bar", Vec::<String>::new())
-            .expect("path_with_references() should succeed");
-        let inner_path = inner.to_absolute_path();
+        let inner: StorePathRef =
+            build_text_path("foo", "bar", []).expect("path_with_references() should succeed");
 
-        let outer: StorePathRef = build_text_path("baz", &inner_path, vec![inner_path.as_str()])
+        let outer: StorePathRef = build_text_path("baz", inner.to_absolute_path(), [inner])
             .expect("path_with_references() should succeed");
 
         assert_eq!(
@@ -254,7 +250,7 @@ mod test {
             &CAHash::Nar(NixHash::Sha1(hex!(
                 "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33"
             ))),
-            Vec::<String>::new(),
+            [],
             false,
         )
         .expect("path_with_references() should succeed");
@@ -282,7 +278,10 @@ mod test {
                     .try_into()
                     .expect("should have right len"),
             )),
-            vec!["/nix/store/dxwkwjzdaq7ka55pkk252gh32bgpmql4-foo"],
+            [
+                StorePathRef::from_bytes(b"dxwkwjzdaq7ka55pkk252gh32bgpmql4-foo")
+                    .expect("to parse"),
+            ],
             false,
         )
         .expect("path_with_references() should succeed");

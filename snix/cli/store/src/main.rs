@@ -349,7 +349,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         // FUTUREWORK: express the `name` at the type level to be valid and check for this earlier.
                         let ca = CAHash::Nar(NixHash::Sha256(nar_sha256));
                         let output_path: StorePath<String> =
-                            store_path::build_ca_path::<&str, _, _>(
+                            store_path::build_ca_path(
                                 &name,
                                 &ca,
                                 [],

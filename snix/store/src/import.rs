@@ -63,15 +63,13 @@ where
 
     // Calculate the output path. Will fail if the previously passed name doesn't pass
     // the [nix_compat::store_path::validate_name] check.
-    let output_path: StorePath<String> =
-        store_path::build_ca_path(name.as_ref(), &ca, std::iter::empty::<&str>(), false).map_err(
-            |_| {
-                std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    format!("invalid name: {0}", name.as_ref()),
-                )
-            },
-        )?;
+    let output_path: StorePath<String> = store_path::build_ca_path(name.as_ref(), &ca, [], false)
+        .map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("invalid name: {0}", name.as_ref()),
+        )
+    })?;
 
     // Insert a PathInfo. On success, return it back to the caller.
     path_info_service

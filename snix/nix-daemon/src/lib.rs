@@ -108,7 +108,7 @@ impl NixDaemonIO for SnixDaemon {
             let actual_path: StorePath<String> = build_ca_path(
                 info.path.name(),
                 cahash,
-                info.info.references.iter().map(|p| p.to_absolute_path()),
+                info.info.references.iter().map(|p| p.as_ref()),
                 false,
             )
             .map_err(Error::other)?;

@@ -165,7 +165,7 @@ impl Fetch {
         };
 
         // calculate the store path of this fetch
-        build_ca_path(name, &ca_hash, Vec::<String>::new(), false).map(Some)
+        build_ca_path(name, &ca_hash, [], false).map(Some)
     }
 }
 
@@ -575,7 +575,7 @@ where
         let (node, ca_hash, size) = self.ingest(fetch).await?;
 
         // Calculate the store path to return, by calculating from ca_hash.
-        let store_path = build_ca_path(name, &ca_hash, Vec::<String>::new(), false)?;
+        let store_path = build_ca_path(name, &ca_hash, [], false)?;
 
         // If the resulting hash is not a CAHash::Nar, we also need to invoke
         // `calculate_nar` to calculate this representation, as it's required in

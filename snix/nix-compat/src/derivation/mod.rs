@@ -138,14 +138,14 @@ impl Derivation {
         // append .drv to the name
         let name = format!("{name}.drv");
 
-        // collect the list of paths from input_sources and input_derivations
-        // into a (sorted, guaranteed by BTreeSet) list of references
-        let references: BTreeSet<String> = self
-            .input_sources
-            .iter()
-            .chain(self.input_derivations.keys())
-            .map(StorePath::to_absolute_path)
+        // collect the list of paths from input_sources AND input_derivations
+        // into a sorted list of references.
+        let mut references: BTreeSet<StorePathRef> = self
+            .input_derivations
+            .keys()
+            .map(StorePath::as_ref)
             .collect();
+        references.extend(self.input_sources.iter().map(StorePath::as_ref));
 
         build_text_path(&name, self.to_aterm_bytes(), references)
             .map_err(|_e| DerivationError::InvalidOutputName(name))
@@ -260,7 +260,7 @@ impl Derivation {
             // For fixed output derivation we use [build_ca_path], otherwise we
             // use [build_output_path] with [hash_derivation_modulo].
             let store_path = if let Some(ref hwm) = output.ca_hash {
-                build_ca_path(&path_name, hwm, Vec::<&str>::new(), false).map_err(|e| {
+                build_ca_path(&path_name, hwm, [], false).map_err(|e| {
                     DerivationError::InvalidOutputDerivationPath(output_name.to_string(), e)
                 })?
             } else {

@@ -316,7 +316,7 @@ mod import_builtins {
             Some(ca) => ca,
         };
 
-        let store_path = build_ca_path(&name, &ca, Vec::<&str>::new(), false)
+        let store_path = build_ca_path(&name, &ca, [], false)
             .map_err(|e| snix_eval::ErrorKind::SnixError(Arc::from(e)))?;
 
         let path_info = state
@@ -514,7 +514,10 @@ mod import_builtins {
                     store_path: build_ca_path(
                         name.to_str()?,
                         &ca_hash,
-                        content.iter_ctx_plain(),
+                        content.iter_ctx_plain().map(|sp| {
+                            StorePathRef::from_absolute_path(sp.as_bytes())
+                                .expect("Snix bug: must parse as store path")
+                        }),
                         false,
                     )
                     .map_err(|_e| {
