@@ -2617,6 +2617,7 @@ dependencies = [
 name = "nix-compat"
 version = "0.1.0"
 dependencies = [
+ "aho-corasick",
  "bitflags 2.11.1",
  "bstr",
  "bytes",

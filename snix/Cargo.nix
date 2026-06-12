@@ -340,6 +340,7 @@ rec {
           "std" = [ "memchr?/std" ];
         };
         resolvedDefaultFeatures = [
+          "default"
           "perf-literal"
           "std"
         ];
@@ -13413,6 +13414,10 @@ rec {
         };
         libName = "nix_compat";
         dependencies = [
+          {
+            name = "aho-corasick";
+            packageId = "aho-corasick";
+          }
           {
             name = "bitflags";
             packageId = "bitflags 2.10.0";

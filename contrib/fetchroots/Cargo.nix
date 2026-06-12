@@ -219,9 +219,9 @@ rec {
       };
       "aho-corasick" = rec {
         crateName = "aho-corasick";
-        version = "1.1.2";
+        version = "1.1.4";
         edition = "2021";
-        sha256 = "1w510wnixvlgimkx1zjbvlxh6xps2vjgfqgwf5a6adlbjp5rv5mj";
+        sha256 = "00a32wb2h07im3skkikc495jvncf62jl6s96vwc7bhi70h9imlyx";
         libName = "aho_corasick";
         authors = [
           "Andrew Gallant <jamslam@gmail.com>"
@@ -244,6 +244,7 @@ rec {
           "std" = [ "memchr?/std" ];
         };
         resolvedDefaultFeatures = [
+          "default"
           "perf-literal"
           "std"
         ];
@@ -6767,6 +6768,10 @@ rec {
         };
         libName = "nix_compat";
         dependencies = [
+          {
+            name = "aho-corasick";
+            packageId = "aho-corasick";
+          }
           {
             name = "bitflags";
             packageId = "bitflags 2.6.0";

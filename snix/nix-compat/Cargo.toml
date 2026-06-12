@@ -23,6 +23,7 @@ test = []
 default = ["async", "daemon", "hashbrown", "wire", "nix-compat-derive"]
 
 [dependencies]
+aho-corasick.workspace = true
 bitflags.workspace = true
 bstr = { workspace = true, features = ["alloc", "unicode", "serde"] }
 data-encoding.workspace = true

@@ -3,7 +3,7 @@
 //!
 //! [ATerm]: http://program-transformation.org/Tools/ATermFormat.html
 
-use crate::aterm::escape_bytes;
+use crate::aterm::write_escaped;
 use crate::derivation::{ca_kind_prefix, output::Output};
 use crate::store_path::StorePath;
 use data_encoding::HEXLOWER;
@@ -103,7 +103,7 @@ pub(crate) fn write_field<S: AsRef<[u8]>>(
     if !escape {
         writer.write_all(s.as_ref())?;
     } else {
-        writer.write_all(&escape_bytes(s.as_ref()))?;
+        write_escaped(s, writer)?;
     }
 
     write_char(writer, QUOTE)?;
