@@ -389,7 +389,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::Error;
-    use std::cmp::Ordering;
 
     use crate::store_path::{DIGEST_SIZE, StorePath, StorePathRef};
     use hex_literal::hex;
@@ -451,15 +450,11 @@ mod tests {
             if w.len() < 2 {
                 continue;
             }
-            let (pa, _) = StorePathRef::from_absolute_path_full(w[0]).expect("parseable");
-            let (pb, _) = StorePathRef::from_absolute_path_full(w[1]).expect("parseable");
-            assert_eq!(
-                Ordering::Less,
-                pa.cmp(&pb),
-                "{:?} not less than {:?}",
-                w[0],
-                w[1]
-            );
+
+            let pa = StorePathRef::from_absolute_path(w[0].as_bytes()).expect("parseable");
+            let pb = StorePathRef::from_absolute_path(w[1].as_bytes()).expect("parseable");
+
+            assert!(pa < pb, "{pa} not less than {pb}");
         }
     }
 
