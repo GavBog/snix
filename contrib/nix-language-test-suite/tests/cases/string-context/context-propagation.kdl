@@ -1,0 +1,13 @@
+lang {
+  builtins "derivation" "substring" "getContext" "map" "foldl" "length" "attrNames" "toString" "replaceStrings"
+}
+
+environment {
+  fixtures {
+    file "hello.txt" content=""
+  }
+}
+
+runtime-opts {
+  eval-strict
+}

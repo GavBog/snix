@@ -1,0 +1,7 @@
+lang {
+  builtins "derivation" "getContext" "dirOf"
+}
+
+runtime-opts {
+  eval-strict
+}

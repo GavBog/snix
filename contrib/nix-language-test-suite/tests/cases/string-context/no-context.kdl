@@ -1,0 +1,7 @@
+lang {
+  builtins "derivation" "getContext" "hasContext" "any" "attrValues" "attrNames" "parseDrvName" "match" "toString"
+}
+
+runtime-opts {
+  eval-strict
+}

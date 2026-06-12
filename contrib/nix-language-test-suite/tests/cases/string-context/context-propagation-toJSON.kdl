@@ -1,0 +1,7 @@
+lang {
+  builtins "getContext" "derivation" "toJSON" "foldl" "map"
+}
+
+runtime-opts {
+  eval-strict
+}

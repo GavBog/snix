@@ -1,0 +1,7 @@
+lang {
+  builtins "getContext" "derivation" "concatStringsSep" "foldl" "map" "toString"
+}
+
+runtime-opts {
+  eval-strict
+}

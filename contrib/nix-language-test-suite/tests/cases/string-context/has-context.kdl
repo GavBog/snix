@@ -1,0 +1,13 @@
+lang {
+  builtins "hasContext" "derivation" "path" "filterSource" "toFile"
+}
+
+environment {
+  fixtures {
+    file "hello.txt" content=""
+  }
+}
+
+runtime-opts {
+  eval-strict
+}

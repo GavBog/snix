@@ -1,0 +1,7 @@
+lang {
+  builtins "derivation" "getContext" "baseNameOf"
+}
+
+runtime-opts {
+  eval-strict
+}
