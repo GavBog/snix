@@ -265,10 +265,10 @@ pub(crate) mod derivation_builtins {
         // Look at the arguments passed to builtins.derivationStrict.
         // Some set special fields in the Derivation struct, some change
         // behaviour of other functionality.
-        for (arg_name, arg_value) in input.clone().into_iter_sorted() {
+        for (arg_name, arg_value) in input.iter_sorted() {
             let arg_name = arg_name.to_str()?;
             // force the current value.
-            let value = generators::request_force(&co, arg_value).await;
+            let value = generators::request_force(&co, arg_value.clone()).await;
 
             // filter out nulls if ignore_nulls is set.
             if ignore_nulls && matches!(value, Value::Null) {
