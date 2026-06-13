@@ -1,4 +1,4 @@
-use pretty_assertions::assert_eq;
+use pretty_assertions::{assert_eq, assert_ne};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -37,7 +37,12 @@ enum NixVersion {
 }
 
 impl SkipConfig {
-    fn should_skip(&self, version: &NixVersion, test_path: &Path, test_case: &TestCase) -> bool {
+    fn is_known_failing(
+        &self,
+        version: &NixVersion,
+        test_path: &Path,
+        test_case: &TestCase,
+    ) -> bool {
         let config = match version {
             NixVersion::CppNix23 => &self.nix_2_3,
             NixVersion::CppNixLatest => &self.nix_latest,
@@ -101,7 +106,15 @@ fn eval_test(
 ) {
     let nix_version = nix_version();
     let test_case = load_test_case(&test_case_path);
-    if skip_config.should_skip(&nix_version, &test_case_path, &test_case) {
+    let known_failing = skip_config.is_known_failing(&nix_version, &test_case_path, &test_case);
+
+    // This branch mostly matches fetchers tests.
+    //
+    // Because Nix/Lix are less lazier than Snix, they're trying to resolve
+    // hostname and only after they can't they fail. That increases the
+    // execution time of the suite by multiple seconds. That might not
+    // make difference in the CI, but becomes more significant during local development.
+    if known_failing && test_case.environment.network {
         eprintln!("SKIP {}", test_case_path.display());
         return;
     }
@@ -169,6 +182,10 @@ fn eval_test(
 
     if let Some(exp_str) = load_expected_output(&test_case_path) {
         if failed {
+            if known_failing {
+                return;
+            }
+
             let error_string = str::from_utf8(&result.stderr).unwrap();
 
             panic!(
@@ -182,6 +199,17 @@ fn eval_test(
             let s = str::from_utf8(&result.stdout).unwrap();
             normalize_output(&test_case, &nix_code_path, s)
         };
+
+        if known_failing {
+            assert_ne!(
+                value.trim(),
+                exp_str.trim(),
+                "{}: test passed unexpectedly! consider removing it from skip.toml",
+                nix_code_path.display()
+            );
+            return;
+        }
+
         assert_eq!(
             value.trim(),
             exp_str.trim(),
@@ -195,8 +223,19 @@ fn eval_test(
     if let Some(exp_err) = load_expected_error(&test_case_path) {
         let error_string = str::from_utf8(&result.stderr).unwrap();
         let output = str::from_utf8(&result.stdout).unwrap();
+        let matches_expected =
+            failed && matches_expected_error(nix_version, error_string, &exp_err);
 
-        if !matches_expected_error(nix_version, error_string, &exp_err) {
+        if known_failing {
+            assert!(
+                !matches_expected,
+                "{}: test passed unexpectedly! consider removing it from skip.toml",
+                test_case_path.display(),
+            );
+            return;
+        }
+
+        if !matches_expected {
             panic!(
                 "{}: invalid error kind. Expected {:?}, got stderr:\n{}\nstdout:\n{}",
                 test_case_path.display(),

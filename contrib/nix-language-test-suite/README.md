@@ -45,7 +45,7 @@ As long as the test case fits into the existing test suite, it is easy: add .nix
 > It should be simple to ignore test cases and mark know failures
 > (similar to the notyetpassing mechanism in the Snix test suite).
 
-This is a problem of runners rather than the test suite, but as long as the suite provides enough information, skipping tests should not be a big problem. See the reference runners for examples.
+This is a problem of runners rather than the test suite, but as long as the suite provides enough information, marking known failures should not be a big problem. The reference runners still execute skipped cases and only ignore mismatching results. If a skipped case starts matching the expected result, the runner fails so the case can be removed from `skip.toml`.
 
 > **Filesystem**: Some test cases `import` other files or use `builtins.readFile`, `builtins.readDir` and friends.
 

@@ -1,4 +1,4 @@
-use pretty_assertions::assert_eq;
+use pretty_assertions::{assert_eq, assert_ne};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -31,7 +31,7 @@ struct SkipConfig {
 }
 
 impl SkipConfig {
-    fn should_skip(&self, test_path: &Path, test_case: &TestCase) -> bool {
+    fn is_known_failing(&self, test_path: &Path, test_case: &TestCase) -> bool {
         let skip_feature = self
             .features
             .iter()
@@ -112,10 +112,7 @@ fn eval_test(
     skip_config: &SkipConfig,
 ) {
     let test_case = load_test_case(&test_case_path);
-    if skip_config.should_skip(&test_case_path, &test_case) {
-        eprintln!("SKIP {}", test_case_path.display());
-        return;
-    }
+    let known_failing = skip_config.is_known_failing(&test_case_path, &test_case);
 
     let (_tmp_dir, code_path) = setup_environment(&test_case_path, &test_case);
     let code = std::fs::read_to_string(&code_path).unwrap();
@@ -129,6 +126,10 @@ fn eval_test(
 
     if let Some(exp_str) = load_expected_output(&test_case_path) {
         if failed {
+            if known_failing {
+                return;
+            }
+
             let error_string = result
                 .errors
                 .iter()
@@ -148,10 +149,22 @@ fn eval_test(
         if test_case.runtime_opts.xml_output {
             let mut xml_actual_buf = Vec::new();
             snix_eval::builtins::value_to_xml(&mut xml_actual_buf, &value).unwrap();
+            let actual_xml =
+                String::from_utf8(xml_actual_buf).expect("to_xml produced invalid utf-8");
+
+            if known_failing {
+                assert_ne!(
+                    actual_xml,
+                    exp_str,
+                    "{}: test passed unexpectedly! consider removing it from skip.toml",
+                    code_path.display()
+                );
+                return;
+            }
 
             assert_eq!(
-                String::from_utf8(xml_actual_buf).expect("to_xml produced invalid utf-8"),
-                *exp_str,
+                actual_xml,
+                exp_str,
                 "{}: result value representation (left) must match expectation (right)",
                 code_path.display()
             );
@@ -159,6 +172,16 @@ fn eval_test(
         }
 
         let result_str = normalize_output(&test_case, &code_path, &value.to_string());
+
+        if known_failing {
+            assert_ne!(
+                result_str,
+                exp_str.trim(),
+                "{}: test passed unexpectedly! consider removing it from skip.toml",
+                code_path.display()
+            );
+            return;
+        }
 
         assert_eq!(
             result_str,
@@ -171,13 +194,19 @@ fn eval_test(
     }
 
     if let Some(exp_error) = load_expected_error(&test_case_path) {
-        assert!(
-            failed,
-            "{}: expected evaluation to fail",
-            test_case_path.display()
-        );
+        let matches_expected =
+            failed && !result.errors.is_empty() && matches_expected_error(&result, &exp_error);
 
-        if !matches_expected_error(&result, &exp_error) {
+        if known_failing {
+            assert!(
+                !matches_expected,
+                "{}: test passed unexpectedly! consider removing it from skip.toml",
+                test_case_path.display(),
+            );
+            return;
+        }
+
+        if !matches_expected {
             panic!(
                 "{}: invalid error kind. Expected {:?}, got errors: {:?}, value: {:?}",
                 test_case_path.display(),
