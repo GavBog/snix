@@ -22594,6 +22594,7 @@ rec {
           {
             name = "tonic-tracing-opentelemetry";
             packageId = "tonic-tracing-opentelemetry";
+            optional = true;
             features = [ "tracing_level_info" ];
           }
           {
@@ -22602,13 +22603,20 @@ rec {
           }
         ];
         features = {
+          "default" = [ "otlp" ];
           "fuse" = [ "snix-castore/fuse" ];
+          "otlp" = [
+            "snix-tracing/otlp"
+            "dep:tonic-tracing-opentelemetry"
+          ];
           "tonic-reflection" = [ "dep:tonic-reflection" ];
           "virtiofs" = [ "snix-castore/virtiofs" ];
           "xp-store-composition-cli" = [ "snix-castore/xp-composition-cli" ];
         };
         resolvedDefaultFeatures = [
+          "default"
           "fuse"
+          "otlp"
           "tonic-reflection"
           "virtiofs"
           "xp-store-composition-cli"
