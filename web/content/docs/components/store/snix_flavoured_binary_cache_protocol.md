@@ -8,13 +8,9 @@ weight: 41
 toc: true
 ---
 
-{{< callout context="caution" title="Caution" icon="outline/alert-triangle" >}}
-This document is a work in progress. `nar-bridge` already sends NAR URLs like
-this, but the client code to make use of these hints is still missing.
-{{</callout>}}
-
 This document describes an extension of the Nix HTTP Binary Cache to allow more
 granular, `snix-castore`-based substitution.
+In Snix, it's available in the `NixHTTPPathInfoService`.
 
 While still being fully compatible with a Snix-unaware client (like Nix
 itself), it allows clients aware of this protocol extension a "shortcut", where
