@@ -4,8 +4,6 @@ use snix_build::{
     buildservice,
     proto::{GRPCBuildServiceWrapper, build_service_server::BuildServiceServer},
 };
-use snix_castore::blobservice;
-use snix_castore::directoryservice;
 use tokio_listener::Listener;
 use tokio_listener::SystemOptions;
 use tokio_listener::UserOptions;
@@ -38,11 +36,8 @@ enum Commands {
         #[arg(long, short = 'l')]
         listen_address: Option<String>,
 
-        #[arg(long, env, default_value = "grpc+http://[::1]:8000")]
-        blob_service_addr: String,
-
-        #[arg(long, env, default_value = "grpc+http://[::1]:8000")]
-        directory_service_addr: String,
+        #[clap(flatten)]
+        castore_service_addrs: snix_castore::utils::ServiceUrlsGrpc,
 
         #[arg(long, env, default_value = "dummy:")]
         build_service_addr: String,
@@ -60,13 +55,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     match args.command {
         Commands::Daemon {
             listen_address,
-            blob_service_addr,
-            directory_service_addr,
+            castore_service_addrs,
             build_service_addr,
         } => {
-            // initialize stores
-            let blob_service = blobservice::from_addr(&blob_service_addr).await?;
-            let directory_service = directoryservice::from_addr(&directory_service_addr).await?;
+            let (blob_service, directory_service) =
+                snix_castore::utils::construct_services(castore_service_addrs).await?;
 
             let build_service =
                 buildservice::from_addr(&build_service_addr, blob_service, directory_service)
