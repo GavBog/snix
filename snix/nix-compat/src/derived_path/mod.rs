@@ -4,7 +4,7 @@ mod legacy;
 mod output_spec;
 
 pub use legacy::LegacyDerivedPath;
-pub use output_spec::{OutputName, OutputSpec};
+pub use output_spec::OutputSpec;
 
 use crate::store_path;
 

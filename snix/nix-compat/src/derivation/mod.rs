@@ -10,6 +10,7 @@ use std::io;
 
 mod errors;
 mod output;
+mod output_name;
 mod parse_error;
 mod parser;
 mod validate;
@@ -22,6 +23,7 @@ mod tests;
 pub use crate::nixhash::{CAHash, NixHash};
 pub use errors::{DerivationError, OutputError};
 pub use output::Output;
+pub use output_name::OutputName;
 pub use parser::Error as ParserError;
 pub use validate::validate_output_name;
 
