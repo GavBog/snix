@@ -39,10 +39,58 @@ impl Default for OutputName {
 }
 
 impl FromStr for OutputName {
-    type Err = store_path::ValidateNameError;
+    type Err = ParseOutputNameError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let name = store_path::validate_name(&s)?.to_string();
+
+        // Disallow the reserved 'drv' name, which may appear in store path names,
+        // but not in Derivations.
+        if s == "drv" {
+            return Err(ParseOutputNameError::ReservedNameDrv);
+        }
+
         Ok(OutputName(name))
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum ParseOutputNameError {
+    #[error("Invalid length")]
+    InvalidLength,
+    #[error("Invalid name")]
+    InvalidName,
+    #[error("Invalid reserved name 'drv'")]
+    ReservedNameDrv,
+}
+
+impl From<store_path::ValidateNameError> for ParseOutputNameError {
+    fn from(value: store_path::ValidateNameError) -> Self {
+        match value {
+            store_path::ValidateNameError::InvalidLength => ParseOutputNameError::InvalidLength,
+            store_path::ValidateNameError::InvalidName => ParseOutputNameError::InvalidName,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+
+    use super::OutputName;
+
+    #[rstest]
+    #[should_panic(expected = "InvalidName")]
+    #[case("bin{n")]
+    #[should_panic(expected = "InvalidName")]
+    #[case("bin{n")]
+    #[should_panic(expected = "InvalidName")]
+    #[case(" bin{n")]
+    #[should_panic(expected = "ReservedNameDrv")]
+    #[case("drv")]
+    #[should_panic(expected = "InvalidLength")]
+    #[case("")]
+    fn parse_fail(#[case] value: &str) {
+        value.parse::<OutputName>().unwrap();
     }
 }

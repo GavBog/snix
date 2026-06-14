@@ -4,7 +4,7 @@ mod legacy;
 mod output_spec;
 
 pub use legacy::LegacyDerivedPath;
-pub use output_spec::OutputSpec;
+pub use output_spec::{OutputSpec, ParseOutputSpecError};
 
 use crate::store_path;
 
@@ -48,7 +48,7 @@ impl fmt::Display for DerivedPath {
 }
 
 impl FromStr for DerivedPath {
-    type Err = store_path::Error;
+    type Err = ParseDerivedPathError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some((prefix, outputs_s)) = s.rsplit_once('^') {
@@ -61,6 +61,16 @@ impl FromStr for DerivedPath {
             ))
         }
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum ParseDerivedPathError {
+    #[error("failed to parse store path")]
+    StorePath(#[from] store_path::Error),
+    #[error("store path does not point to a derivation")]
+    MissingDrvSuffix,
+    #[error("failed to parse output spec")]
+    OutputSpec(#[from] ParseOutputSpecError),
 }
 
 #[cfg(test)]

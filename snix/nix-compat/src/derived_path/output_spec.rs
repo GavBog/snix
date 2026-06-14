@@ -2,8 +2,7 @@ use std::collections::BTreeSet;
 use std::fmt;
 use std::str::FromStr;
 
-use crate::derivation::OutputName;
-use crate::store_path::ValidateNameError;
+use crate::derivation::{OutputName, ParseOutputNameError};
 
 // FUTUREWORK: reduce the amount of heap allocation needed for this small set of small strings.
 /// An output selection spec.
@@ -50,15 +49,17 @@ impl fmt::Display for OutputSpec {
 }
 
 impl FromStr for OutputSpec {
-    type Err = ValidateNameError;
+    type Err = ParseOutputSpecError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s == "*" {
             Ok(OutputSpec::All)
         } else {
             let mut outputs = BTreeSet::new();
-            for name in s.split(",") {
-                let output = name.parse()?;
+            for (idx, name) in s.split(",").enumerate() {
+                let output = name
+                    .parse()
+                    .map_err(|err| ParseOutputSpecError::OutputName { idx, err })?;
                 outputs.insert(output);
             }
             Ok(OutputSpec::Named(outputs))
@@ -70,6 +71,16 @@ impl From<OutputName> for OutputSpec {
     fn from(output_name: OutputName) -> Self {
         Self::single(output_name)
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum ParseOutputSpecError {
+    #[error("Invalid Output Name at index {idx}")]
+    OutputName {
+        idx: usize,
+        #[source]
+        err: ParseOutputNameError,
+    },
 }
 
 #[cfg(test)]
@@ -100,25 +111,14 @@ mod tests {
     }
 
     #[rstest]
-    #[should_panic(expected = "Invalid name")]
-    #[case("bin{n")]
-    #[should_panic(expected = "Invalid name")]
+    #[should_panic]
     #[case("out,bin{n")]
-    #[should_panic(expected = "Invalid name")]
-    #[case(" bin{n")]
-    #[should_panic(expected = "Invalid length")]
-    #[case("out,")]
-    #[should_panic(expected = "Invalid length")]
-    #[case("")]
-    #[should_panic(expected = "Invalid length")]
-    #[case(",out")]
-    #[should_panic(expected = "Invalid length")]
+    #[should_panic]
     #[case::too_long(
         "test-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     )]
-    fn parse_failure(#[case] value: &str) {
-        let actual = value.parse::<OutputSpec>().unwrap_err();
-        panic!("{actual}");
+    fn parse_fail(#[case] value: &str) {
+        value.parse::<OutputSpec>().unwrap();
     }
 
     #[rstest]

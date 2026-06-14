@@ -1,9 +1,6 @@
 use std::{fmt, str::FromStr};
 
-use crate::{
-    derived_path::OutputSpec,
-    store_path::{self, StorePath},
-};
+use crate::{derived_path::OutputSpec, store_path::StorePath};
 
 use super::DerivedPath;
 
@@ -46,7 +43,7 @@ impl fmt::Display for LegacyDerivedPath {
 }
 
 impl FromStr for LegacyDerivedPath {
-    type Err = store_path::Error;
+    type Err = super::ParseDerivedPathError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some((prefix, outputs_s)) = s.rsplit_once('!') {
