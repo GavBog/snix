@@ -5118,7 +5118,9 @@ dependencies = [
  "tokio",
  "tokio-listener",
  "tonic",
+ "tonic-health",
  "tonic-reflection",
+ "tonic-tracing-opentelemetry",
  "tracing",
 ]
 

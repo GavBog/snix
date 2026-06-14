@@ -17,12 +17,14 @@ snix-tracing = { path = "../../tracing", features = ["clap"] }
 tokio = { workspace = true, features = ["process"] }
 tokio-listener = { workspace = true, features = ["tonic014"] }
 tonic.workspace = true
+tonic-health.workspace = true
 tonic-reflection = { workspace = true, optional = true }
+tonic-tracing-opentelemetry = { workspace = true, optional = true }
 tracing.workspace = true
 
 [features]
 default = ["otlp"]
-otlp = ["snix-tracing/otlp"]
+otlp = ["snix-tracing/otlp", "dep:tonic-tracing-opentelemetry"]
 tracing-chrome = ["snix-tracing/chrome"]
 tonic-reflection = ["dep:tonic-reflection"]
 xp-store-composition-cli = ["snix-castore/xp-composition-cli"]

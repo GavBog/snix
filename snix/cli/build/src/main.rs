@@ -70,12 +70,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .parse()
                 .unwrap();
 
+            #[cfg_attr(feature = "otlp", allow(unused_mut))]
             let mut server = Server::builder();
+            #[cfg(feature = "otlp")]
+            let mut server = server.layer(
+                if args
+                    .tracing_args
+                    .tracers()
+                    .contains(snix_tracing::Tracer::Otlp)
+                {
+                    tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
+                } else {
+                    tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
+                        .filter(|_| false)
+                },
+            );
+
+            let (_health_reporter, health_service) = tonic_health::server::health_reporter();
 
             #[allow(unused_mut)]
-            let mut router = server.add_service(BuildServiceServer::new(
-                GRPCBuildServiceWrapper::new(build_service),
-            ));
+            let mut router =
+                server
+                    .add_service(health_service)
+                    .add_service(BuildServiceServer::new(GRPCBuildServiceWrapper::new(
+                        build_service,
+                    )));
 
             #[cfg(feature = "tonic-reflection")]
             {

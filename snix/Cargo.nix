@@ -22495,9 +22495,20 @@ rec {
             ];
           }
           {
+            name = "tonic-health";
+            packageId = "tonic-health";
+            usesDefaultFeatures = false;
+          }
+          {
             name = "tonic-reflection";
             packageId = "tonic-reflection";
             optional = true;
+          }
+          {
+            name = "tonic-tracing-opentelemetry";
+            packageId = "tonic-tracing-opentelemetry";
+            optional = true;
+            features = [ "tracing_level_info" ];
           }
           {
             name = "tracing";
@@ -22506,7 +22517,10 @@ rec {
         ];
         features = {
           "default" = [ "otlp" ];
-          "otlp" = [ "snix-tracing/otlp" ];
+          "otlp" = [
+            "snix-tracing/otlp"
+            "dep:tonic-tracing-opentelemetry"
+          ];
           "tonic-reflection" = [ "dep:tonic-reflection" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "xp-store-composition-cli" = [ "snix-castore/xp-composition-cli" ];
