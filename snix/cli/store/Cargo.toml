@@ -37,7 +37,7 @@ tokio-listener = { workspace = true, features = [
 tonic.workspace = true
 tonic-health.workspace = true
 tonic-reflection = { workspace = true, optional = true }
-tonic-tracing-opentelemetry.workspace = true
+tonic-tracing-opentelemetry = { workspace = true, optional = true }
 tracing.workspace = true
 tracing-indicatif.workspace = true
 
@@ -46,7 +46,7 @@ default = ["fuse", "otlp", "tonic-reflection"]
 fuse = ["snix-castore/fuse"]
 virtiofs = ["snix-castore/virtiofs"]
 tonic-reflection = ["dep:tonic-reflection"]
-otlp = ["snix-tracing/otlp"]
+otlp = ["snix-tracing/otlp", "dep:tonic-tracing-opentelemetry"]
 tracing-chrome = ["snix-tracing/chrome"]
 tracing-tracy = ["snix-tracing/tracy"]
 xp-store-composition-cli = [

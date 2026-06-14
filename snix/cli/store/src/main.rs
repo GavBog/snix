@@ -226,8 +226,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let (blob_service, directory_service, path_info_service, nar_calculation_service) =
                 snix_store::utils::construct_services(service_addrs).await?;
 
-            let mut server = Server::builder()
-                .layer(tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default());
+            #[cfg_attr(feature = "otlp", allow(unused_mut))]
+            let mut server = Server::builder();
+            #[cfg(feature = "otlp")]
+            let mut server = server.layer(
+                if args
+                    .tracing_args
+                    .tracers()
+                    .contains(snix_tracing::Tracer::Otlp)
+                {
+                    tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
+                } else {
+                    tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
+                        .filter(|_| false)
+                },
+            );
 
             let (_health_reporter, health_service) = tonic_health::server::health_reporter();
 

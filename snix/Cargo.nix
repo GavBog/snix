@@ -23156,6 +23156,7 @@ rec {
           {
             name = "tonic-tracing-opentelemetry";
             packageId = "tonic-tracing-opentelemetry";
+            optional = true;
             features = [ "tracing_level_info" ];
           }
           {
@@ -23174,7 +23175,10 @@ rec {
             "tonic-reflection"
           ];
           "fuse" = [ "snix-castore/fuse" ];
-          "otlp" = [ "snix-tracing/otlp" ];
+          "otlp" = [
+            "snix-tracing/otlp"
+            "dep:tonic-tracing-opentelemetry"
+          ];
           "tonic-reflection" = [ "dep:tonic-reflection" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracing-tracy" = [ "snix-tracing/tracy" ];
