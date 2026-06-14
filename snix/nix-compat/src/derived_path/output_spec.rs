@@ -105,6 +105,8 @@ mod tests {
     #[case("*", OutputSpec::All)]
     #[case("out", OutputSpec::Named(set!("out")))]
     #[case("bin,dev,out", OutputSpec::Named(set!("bin", "dev", "out")))]
+    #[case::unordered("dev,bin,out", OutputSpec::Named(set!("bin", "dev", "out")))]
+    #[case::duplicates("bin,dev,dev", OutputSpec::Named(set!("bin", "dev")))]
     fn parse(#[case] value: &str, #[case] expected: OutputSpec) {
         let actual = value.parse::<OutputSpec>().unwrap();
         assert_eq!(actual, expected);
