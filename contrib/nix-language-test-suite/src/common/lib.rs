@@ -76,6 +76,8 @@ pub enum ErrorKind {
     HashMismatch,
     DerivationError,
     UnexpectedArgument,
+    DuplicateAttrsKey,
+    VariableAlreadyDefined,
 }
 
 impl std::str::FromStr for ErrorKind {
@@ -90,6 +92,8 @@ impl std::str::FromStr for ErrorKind {
             "HashMismatch" => Ok(ErrorKind::HashMismatch),
             "DerivationError" => Ok(ErrorKind::DerivationError),
             "UnexpectedArgument" => Ok(ErrorKind::UnexpectedArgument),
+            "DuplicateAttrsKey" => Ok(ErrorKind::DuplicateAttrsKey),
+            "VariableAlreadyDefined" => Ok(ErrorKind::VariableAlreadyDefined),
             other => Err(format!("unknown error kind: {other}")),
         }
     }

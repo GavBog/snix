@@ -266,6 +266,12 @@ fn matches_expected_error(result: &snix_eval::EvaluationResult, exp_kind: &Error
             snix_kind,
             snix_eval::ErrorKind::UnexpectedArgumentBuiltin(_)
         ),
+        ErrorKind::VariableAlreadyDefined => {
+            matches!(snix_kind, snix_eval::ErrorKind::VariableAlreadyDefined(_))
+        }
+        ErrorKind::DuplicateAttrsKey => {
+            matches!(snix_kind, snix_eval::ErrorKind::DuplicateAttrsKey { .. })
+        }
     }
 }
 

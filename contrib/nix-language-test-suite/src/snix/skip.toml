@@ -7,6 +7,14 @@ paths = [
   #
   # Related issue: https://github.com/NixOS/nix/issues/7761
   "filterSource-symlink-dir",
+
+  # Snix fails with duplicate attrs correctly,
+  # but only with strict evaluation, while
+  # Nix fails with lazy evaluation too
+  "unthunked-dup-attr-path",
+
+  # Nix fails, but Snix only emits a "UselessInherit" warning
+  "dup-inherit",
 ]
 
 builtins = ["readFileType", "readFile", "__nixPath", "unsafeGetAttrPos"]
