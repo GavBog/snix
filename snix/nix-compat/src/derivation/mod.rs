@@ -25,7 +25,6 @@ pub use errors::{DerivationError, OutputError};
 pub use output::Output;
 pub use output_name::{OutputName, ParseOutputNameError};
 pub use parser::Error as ParserError;
-pub use validate::validate_output_name;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -40,14 +39,14 @@ pub struct Derivation {
 
     /// Map from drv path to output names used from this derivation.
     #[cfg_attr(feature = "serde", serde(rename = "inputDrvs"))]
-    pub input_derivations: BTreeMap<StorePath<String>, BTreeSet<String>>,
+    pub input_derivations: BTreeMap<StorePath<String>, BTreeSet<OutputName>>,
 
     /// Plain store paths of additional inputs.
     #[cfg_attr(feature = "serde", serde(rename = "inputSrcs"))]
     pub input_sources: BTreeSet<StorePath<String>>,
 
     /// Maps output names to Output.
-    pub outputs: BTreeMap<String, Output>,
+    pub outputs: BTreeMap<OutputName, Output>,
 
     pub system: String,
 }
@@ -109,7 +108,10 @@ impl Derivation {
             return None;
         }
 
-        let out_output = self.outputs.get("out")?;
+        // FUTUREWORK: newtype for Outputs, representing single-out output differently?
+        let out_output = self
+            .outputs
+            .get(&"out".parse().expect("valid OutputName"))?;
         let ca_hash = out_output.ca_hash.as_ref()?;
 
         Some(if let Some(out_output_path) = out_output.path.as_ref() {
@@ -205,6 +207,7 @@ impl Derivation {
             // footgun prevention mechanism.
             assert!(output.path.is_none());
 
+            // FUTUREWORK: generalize `path_name` consumers on `Display`
             let path_name = output_path_name(name, output_name);
 
             // For fixed output derivation we use [build_ca_path], otherwise we
@@ -214,12 +217,13 @@ impl Derivation {
                     DerivationError::InvalidOutputDerivationPath(output_name.to_string(), e)
                 })?
             } else {
-                build_output_path(hash_derivation_modulo, output_name, &path_name).map_err(|e| {
-                    DerivationError::InvalidOutputDerivationPath(
-                        output_name.to_string(),
-                        store_path::BuildStorePathError::InvalidStorePath(e),
-                    )
-                })?
+                build_output_path(hash_derivation_modulo, output_name.as_str(), &path_name)
+                    .map_err(|e| {
+                        DerivationError::InvalidOutputDerivationPath(
+                            output_name.to_string(),
+                            store_path::BuildStorePathError::InvalidStorePath(e),
+                        )
+                    })?
             };
 
             self.environment.insert(
@@ -298,13 +302,14 @@ impl DerivationAsyncExt for Derivation {
 ///
 /// It's the name, and (if it's the non-out output), the output name
 /// after a `-`.
-fn output_path_name(derivation_name: &str, output_name: &str) -> String {
-    let mut output_path_name = derivation_name.to_string();
-    if output_name != "out" {
-        output_path_name.push('-');
-        output_path_name.push_str(output_name);
+/// Used in `calculate_output_paths`.
+fn output_path_name(derivation_name: &str, output_name: &OutputName) -> String {
+    let mut buf = derivation_name.to_owned();
+    if output_name.as_ref() != "out" {
+        buf.push('-');
+        buf.push_str(output_name.as_ref());
     }
-    output_path_name
+    buf
 }
 
 /// For a [CAHash], return the "prefix" used for NAR purposes.

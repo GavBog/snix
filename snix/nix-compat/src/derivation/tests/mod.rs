@@ -183,10 +183,10 @@ fn derivation_without_output_paths(derivation: &Derivation) -> Derivation {
     let mut trimmed_outputs = derivation.outputs.clone();
 
     for (output_name, output) in &derivation.outputs {
-        trimmed_env.insert(output_name.clone(), "".into());
+        trimmed_env.insert(output_name.as_str().to_owned(), "".into());
         assert!(trimmed_outputs.contains_key(output_name));
         trimmed_outputs.insert(
-            output_name.to_string(),
+            output_name.clone(),
             Output {
                 path: None,
                 ..output.clone()
@@ -341,7 +341,7 @@ fn output_path_construction() {
 
     // assemble bar outputs
     bar_drv.outputs.insert(
-        "out".to_string(),
+        "out".parse().expect("valid OutputName"),
         Output {
             path: None, // will be calculated
             ca_hash: Some(crate::nixhash::CAHash::Nar(
@@ -378,7 +378,11 @@ fn output_path_construction() {
 
     // now construct foo, which requires bar_drv
     // Note how we refer to the output path, drv name and replacement_str (with calculated output paths) of bar.
-    let bar_output_path = &bar_drv.outputs.get("out").expect("must exist").path;
+    let bar_output_path = &bar_drv
+        .outputs
+        .get(&"out".parse().expect("valid OutputName"))
+        .expect("must exist")
+        .path;
     let bar_drv_hash_derivation_modulo =
         bar_drv.hash_derivation_modulo(|_| panic!("is FOD, should not lookup"));
 
@@ -395,7 +399,6 @@ fn output_path_construction() {
 
     // assemble foo env
     let foo_env = &mut foo_drv.environment;
-    // foo_env.insert("bar".to_string(), StorePathRef:: bar_output_path.to_owned().try_into().unwrap());
     foo_env.insert(
         "bar".to_string(),
         bar_output_path
@@ -412,7 +415,7 @@ fn output_path_construction() {
 
     // asssemble foo outputs
     foo_drv.outputs.insert(
-        "out".to_string(),
+        "out".parse().expect("valid OutputName"),
         Output {
             path: None, // will be calculated
             ca_hash: None,
@@ -420,9 +423,10 @@ fn output_path_construction() {
     );
 
     // assemble foo input_derivations
-    foo_drv
-        .input_derivations
-        .insert(bar_drv_path, BTreeSet::from(["out".to_string()]));
+    foo_drv.input_derivations.insert(
+        bar_drv_path,
+        BTreeSet::from(["out".parse().expect("valid OutputName")]),
+    );
 
     // calculate foo output paths
     let foo_calc_result = foo_drv.calculate_output_paths(

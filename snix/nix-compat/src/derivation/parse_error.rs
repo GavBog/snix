@@ -3,6 +3,7 @@
 use nom::IResult;
 
 use crate::{
+    derivation::{OutputName, ParseOutputNameError},
     nixhash,
     store_path::{self, StorePath},
 };
@@ -16,11 +17,14 @@ pub enum ErrorKind {
     DuplicateMapKey(String),
 
     /// Input derivation has two outputs with the same name
-    #[error("duplicate output name {1} for input derivation {0}")]
-    DuplicateInputDerivationOutputName(String, String),
+    #[error("duplicate output name {0} for input derivation {1}")]
+    DuplicateInputDerivationOutputName(OutputName, String),
 
     #[error("duplicate input source: {0}")]
     DuplicateInputSource(StorePath<String>),
+
+    #[error("invalind output name")]
+    InvalidOutputName(#[from] ParseOutputNameError),
 
     #[error("nix hash error: {0}")]
     NixHashError(nixhash::Error),

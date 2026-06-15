@@ -3,7 +3,7 @@ use crate::builtins::DerivationError;
 use crate::known_paths::KnownPaths;
 use crate::snix_store_io::SnixStoreIO;
 use bstr::BString;
-use nix_compat::derivation::{Derivation, Output};
+use nix_compat::derivation::{Derivation, Output, OutputName};
 use nix_compat::nixhash::{CAHash, HashAlgo, NixHash};
 use nix_compat::store_path::{StorePath, StorePathRef};
 use snix_eval::builtin_macros::builtins;
@@ -46,13 +46,17 @@ fn populate_inputs(drv: &mut Derivation, full_context: NixContext, known_paths: 
                     "Extra path not empty for {derivation_str}"
                 );
 
+                let name: OutputName = name
+                    .parse()
+                    .expect("Snix bug: output name in context invalid");
+
                 match drv.input_derivations.entry(derivation.clone()) {
                     btree_map::Entry::Vacant(entry) => {
-                        entry.insert(BTreeSet::from([name.clone()]));
+                        entry.insert(BTreeSet::from([name]));
                     }
 
                     btree_map::Entry::Occupied(mut entry) => {
-                        entry.get_mut().insert(name.clone());
+                        entry.get_mut().insert(name);
                     }
                 }
             }
@@ -142,7 +146,7 @@ fn handle_fixed_output(
 
         // construct the fixed output.
         drv.outputs.insert(
-            "out".to_string(),
+            "out".parse().expect("valid OutputName"),
             Output {
                 path: None,
                 ca_hash: match hash_mode_str.as_deref() {
@@ -228,7 +232,8 @@ pub(crate) mod derivation_builtins {
         let name = name.to_str()?;
 
         let mut drv = Derivation::default();
-        drv.outputs.insert("out".to_string(), Default::default());
+        drv.outputs
+            .insert("out".parse().expect("valid OutputName"), Default::default());
         let mut input_context = NixContext::new();
 
         /// Inserts a key and value into the drv.environment BTreeMap, and fails if the
@@ -310,7 +315,13 @@ pub(crate) mod derivation_builtins {
                         // Populate drv.outputs
                         if drv
                             .outputs
-                            .insert(output_name.to_str()?.to_owned(), Default::default())
+                            .insert(
+                                output_name
+                                    .to_str()?
+                                    .parse()
+                                    .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?,
+                                Default::default(),
+                            )
                             .is_some()
                         {
                             Err(DerivationError::DuplicateOutput(
@@ -479,10 +490,10 @@ pub(crate) mod derivation_builtins {
                 .iter()
                 .map(|(name, output)| {
                     (
-                        name.clone(),
+                        name.to_owned().into_string(),
                         NixString::new_context_from(
                             NixContextElement::Single {
-                                name: name.clone(),
+                                name: name.to_owned().into_string(),
                                 derivation: drv_path.to_absolute_path(),
                             }
                             .into(),

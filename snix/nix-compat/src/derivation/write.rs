@@ -4,6 +4,7 @@
 //! [ATerm]: http://program-transformation.org/Tools/ATermFormat.html
 
 use super::{ca_kind_prefix, output::Output};
+use crate::derivation::OutputName;
 use crate::store_path::StorePath;
 use crate::{aterm::write_escaped, derivation::Derivation};
 use data_encoding::HEXLOWER;
@@ -82,6 +83,12 @@ impl AtermWriteable for [u8; 32] {
     }
 }
 
+impl AtermWriteable for &OutputName {
+    fn aterm_write(&self, writer: &mut impl io::Write) -> std::io::Result<()> {
+        write_field(writer, self.as_ref(), false)
+    }
+}
+
 impl Derivation {
     /// Like `serialize`, but allows replacing the input_derivations for hash calculations.
     ///
@@ -90,7 +97,7 @@ impl Derivation {
     pub(super) fn serialize_with_replacements<S>(
         &self,
         writer: &mut impl std::io::Write,
-        input_derivations: &BTreeMap<S, BTreeSet<String>>,
+        input_derivations: &BTreeMap<S, BTreeSet<OutputName>>,
     ) -> Result<(), io::Error>
     where
         S: AtermWriteable,
@@ -173,7 +180,7 @@ where
 
 fn write_outputs(
     writer: &mut impl Write,
-    outputs: &BTreeMap<String, Output>,
+    outputs: &BTreeMap<OutputName, Output>,
 ) -> Result<(), io::Error> {
     write_char(writer, BRACKET_OPEN)?;
     for (ii, (output_name, output)) in outputs.iter().enumerate() {
@@ -190,10 +197,15 @@ fn write_outputs(
             let digest_str = &data_encoding::HEXLOWER.encode(ca_hash.hash().digest_as_bytes());
             write_array_elements(
                 writer,
-                [output_name, path_str.as_ref(), mode_and_algo, digest_str],
+                [
+                    output_name.as_str(),
+                    path_str.as_ref(),
+                    mode_and_algo,
+                    digest_str,
+                ],
             )?;
         } else {
-            write_array_elements(writer, [output_name, path_str.as_ref(), "", ""])?;
+            write_array_elements(writer, [output_name.as_str(), path_str.as_ref(), "", ""])?;
         };
 
         write_char(writer, PAREN_CLOSE)?;
@@ -205,17 +217,17 @@ fn write_outputs(
 
 fn write_input_derivations(
     writer: &mut impl Write,
-    input_derivations: &BTreeMap<impl AtermWriteable, BTreeSet<String>>,
+    input_derivations: &BTreeMap<impl AtermWriteable, BTreeSet<OutputName>>,
 ) -> Result<(), io::Error> {
     write_char(writer, BRACKET_OPEN)?;
 
-    for (ii, (input_derivation_aterm, output_names)) in input_derivations.iter().enumerate() {
+    for (ii, (k, output_names)) in input_derivations.iter().enumerate() {
         if ii > 0 {
             write_char(writer, COMMA)?;
         }
 
         write_char(writer, PAREN_OPEN)?;
-        input_derivation_aterm.aterm_write(writer)?;
+        k.aterm_write(writer)?;
         write_char(writer, COMMA)?;
 
         write_char(writer, BRACKET_OPEN)?;

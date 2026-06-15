@@ -6,6 +6,8 @@ use crate::store_path;
 ///
 /// This is a derivation output name, so the 'out' or 'bin' bit that has
 /// been verified to not contain invalid characters.
+///
+/// Output names may also not be empty or be called `drv`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(
     feature = "serde",
@@ -80,7 +82,7 @@ impl From<OutputName> for String {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, PartialEq)]
 pub enum ParseOutputNameError {
     #[error("Invalid length")]
     InvalidLength,
@@ -112,11 +114,25 @@ mod tests {
     #[case("bin{n")]
     #[should_panic(expected = "InvalidName")]
     #[case(" bin{n")]
+    #[should_panic(expected = "InvalidName")]
+    #[case("invalid name")]
+    #[should_panic(expected = "InvalidName")]
+    #[case("invalid/name")]
     #[should_panic(expected = "ReservedNameDrv")]
     #[case("drv")]
     #[should_panic(expected = "InvalidLength")]
     #[case("")]
     fn parse_fail(#[case] value: &str) {
+        value.parse::<OutputName>().unwrap();
+    }
+
+    #[rstest]
+    #[case("out")]
+    #[case("dev")]
+    #[case("lib")]
+    #[case("bin")]
+    #[case("debug")]
+    fn parse(#[case] value: &str) {
         value.parse::<OutputName>().unwrap();
     }
 }

@@ -9,7 +9,7 @@ use async_stream::try_stream;
 use bstr::BString;
 use bytes::Bytes;
 use futures::Stream;
-use nix_compat::derivation::Output;
+use nix_compat::derivation::{Output, OutputName};
 use nix_compat::store_path::hash_placeholder;
 use nix_compat::{derivation::Derivation, nixbase32, store_path::StorePath};
 use sha2::{Digest, Sha256};
@@ -161,7 +161,7 @@ pub(crate) fn derivation_into_build_request(
     if derivation.outputs.len() == 1
         && derivation
             .outputs
-            .get("out")
+            .get(&"out".parse().expect("valid OutputName"))
             .expect("Snix bug: Derivation has no out output")
             .is_fixed()
     {
@@ -284,7 +284,7 @@ fn calculate_pass_as_file_env(k: &str) -> (String, String) {
 }
 
 /// Replace all references to `placeholder outputName` inside the derivation
-fn replace_placeholders(s: &str, outputs: &BTreeMap<String, Output>) -> String {
+fn replace_placeholders(s: &str, outputs: &BTreeMap<OutputName, Output>) -> String {
     let mut s = s.to_owned();
     for (out_name, output) in outputs {
         let placeholder = hash_placeholder(out_name.as_str());
@@ -292,7 +292,7 @@ fn replace_placeholders(s: &str, outputs: &BTreeMap<String, Output>) -> String {
             s = s.replace(&placeholder, &path.to_absolute_path());
         } else {
             warn!(
-                output.name = out_name,
+                output.name = %out_name,
                 "output should have a path during placeholder replacement"
             );
         }
@@ -301,7 +301,7 @@ fn replace_placeholders(s: &str, outputs: &BTreeMap<String, Output>) -> String {
 }
 
 /// Replace all references to `placeholder outputName` inside the derivation
-fn replace_placeholders_b(s: &BString, outputs: &BTreeMap<String, Output>) -> BString {
+fn replace_placeholders_b(s: &BString, outputs: &BTreeMap<OutputName, Output>) -> BString {
     use bstr::ByteSlice;
     let mut s = s.clone();
     for (out_name, output) in outputs {
@@ -312,7 +312,7 @@ fn replace_placeholders_b(s: &BString, outputs: &BTreeMap<String, Output>) -> BS
                 .into();
         } else {
             warn!(
-                output.name = out_name,
+                output.name = %out_name,
                 "output should have a path during placeholder replacement"
             );
         }

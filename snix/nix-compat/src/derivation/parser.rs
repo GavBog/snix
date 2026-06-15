@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, BTreeSet, btree_map};
 use thiserror;
 
 use crate::derivation::parse_error::{ErrorKind, NomError, NomResult, into_nomerror};
-use crate::derivation::{CAHash, Derivation, Output, write};
+use crate::derivation::{CAHash, Derivation, Output, OutputName, write};
 use crate::store_path::{self, StorePath};
 use crate::{aterm, nixhash, nixhash::NixHash};
 
@@ -100,7 +100,7 @@ fn from_algo_and_mode_and_digest<B: AsRef<[u8]>>(
 /// Parse one output in ATerm. This is 4 string fields inside parans:
 /// output name, output path, algo (and mode), digest.
 /// Returns the output name and [Output] struct.
-fn parse_output(i: &[u8]) -> NomResult<&[u8], (String, Output)> {
+fn parse_output(i: &[u8]) -> NomResult<&[u8], (OutputName, Output)> {
     delimited(
         nomchar('('),
         map_res(
@@ -114,7 +114,13 @@ fn parse_output(i: &[u8]) -> NomResult<&[u8], (String, Output)> {
                     .parse(i)
                     .map_err(into_nomerror)
             },
-            |(output_name, output_path, algo_and_mode, encoded_digest)| {
+            |(output_name_str, output_path, algo_and_mode, encoded_digest)| {
+                let output_name = output_name_str.try_into().map_err(|err| {
+                    nom::Err::Failure(NomError {
+                        input: i,
+                        code: ErrorKind::InvalidOutputName(err),
+                    })
+                })?;
                 // convert these 4 fields into an [Output].
                 let ca_hash_res = {
                     if algo_and_mode.is_empty() && encoded_digest.is_empty() {
@@ -161,7 +167,7 @@ fn parse_output(i: &[u8]) -> NomResult<&[u8], (String, Output)> {
 /// it to a BTreeMap.
 /// We don't use parse_kv here, as it's dealing with 2-tuples, and these are
 /// 4-tuples.
-fn parse_outputs(i: &[u8]) -> NomResult<&[u8], BTreeMap<String, Output>> {
+fn parse_outputs(i: &[u8]) -> NomResult<&[u8], BTreeMap<OutputName, Output>> {
     let res = delimited(
         nomchar('['),
         separated_list1(tag(","), parse_output),
@@ -190,30 +196,37 @@ fn parse_outputs(i: &[u8]) -> NomResult<&[u8], BTreeMap<String, Output>> {
 
 fn parse_input_derivations(
     i: &[u8],
-) -> NomResult<&[u8], BTreeMap<StorePath<String>, BTreeSet<String>>> {
+) -> NomResult<&[u8], BTreeMap<StorePath<String>, BTreeSet<OutputName>>> {
     let (i, input_derivations_list) = parse_kv(aterm::parse_string_list)(i)?;
 
     // This is a HashMap of drv paths to a list of output names.
     let mut input_derivations: BTreeMap<StorePath<String>, BTreeSet<_>> = BTreeMap::new();
 
-    for (input_derivation, output_names) in input_derivations_list {
-        let mut new_output_names = BTreeSet::new();
-        for output_name in output_names.into_iter() {
-            if new_output_names.contains(&output_name) {
+    for (input_derivation, output_names_strings) in input_derivations_list {
+        let mut output_names = BTreeSet::<OutputName>::new();
+        for output_name_string in output_names_strings.into_iter() {
+            let output_name = OutputName::try_from(output_name_string).map_err(|err| {
+                nom::Err::Failure(NomError {
+                    input: i,
+                    code: ErrorKind::InvalidOutputName(err),
+                })
+            })?;
+
+            if output_names.contains(&output_name) {
                 return Err(nom::Err::Failure(NomError {
                     input: i,
                     code: ErrorKind::DuplicateInputDerivationOutputName(
-                        input_derivation.to_string(),
-                        output_name.to_string(),
+                        output_name,
+                        input_derivation,
                     ),
                 }));
             }
-            new_output_names.insert(output_name);
+            output_names.insert(output_name);
         }
 
         let input_derivation = string_to_store_path(i, input_derivation.as_str())?;
 
-        input_derivations.insert(input_derivation, new_output_names);
+        input_derivations.insert(input_derivation, output_names);
     }
 
     Ok((i, input_derivations))
@@ -381,6 +394,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::derivation::OutputName;
     use crate::store_path::StorePathRef;
     use std::collections::{BTreeMap, BTreeSet};
     use std::sync::LazyLock;
@@ -399,10 +413,10 @@ mod tests {
         hex!("a5ce9c155ed09397614646c9717fc7cd94b1023d7b76b618d409e4fefd6e9d39");
 
     static NIXHASH_SHA256: NixHash = NixHash::Sha256(DIGEST_SHA256);
-    static EXP_MULTI_OUTPUTS: LazyLock<BTreeMap<String, Output>> = LazyLock::new(|| {
+    static EXP_MULTI_OUTPUTS: LazyLock<BTreeMap<OutputName, Output>> = LazyLock::new(|| {
         let mut b = BTreeMap::new();
         b.insert(
-            "lib".to_string(),
+            "lib".parse().expect("valid OutputName"),
             Output {
                 path: Some(
                     StorePath::from_bytes(b"2vixb94v0hy2xc6p7mbnxxcyc095yyia-has-multi-out-lib")
@@ -412,7 +426,7 @@ mod tests {
             },
         );
         b.insert(
-            "out".to_string(),
+            "out".parse().expect("valid OutputName"),
             Output {
                 path: Some(
                     StorePath::from_bytes(
@@ -433,30 +447,30 @@ mod tests {
         b
     });
 
-    static EXP_INPUT_DERIVATIONS_SIMPLE: LazyLock<BTreeMap<StorePath<String>, BTreeSet<String>>> =
-        LazyLock::new(|| {
-            let mut b = BTreeMap::new();
-            b.insert(
-                StorePath::from_bytes(b"8bjm87p310sb7r2r0sg4xrynlvg86j8k-hello-2.12.1.tar.gz.drv")
-                    .unwrap(),
-                {
-                    let mut output_names = BTreeSet::new();
-                    output_names.insert("out".to_string());
-                    output_names
-                },
-            );
-            b.insert(
-                StorePath::from_bytes(b"p3jc8aw45dza6h52v81j7lk69khckmcj-bash-5.2-p15.drv")
-                    .unwrap(),
-                {
-                    let mut output_names = BTreeSet::new();
-                    output_names.insert("out".to_string());
-                    output_names.insert("lib".to_string());
-                    output_names
-                },
-            );
-            b
-        });
+    static EXP_INPUT_DERIVATIONS_SIMPLE: LazyLock<
+        BTreeMap<StorePath<String>, BTreeSet<OutputName>>,
+    > = LazyLock::new(|| {
+        let mut b = BTreeMap::new();
+        b.insert(
+            StorePath::from_bytes(b"8bjm87p310sb7r2r0sg4xrynlvg86j8k-hello-2.12.1.tar.gz.drv")
+                .unwrap(),
+            {
+                let mut output_names = BTreeSet::new();
+                output_names.insert("out".parse().expect("valid OutputName"));
+                output_names
+            },
+        );
+        b.insert(
+            StorePath::from_bytes(b"p3jc8aw45dza6h52v81j7lk69khckmcj-bash-5.2-p15.drv").unwrap(),
+            {
+                let mut output_names = BTreeSet::new();
+                output_names.insert("out".parse().expect("valid OutputName"));
+                output_names.insert("lib".parse().expect("valid OutputName"));
+                output_names
+            },
+        );
+        b
+    });
 
     static EXP_INPUT_DERIVATIONS_SIMPLE_ATERM: LazyLock<String> = LazyLock::new(|| {
         format!(
@@ -522,7 +536,7 @@ mod tests {
     #[case::simple(EXP_INPUT_DERIVATIONS_SIMPLE_ATERM.as_bytes(), &EXP_INPUT_DERIVATIONS_SIMPLE)]
     fn parse_input_derivations(
         #[case] input: &'static [u8],
-        #[case] expected: &BTreeMap<StorePath<String>, BTreeSet<String>>,
+        #[case] expected: &BTreeMap<StorePath<String>, BTreeSet<OutputName>>,
     ) {
         let (rest, parsed) = super::parse_input_derivations(input).expect("must parse");
 
@@ -544,8 +558,8 @@ mod tests {
             nom::Err::Failure(e) => {
                 assert_eq!(
                     ErrorKind::DuplicateInputDerivationOutputName(
+                        "out".parse().expect("Valid OutputName"),
                         "/nix/store/p3jc8aw45dza6h52v81j7lk69khckmcj-bash-5.2-p15.drv".to_string(),
-                        "out".to_string()
                     ),
                     e.code
                 );
@@ -598,7 +612,7 @@ mod tests {
     #[rstest]
     #[case::simple(
         br#"("out","/nix/store/5vyvcwah9l9kf07d52rcgdk70g2f4y13-foo","","")"#,
-        ("out".to_string(), Output {
+        ("out".parse().expect("valid OutputName"), Output {
             path: Some(
                 StorePathRef::from_absolute_path("/nix/store/5vyvcwah9l9kf07d52rcgdk70g2f4y13-foo".as_bytes()).unwrap().to_owned()),
             ca_hash: None
@@ -606,7 +620,7 @@ mod tests {
     )]
     #[case::fod(
         br#"("out","/nix/store/4q0pg5zpfmznxscq3avycvf9xdvx50n3-bar","r:sha256","08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba")"#,
-        ("out".to_string(), Output {
+        ("out".parse().expect("valid OutputName"), Output {
             path: Some(
                 StorePathRef::from_absolute_path(
                 "/nix/store/4q0pg5zpfmznxscq3avycvf9xdvx50n3-bar".as_bytes()).unwrap().to_owned()),
@@ -614,7 +628,7 @@ mod tests {
                    data_encoding::HEXLOWER.decode(b"08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba").unwrap()            ).unwrap()),
         })
      )]
-    fn parse_output(#[case] input: &[u8], #[case] expected: (String, Output)) {
+    fn parse_output(#[case] input: &[u8], #[case] expected: (OutputName, Output)) {
         let (rest, parsed) = super::parse_output(input).expect("must parse");
         assert!(rest.is_empty());
         assert_eq!(expected, parsed);
@@ -625,7 +639,7 @@ mod tests {
         br#"[("lib","/nix/store/2vixb94v0hy2xc6p7mbnxxcyc095yyia-has-multi-out-lib","",""),("out","/nix/store/55lwldka5nyxa08wnvlizyqw02ihy8ic-has-multi-out","","")]"#,
         &EXP_MULTI_OUTPUTS
     )]
-    fn parse_outputs(#[case] input: &[u8], #[case] expected: &BTreeMap<String, Output>) {
+    fn parse_outputs(#[case] input: &[u8], #[case] expected: &BTreeMap<OutputName, Output>) {
         let (rest, parsed) = super::parse_outputs(input).expect("must parse");
         assert!(rest.is_empty());
         assert_eq!(*expected, parsed);
