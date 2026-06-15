@@ -1,7 +1,10 @@
 //! This contains the code translating from a `builtin:derivation` [Derivation]
 //! to a [Fetch].
 use crate::fetchers::Fetch;
-use nix_compat::{derivation::Derivation, nixhash::CAHash};
+use nix_compat::{
+    derivation::{Derivation, OutputName},
+    nixhash::CAHash,
+};
 use tracing::instrument;
 use url::Url;
 
@@ -23,10 +26,7 @@ pub(crate) fn fetchurl_derivation_to_fetch(drv: &Derivation) -> Result<(String, 
     if drv.outputs.len() != 1 {
         return Err(Error::NoFOD);
     }
-    let out_output = &drv
-        .outputs
-        .get(&"out".parse().expect("valid OutputName"))
-        .ok_or(Error::NoFOD)?;
+    let out_output = &drv.outputs.get(&OutputName::out()).ok_or(Error::NoFOD)?;
     let ca_hash = out_output.ca_hash.clone().ok_or(Error::NoFOD)?;
 
     let name: String = drv

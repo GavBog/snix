@@ -1,6 +1,9 @@
 use super::parse_error::ErrorKind;
 use crate::derivation::Derivation;
 #[cfg(feature = "serde")]
+use crate::derivation::OutputName;
+#[cfg(feature = "serde")]
+#[cfg(feature = "serde")]
 use crate::derivation::output::Output;
 use crate::derivation::parse_error::NomError;
 use crate::derivation::parser::Error;
@@ -341,7 +344,7 @@ fn output_path_construction() {
 
     // assemble bar outputs
     bar_drv.outputs.insert(
-        "out".parse().expect("valid OutputName"),
+        OutputName::out(),
         Output {
             path: None, // will be calculated
             ca_hash: Some(crate::nixhash::CAHash::Nar(
@@ -380,7 +383,7 @@ fn output_path_construction() {
     // Note how we refer to the output path, drv name and replacement_str (with calculated output paths) of bar.
     let bar_output_path = &bar_drv
         .outputs
-        .get(&"out".parse().expect("valid OutputName"))
+        .get(&OutputName::out())
         .expect("must exist")
         .path;
     let bar_drv_hash_derivation_modulo =
@@ -415,7 +418,7 @@ fn output_path_construction() {
 
     // asssemble foo outputs
     foo_drv.outputs.insert(
-        "out".parse().expect("valid OutputName"),
+        OutputName::out(),
         Output {
             path: None, // will be calculated
             ca_hash: None,
@@ -423,10 +426,9 @@ fn output_path_construction() {
     );
 
     // assemble foo input_derivations
-    foo_drv.input_derivations.insert(
-        bar_drv_path,
-        BTreeSet::from(["out".parse().expect("valid OutputName")]),
-    );
+    foo_drv
+        .input_derivations
+        .insert(bar_drv_path, BTreeSet::from([OutputName::out()]));
 
     // calculate foo output paths
     let foo_calc_result = foo_drv.calculate_output_paths(

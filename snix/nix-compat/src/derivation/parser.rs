@@ -454,20 +454,11 @@ mod tests {
         b.insert(
             StorePath::from_bytes(b"8bjm87p310sb7r2r0sg4xrynlvg86j8k-hello-2.12.1.tar.gz.drv")
                 .unwrap(),
-            {
-                let mut output_names = BTreeSet::new();
-                output_names.insert("out".parse().expect("valid OutputName"));
-                output_names
-            },
+            BTreeSet::from([OutputName::out()]),
         );
         b.insert(
             StorePath::from_bytes(b"p3jc8aw45dza6h52v81j7lk69khckmcj-bash-5.2-p15.drv").unwrap(),
-            {
-                let mut output_names = BTreeSet::new();
-                output_names.insert("out".parse().expect("valid OutputName"));
-                output_names.insert("lib".parse().expect("valid OutputName"));
-                output_names
-            },
+            BTreeSet::from([OutputName::out(), "lib".parse().expect("valid OutputName")]),
         );
         b
     });
@@ -612,7 +603,7 @@ mod tests {
     #[rstest]
     #[case::simple(
         br#"("out","/nix/store/5vyvcwah9l9kf07d52rcgdk70g2f4y13-foo","","")"#,
-        ("out".parse().expect("valid OutputName"), Output {
+        (OutputName::out(), Output {
             path: Some(
                 StorePathRef::from_absolute_path("/nix/store/5vyvcwah9l9kf07d52rcgdk70g2f4y13-foo".as_bytes()).unwrap().to_owned()),
             ca_hash: None
@@ -620,7 +611,7 @@ mod tests {
     )]
     #[case::fod(
         br#"("out","/nix/store/4q0pg5zpfmznxscq3avycvf9xdvx50n3-bar","r:sha256","08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba")"#,
-        ("out".parse().expect("valid OutputName"), Output {
+        (OutputName::out(), Output {
             path: Some(
                 StorePathRef::from_absolute_path(
                 "/nix/store/4q0pg5zpfmznxscq3avycvf9xdvx50n3-bar".as_bytes()).unwrap().to_owned()),

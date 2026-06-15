@@ -161,7 +161,7 @@ pub(crate) fn derivation_into_build_request(
     if derivation.outputs.len() == 1
         && derivation
             .outputs
-            .get(&"out".parse().expect("valid OutputName"))
+            .get(&OutputName::out())
             .expect("Snix bug: Derivation has no out output")
             .is_fixed()
     {

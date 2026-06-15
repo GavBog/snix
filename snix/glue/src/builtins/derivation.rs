@@ -146,7 +146,7 @@ fn handle_fixed_output(
 
         // construct the fixed output.
         drv.outputs.insert(
-            "out".parse().expect("valid OutputName"),
+            OutputName::default(),
             Output {
                 path: None,
                 ca_hash: match hash_mode_str.as_deref() {
@@ -232,8 +232,7 @@ pub(crate) mod derivation_builtins {
         let name = name.to_str()?;
 
         let mut drv = Derivation::default();
-        drv.outputs
-            .insert("out".parse().expect("valid OutputName"), Default::default());
+        drv.outputs.insert(OutputName::out(), Default::default());
         let mut input_context = NixContext::new();
 
         /// Inserts a key and value into the drv.environment BTreeMap, and fails if the
@@ -490,10 +489,10 @@ pub(crate) mod derivation_builtins {
                 .iter()
                 .map(|(name, output)| {
                     (
-                        name.to_owned().into_string(),
+                        name.into(),
                         NixString::new_context_from(
                             NixContextElement::Single {
-                                name: name.to_owned().into_string(),
+                                name: name.into(),
                                 derivation: drv_path.to_absolute_path(),
                             }
                             .into(),

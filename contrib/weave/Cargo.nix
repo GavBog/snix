@@ -3722,6 +3722,10 @@ rec {
             packageId = "sha2";
           }
           {
+            name = "smol_str";
+            packageId = "smol_str";
+          }
+          {
             name = "thiserror";
             packageId = "thiserror 2.0.11";
           }
@@ -3734,6 +3738,10 @@ rec {
           {
             name = "mimalloc";
             packageId = "mimalloc";
+          }
+          {
+            name = "smol_str";
+            packageId = "smol_str";
           }
         ];
         features = {
@@ -8805,17 +8813,24 @@ rec {
       };
       "smallvec" = rec {
         crateName = "smallvec";
-        version = "1.13.2";
+        version = "1.15.2";
         edition = "2018";
-        sha256 = "0rsw5samawl3wsw6glrsb127rx6sh89a8wyikicw6dkdcjd1lpiw";
+        sha256 = "143wzbqf6vgapdp2z4qpl0yvlqcn17s8cnk8m28rqly808zsdmlf";
         authors = [
           "The Servo Project Developers"
         ];
         features = {
           "arbitrary" = [ "dep:arbitrary" ];
+          "bincode" = [ "dep:bincode" ];
           "const_new" = [ "const_generics" ];
           "drain_keep_rest" = [ "drain_filter" ];
+          "impl_bincode" = [
+            "bincode"
+            "unty"
+          ];
+          "malloc_size_of" = [ "dep:malloc_size_of" ];
           "serde" = [ "dep:serde" ];
+          "unty" = [ "dep:unty" ];
         };
       };
       "smartstring" = rec {
@@ -8852,6 +8867,40 @@ rec {
             "arbitrary"
             "arbitrary/derive"
           ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
+      };
+      "smol_str" = rec {
+        crateName = "smol_str";
+        version = "0.2.2";
+        edition = "2018";
+        sha256 = "1bfylqf2vnqaglw58930vpxm2rfzji5gjp15a2c0kh8aj6v8ylyx";
+        authors = [
+          "Aleksey Kladov <aleksey.kladov@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "serde";
+            packageId = "serde";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
+        devDependencies = [
+          {
+            name = "serde";
+            packageId = "serde";
+            features = [ "derive" ];
+          }
+        ];
+        features = {
+          "arbitrary" = [ "dep:arbitrary" ];
+          "default" = [ "std" ];
+          "serde" = [ "dep:serde" ];
+          "std" = [ "serde?/std" ];
         };
         resolvedDefaultFeatures = [
           "default"

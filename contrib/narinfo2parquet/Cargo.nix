@@ -3449,6 +3449,10 @@ rec {
             packageId = "sha2";
           }
           {
+            name = "smol_str";
+            packageId = "smol_str";
+          }
+          {
             name = "thiserror";
             packageId = "thiserror 2.0.11";
           }
@@ -3461,6 +3465,10 @@ rec {
           {
             name = "mimalloc";
             packageId = "mimalloc";
+          }
+          {
+            name = "smol_str";
+            packageId = "smol_str";
           }
         ];
         features = {
@@ -8458,6 +8466,40 @@ rec {
             "arbitrary"
             "arbitrary/derive"
           ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "std"
+        ];
+      };
+      "smol_str" = rec {
+        crateName = "smol_str";
+        version = "0.2.2";
+        edition = "2018";
+        sha256 = "1bfylqf2vnqaglw58930vpxm2rfzji5gjp15a2c0kh8aj6v8ylyx";
+        authors = [
+          "Aleksey Kladov <aleksey.kladov@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "serde";
+            packageId = "serde";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+        ];
+        devDependencies = [
+          {
+            name = "serde";
+            packageId = "serde";
+            features = [ "derive" ];
+          }
+        ];
+        features = {
+          "arbitrary" = [ "dep:arbitrary" ];
+          "default" = [ "std" ];
+          "serde" = [ "dep:serde" ];
+          "std" = [ "serde?/std" ];
         };
         resolvedDefaultFeatures = [
           "default"

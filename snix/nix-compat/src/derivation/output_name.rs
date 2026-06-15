@@ -1,5 +1,7 @@
 use std::{fmt, str::FromStr};
 
+use smol_str::SmolStr;
+
 use crate::store_path;
 
 /// A derivation output name.
@@ -13,24 +15,19 @@ use crate::store_path;
     feature = "serde",
     derive(serde_with::DeserializeFromStr, serde_with::SerializeDisplay)
 )]
-pub struct OutputName(String);
+pub struct OutputName(SmolStr);
 
 impl OutputName {
-    /// Returns `true` if this output name is the default of `out`.
-    pub fn is_default(&self) -> bool {
-        self.0 == "out"
-    }
-
     pub fn as_str(&self) -> &str {
-        &self.0
+        self.0.as_str()
     }
 
-    pub fn into_string(self) -> String {
-        self.0
+    pub const fn out() -> Self {
+        Self(SmolStr::new_static("out"))
     }
 }
 
-fn parse<S: AsRef<str> + Into<String>>(s: S) -> Result<OutputName, ParseOutputNameError> {
+fn validate<S: AsRef<str>>(s: S) -> Result<(), ParseOutputNameError> {
     store_path::validate_name(s.as_ref())?;
 
     // Disallow the reserved 'drv' name, which may appear in store path names,
@@ -39,24 +36,24 @@ fn parse<S: AsRef<str> + Into<String>>(s: S) -> Result<OutputName, ParseOutputNa
         return Err(ParseOutputNameError::ReservedNameDrv);
     }
 
-    Ok(OutputName(s.into()))
+    Ok(())
 }
 
 impl fmt::Display for OutputName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
+        f.write_str(self.as_str())
     }
 }
 
 impl AsRef<str> for OutputName {
     fn as_ref(&self) -> &str {
-        &self.0
+        self.as_str()
     }
 }
 
 impl Default for OutputName {
     fn default() -> Self {
-        OutputName("out".into())
+        Self::out()
     }
 }
 
@@ -64,7 +61,9 @@ impl FromStr for OutputName {
     type Err = ParseOutputNameError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        parse(s)
+        validate(s)?;
+
+        Ok(Self(SmolStr::new(s)))
     }
 }
 
@@ -72,13 +71,21 @@ impl TryFrom<String> for OutputName {
     type Error = ParseOutputNameError;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        parse(value)
+        validate(&value)?;
+
+        Ok(Self(SmolStr::new(value)))
     }
 }
 
 impl From<OutputName> for String {
     fn from(value: OutputName) -> Self {
-        value.0
+        value.0.into()
+    }
+}
+
+impl From<&OutputName> for String {
+    fn from(value: &OutputName) -> Self {
+        value.as_str().into()
     }
 }
 
@@ -134,5 +141,10 @@ mod tests {
     #[case("debug")]
     fn parse(#[case] value: &str) {
         value.parse::<OutputName>().unwrap();
+    }
+
+    #[test]
+    fn size() {
+        assert_eq!(size_of::<OutputName>(), size_of::<String>());
     }
 }

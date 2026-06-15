@@ -69,7 +69,7 @@ impl Derivation {
 mod test {
     use std::collections::BTreeMap;
 
-    use crate::derivation::{CAHash, Derivation, Output};
+    use crate::derivation::{CAHash, Derivation, Output, OutputName};
 
     /// Regression test: produce a Derivation that's almost valid, except its
     /// fixed-output output has the wrong hash specified.
@@ -77,7 +77,7 @@ mod test {
     fn output_validate() {
         let mut outputs = BTreeMap::new();
         outputs.insert(
-            "out".parse().expect("must be valid OutputName"),
+            OutputName::out(),
             Output {
                 path: None,
                 ca_hash: Some(CAHash::Text([0; 32])), // This is disallowed

@@ -108,10 +108,7 @@ impl Derivation {
             return None;
         }
 
-        // FUTUREWORK: newtype for Outputs, representing single-out output differently?
-        let out_output = self
-            .outputs
-            .get(&"out".parse().expect("valid OutputName"))?;
+        let out_output = self.outputs.get(&OutputName::out())?;
         let ca_hash = out_output.ca_hash.as_ref()?;
 
         Some(if let Some(out_output_path) = out_output.path.as_ref() {
