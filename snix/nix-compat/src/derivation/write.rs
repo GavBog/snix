@@ -94,13 +94,16 @@ impl Derivation {
     ///
     /// This is used to render the ATerm representation of a Derivation "modulo
     /// fixed-output derivations".
-    pub(super) fn serialize_with_replacements<S>(
+    ///
+    /// The passed input_derivations MUST be sorted.
+    pub(super) fn serialize_with_replacements<'a, K, I>(
         &self,
         writer: &mut impl std::io::Write,
-        input_derivations: &BTreeMap<S, BTreeSet<OutputName>>,
+        input_derivations_sorted: I,
     ) -> Result<(), io::Error>
     where
-        S: AtermWriteable,
+        I: Iterator<Item = (K, &'a BTreeSet<OutputName>)>,
+        K: AtermWriteable,
     {
         writer.write_all(DERIVATION_PREFIX.as_bytes())?;
         write_char(writer, PAREN_OPEN)?;
@@ -108,7 +111,7 @@ impl Derivation {
         write_outputs(writer, &self.outputs)?;
         write_char(writer, COMMA)?;
 
-        write_input_derivations(writer, input_derivations)?;
+        write_input_derivations(writer, input_derivations_sorted)?;
         write_char(writer, COMMA)?;
 
         write_input_sources(writer, &self.input_sources)?;
@@ -215,13 +218,17 @@ fn write_outputs(
     Ok(())
 }
 
-fn write_input_derivations(
+fn write_input_derivations<'a, I, K>(
     writer: &mut impl Write,
-    input_derivations: &BTreeMap<impl AtermWriteable, BTreeSet<OutputName>>,
-) -> Result<(), io::Error> {
+    input_derivations_sorted: I,
+) -> Result<(), io::Error>
+where
+    I: Iterator<Item = (K, &'a BTreeSet<OutputName>)>,
+    K: AtermWriteable,
+{
     write_char(writer, BRACKET_OPEN)?;
 
-    for (ii, (k, output_names)) in input_derivations.iter().enumerate() {
+    for (ii, (k, output_names)) in input_derivations_sorted.enumerate() {
         if ii > 0 {
             write_char(writer, COMMA)?;
         }

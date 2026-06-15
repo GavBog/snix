@@ -56,7 +56,7 @@ impl Derivation {
     ///
     /// The only errors returns are these when writing to the passed writer.
     pub fn serialize(&self, writer: &mut impl std::io::Write) -> Result<(), io::Error> {
-        self.serialize_with_replacements(writer, &self.input_derivations)
+        self.serialize_with_replacements(writer, self.input_derivations.iter())
     }
 
     /// return the ATerm serialization.
@@ -156,19 +156,21 @@ impl Derivation {
         // ourselves, so callers can precompute this.
         self.fod_digest().unwrap_or({
             // For each input_derivation, look up the hash derivation modulo,
-            // and replace the derivation path in the aterm with it's HEXLOWER digest.
-            let mut hasher = Sha256::new();
-            self.serialize_with_replacements(
-                &mut hasher,
-                &BTreeMap::from_iter(self.input_derivations.iter().map(
-                    |(drv_path, output_names)| {
-                        let hash = fn_lookup_hash_derivation_modulo(&drv_path.as_ref());
+            // and replace the derivation path with the hash_derivation_modulo.
+            let mut replacements = Vec::from_iter(self.input_derivations.iter().map(
+                |(drv_path, output_names)| {
+                    (
+                        fn_lookup_hash_derivation_modulo(&drv_path.as_ref()),
+                        output_names,
+                    )
+                },
+            ));
+            // changing the keys changes the order, so we need to sort by keys again
+            replacements.sort_by_key(|(k, _output_names)| *k);
 
-                        (hash, output_names.to_owned())
-                    },
-                )),
-            )
-            .unwrap();
+            let mut hasher = Sha256::new();
+            self.serialize_with_replacements(&mut hasher, replacements.into_iter())
+                .unwrap();
 
             hasher.finalize().into()
         })
