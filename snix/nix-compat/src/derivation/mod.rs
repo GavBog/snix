@@ -216,13 +216,12 @@ impl Derivation {
                     DerivationError::InvalidOutputDerivationPath(output_name.to_string(), e)
                 })?
             } else {
-                build_output_path(hash_derivation_modulo, output_name.as_str(), &path_name)
-                    .map_err(|e| {
-                        DerivationError::InvalidOutputDerivationPath(
-                            output_name.to_string(),
-                            store_path::BuildStorePathError::InvalidStorePath(e),
-                        )
-                    })?
+                build_output_path(hash_derivation_modulo, output_name, &path_name).map_err(|e| {
+                    DerivationError::InvalidOutputDerivationPath(
+                        output_name.to_string(),
+                        store_path::BuildStorePathError::InvalidStorePath(e),
+                    )
+                })?
             };
 
             self.environment.insert(

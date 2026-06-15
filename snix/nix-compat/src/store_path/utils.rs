@@ -1,4 +1,7 @@
+use std::fmt::Display;
+
 use super::{ParseStorePathError, STORE_DIR, StorePath, StorePathRef};
+use crate::derivation::OutputName;
 use crate::nixbase32;
 use crate::nixhash::{CAHash, NixHash};
 use data_encoding::HEXLOWER;
@@ -113,14 +116,14 @@ where
 /// derivation and its closure.
 pub fn build_output_path<'a, SP>(
     drv_sha256: &[u8; 32],
-    output_name: &str,
+    output_name: &OutputName,
     output_path_name: &'a str,
 ) -> Result<StorePath<SP>, ParseStorePathError>
 where
     SP: AsRef<str> + std::convert::From<&'a str>,
 {
     build_store_path_from_fingerprint_parts(
-        &(String::from("output:") + output_name),
+        format_args!("output:{output_name}"),
         drv_sha256,
         output_path_name,
     )
@@ -137,7 +140,7 @@ where
 /// Inside a StorePath, that digest is printed nixbase32-encoded
 /// (32 characters).
 fn build_store_path_from_fingerprint_parts<'a, SP>(
-    ty: &str,
+    ty: impl Display,
     inner_digest: &[u8; 32],
     name: &'a str,
 ) -> Result<StorePath<SP>, ParseStorePathError>
@@ -146,7 +149,7 @@ where
 {
     let fingerprint_hash = sha256!(
         "{ty}:sha256:{}:{STORE_DIR}:{name}",
-        HEXLOWER.encode(inner_digest)
+        HEXLOWER.encode_display(inner_digest)
     );
     // name validation happens in here.
     StorePath::from_name_and_digest_fixed(name, compress_hash(&fingerprint_hash))
