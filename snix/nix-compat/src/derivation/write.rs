@@ -3,9 +3,9 @@
 //!
 //! [ATerm]: http://program-transformation.org/Tools/ATermFormat.html
 
-use crate::aterm::write_escaped;
-use crate::derivation::{ca_kind_prefix, output::Output};
+use super::{ca_kind_prefix, output::Output};
 use crate::store_path::StorePath;
+use crate::{aterm::write_escaped, derivation::Derivation};
 use data_encoding::HEXLOWER;
 
 use std::{
@@ -28,8 +28,8 @@ pub const QUOTE: char = '"';
 /// Note that we mostly use explicit `write_*` calls
 /// instead since the serialization of the items depends on
 /// the context a lot.
-pub(crate) trait AtermWriteable {
-    fn aterm_write(&self, writer: &mut impl Write) -> std::io::Result<()>;
+pub(super) trait AtermWriteable {
+    fn aterm_write(&self, writer: &mut impl io::Write) -> std::io::Result<()>;
 }
 
 impl<S> AtermWriteable for &StorePath<S>
@@ -82,6 +82,48 @@ impl AtermWriteable for [u8; 32] {
     }
 }
 
+impl Derivation {
+    /// Like `serialize`, but allows replacing the input_derivations for hash calculations.
+    ///
+    /// This is used to render the ATerm representation of a Derivation "modulo
+    /// fixed-output derivations".
+    pub(super) fn serialize_with_replacements<S>(
+        &self,
+        writer: &mut impl std::io::Write,
+        input_derivations: &BTreeMap<S, BTreeSet<String>>,
+    ) -> Result<(), io::Error>
+    where
+        S: AtermWriteable,
+    {
+        writer.write_all(DERIVATION_PREFIX.as_bytes())?;
+        write_char(writer, PAREN_OPEN)?;
+
+        write_outputs(writer, &self.outputs)?;
+        write_char(writer, COMMA)?;
+
+        write_input_derivations(writer, input_derivations)?;
+        write_char(writer, COMMA)?;
+
+        write_input_sources(writer, &self.input_sources)?;
+        write_char(writer, COMMA)?;
+
+        write_system(writer, &self.system)?;
+        write_char(writer, COMMA)?;
+
+        write_builder(writer, &self.builder)?;
+        write_char(writer, COMMA)?;
+
+        write_arguments(writer, &self.arguments)?;
+        write_char(writer, COMMA)?;
+
+        write_environment(writer, &self.environment)?;
+
+        write_char(writer, PAREN_CLOSE)?;
+
+        Ok(())
+    }
+}
+
 // Writes a character to the writer.
 pub(crate) fn write_char(writer: &mut impl Write, c: char) -> io::Result<()> {
     let mut buf = [0; 4];
@@ -129,7 +171,7 @@ where
     Ok(())
 }
 
-pub(crate) fn write_outputs(
+fn write_outputs(
     writer: &mut impl Write,
     outputs: &BTreeMap<String, Output>,
 ) -> Result<(), io::Error> {
@@ -161,7 +203,7 @@ pub(crate) fn write_outputs(
     Ok(())
 }
 
-pub(crate) fn write_input_derivations(
+fn write_input_derivations(
     writer: &mut impl Write,
     input_derivations: &BTreeMap<impl AtermWriteable, BTreeSet<String>>,
 ) -> Result<(), io::Error> {
@@ -188,7 +230,7 @@ pub(crate) fn write_input_derivations(
     Ok(())
 }
 
-pub(crate) fn write_input_sources(
+fn write_input_sources(
     writer: &mut impl Write,
     input_sources: &BTreeSet<StorePath<String>>,
 ) -> Result<(), io::Error> {
@@ -199,20 +241,17 @@ pub(crate) fn write_input_sources(
     Ok(())
 }
 
-pub(crate) fn write_system(writer: &mut impl Write, platform: &str) -> Result<(), Error> {
+fn write_system(writer: &mut impl Write, platform: &str) -> Result<(), Error> {
     write_field(writer, platform, true)?;
     Ok(())
 }
 
-pub(crate) fn write_builder(writer: &mut impl Write, builder: &str) -> Result<(), Error> {
+fn write_builder(writer: &mut impl Write, builder: &str) -> Result<(), Error> {
     write_field(writer, builder, true)?;
     Ok(())
 }
 
-pub(crate) fn write_arguments(
-    writer: &mut impl Write,
-    arguments: &[String],
-) -> Result<(), io::Error> {
+fn write_arguments(writer: &mut impl Write, arguments: &[String]) -> Result<(), io::Error> {
     write_char(writer, BRACKET_OPEN)?;
     write_array_elements(writer, arguments)?;
     write_char(writer, BRACKET_CLOSE)?;
@@ -220,10 +259,7 @@ pub(crate) fn write_arguments(
     Ok(())
 }
 
-pub(crate) fn write_environment<E, K, V>(
-    writer: &mut impl Write,
-    environment: E,
-) -> Result<(), io::Error>
+fn write_environment<E, K, V>(writer: &mut impl Write, environment: E) -> Result<(), io::Error>
 where
     E: IntoIterator<Item = (K, V)>,
     K: AsRef<[u8]>,

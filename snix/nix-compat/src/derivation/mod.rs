@@ -27,8 +27,6 @@ pub use output_name::{OutputName, ParseOutputNameError};
 pub use parser::Error as ParserError;
 pub use validate::validate_output_name;
 
-use self::write::AtermWriteable;
-
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Derivation {
@@ -62,66 +60,11 @@ impl Derivation {
         self.serialize_with_replacements(writer, &self.input_derivations)
     }
 
-    /// Like `serialize` but allow replacing the input_derivations for hash calculations.
-    fn serialize_with_replacements<S>(
-        &self,
-        writer: &mut impl std::io::Write,
-        input_derivations: &BTreeMap<S, BTreeSet<String>>,
-    ) -> Result<(), io::Error>
-    where
-        S: AtermWriteable,
-    {
-        use write::*;
-
-        writer.write_all(write::DERIVATION_PREFIX.as_bytes())?;
-        write_char(writer, write::PAREN_OPEN)?;
-
-        write_outputs(writer, &self.outputs)?;
-        write_char(writer, COMMA)?;
-
-        write_input_derivations(writer, input_derivations)?;
-        write_char(writer, COMMA)?;
-
-        write_input_sources(writer, &self.input_sources)?;
-        write_char(writer, COMMA)?;
-
-        write_system(writer, &self.system)?;
-        write_char(writer, COMMA)?;
-
-        write_builder(writer, &self.builder)?;
-        write_char(writer, COMMA)?;
-
-        write_arguments(writer, &self.arguments)?;
-        write_char(writer, COMMA)?;
-
-        write_environment(writer, &self.environment)?;
-
-        write_char(writer, PAREN_CLOSE)?;
-
-        Ok(())
-    }
-
     /// return the ATerm serialization.
     pub fn to_aterm_bytes(&self) -> Vec<u8> {
-        self.to_aterm_bytes_with_replacements(&self.input_derivations)
-    }
-
-    /// Like `to_aterm_bytes`, but accept a different BTreeMap for input_derivations.
-    /// This is used to render the ATerm representation of a Derivation "modulo
-    /// fixed-output derivations".
-    fn to_aterm_bytes_with_replacements(
-        &self,
-        input_derivations: &BTreeMap<impl AtermWriteable, BTreeSet<String>>,
-    ) -> Vec<u8> {
-        let mut buffer: Vec<u8> = Vec::new();
-
-        // invoke serialize and write to the buffer.
-        // Note we only propagate errors writing to the writer in serialize,
-        // which won't panic for the string we write to.
-        self.serialize_with_replacements(&mut buffer, input_derivations)
-            .unwrap();
-
-        buffer
+        let mut buf = Vec::new();
+        self.serialize(&mut buf).unwrap();
+        buf
     }
 
     /// Parse an Derivation in ATerm serialization, and validate it passes our
@@ -215,18 +158,20 @@ impl Derivation {
         self.fod_digest().unwrap_or({
             // For each input_derivation, look up the hash derivation modulo,
             // and replace the derivation path in the aterm with it's HEXLOWER digest.
-            let aterm_bytes = self.to_aterm_bytes_with_replacements(&BTreeMap::from_iter(
-                self.input_derivations
-                    .iter()
-                    .map(|(drv_path, output_names)| {
+            let mut hasher = Sha256::new();
+            self.serialize_with_replacements(
+                &mut hasher,
+                &BTreeMap::from_iter(self.input_derivations.iter().map(
+                    |(drv_path, output_names)| {
                         let hash = fn_lookup_hash_derivation_modulo(&drv_path.as_ref());
 
                         (hash, output_names.to_owned())
-                    }),
-            ));
+                    },
+                )),
+            )
+            .unwrap();
 
-            // write the ATerm of that to the hash function and return its digest.
-            Sha256::digest(aterm_bytes).into()
+            hasher.finalize().into()
         })
     }
 
