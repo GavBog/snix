@@ -18,6 +18,26 @@ impl OutputName {
     pub fn is_default(&self) -> bool {
         self.0 == "out"
     }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    pub fn into_string(self) -> String {
+        self.0
+    }
+}
+
+fn parse<S: AsRef<str> + Into<String>>(s: S) -> Result<OutputName, ParseOutputNameError> {
+    store_path::validate_name(s.as_ref())?;
+
+    // Disallow the reserved 'drv' name, which may appear in store path names,
+    // but not in Derivations.
+    if s.as_ref() == "drv" {
+        return Err(ParseOutputNameError::ReservedNameDrv);
+    }
+
+    Ok(OutputName(s.into()))
 }
 
 impl fmt::Display for OutputName {
@@ -42,15 +62,21 @@ impl FromStr for OutputName {
     type Err = ParseOutputNameError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let name = store_path::validate_name(&s)?.to_string();
+        parse(s)
+    }
+}
 
-        // Disallow the reserved 'drv' name, which may appear in store path names,
-        // but not in Derivations.
-        if s == "drv" {
-            return Err(ParseOutputNameError::ReservedNameDrv);
-        }
+impl TryFrom<String> for OutputName {
+    type Error = ParseOutputNameError;
 
-        Ok(OutputName(name))
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        parse(value)
+    }
+}
+
+impl From<OutputName> for String {
+    fn from(value: OutputName) -> Self {
+        value.0
     }
 }
 
