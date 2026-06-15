@@ -319,7 +319,8 @@ mod import_builtins {
         };
 
         let store_path = build_ca_path(&name, &ca, [], false)
-            .map_err(|e| snix_eval::ErrorKind::SnixError(Arc::from(e)))?;
+            .map_err(|e| snix_eval::ErrorKind::SnixError(Arc::from(e)))?
+            .to_owned();
 
         let path_info = state
             .tokio_handle
@@ -527,7 +528,8 @@ mod import_builtins {
                             name.to_str_lossy().into_owned(),
                         )
                     })
-                    .map_err(crate::builtins::DerivationError::InvalidDerivation)?,
+                    .map_err(crate::builtins::DerivationError::InvalidDerivation)?
+                    .to_owned(),
                     node: root_node,
                     // assemble references from plain context.
                     references: content

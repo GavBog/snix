@@ -73,7 +73,7 @@ fn populate_inputs(drv: &mut Derivation, full_context: NixContext, known_paths: 
 
                 // We need to know all the outputs *names* of that derivation.
                 let output_names = known_paths
-                    .get_drv_by_drvpath(&derivation)
+                    .get_drv_by_drvpath(&derivation.as_ref())
                     .expect("no known derivation associated to that derivation path")
                     .outputs
                     .keys();
@@ -473,7 +473,7 @@ pub(crate) mod derivation_builtins {
             // as the outputs are still unset.
             &drv.hash_derivation_modulo(|drv_path| {
                 *known_paths
-                    .get_hash_derivation_modulo(&drv_path.to_owned())
+                    .get_hash_derivation_modulo(drv_path)
                     .unwrap_or_else(|| panic!("{drv_path} not found"))
             }),
         )

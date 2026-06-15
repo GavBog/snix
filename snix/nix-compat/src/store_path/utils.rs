@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::{ParseStorePathError, STORE_DIR, StorePath, StorePathRef};
+use super::{ParseStorePathError, STORE_DIR, StorePathRef};
 use crate::derivation::OutputName;
 use crate::nixbase32;
 use crate::nixhash::{CAHash, NixHash};
@@ -45,15 +45,11 @@ pub fn compress_hash<const OUTPUT_SIZE: usize>(input: &[u8]) -> [u8; OUTPUT_SIZE
 /// derivation or a literal text file that may contain references.
 /// If you don't want to have to pass the entire contents, you might want to use
 /// [build_ca_path] instead.
-pub fn build_text_path<'a, SP, C>(
-    name: &'a str,
-    content: C,
+pub fn build_text_path<'a, 'n>(
+    name: &'n str,
+    content: impl AsRef<[u8]>,
     references: impl IntoIterator<Item = StorePathRef<'a>>,
-) -> Result<StorePath<SP>, BuildStorePathError>
-where
-    SP: AsRef<str> + std::convert::From<&'a str>,
-    C: AsRef<[u8]>,
-{
+) -> Result<StorePathRef<'n>, BuildStorePathError> {
     // produce the sha256 digest of the contents
     let content_digest = Sha256::digest(content.as_ref()).into();
 
@@ -61,15 +57,12 @@ where
 }
 
 /// This builds a store path from a [CAHash] and a list of references.
-pub fn build_ca_path<'a, SP>(
-    name: &'a str,
+pub fn build_ca_path<'r, 'n>(
+    name: &'n str,
     ca_hash: &CAHash,
-    references: impl IntoIterator<Item = StorePathRef<'a>>,
+    references: impl IntoIterator<Item = StorePathRef<'r>>,
     self_reference: bool,
-) -> Result<StorePath<SP>, BuildStorePathError>
-where
-    SP: AsRef<str> + std::convert::From<&'a str>,
-{
+) -> Result<StorePathRef<'n>, BuildStorePathError> {
     // self references are only allowed for CAHash::Nar(NixHash::Sha256(_)).
     if self_reference && matches!(ca_hash, CAHash::Nar(NixHash::Sha256(_))) {
         return Err(BuildStorePathError::InvalidReference());
@@ -114,14 +107,11 @@ where
 ///
 /// Input-addresed store paths are always derivation outputs, the "input" in question is the
 /// derivation and its closure.
-pub fn build_output_path<'a, SP>(
+pub fn build_output_path<'n>(
     drv_sha256: &[u8; 32],
     output_name: &OutputName,
-    output_path_name: &'a str,
-) -> Result<StorePath<SP>, ParseStorePathError>
-where
-    SP: AsRef<str> + std::convert::From<&'a str>,
-{
+    output_path_name: &'n str,
+) -> Result<StorePathRef<'n>, ParseStorePathError> {
     build_store_path_from_fingerprint_parts(
         format_args!("output:{output_name}"),
         drv_sha256,
@@ -139,20 +129,17 @@ where
 /// bytes.
 /// Inside a StorePath, that digest is printed nixbase32-encoded
 /// (32 characters).
-fn build_store_path_from_fingerprint_parts<'a, SP>(
+fn build_store_path_from_fingerprint_parts<'n>(
     ty: impl Display,
     inner_digest: &[u8; 32],
-    name: &'a str,
-) -> Result<StorePath<SP>, ParseStorePathError>
-where
-    SP: AsRef<str> + std::convert::From<&'a str>,
-{
+    name: &'n str,
+) -> Result<StorePathRef<'n>, ParseStorePathError> {
     let fingerprint_hash = sha256!(
         "{ty}:sha256:{}:{STORE_DIR}:{name}",
         HEXLOWER.encode_display(inner_digest)
     );
     // name validation happens in here.
-    StorePath::from_name_and_digest_fixed(name, compress_hash(&fingerprint_hash))
+    StorePathRef::from_name_and_digest_fixed(name, compress_hash(&fingerprint_hash))
 }
 
 /// This contains the Nix logic to create "text hash strings", which are used

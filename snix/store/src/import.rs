@@ -5,7 +5,7 @@ use tracing::instrument;
 
 use nix_compat::{
     nixhash::{CAHash, NixHash},
-    store_path::{self, StorePath},
+    store_path,
 };
 
 use crate::{
@@ -63,8 +63,7 @@ where
 
     // Calculate the output path. Will fail if the previously passed name doesn't pass
     // the [nix_compat::store_path::validate_name] check.
-    let output_path: StorePath<String> = store_path::build_ca_path(name.as_ref(), &ca, [], false)
-        .map_err(|_| {
+    let output_path = store_path::build_ca_path(name.as_ref(), &ca, [], false).map_err(|_| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidData,
             format!("invalid name: {0}", name.as_ref()),

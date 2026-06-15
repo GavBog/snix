@@ -123,7 +123,7 @@ where
                 // Note: please keep operations sorted in ascending order of their numerical op number.
                 Ok(operation) => match operation {
                     Operation::IsValidPath => {
-                        let path: StorePath<String> = self.reader.read_value().await?;
+                        let path: StorePath = self.reader.read_value().await?;
                         Self::handle(&self.writer, io.is_valid_path(&path)).await?
                     }
                     // Note this operation does not currently delegate to NixDaemonIO,
@@ -135,7 +135,7 @@ where
                         Self::handle(&self.writer, async { Ok(()) }).await?
                     }
                     Operation::QueryPathInfo => {
-                        let path: StorePath<String> = self.reader.read_value().await?;
+                        let path: StorePath = self.reader.read_value().await?;
                         Self::handle(&self.writer, io.query_path_info(&path)).await?
                     }
                     Operation::QueryPathFromHashPart => {
@@ -147,7 +147,7 @@ where
                         Self::handle(&self.writer, io.query_valid_paths(&query)).await?
                     }
                     Operation::QueryValidDerivers => {
-                        let path: StorePath<String> = self.reader.read_value().await?;
+                        let path: StorePath = self.reader.read_value().await?;
                         Self::handle(&self.writer, io.query_valid_derivers(&path)).await?
                     }
                     // FUTUREWORK: These are just stubs that return an empty list.
@@ -163,7 +163,7 @@ where
                                 ?operation,
                                 "This operation is not implemented. Returning empty result..."
                             );
-                            Ok(Vec::<StorePath<String>>::new())
+                            Ok(Vec::<StorePath>::new())
                         })
                         .await?
                     }
@@ -422,7 +422,7 @@ mod tests {
         let (io, mut handle) = tokio_test::io::Builder::new().build_with_handle();
         let mut mock = MockNixDaemonIO::new();
         let (reader, writer) = split(io);
-        let path: StorePath<String> = StorePath::<String>::from_absolute_path(
+        let path = StorePath::from_absolute_path(
             "/nix/store/33l4p0pn0mybmqzaxfkpppyh7vx1c74p-hello-2.12.1".as_bytes(),
         )
         .unwrap();
@@ -459,7 +459,7 @@ mod tests {
         let (io, mut handle) = tokio_test::io::Builder::new().build_with_handle();
         let mut mock = MockNixDaemonIO::new();
         let (reader, writer) = split(io);
-        let path: StorePath<String> = StorePath::<String>::from_absolute_path(
+        let path: StorePath = StorePath::from_absolute_path(
             "/nix/store/33l4p0pn0mybmqzaxfkpppyh7vx1c74p-hello-2.12.1".as_bytes(),
         )
         .unwrap();

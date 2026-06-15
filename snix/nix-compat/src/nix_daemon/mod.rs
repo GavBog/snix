@@ -20,14 +20,14 @@ use mockall::automock;
 pub trait NixDaemonIO: Sync {
     fn is_valid_path(
         &self,
-        path: &StorePath<String>,
+        path: &StorePath,
     ) -> impl std::future::Future<Output = Result<bool>> + Send {
         async move { Ok(self.query_path_info(path).await?.is_some()) }
     }
 
     fn query_path_info(
         &self,
-        path: &StorePath<String>,
+        path: &StorePath,
     ) -> impl std::future::Future<Output = Result<Option<UnkeyedValidPathInfo>>> + Send;
 
     fn query_path_from_hash_part(
@@ -38,13 +38,13 @@ pub trait NixDaemonIO: Sync {
     fn query_valid_paths(
         &self,
         request: &QueryValidPaths,
-    ) -> impl std::future::Future<Output = Result<Vec<StorePath<String>>>> + Send {
+    ) -> impl std::future::Future<Output = Result<Vec<StorePath>>> + Send {
         async move {
             if request.substitute {
                 warn!("snix does not yet support substitution, ignoring the 'substitute' flag...");
             }
 
-            let mut results: Vec<StorePath<String>> = Vec::with_capacity(request.paths.len());
+            let mut results: Vec<StorePath> = Vec::with_capacity(request.paths.len());
 
             for path in request.paths.iter() {
                 if self.is_valid_path(path).await? {
@@ -58,8 +58,8 @@ pub trait NixDaemonIO: Sync {
 
     fn query_valid_derivers(
         &self,
-        path: &StorePath<String>,
-    ) -> impl std::future::Future<Output = Result<Vec<StorePath<String>>>> + Send {
+        path: &StorePath,
+    ) -> impl std::future::Future<Output = Result<Vec<StorePath>>> + Send {
         async move {
             let result = self.query_path_info(path).await?;
             let result: Vec<_> = result.into_iter().filter_map(|info| info.deriver).collect();
@@ -98,7 +98,7 @@ mod tests {
     impl NixDaemonIO for MockNixDaemonIO {
         async fn query_path_info(
             &self,
-            _path: &StorePath<String>,
+            _path: &StorePath,
         ) -> std::io::Result<Option<UnkeyedValidPathInfo>> {
             Ok(self.query_path_info_result.clone())
         }
@@ -127,8 +127,7 @@ mod tests {
     #[tokio::test]
     async fn test_is_valid_path_returns_true() {
         let path =
-            StorePath::<String>::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes())
-                .unwrap();
+            StorePath::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes()).unwrap();
         let io = MockNixDaemonIO {
             query_path_info_result: Some(UnkeyedValidPathInfo {
                 deriver: Some("00000000000000000000000000000000-_.drv".parse().unwrap()),
@@ -152,8 +151,7 @@ mod tests {
     #[tokio::test]
     async fn test_is_valid_path_returns_false() {
         let path =
-            StorePath::<String>::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes())
-                .unwrap();
+            StorePath::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes()).unwrap();
         let io = MockNixDaemonIO {
             query_path_info_result: None,
         };
@@ -168,8 +166,7 @@ mod tests {
     #[tokio::test]
     async fn test_query_valid_paths_returns_empty_response() {
         let path =
-            StorePath::<String>::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes())
-                .unwrap();
+            StorePath::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes()).unwrap();
         let io = MockNixDaemonIO {
             query_path_info_result: None,
         };
@@ -187,8 +184,7 @@ mod tests {
     #[tokio::test]
     async fn test_query_valid_paths_returns_non_empty_response() {
         let path =
-            StorePath::<String>::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes())
-                .unwrap();
+            StorePath::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes()).unwrap();
         let io = MockNixDaemonIO {
             query_path_info_result: Some(UnkeyedValidPathInfo {
                 deriver: Some("00000000000000000000000000000000-_.drv".parse().unwrap()),
@@ -215,8 +211,7 @@ mod tests {
     #[tokio::test]
     async fn test_query_valid_derivers_returns_empty_response() {
         let path =
-            StorePath::<String>::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes())
-                .unwrap();
+            StorePath::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes()).unwrap();
         let io = MockNixDaemonIO {
             query_path_info_result: None,
         };
@@ -231,12 +226,9 @@ mod tests {
     #[tokio::test]
     async fn test_query_valid_derivers_returns_non_empty_response() {
         let path =
-            StorePath::<String>::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes())
-                .unwrap();
-        let deriver = StorePath::<String>::from_bytes(
-            "z6r3bn5l51679pwkvh9nalp6c317z34m-hello.drv".as_bytes(),
-        )
-        .unwrap();
+            StorePath::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello".as_bytes()).unwrap();
+        let deriver =
+            StorePath::from_bytes("z6r3bn5l51679pwkvh9nalp6c317z34m-hello.drv".as_bytes()).unwrap();
         let io = MockNixDaemonIO {
             query_path_info_result: Some(UnkeyedValidPathInfo {
                 deriver: Some(deriver.clone()),

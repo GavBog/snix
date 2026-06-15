@@ -48,13 +48,13 @@ pub(crate) fn get_all_inputs<'a, F, Fut>(
     derivation: &'a Derivation,
     known_paths: &'a KnownPaths,
     get_path_info: F,
-) -> impl Stream<Item = Result<(StorePath<String>, Node), std::io::Error>> + use<F, Fut>
+) -> impl Stream<Item = Result<(StorePath, Node), std::io::Error>> + use<F, Fut>
 where
-    F: Fn(StorePath<String>) -> Fut,
+    F: Fn(StorePath) -> Fut,
     Fut: Future<Output = std::io::Result<Option<PathInfo>>>,
 {
-    let mut visited: HashSet<StorePath<String>> = HashSet::new();
-    let mut queue: VecDeque<StorePath<String>> = derivation
+    let mut visited: HashSet<StorePath> = HashSet::new();
+    let mut queue: VecDeque<StorePath> = derivation
         .input_sources
         .iter()
         .cloned()
@@ -63,7 +63,9 @@ where
                 .input_derivations
                 .iter()
                 .flat_map(|(drv_path, outs)| {
-                    let drv = known_paths.get_drv_by_drvpath(drv_path).expect("drv Bug!!");
+                    let drv = known_paths
+                        .get_drv_by_drvpath(&drv_path.as_ref())
+                        .expect("drv Bug!!");
                     outs.iter().map(move |output| {
                         drv.outputs
                             .get(output)
@@ -96,7 +98,7 @@ where
 /// It assumes the Derivation has been validated, and all referenced output paths are present in `inputs`.
 pub(crate) fn derivation_into_build_request(
     mut derivation: Derivation,
-    inputs: &BTreeMap<StorePath<String>, Node>,
+    inputs: &BTreeMap<StorePath, Node>,
 ) -> std::io::Result<BuildRequest> {
     debug_assert!(derivation.validate(true).is_ok(), "drv must validate");
 
@@ -353,11 +355,11 @@ mod test {
 
         let derivation1 = Derivation::from_aterm_bytes(aterm_bytes).expect("drv1 must parse");
         let drv_path1 =
-            StorePath::<String>::from_bytes("ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv".as_bytes())
+            StorePath::from_bytes("ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv".as_bytes())
                 .expect("drv path1 must parse");
         let derivation2 = Derivation::from_aterm_bytes(dep_drv_bytes).expect("drv2 must parse");
         let drv_path2 =
-            StorePath::<String>::from_bytes("ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv".as_bytes())
+            StorePath::from_bytes("ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv".as_bytes())
                 .expect("drv path2 must parse");
 
         let mut known_paths = KnownPaths::default();
@@ -368,7 +370,7 @@ mod test {
         let build_request = derivation_into_build_request(
             derivation1.clone(),
             &BTreeMap::from([(
-                StorePath::<String>::from_bytes(&INPUT_NODE_FOO_NAME.clone()).unwrap(),
+                StorePath::from_bytes(&INPUT_NODE_FOO_NAME.clone()).unwrap(),
                 INPUT_NODE_FOO.clone(),
             )]),
         )

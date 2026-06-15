@@ -39,11 +39,11 @@ pub struct Derivation {
 
     /// Map from drv path to output names used from this derivation.
     #[cfg_attr(feature = "serde", serde(rename = "inputDrvs"))]
-    pub input_derivations: BTreeMap<StorePath<String>, BTreeSet<OutputName>>,
+    pub input_derivations: BTreeMap<StorePath, BTreeSet<OutputName>>,
 
     /// Plain store paths of additional inputs.
     #[cfg_attr(feature = "serde", serde(rename = "inputSrcs"))]
-    pub input_sources: BTreeSet<StorePath<String>>,
+    pub input_sources: BTreeSet<StorePath>,
 
     /// Maps output names to Output.
     pub outputs: BTreeMap<OutputName, Output>,
@@ -78,13 +78,7 @@ impl Derivation {
     /// the `name` with a `.drv` suffix as name, all [Derivation::input_sources] and
     /// keys of [Derivation::input_derivations] as references, and the ATerm string of
     /// the [Derivation] as content.
-    pub fn calculate_derivation_path(
-        &self,
-        name: &str,
-    ) -> Result<StorePath<String>, DerivationError> {
-        // append .drv to the name
-        let name = format!("{name}.drv");
-
+    pub fn calculate_derivation_path(&self, name: &str) -> Result<StorePath, DerivationError> {
         // collect the list of paths from input_sources AND input_derivations
         // into a sorted list of references.
         let mut references: BTreeSet<StorePathRef> = self
@@ -94,8 +88,14 @@ impl Derivation {
             .collect();
         references.extend(self.input_sources.iter().map(StorePath::as_ref));
 
-        build_text_path(&name, self.to_aterm_bytes(), references)
-            .map_err(|_e| DerivationError::InvalidOutputName(name))
+        build_text_path(
+            // append .drv to the name
+            &format!("{name}.drv"),
+            self.to_aterm_bytes(),
+            references,
+        )
+        .map_err(|_e| DerivationError::InvalidOutputName(name.to_owned()))
+        .map(|sp| sp.to_owned())
     }
 
     /// Returns the FOD digest, if the derivation is fixed-output, or None if
@@ -228,7 +228,7 @@ impl Derivation {
                 output_name.to_string(),
                 store_path.to_absolute_path().into(),
             );
-            output.path = Some(store_path);
+            output.path = Some(store_path.to_owned());
         }
 
         Ok(())

@@ -164,14 +164,14 @@ impl NixSerialize for Option<UnkeyedValidPathInfo> {
 }
 
 // Custom implementation since FromStr does not use from_absolute_path
-impl NixDeserialize for StorePath<String> {
+impl NixDeserialize for StorePath {
     async fn try_deserialize<R>(reader: &mut R) -> Result<Option<Self>, R::Error>
     where
         R: ?Sized + NixRead + Send,
     {
         use crate::wire::de::Error;
         if let Some(buf) = reader.try_read_bytes().await? {
-            let result = StorePath::<String>::from_absolute_path(&buf);
+            let result = StorePath::from_absolute_path(&buf);
             result.map(Some).map_err(R::Error::invalid_data)
         } else {
             Ok(None)
@@ -179,7 +179,7 @@ impl NixDeserialize for StorePath<String> {
     }
 }
 
-impl NixDeserialize for Option<StorePath<String>> {
+impl NixDeserialize for Option<StorePath> {
     async fn try_deserialize<R>(reader: &mut R) -> Result<Option<Self>, R::Error>
     where
         R: ?Sized + NixRead + Send,
@@ -189,7 +189,7 @@ impl NixDeserialize for Option<StorePath<String>> {
             if buf.is_empty() {
                 Ok(Some(None))
             } else {
-                let result = StorePath::<String>::from_absolute_path(&buf);
+                let result = StorePath::from_absolute_path(&buf);
                 result
                     .map(|r| Some(Some(r)))
                     .map_err(R::Error::invalid_data)
@@ -201,10 +201,7 @@ impl NixDeserialize for Option<StorePath<String>> {
 }
 
 // Custom implementation since Display does not use absolute paths.
-impl<S> NixSerialize for StorePath<S>
-where
-    S: AsRef<str>,
-{
+impl NixSerialize for StorePath {
     fn serialize<W>(&self, writer: &mut W) -> impl Future<Output = Result<(), W::Error>> + Send
     where
         W: NixWrite,
@@ -224,7 +221,7 @@ nix_compat_derive::nix_serialize_remote!(
 );
 
 // Writes StorePath or an empty string.
-impl NixSerialize for Option<StorePath<String>> {
+impl NixSerialize for Option<StorePath> {
     async fn serialize<W>(&self, writer: &mut W) -> Result<(), W::Error>
     where
         W: NixWrite,
@@ -238,9 +235,9 @@ impl NixSerialize for Option<StorePath<String>> {
 
 #[derive(NixSerialize, NixDeserialize, Debug, Clone, PartialEq)]
 pub struct UnkeyedValidPathInfo {
-    pub deriver: Option<StorePath<String>>,
+    pub deriver: Option<StorePath>,
     pub nar_hash: NarHash,
-    pub references: Vec<StorePath<String>>,
+    pub references: Vec<StorePath>,
     pub registration_time: u64,
     pub nar_size: u64,
     pub ultimate: bool,
@@ -252,7 +249,7 @@ pub struct UnkeyedValidPathInfo {
 #[derive(NixDeserialize)]
 pub struct QueryValidPaths {
     // Paths to query
-    pub paths: Vec<StorePath<String>>,
+    pub paths: Vec<StorePath>,
 
     // Whether to try and substitute the paths.
     #[nix(version = "27..")]
@@ -310,6 +307,6 @@ impl NixSerialize for NarHash {
 #[derive(NixDeserialize, Debug)]
 pub struct ValidPathInfo {
     // - path :: [StorePath][se-StorePath]
-    pub path: StorePath<String>,
+    pub path: StorePath,
     pub info: UnkeyedValidPathInfo,
 }

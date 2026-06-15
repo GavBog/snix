@@ -196,11 +196,11 @@ fn parse_outputs(i: &[u8]) -> NomResult<&[u8], BTreeMap<OutputName, Output>> {
 
 fn parse_input_derivations(
     i: &[u8],
-) -> NomResult<&[u8], BTreeMap<StorePath<String>, BTreeSet<OutputName>>> {
+) -> NomResult<&[u8], BTreeMap<StorePath, BTreeSet<OutputName>>> {
     let (i, input_derivations_list) = parse_kv(aterm::parse_string_list)(i)?;
 
     // This is a HashMap of drv paths to a list of output names.
-    let mut input_derivations: BTreeMap<StorePath<String>, BTreeSet<_>> = BTreeMap::new();
+    let mut input_derivations: BTreeMap<StorePath, BTreeSet<_>> = BTreeMap::new();
 
     for (input_derivation, output_names_strings) in input_derivations_list {
         let mut output_names = BTreeSet::<OutputName>::new();
@@ -232,7 +232,7 @@ fn parse_input_derivations(
     Ok((i, input_derivations))
 }
 
-fn parse_input_sources(i: &[u8]) -> NomResult<&[u8], BTreeSet<StorePath<String>>> {
+fn parse_input_sources(i: &[u8]) -> NomResult<&[u8], BTreeSet<StorePath>> {
     let (i, input_sources_lst) = aterm::parse_string_list(i).map_err(into_nomerror)?;
 
     let mut input_sources: BTreeSet<_> = BTreeSet::new();
@@ -251,13 +251,10 @@ fn parse_input_sources(i: &[u8]) -> NomResult<&[u8], BTreeSet<StorePath<String>>
     Ok((i, input_sources))
 }
 
-fn string_to_store_path<'a, 'i, S>(
+fn string_to_store_path<'i>(
     i: &'i [u8],
-    path_str: &'a str,
-) -> Result<StorePath<S>, nom::Err<NomError<&'i [u8]>>>
-where
-    S: std::clone::Clone + AsRef<str> + std::convert::From<&'a str>,
-{
+    path_str: &str,
+) -> Result<StorePath, nom::Err<NomError<&'i [u8]>>> {
     let path = StorePath::from_absolute_path(path_str.as_bytes()).map_err(
         |e: store_path::ParseStorePathError| {
             nom::Err::Failure(NomError {
@@ -447,21 +444,21 @@ mod tests {
         b
     });
 
-    static EXP_INPUT_DERIVATIONS_SIMPLE: LazyLock<
-        BTreeMap<StorePath<String>, BTreeSet<OutputName>>,
-    > = LazyLock::new(|| {
-        let mut b = BTreeMap::new();
-        b.insert(
-            StorePath::from_bytes(b"8bjm87p310sb7r2r0sg4xrynlvg86j8k-hello-2.12.1.tar.gz.drv")
-                .unwrap(),
-            BTreeSet::from([OutputName::out()]),
-        );
-        b.insert(
-            StorePath::from_bytes(b"p3jc8aw45dza6h52v81j7lk69khckmcj-bash-5.2-p15.drv").unwrap(),
-            BTreeSet::from([OutputName::out(), "lib".parse().expect("valid OutputName")]),
-        );
-        b
-    });
+    static EXP_INPUT_DERIVATIONS_SIMPLE: LazyLock<BTreeMap<StorePath, BTreeSet<OutputName>>> =
+        LazyLock::new(|| {
+            let mut b = BTreeMap::new();
+            b.insert(
+                StorePath::from_bytes(b"8bjm87p310sb7r2r0sg4xrynlvg86j8k-hello-2.12.1.tar.gz.drv")
+                    .unwrap(),
+                BTreeSet::from([OutputName::out()]),
+            );
+            b.insert(
+                StorePath::from_bytes(b"p3jc8aw45dza6h52v81j7lk69khckmcj-bash-5.2-p15.drv")
+                    .unwrap(),
+                BTreeSet::from([OutputName::out(), "lib".parse().expect("valid OutputName")]),
+            );
+            b
+        });
 
     static EXP_INPUT_DERIVATIONS_SIMPLE_ATERM: LazyLock<String> = LazyLock::new(|| {
         format!(
@@ -527,7 +524,7 @@ mod tests {
     #[case::simple(EXP_INPUT_DERIVATIONS_SIMPLE_ATERM.as_bytes(), &EXP_INPUT_DERIVATIONS_SIMPLE)]
     fn parse_input_derivations(
         #[case] input: &'static [u8],
-        #[case] expected: &BTreeMap<StorePath<String>, BTreeSet<OutputName>>,
+        #[case] expected: &BTreeMap<StorePath, BTreeSet<OutputName>>,
     ) {
         let (rest, parsed) = super::parse_input_derivations(input).expect("must parse");
 

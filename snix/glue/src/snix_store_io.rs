@@ -1,6 +1,9 @@
 //! This module provides an implementation of EvalIO talking to snix-store.
 use futures::TryStreamExt;
-use nix_compat::{nixhash::CAHash, store_path::StorePath};
+use nix_compat::{
+    nixhash::CAHash,
+    store_path::{StorePath, StorePathRef},
+};
 use snix_build::buildservice::BuildService;
 use snix_eval::{EvalIO, FileType, StdIO};
 use snix_store::nar::NarCalculationService;
@@ -113,14 +116,11 @@ impl SnixStoreIO {
     /// subgraph at some point, because this design doesn't allow concurrent
     /// builds yet.
     #[instrument(skip(self, store_path), fields(store_path=%store_path, indicatif.pb_show=tracing::field::Empty), ret(level = Level::TRACE), err(level = Level::TRACE))]
-    async fn store_path_to_path_info<S>(
+    async fn store_path_to_path_info(
         &self,
-        store_path: &StorePath<S>,
+        store_path: &StorePathRef<'_>,
         sub_path: &snix_castore::Path,
-    ) -> io::Result<Option<PathInfo>>
-    where
-        S: AsRef<str>,
-    {
+    ) -> io::Result<Option<PathInfo>> {
         // Find the root node for the store_path.
         // It asks the PathInfoService first, but in case there was a Derivation
         // produced that would build it, fall back to triggering the build.
@@ -166,7 +166,7 @@ impl SnixStoreIO {
 
                         debug_assert_eq!(
                             sp.to_absolute_path(),
-                            store_path.as_ref().to_absolute_path(),
+                            store_path.to_absolute_path(),
                             "store path returned from fetcher must match store path we have in fetchers"
                         );
 
@@ -179,7 +179,10 @@ impl SnixStoreIO {
                             match known_paths.get_drv_path_for_output_path(store_path) {
                                 Some(drv_path) => (
                                     drv_path.to_owned(),
-                                    known_paths.get_drv_by_drvpath(drv_path).unwrap().to_owned(),
+                                    known_paths
+                                        .get_drv_by_drvpath(&drv_path.as_ref())
+                                        .unwrap()
+                                        .to_owned(),
                                 ),
                                 None => {
                                     warn!(store_path=%store_path, "no drv found");
@@ -200,8 +203,11 @@ impl SnixStoreIO {
                             let known_paths = &self.known_paths.borrow();
                             builder::get_all_inputs(&drv, known_paths, |path| {
                                 Box::pin(async move {
-                                    self.store_path_to_path_info(&path, snix_castore::Path::ROOT)
-                                        .await
+                                    self.store_path_to_path_info(
+                                        &path.as_ref(),
+                                        snix_castore::Path::ROOT,
+                                    )
+                                    .await
                                 })
                             })
                         }
@@ -220,13 +226,13 @@ impl SnixStoreIO {
                         // Assemble a mapping table from needle back to store path, as well as a list of all outputs.
                         // The latter is a subset of the former.
                         // We need this to understand the response later.
-                        let mut output_paths: Vec<StorePath<String>> =
+                        let mut output_paths: Vec<StorePath> =
                             Vec::with_capacity(build_request.outputs.len());
-                        let all_possible_refs: Vec<StorePath<String>> = build_request
+                        let all_possible_refs: Vec<StorePath> = build_request
                             .outputs
                             .iter()
                             .map(|p| {
-                                let sp = StorePath::<String>::from_bytes(
+                                let sp = StorePath::from_bytes(
                                     p.strip_prefix(&nix_compat::store_path::STORE_DIR[1..])
                                         .expect("output doesn't have expected store_dir prefix")
                                         .as_os_str()
@@ -308,7 +314,7 @@ impl SnixStoreIO {
                                 .await
                                 .map_err(std::io::Error::other)?;
 
-                            if store_path.as_ref() == output_path.as_ref() {
+                            if *store_path == output_path.as_ref() {
                                 out_path_info = Some(path_info);
                             }
                         }
@@ -343,11 +349,11 @@ fn node_get_type(node: &Node) -> FileType {
 
 // Helper function converting a [std::path::Path] to a [StorePath] and [snix_castore::Path].
 #[cfg(unix)]
-fn parse_store_and_sub_path(
-    path: &std::path::Path,
-) -> io::Result<(StorePath<&str>, &snix_castore::Path)> {
+fn parse_store_and_sub_path<'a>(
+    path: &'a std::path::Path,
+) -> io::Result<(StorePathRef<'a>, &'a snix_castore::Path)> {
     let (store_path, rest) =
-        StorePath::from_absolute_path_full(path).map_err(std::io::Error::other)?;
+        StorePathRef::from_absolute_path_full(path).map_err(std::io::Error::other)?;
 
     use std::os::unix::ffi::OsStrExt;
     let sub_path = snix_castore::Path::from_bytes(rest.as_os_str().as_bytes())

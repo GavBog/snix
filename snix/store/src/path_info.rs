@@ -12,12 +12,12 @@ use nix_compat::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PathInfo {
     /// The store path this is about.
-    pub store_path: StorePath<String>,
+    pub store_path: StorePath,
     /// The contents in the snix-castore model.
     //// Can be a directory, file or symlink.
     pub node: snix_castore::Node,
     /// A list of references.
-    pub references: Vec<StorePath<String>>,
+    pub references: Vec<StorePath>,
     /// The size of the NAR representation of the contents, in bytes.
     pub nar_size: u64,
     /// The sha256 digest of the NAR representation of the contents.
@@ -26,7 +26,7 @@ pub struct PathInfo {
     pub signatures: Vec<Signature<String>>,
     /// The StorePath of the .drv file producing this output.
     /// The .drv suffix is omitted in its `name` field.
-    pub deriver: Option<StorePath<String>>,
+    pub deriver: Option<StorePath>,
     /// The CA field in the .narinfo.
     /// Its textual representations seen in the wild are one of the following:
     ///

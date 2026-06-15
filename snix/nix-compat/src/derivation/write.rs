@@ -5,7 +5,7 @@
 
 use super::{ca_kind_prefix, output::Output};
 use crate::derivation::OutputName;
-use crate::store_path::StorePath;
+use crate::store_path::{StorePath, StorePathRef};
 use crate::{aterm::write_escaped, derivation::Derivation};
 use data_encoding::HEXLOWER;
 
@@ -33,10 +33,7 @@ pub(super) trait AtermWriteable {
     fn aterm_write(&self, writer: &mut impl io::Write) -> std::io::Result<()>;
 }
 
-impl<S> AtermWriteable for &StorePath<S>
-where
-    S: AsRef<str>,
-{
+impl<'a> AtermWriteable for &StorePathRef<'a> {
     fn aterm_write(&self, writer: &mut impl Write) -> std::io::Result<()> {
         write_char(writer, QUOTE)?;
         write!(writer, "{}", self.as_absolute_path_fmt())?;
@@ -45,12 +42,9 @@ where
     }
 }
 
-impl<S> AtermWriteable for StorePath<S>
-where
-    S: AsRef<str>,
-{
+impl AtermWriteable for &StorePath {
     fn aterm_write(&self, writer: &mut impl Write) -> std::io::Result<()> {
-        (&self).aterm_write(writer)
+        (&self.as_ref()).aterm_write(writer)
     }
 }
 
@@ -251,7 +245,7 @@ where
 
 fn write_input_sources(
     writer: &mut impl Write,
-    input_sources: &BTreeSet<StorePath<String>>,
+    input_sources: &BTreeSet<StorePath>,
 ) -> Result<(), io::Error> {
     write_char(writer, BRACKET_OPEN)?;
     write_array_elements(writer, input_sources)?;

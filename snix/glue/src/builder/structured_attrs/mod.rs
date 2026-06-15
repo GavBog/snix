@@ -17,7 +17,7 @@
 use std::collections::BTreeMap;
 
 use bytes::Bytes;
-use nix_compat::store_path::StorePath;
+use nix_compat::store_path::StorePathRef;
 mod shell;
 
 pub const JSON_KEY: &str = "__json";
@@ -34,7 +34,7 @@ pub const JSON_FILE_PATH: &str = "/build/.attrs.json";
 /// and populates `environment_vars` and `additional_files`.
 pub fn handle_structured_attrs<'a>(
     json_str: &[u8],
-    outputs: impl Iterator<Item = (&'a str, StorePath<&'a str>)>,
+    outputs: impl Iterator<Item = (&'a str, StorePathRef<'a>)>,
     environment_vars: &mut BTreeMap<String, Vec<u8>>,
     additional_files: &mut BTreeMap<String, Bytes>,
 ) -> std::io::Result<()> {

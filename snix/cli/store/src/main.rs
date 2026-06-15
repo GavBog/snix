@@ -361,7 +361,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         // Calculate the output path. This might still fail, as some names are illegal.
                         // FUTUREWORK: express the `name` at the type level to be valid and check for this earlier.
                         let ca = CAHash::Nar(NixHash::Sha256(nar_sha256));
-                        let output_path: StorePath<String> =
+                        let output_path =
                             store_path::build_ca_path(
                                 &name,
                                 &ca,
@@ -493,11 +493,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 #[serde(rename = "narSize")]
                 nar_size: u64,
 
-                pub path: StorePath<String>,
+                pub path: StorePath,
 
-                pub deriver: Option<StorePath<String>>,
+                pub deriver: Option<StorePath>,
                 #[serde(default)]
-                pub references: Vec<StorePath<String>>,
+                pub references: Vec<StorePath>,
                 #[serde(default)]
                 #[serde_as(as = "DefaultOnNull")]
                 pub signatures: Vec<Signature<String>>,

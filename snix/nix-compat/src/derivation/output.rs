@@ -13,7 +13,7 @@ use std::borrow::Cow;
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Output {
     /// Store path of build result.
-    pub path: Option<StorePath<String>>,
+    pub path: Option<StorePath>,
 
     #[cfg_attr(feature = "serde", serde(flatten))]
     pub ca_hash: Option<CAHash>, // we can only represent a subset here.

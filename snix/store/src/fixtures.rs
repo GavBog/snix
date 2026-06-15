@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 pub const DUMMY_PATH_STR: &str = "00000000000000000000000000000000-dummy";
 pub const DUMMY_PATH_DIGEST: [u8; 20] = [0; 20];
 
-pub static DUMMY_PATH: LazyLock<StorePath<String>> =
+pub static DUMMY_PATH: LazyLock<StorePath> =
     LazyLock::new(|| StorePath::from_name_and_digest_fixed("dummy", DUMMY_PATH_DIGEST).unwrap());
 
 pub static CASTORE_NODE_SYMLINK: LazyLock<Node> = LazyLock::new(|| Node::Symlink {

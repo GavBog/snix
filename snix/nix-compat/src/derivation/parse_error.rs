@@ -21,7 +21,7 @@ pub enum ErrorKind {
     DuplicateInputDerivationOutputName(OutputName, String),
 
     #[error("duplicate input source: {0}")]
-    DuplicateInputSource(StorePath<String>),
+    DuplicateInputSource(StorePath),
 
     #[error("invalind output name")]
     InvalidOutputName(#[from] ParseOutputNameError),

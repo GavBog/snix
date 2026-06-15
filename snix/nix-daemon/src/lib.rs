@@ -41,10 +41,7 @@ impl SnixDaemon {
 /// Implements [NixDaemonIO] backed by snix services.
 impl NixDaemonIO for SnixDaemon {
     #[instrument(skip_all, fields(path), level = "debug", ret(Debug))]
-    async fn query_path_info(
-        &self,
-        path: &StorePath<String>,
-    ) -> Result<Option<UnkeyedValidPathInfo>> {
+    async fn query_path_info(&self, path: &StorePath) -> Result<Option<UnkeyedValidPathInfo>> {
         if let Some(path_info) = self
             .path_info_service
             .get(*path.digest())
@@ -105,14 +102,15 @@ impl NixDaemonIO for SnixDaemon {
         }
 
         if let Some(cahash) = &info.info.ca {
-            let actual_path: StorePath<String> = build_ca_path(
+            let actual_path = build_ca_path(
                 info.path.name(),
                 cahash,
                 info.info.references.iter().map(|p| p.as_ref()),
                 false,
             )
             .map_err(Error::other)?;
-            if actual_path != info.path {
+
+            if actual_path != info.path.as_ref() {
                 return Err(Error::other("path mismatch"));
             }
         }

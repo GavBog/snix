@@ -1,4 +1,4 @@
-use nix_compat::store_path::StorePath;
+use nix_compat::store_path::StorePathRef;
 
 /// Produces the format that Nix calls "makeValidityRegistration" and describes as:
 /// "A string accepted by decodeValidPathInfo() that registers the specified paths as valid."
@@ -7,11 +7,10 @@ use nix_compat::store_path::StorePath;
 /// We don't implement the showDerivers and showHash functionality,
 /// as that doesn't seem to be used for exportReferenceGraph.
 pub fn make_validity_registration<
+    'a,
     W: std::fmt::Write,
-    E: Iterator<Item = (StorePath<S1>, R)>,
-    R: Iterator<Item = StorePath<S2>> + ExactSizeIterator,
-    S1: std::convert::AsRef<str>,
-    S2: std::convert::AsRef<str>,
+    E: Iterator<Item = (&'a StorePathRef<'a>, R)>,
+    R: Iterator<Item = &'a StorePathRef<'a>> + ExactSizeIterator + 'a,
 >(
     w: &mut W,
     elems: E,
@@ -36,7 +35,7 @@ pub fn make_validity_registration<
 mod test {
     use std::sync::LazyLock;
 
-    use nix_compat::store_path::{StorePath, StorePathRef};
+    use nix_compat::store_path::StorePathRef;
 
     use crate::builder::export_reference_graph::make_validity_registration;
 
@@ -125,12 +124,9 @@ mod test {
         let mut s = String::new();
         make_validity_registration(
             &mut s,
-            CLOSURE_HELLO.iter().map(|elem| {
-                (
-                    elem.path.to_owned(),
-                    elem.references.iter().map(|sp| sp.to_owned()),
-                )
-            }),
+            CLOSURE_HELLO
+                .iter()
+                .map(|elem| (&elem.path, elem.references.iter())),
         )
         .expect("must succeed");
 
@@ -167,11 +163,11 @@ mod test {
     fn test_validity_registration_simple() {
         let mut s = String::new();
 
-        let sp_libiconv: StorePath<&str> = StorePath::from_absolute_path(
+        let sp_libiconv = StorePathRef::from_absolute_path(
             b"/nix/store/2ilm1l0xy457r1py73n1sxh2c8pc1sq1-libiconv-109",
         )
         .expect("must parse");
-        let sp_hello = StorePath::from_absolute_path(
+        let sp_hello = StorePathRef::from_absolute_path(
             b"/nix/store/8ha1dhmx807czjczmwy078s4r9s254il-hello-2.12.2",
         )
         .expect("must parse");
@@ -183,7 +179,7 @@ mod test {
             elems
                 .as_slice()
                 .iter()
-                .map(|(path, refs)| ((*path).to_owned(), refs.iter().map(|sp| (*sp).to_owned()))),
+                .map(|(path, refs)| ((*path), refs.iter().copied())),
         )
         .expect("must succeed");
 

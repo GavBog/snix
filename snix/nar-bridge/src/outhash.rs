@@ -5,7 +5,6 @@ use bytes::Bytes;
 use nix_compat::{
     narinfo::{NarInfo, Signature},
     nix_http,
-    store_path::StorePath,
 };
 use snix_castore::proto::write_infused_nar_path;
 use snix_store::pathinfoservice::PathInfo;
@@ -146,7 +145,7 @@ pub async fn put(
                 .put(PathInfo {
                     store_path: narinfo.store_path.to_owned(),
                     node: root_node,
-                    references: narinfo.references.iter().map(StorePath::to_owned).collect(),
+                    references: narinfo.references.iter().map(|sp| sp.to_owned()).collect(),
                     nar_sha256: narinfo.nar_hash,
                     nar_size: narinfo.nar_size,
                     signatures: narinfo
@@ -156,7 +155,7 @@ pub async fn put(
                             Signature::<String>::new(s.name().to_string(), s.bytes().to_owned())
                         })
                         .collect(),
-                    deriver: narinfo.deriver.as_ref().map(StorePath::to_owned),
+                    deriver: narinfo.deriver.as_ref().map(|sp| sp.to_owned()),
                     ca: narinfo.ca,
                 })
                 .await

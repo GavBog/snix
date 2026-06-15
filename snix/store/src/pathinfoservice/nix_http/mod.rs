@@ -8,7 +8,6 @@ use nix_compat::{
     narinfo::{self, NarInfo, Signature},
     nixbase32,
     nixhash::NixHash,
-    store_path::StorePath,
 };
 use reqwest::StatusCode;
 use snix_castore::{
@@ -341,10 +340,10 @@ where
         Ok(Some(PathInfo {
             store_path: narinfo.store_path.to_owned(),
             node: root_node,
-            references: narinfo.references.iter().map(StorePath::to_owned).collect(),
+            references: narinfo.references.iter().map(|sp| sp.to_owned()).collect(),
             nar_size: narinfo.nar_size,
             nar_sha256: narinfo.nar_hash,
-            deriver: narinfo.deriver.as_ref().map(StorePath::to_owned),
+            deriver: narinfo.deriver.as_ref().map(|sp| sp.to_owned()),
             signatures: narinfo
                 .signatures
                 .into_iter()

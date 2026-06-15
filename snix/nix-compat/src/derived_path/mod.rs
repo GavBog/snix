@@ -18,9 +18,9 @@ use crate::store_path;
 /// See: <https://nix.dev/manual/nix/latest/store/derivation/#deriving-path>
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum DerivedPath {
-    Opaque(store_path::StorePath<String>),
+    Opaque(store_path::StorePath),
     Built {
-        drv_path: store_path::StorePath<String>,
+        drv_path: store_path::StorePath,
         outputs: OutputSpec,
     },
 }

@@ -25,27 +25,27 @@ pub struct KnownPaths {
     ///
     /// Keys are derivation paths, values are a tuple of the "hash derivation
     /// modulo" and the Derivation struct itself.
-    derivations: HashMap<StorePath<String>, ([u8; 32], Derivation)>,
+    derivations: HashMap<StorePath, ([u8; 32], Derivation)>,
 
     /// A map from output path to (one) drv path.
     /// Note that in the case of FODs, multiple drvs can produce the same output
     /// path. We use one of them.
-    outputs_to_drvpath: HashMap<StorePath<String>, StorePath<String>>,
+    outputs_to_drvpath: HashMap<StorePath, StorePath>,
 
     /// A map from output path to fetches (and their names).
-    outputs_to_fetches: HashMap<StorePath<String>, (String, Fetch)>,
+    outputs_to_fetches: HashMap<StorePath, (String, Fetch)>,
 }
 
 impl KnownPaths {
     /// Fetch the opaque "hash derivation modulo" for a given derivation path.
-    pub fn get_hash_derivation_modulo(&self, drv_path: &StorePath<String>) -> Option<&[u8; 32]> {
+    pub fn get_hash_derivation_modulo(&self, drv_path: &StorePathRef) -> Option<&[u8; 32]> {
         self.derivations
             .get(drv_path)
             .map(|(hash_derivation_modulo, _derivation)| hash_derivation_modulo)
     }
 
     /// Return a reference to the Derivation for a given drv path.
-    pub fn get_drv_by_drvpath(&self, drv_path: &StorePath<String>) -> Option<&Derivation> {
+    pub fn get_drv_by_drvpath(&self, drv_path: &StorePathRef) -> Option<&Derivation> {
         self.derivations
             .get(drv_path)
             .map(|(_hash_derivation_modulo, derivation)| derivation)
@@ -54,14 +54,8 @@ impl KnownPaths {
     /// Return the drv path of the derivation producing the passed output path.
     /// Note there can be multiple Derivations producing the same output path in
     /// flight; this function will only return one of them.
-    pub fn get_drv_path_for_output_path<S>(
-        &self,
-        output_path: &StorePath<S>,
-    ) -> Option<&StorePath<String>>
-    where
-        S: AsRef<str>,
-    {
-        self.outputs_to_drvpath.get(&output_path.as_ref())
+    pub fn get_drv_path_for_output_path(&self, output_path: &StorePathRef) -> Option<&StorePath> {
+        self.outputs_to_drvpath.get(output_path)
     }
 
     /// Insert a new [Derivation] into this struct.
@@ -69,7 +63,7 @@ impl KnownPaths {
     /// be fully calculated.
     /// All input derivations this refers to must also be inserted to this
     /// struct.
-    pub fn add_derivation(&mut self, drv_path: StorePath<String>, drv: Derivation) {
+    pub fn add_derivation(&mut self, drv_path: StorePath, drv: Derivation) {
         // check input derivations to have been inserted.
         #[cfg(debug_assertions)]
         {
@@ -80,7 +74,7 @@ impl KnownPaths {
 
         // compute the hash derivation modulo
         let hash_derivation_modulo = drv.hash_derivation_modulo(|drv_path| {
-            self.get_hash_derivation_modulo(&drv_path.to_owned())
+            self.get_hash_derivation_modulo(drv_path)
                 .unwrap_or_else(|| panic!("{drv_path} not found"))
                 .to_owned()
         });
@@ -130,21 +124,20 @@ impl KnownPaths {
 
     /// Return the name and fetch producing the passed output path.
     /// Note there can also be (multiple) Derivations producing the same output path.
-    pub fn get_fetch_for_output_path<S>(
+    pub fn get_fetch_for_output_path(
         &self,
-        output_path: &StorePath<S>,
-    ) -> Option<(String, Fetch)>
-    where
-        S: AsRef<str>,
-    {
+        output_path: &StorePathRef<'_>,
+    ) -> Option<(String, Fetch)> {
         self.outputs_to_fetches
-            .get(&output_path.as_ref())
+            .get(output_path)
             .map(|(name, fetch)| (name.to_owned(), fetch.to_owned()))
     }
 
     /// Returns an iterator over all known derivations and their store path.
-    pub fn get_derivations(&self) -> impl Iterator<Item = (&StorePath<String>, &Derivation)> {
-        self.derivations.iter().map(|(k, v)| (k, &v.1))
+    pub fn get_derivations<'a>(
+        &'a self,
+    ) -> impl Iterator<Item = (StorePathRef<'a>, &'a Derivation)> {
+        self.derivations.iter().map(|(k, v)| (k.as_ref(), &v.1))
     }
 }
 
@@ -173,19 +166,19 @@ mod tests {
         .expect("must parse")
     });
 
-    static BAR_DRV_PATH: LazyLock<StorePath<String>> = LazyLock::new(|| {
+    static BAR_DRV_PATH: LazyLock<StorePath> = LazyLock::new(|| {
         StorePath::from_bytes(b"ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv").expect("must parse")
     });
 
-    static FOO_DRV_PATH: LazyLock<StorePath<String>> = LazyLock::new(|| {
+    static FOO_DRV_PATH: LazyLock<StorePath> = LazyLock::new(|| {
         StorePath::from_bytes(b"ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv").expect("must parse")
     });
 
-    static BAR_OUT_PATH: LazyLock<StorePath<String>> = LazyLock::new(|| {
+    static BAR_OUT_PATH: LazyLock<StorePath> = LazyLock::new(|| {
         StorePath::from_bytes(b"mp57d33657rf34lzvlbpfa1gjfv5gmpg-bar").expect("must parse")
     });
 
-    static FOO_OUT_PATH: LazyLock<StorePath<String>> = LazyLock::new(|| {
+    static FOO_OUT_PATH: LazyLock<StorePath> = LazyLock::new(|| {
         StorePath::from_bytes(b"fhaj6gmwns62s6ypkcldbaj2ybvkhx3p-foo").expect("must parse")
     });
 
@@ -196,7 +189,7 @@ mod tests {
     }
     });
 
-    static FETCH_URL_OUT_PATH: LazyLock<StorePath<String>> = LazyLock::new(|| {
+    static FETCH_URL_OUT_PATH: LazyLock<StorePath> = LazyLock::new(|| {
         StorePath::from_bytes(b"06qi00hylriyfm0nl827crgjvbax84mz-notmuch-extract-patch").unwrap()
     });
 
@@ -207,7 +200,7 @@ mod tests {
     }
     });
 
-    static FETCH_TARBALL_OUT_PATH: LazyLock<StorePath<String>> = LazyLock::new(|| {
+    static FETCH_TARBALL_OUT_PATH: LazyLock<StorePath> = LazyLock::new(|| {
         StorePath::from_bytes(b"7adgvk5zdfq4pwrhsm3n9lzypb12gw0g-source").unwrap()
     });
 
@@ -228,8 +221,11 @@ mod tests {
 
         // get_drv_by_drvpath should return None for non-existing Derivations,
         // same as get_hash_derivation_modulo and get_drv_path_for_output_path
-        assert_eq!(None, known_paths.get_drv_by_drvpath(&BAR_DRV_PATH));
-        assert_eq!(None, known_paths.get_hash_derivation_modulo(&BAR_DRV_PATH));
+        assert_eq!(None, known_paths.get_drv_by_drvpath(&BAR_DRV_PATH.as_ref()));
+        assert_eq!(
+            None,
+            known_paths.get_hash_derivation_modulo(&BAR_DRV_PATH.as_ref())
+        );
         assert_eq!(
             None,
             known_paths.get_drv_path_for_output_path(&BAR_OUT_PATH.as_ref())
@@ -241,13 +237,13 @@ mod tests {
         // We should get it back
         assert_eq!(
             Some(&BAR_DRV.clone()),
-            known_paths.get_drv_by_drvpath(&BAR_DRV_PATH)
+            known_paths.get_drv_by_drvpath(&BAR_DRV_PATH.as_ref())
         );
 
         // Test get_drv_path_for_output_path
         assert_eq!(
             Some(&BAR_DRV_PATH.clone()),
-            known_paths.get_drv_path_for_output_path(&BAR_OUT_PATH)
+            known_paths.get_drv_path_for_output_path(&BAR_OUT_PATH.as_ref())
         );
 
         // It should be possible to get the hash derivation modulo.
@@ -255,7 +251,7 @@ mod tests {
             Some(&hex!(
                 "c79aebd0ce3269393d4a1fde2cbd1d975d879b40f0bf40a48f550edc107fd5df"
             )),
-            known_paths.get_hash_derivation_modulo(&BAR_DRV_PATH.clone())
+            known_paths.get_hash_derivation_modulo(&BAR_DRV_PATH.as_ref())
         );
 
         // Now insert FOO_DRV too. It shouldn't panic, as BAR_DRV is already
@@ -264,19 +260,19 @@ mod tests {
 
         assert_eq!(
             Some(&FOO_DRV.clone()),
-            known_paths.get_drv_by_drvpath(&FOO_DRV_PATH)
+            known_paths.get_drv_by_drvpath(&FOO_DRV_PATH.as_ref())
         );
         assert_eq!(
             Some(&hex!(
                 "af030d36d63d3d7f56a71adaba26b36f5fa1f9847da5eed953ed62e18192762f"
             )),
-            known_paths.get_hash_derivation_modulo(&FOO_DRV_PATH.clone())
+            known_paths.get_hash_derivation_modulo(&FOO_DRV_PATH.as_ref())
         );
 
         // Test get_drv_path_for_output_path
         assert_eq!(
             Some(&FOO_DRV_PATH.clone()),
-            known_paths.get_drv_path_for_output_path(&FOO_OUT_PATH)
+            known_paths.get_drv_path_for_output_path(&FOO_OUT_PATH.as_ref())
         );
     }
 
@@ -287,7 +283,7 @@ mod tests {
         // get_fetch_for_output_path should return None for new fetches.
         assert!(
             known_paths
-                .get_fetch_for_output_path(&FETCH_TARBALL_OUT_PATH)
+                .get_fetch_for_output_path(&FETCH_TARBALL_OUT_PATH.as_ref())
                 .is_none()
         );
 
@@ -318,10 +314,10 @@ mod tests {
 
         // We should be able to find BAR_DRV_PATH and BAR_DRV as a pair in get_derivations.
         assert_eq!(
-            Some((&BAR_DRV_PATH.clone(), &BAR_DRV.clone())),
+            Some((BAR_DRV_PATH.as_ref(), &BAR_DRV.clone())),
             known_paths
                 .get_derivations()
-                .find(|(s, d)| (*s, *d) == (&BAR_DRV_PATH, &BAR_DRV))
+                .find(|(s, d)| (s, *d) == (&BAR_DRV_PATH.as_ref(), &*BAR_DRV))
         );
     }
 
