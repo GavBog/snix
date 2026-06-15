@@ -72,11 +72,6 @@ where
         return Err(BuildStorePathError::InvalidReference());
     }
 
-    /// Helper function, used for the non-sha256 [CAHash::Nar] and all [CAHash::Flat].
-    fn fixed_out_digest(prefix: &str, hash: &NixHash) -> [u8; 32] {
-        sha256!("{}:{}:", prefix, hash.as_nix_lowerhex_string_fmt())
-    }
-
     let (ty, inner_digest) = match &ca_hash {
         CAHash::Text(digest) => (make_references_string("text", references, false), *digest),
         CAHash::Nar(NixHash::Sha256(digest)) => (
@@ -92,7 +87,7 @@ where
 
             (
                 "output:out".to_string(),
-                fixed_out_digest("fixed:out:r", hash),
+                sha256!("fixed:out:r:{}:", hash.as_nix_lowerhex_string_fmt()),
             )
         }
         // CaHash::Flat is using something very similar, except the `r:` prefix.
@@ -103,7 +98,7 @@ where
 
             (
                 "output:out".to_string(),
-                fixed_out_digest("fixed:out", hash),
+                sha256!("fixed:out:{}:", hash.as_nix_lowerhex_string_fmt()),
             )
         }
     };
