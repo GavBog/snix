@@ -74,7 +74,7 @@ where
 
     /// Helper function, used for the non-sha256 [CAHash::Nar] and all [CAHash::Flat].
     fn fixed_out_digest(prefix: &str, hash: &NixHash) -> [u8; 32] {
-        sha256!("{}:{}:", prefix, hash.to_nix_lowerhex_string())
+        sha256!("{}:{}:", prefix, hash.as_nix_lowerhex_string_fmt())
     }
 
     let (ty, inner_digest) = match &ca_hash {

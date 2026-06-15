@@ -209,12 +209,15 @@ impl NixHash {
     }
 
     /// Formats a [NixHash] in the Nix lowerhex format.
-    pub fn to_nix_lowerhex_string(&self) -> String {
-        format!(
-            "{}:{}",
-            self.algo(),
-            HEXLOWER.encode(self.digest_as_bytes())
-        )
+    pub fn as_nix_lowerhex_string_fmt(&self) -> impl std::fmt::Display + '_ {
+        std::fmt::from_fn(|f| {
+            write!(
+                f,
+                "{}:{}",
+                self.algo(),
+                HEXLOWER.encode_display(self.digest_as_bytes())
+            )
+        })
     }
 
     /// This parses all known output formats for NixHash.

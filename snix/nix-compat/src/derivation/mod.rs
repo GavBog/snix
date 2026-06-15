@@ -115,14 +115,14 @@ impl Derivation {
             sha256!(
                 "fixed:out:{}{}:{}",
                 ca_kind_prefix(ca_hash),
-                ca_hash.hash().to_nix_lowerhex_string(),
+                ca_hash.hash().as_nix_lowerhex_string_fmt(),
                 out_output_path.as_absolute_path_fmt(),
             )
         } else {
             sha256!(
                 "fixed:out:{}{}:",
                 ca_kind_prefix(ca_hash),
-                ca_hash.hash().to_nix_lowerhex_string(),
+                ca_hash.hash().as_nix_lowerhex_string_fmt(),
             )
         })
     }
