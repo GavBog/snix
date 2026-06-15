@@ -521,18 +521,22 @@ Sig: cache.nixos.org-1:o1DTsjCz0PofLJ216P2RBuSulI8BAb6zHxWE4N+tzlcELk5Uk/GO2SCxW
 
     #[test]
     fn ca_nar_hash_sha1() {
-        let parsed = NarInfo::parse(
-            r#"StorePath: /nix/store/k20pahypzvr49fy82cw5sx72hdfg3qcr-texlive-hyphenex-37354
+        // be explicit with the trailing whitespace to prevent editors from stripping it out
+        let input = {
+            let input = r#"StorePath: /nix/store/k20pahypzvr49fy82cw5sx72hdfg3qcr-texlive-hyphenex-37354
 URL: nar/0i5biw0g01514llhfswxy6xfav8lxxdq1xg6ik7hgsqbpw0f06yi.nar.xz
 Compression: xz
 FileHash: sha256:0i5biw0g01514llhfswxy6xfav8lxxdq1xg6ik7hgsqbpw0f06yi
 FileSize: 7120
 NarHash: sha256:0h1bm4sj1cnfkxgyhvgi8df1qavnnv94sd0v09wcrm971602shfg
 NarSize: 22552
-References: 
+References:!!WSP!!
 Sig: cache.nixos.org-1:u01BybwQhyI5H1bW1EIWXssMDhDDIvXOG5uh8Qzgdyjz6U1qg6DHhMAvXZOUStIj6X5t4/ufFgR8i3fjf0bMAw==
 CA: fixed:r:sha1:1ak1ymbmsfx7z8kh09jzkr3a4dvkrfjw
-"#).expect("should parse");
+"#;
+            input.replace("!!WSP!!", " ")
+        };
+        let parsed = NarInfo::parse(&input).expect("should parse");
 
         assert_eq!(
             parsed.ca,
@@ -657,19 +661,21 @@ Sig: cache.nixos.org-1:WDvKIdxSnQ8p2w9SD0ffdibUSNMz6QQN6jpe+A8LLNHmZFsX+m8GZF0x9
     /// DUMMY_VERIFYING_KEY succeeds.
     #[test]
     fn sign() {
-        let mut narinfo = NarInfo::parse(
-            r#"StorePath: /nix/store/0vpqfxbkx0ffrnhbws6g9qwhmliksz7f-perl-HTTP-Cookies-6.01
+        // be explicit with the trailing whitespace to prevent editors from stripping it out
+        let input = {
+            let input = r#"StorePath: /nix/store/0vpqfxbkx0ffrnhbws6g9qwhmliksz7f-perl-HTTP-Cookies-6.01
 URL: nar/0i5biw0g01514llhfswxy6xfav8lxxdq1xg6ik7hgsqbpw0f06yi.nar.xz
 Compression: xz
 FileHash: sha256:0i5biw0g01514llhfswxy6xfav8lxxdq1xg6ik7hgsqbpw0f06yi
 FileSize: 7120
 NarHash: sha256:0h1bm4sj1cnfkxgyhvgi8df1qavnnv94sd0v09wcrm971602shfg
 NarSize: 22552
-References: 
+References:!!WSP!!
 CA: fixed:r:sha1:1ak1ymbmsfx7z8kh09jzkr3a4dvkrfjw
-"#,
-        )
-        .expect("should parse");
+"#;
+            input.replace("!!WSP!!", " ")
+        };
+        let mut narinfo = NarInfo::parse(&input).expect("should parse");
 
         let fp = narinfo.fingerprint();
 

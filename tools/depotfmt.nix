@@ -62,10 +62,6 @@ let
     excludes = [
       "snix/eval/src/tests/nix_tests/*",
       "snix/glue/src/tests/nix_tests/*",
-
-      # contains "References: ", which has trailing whitespace
-      # FUTUREWORK: move into separate fixture and read from here
-      "snix/nix-compat/src/narinfo/mod.rs"
     ]
   '';
 
