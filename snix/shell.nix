@@ -8,6 +8,7 @@ pkgs.mkShell {
     pkgs.cargo-machete
     pkgs.cargo-expand
     pkgs.cargo-flamegraph
+    pkgs.cargo-nextest
     pkgs.clippy
     pkgs.evans
     pkgs.fuse
