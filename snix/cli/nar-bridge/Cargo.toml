@@ -17,7 +17,7 @@ snix-store.path = "../../store"
 snix-tracing = { path = "../../tracing", features = ["tonic", "axum"] }
 tokio.workspace = true
 axum.workspace = true
-axum-tracing-opentelemetry.workspace = true
+axum-tracing-opentelemetry = { workspace = true, optional = true }
 tokio-listener = { workspace = true, features = [
   "axum08",
   "clap",
@@ -28,7 +28,11 @@ tracing.workspace = true
 
 [features]
 default = ["otlp"]
-otlp = ["snix-tracing/otlp", "nar-bridge/otlp"]
+otlp = [
+  "snix-tracing/otlp",
+  "nar-bridge/otlp",
+  "dep:axum-tracing-opentelemetry",
+]
 tracing-chrome = ["snix-tracing/chrome"]
 tracing-tracy = ["snix-tracing/tracy"]
 xp-store-composition-cli = ["snix-store/xp-composition-cli"]

@@ -22883,6 +22883,7 @@ rec {
           {
             name = "axum-tracing-opentelemetry";
             packageId = "axum-tracing-opentelemetry";
+            optional = true;
             features = [ "tracing_level_info" ];
           }
           {
@@ -22941,6 +22942,7 @@ rec {
           "otlp" = [
             "snix-tracing/otlp"
             "nar-bridge/otlp"
+            "dep:axum-tracing-opentelemetry"
           ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracing-tracy" = [ "snix-tracing/tracy" ];

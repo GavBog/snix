@@ -1,3 +1,4 @@
+#[cfg(feature = "otlp")]
 use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use clap::Parser;
 use mimalloc::MiMalloc;
@@ -62,9 +63,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         args.root_nodes_cache_capacity,
     );
 
-    let app = nar_bridge::gen_router(args.priority)
-        .layer(OtelAxumLayer::default())
-        .with_state(state);
+    let app = nar_bridge::gen_router(args.priority);
+
+    #[cfg(feature = "otlp")]
+    let app = app.layer(
+        if args
+            .tracing_args
+            .tracers()
+            .contains(snix_tracing::Tracer::Otlp)
+        {
+            OtelAxumLayer::default()
+        } else {
+            OtelAxumLayer::default().filter(|_| false)
+        },
+    );
+
+    let app = app.with_state(state);
 
     let listen_address = &args.listen_args.listen_address.unwrap_or_else(|| {
         "[::]:9000"
