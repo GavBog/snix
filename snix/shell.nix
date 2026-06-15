@@ -29,8 +29,15 @@ pkgs.mkShell {
     pkgs.bubblewrap
     pkgs.cbtemulator
     pkgs.google-cloud-bigtable-tool
+    pkgs.mold
     pkgs.runc
   ];
+
+  # Use the mold linker for faster link times.
+  # mold is an ELF linker, so this only applies on Linux.
+  env = pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+    RUSTFLAGS = "-C link-arg=-fuse-ld=mold";
+  };
 
   # Set SNIX_BENCH_NIX_PATH to a somewhat pinned nixpkgs path.
   # This is for invoking `cargo bench` imperatively on the developer machine.
