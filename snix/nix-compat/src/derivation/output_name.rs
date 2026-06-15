@@ -64,11 +64,11 @@ pub enum ParseOutputNameError {
     ReservedNameDrv,
 }
 
-impl From<store_path::ValidateNameError> for ParseOutputNameError {
-    fn from(value: store_path::ValidateNameError) -> Self {
+impl From<store_path::ParseStorePathNameError> for ParseOutputNameError {
+    fn from(value: store_path::ParseStorePathNameError) -> Self {
         match value {
-            store_path::ValidateNameError::InvalidLength => ParseOutputNameError::InvalidLength,
-            store_path::ValidateNameError::InvalidName => ParseOutputNameError::InvalidName,
+            store_path::ParseStorePathNameError::Length => ParseOutputNameError::InvalidLength,
+            store_path::ParseStorePathNameError::Name => ParseOutputNameError::InvalidName,
         }
     }
 }

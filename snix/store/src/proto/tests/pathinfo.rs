@@ -93,7 +93,7 @@ fn convert_pathinfo_wrong_entries(
         digest: (*DUMMY_DIGEST).into(),
         size: 0,
     }),
-    ValidatePathInfoError::InvalidNodeName("invalid".into(), store_path::Error::InvalidLength)
+    ValidatePathInfoError::InvalidNodeName("invalid".into(), store_path::ParseStorePathError::Length)
 )]
 #[case::file_invalid_digest_len(
     castorepb::entry::Entry::File(castorepb::FileEntry {
@@ -111,7 +111,7 @@ fn convert_pathinfo_wrong_entries(
     }),
     ValidatePathInfoError::InvalidNodeName(
         "invalid".into(),
-        store_path::Error::InvalidLength
+        store_path::ParseStorePathError::Length
     )
 )]
 #[case::symlink_invalid_entry_name(
@@ -121,7 +121,7 @@ fn convert_pathinfo_wrong_entries(
     }),
     ValidatePathInfoError::InvalidNodeName(
         "invalid".into(),
-        store_path::Error::InvalidLength
+        store_path::ParseStorePathError::Length
     )
 )]
 fn convert_fail_entry(
@@ -237,7 +237,7 @@ fn convert_invalid_deriver() {
     });
 
     assert_eq!(
-        ValidatePathInfoError::InvalidDeriverField(store_path::Error::InvalidLength),
+        ValidatePathInfoError::InvalidDeriverField(store_path::ParseStorePathError::Length),
         PathInfo::try_from(path_info).expect_err("must fail")
     )
 }

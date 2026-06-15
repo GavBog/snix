@@ -26,7 +26,7 @@ pub enum ErrorKind {
     NixHashError(nixhash::Error),
 
     #[error("store path error: {0}")]
-    StorePathError(#[from] store_path::Error),
+    StorePathError(#[from] store_path::ParseStorePathError),
 
     #[error("nom error: {0:?}")]
     Nom(nom::error::ErrorKind),

@@ -22,33 +22,33 @@ pub const STORE_DIR_WITH_SLASH: &str = "/nix/store/";
 
 /// Error returned by [`validate_name`].
 #[derive(Debug, PartialEq, Eq, Clone, thiserror::Error)]
-pub enum ValidateNameError {
+pub enum ParseStorePathNameError {
     #[error("Invalid length")]
-    InvalidLength,
+    Length,
     #[error("Invalid name")]
-    InvalidName,
+    Name,
 }
 
-impl From<ValidateNameError> for Error {
-    fn from(value: ValidateNameError) -> Self {
+impl From<ParseStorePathNameError> for ParseStorePathError {
+    fn from(value: ParseStorePathNameError) -> Self {
         match value {
-            ValidateNameError::InvalidLength => Error::InvalidLength,
-            ValidateNameError::InvalidName => Error::InvalidName,
+            ParseStorePathNameError::Length => ParseStorePathError::Length,
+            ParseStorePathNameError::Name => ParseStorePathError::Name,
         }
     }
 }
 
 /// Errors that can occur when parsing a literal store path
 #[derive(Debug, PartialEq, Eq, thiserror::Error)]
-pub enum Error {
+pub enum ParseStorePathError {
     #[error("Dash is missing between hash and name")]
     MissingDash,
     #[error("Hash encoding is invalid: {0}")]
-    InvalidHashEncoding(#[from] DecodeError),
+    DigestEncoding(#[from] DecodeError),
     #[error("Invalid length")]
-    InvalidLength,
+    Length,
     #[error("Invalid name")]
-    InvalidName,
+    Name,
     #[error("Tried to parse an absolute path which was missing the store dir prefix.")]
     MissingStoreDir,
 }
@@ -132,7 +132,7 @@ where
 
     /// Construct a [StorePath] by passing the `$digest-$name` string
     /// that comes after [STORE_DIR_WITH_SLASH].
-    pub fn from_bytes<'a>(s: &'a [u8]) -> Result<Self, Error>
+    pub fn from_bytes<'a>(s: &'a [u8]) -> Result<Self, ParseStorePathError>
     where
         S: From<&'a str>,
     {
@@ -142,13 +142,13 @@ where
         // - 1 dash
         // - 1 character for the name
         if s.len() < ENCODED_DIGEST_SIZE + 2 {
-            Err(Error::InvalidLength)?
+            Err(ParseStorePathError::Length)?
         }
 
         let digest = nixbase32::decode_fixed(&s[..ENCODED_DIGEST_SIZE])?;
 
         if s[ENCODED_DIGEST_SIZE] != b'-' {
-            return Err(Error::MissingDash);
+            return Err(ParseStorePathError::MissingDash);
         }
 
         Ok(StorePath {
@@ -159,11 +159,14 @@ where
 
     /// Construct a [StorePathRef] from a name and digest.
     /// The name is validated, and the digest checked for size.
-    pub fn from_name_and_digest<'a>(name: &'a str, digest: &[u8]) -> Result<Self, Error>
+    pub fn from_name_and_digest<'a>(
+        name: &'a str,
+        digest: &[u8],
+    ) -> Result<Self, ParseStorePathError>
     where
         S: From<&'a str>,
     {
-        let digest_fixed = digest.try_into().map_err(|_| Error::InvalidLength)?;
+        let digest_fixed = digest.try_into().map_err(|_| ParseStorePathError::Length)?;
         Self::from_name_and_digest_fixed(name, digest_fixed)
     }
 
@@ -172,7 +175,7 @@ where
     pub fn from_name_and_digest_fixed<'a>(
         name: &'a str,
         digest: [u8; DIGEST_SIZE],
-    ) -> Result<Self, Error>
+    ) -> Result<Self, ParseStorePathError>
     where
         S: From<&'a str>,
     {
@@ -185,13 +188,13 @@ where
     /// Construct a [StorePathRef] from an absolute store path string.
     /// This is equivalent to calling [StorePathRef::from_bytes], but stripping
     /// the [STORE_DIR_WITH_SLASH] prefix before.
-    pub fn from_absolute_path<'a>(s: &'a [u8]) -> Result<Self, Error>
+    pub fn from_absolute_path<'a>(s: &'a [u8]) -> Result<Self, ParseStorePathError>
     where
         S: From<&'a str>,
     {
         match s.strip_prefix(STORE_DIR_WITH_SLASH.as_bytes()) {
             Some(s_stripped) => Self::from_bytes(s_stripped),
-            None => Err(Error::MissingStoreDir),
+            None => Err(ParseStorePathError::MissingStoreDir),
         }
     }
 
@@ -199,7 +202,7 @@ where
     /// the rest of the path, or an error.
     pub fn from_absolute_path_full<'p: 'sp, 'sp, P>(
         path: &'p P,
-    ) -> Result<(Self, &'p std::path::Path), Error>
+    ) -> Result<(Self, &'p std::path::Path), ParseStorePathError>
     where
         S: From<&'sp str>,
         P: AsRef<std::path::Path> + 'p + ?Sized,
@@ -208,18 +211,22 @@ where
         let p = path
             .as_ref()
             .strip_prefix(STORE_DIR_WITH_SLASH)
-            .map_err(|_| Error::MissingStoreDir)?;
+            .map_err(|_| ParseStorePathError::MissingStoreDir)?;
 
         let mut components = p.components();
 
         use bstr::ByteSlice;
-        let first_component =
-            <[u8]>::from_os_str(components.next().ok_or(Error::InvalidLength)?.as_os_str())
-                .ok_or(Error::InvalidName)?;
+        let first_component = <[u8]>::from_os_str(
+            components
+                .next()
+                .ok_or(ParseStorePathError::Length)?
+                .as_os_str(),
+        )
+        .ok_or(ParseStorePathError::Name)?;
 
         // The first component must be parse-able as a [StorePath].
         if first_component.len() < 34 {
-            return Err(Error::InvalidLength);
+            return Err(ParseStorePathError::Length);
         }
 
         let store_path = StorePath::from_bytes(first_component)?;
@@ -266,7 +273,7 @@ where
 }
 
 impl FromStr for StorePath<String> {
-    type Err = Error;
+    type Err = ParseStorePathError;
 
     /// Construct a [StorePath] by passing the `$digest-$name` string
     /// that comes after [STORE_DIR_WITH_SLASH].
@@ -332,12 +339,12 @@ static NAME_CHARS: [bool; 256] = {
 
 /// Checks a given &[u8] to match the restrictions for [StorePath::name], and
 /// returns the name as &str if successful.
-pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, ValidateNameError> {
+pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, ParseStorePathNameError> {
     let s = s.as_ref();
 
     // Empty or excessively long names are not allowed.
     if s.is_empty() || s.len() > 211 {
-        return Err(ValidateNameError::InvalidLength);
+        return Err(ParseStorePathNameError::Length);
     }
 
     let mut valid = true;
@@ -348,7 +355,7 @@ pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, ValidateNa
     if !valid {
         for &c in s.iter() {
             if !NAME_CHARS[c as usize] {
-                return Err(ValidateNameError::InvalidName);
+                return Err(ParseStorePathNameError::Name);
             }
         }
 
@@ -363,8 +370,8 @@ pub fn validate_name(s: &(impl AsRef<[u8]> + ?Sized)) -> Result<&str, ValidateNa
 /// returns the name as &str if successful.
 pub fn validate_name_as_os_str(
     s: &(impl AsRef<std::ffi::OsStr> + ?Sized),
-) -> Result<&str, ValidateNameError> {
-    let s = s.as_ref().to_str().ok_or(ValidateNameError::InvalidName)?;
+) -> Result<&str, ParseStorePathNameError> {
+    let s = s.as_ref().to_str().ok_or(ParseStorePathNameError::Name)?;
 
     validate_name(s)
 }
@@ -388,7 +395,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::Error;
+    use super::ParseStorePathError;
 
     use crate::store_path::{DIGEST_SIZE, StorePath, StorePathRef};
     use hex_literal::hex;
@@ -534,7 +541,7 @@ mod tests {
     #[test]
     fn absolute_path_missing_prefix() {
         assert_eq!(
-            Error::MissingStoreDir,
+            ParseStorePathError::MissingStoreDir,
             StorePathRef::from_absolute_path(b"foobar-123").expect_err("must fail")
         );
     }
@@ -642,15 +649,15 @@ mod tests {
     #[test]
     fn from_absolute_path_errors() {
         assert_eq!(
-            Error::InvalidLength,
+            ParseStorePathError::Length,
             StorePathRef::from_absolute_path_full("/nix/store/").expect_err("must fail")
         );
         assert_eq!(
-            Error::InvalidLength,
+            ParseStorePathError::Length,
             StorePathRef::from_absolute_path_full("/nix/store/foo").expect_err("must fail")
         );
         assert_eq!(
-            Error::MissingStoreDir,
+            ParseStorePathError::MissingStoreDir,
             StorePathRef::from_absolute_path_full(
                 "00bgd045z0d4icpbc2yyz4gx48ak44la-net-tools-1.60_p20170221182432"
             )

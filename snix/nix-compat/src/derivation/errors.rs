@@ -22,7 +22,7 @@ pub enum DerivationError {
     InvalidOutputDerivationPath(String, store_path::BuildStorePathError),
     // input derivation
     #[error("unable to parse input derivation path {0}: {1}")]
-    InvalidInputDerivationPath(String, store_path::Error),
+    InvalidInputDerivationPath(String, store_path::ParseStorePathError),
     #[error("input derivation {0} doesn't end with .drv")]
     InvalidInputDerivationPrefix(String),
     #[error("input derivation {0} output names are empty")]
@@ -32,7 +32,7 @@ pub enum DerivationError {
 
     // input sources
     #[error("unable to parse input sources path {0}: {1}")]
-    InvalidInputSourcesPath(String, store_path::Error),
+    InvalidInputSourcesPath(String, store_path::ParseStorePathError),
 
     // platform
     #[error("invalid platform field: {0}")]
@@ -52,7 +52,7 @@ pub enum DerivationError {
 #[derive(Debug, Error, PartialEq)]
 pub enum OutputError {
     #[error("Invalid output path {0}: {1}")]
-    InvalidOutputPath(String, store_path::Error),
+    InvalidOutputPath(String, store_path::ParseStorePathError),
     #[error("Missing output path")]
     MissingOutputPath,
     #[error("Invalid CAHash: {:?}", .0)]

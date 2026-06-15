@@ -252,7 +252,7 @@ fn matches_expected_error(result: &snix_eval::EvaluationResult, exp_kind: &Error
             let snix_eval::ErrorKind::SnixError(err) = snix_kind else {
                 return false;
             };
-            err.downcast_ref::<nix_compat::store_path::Error>()
+            err.downcast_ref::<nix_compat::store_path::ParseStorePathError>()
                 .is_some()
         }
         ErrorKind::DerivationError => match snix_kind {

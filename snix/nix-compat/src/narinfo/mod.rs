@@ -24,7 +24,11 @@ use std::{
     mem,
 };
 
-use crate::{nixbase32, nixhash::CAHash, store_path::StorePathRef};
+use crate::{
+    nixbase32,
+    nixhash::CAHash,
+    store_path::{ParseStorePathError, StorePathRef},
+};
 
 mod fingerprint;
 mod signature;
@@ -139,7 +143,7 @@ impl<'a> NarInfo<'a> {
                     let val = val
                         .strip_prefix("/nix/store/")
                         .ok_or(Error::InvalidStorePath(
-                            crate::store_path::Error::MissingStoreDir,
+                            ParseStorePathError::MissingStoreDir,
                         ))?;
                     let val = StorePathRef::from_bytes(val.as_bytes())
                         .map_err(Error::InvalidStorePath)?;
@@ -415,7 +419,7 @@ pub enum Error {
     InvalidLine(String),
 
     #[error("invalid StorePath: {0}")]
-    InvalidStorePath(crate::store_path::Error),
+    InvalidStorePath(ParseStorePathError),
 
     #[error("field {0} may not be empty string")]
     EmptyField(&'static str),
@@ -424,10 +428,10 @@ pub enum Error {
     UnableToParseSize(&'static str, String),
 
     #[error("unable to parse #{0} reference: {1}")]
-    InvalidReference(usize, crate::store_path::Error),
+    InvalidReference(usize, ParseStorePathError),
 
     #[error("invalid Deriver store path: {0}")]
-    InvalidDeriverStorePath(crate::store_path::Error),
+    InvalidDeriverStorePath(ParseStorePathError),
 
     #[error("invalid Deriver store path, must end with .drv")]
     InvalidDeriverStorePathMissingSuffix,

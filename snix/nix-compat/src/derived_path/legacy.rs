@@ -107,16 +107,17 @@ mod tests {
     }
 
     #[rstest]
-    #[should_panic(expected = "InvalidName")]
+    // tries to parse `test.drv!out` as store path name
     #[case("/nix/store/00000000000000000000000000000000-test.drv!out!bin,lib")]
-    #[should_panic(expected = "InvalidName")]
+    // tries to parse `test.drv!out!bin` as store path name
     #[case("/nix/store/00000000000000000000000000000000-test.drv!out!bin!lib")]
-    #[should_panic(expected = "InvalidName")]
+    // treats it as opaque
     #[case("/nix/store/00000000000000000000000000000000-test.drv^out")]
-    #[should_panic(expected = "InvalidName")]
+    // tries to parse `test.drv^out` as store path name
     #[case("/nix/store/00000000000000000000000000000000-test.drv^out!bin")]
-    #[should_panic(expected = "InvalidName")]
+    // tries to parse `test.drv!out!bin^out` as store path name
     #[case("/nix/store/00000000000000000000000000000000-test.drv!out!bin^out!lib")]
+    #[should_panic(expected = "StorePath(Name)")]
     fn parse_fail(#[case] input: &str) {
         input.parse::<LegacyDerivedPath>().unwrap();
     }

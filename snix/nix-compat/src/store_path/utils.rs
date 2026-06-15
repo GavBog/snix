@@ -1,17 +1,16 @@
+use super::{ParseStorePathError, STORE_DIR, StorePath, StorePathRef};
 use crate::nixbase32;
 use crate::nixhash::{CAHash, NixHash};
-use crate::store_path::{Error, STORE_DIR, StorePath, StorePathRef};
 use data_encoding::HEXLOWER;
 use sha2::{Digest, Sha256};
-use thiserror;
 
 /// Errors that can occur when creating a content-addressed store path.
 ///
-/// This wraps the main [crate::store_path::Error]..
+/// This wraps the main [crate::store_path::ParseStorePathError].
 #[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum BuildStorePathError {
     #[error("Invalid Store Path: {0}")]
-    InvalidStorePath(Error),
+    InvalidStorePath(ParseStorePathError),
     /// This error occurs when we have references outside the SHA-256 +
     /// Recursive case. The restriction comes from upstream Nix. It may be
     /// lifted at some point but there isn't a pressing need to anticipate that.
@@ -121,7 +120,7 @@ pub fn build_output_path<'a, SP>(
     drv_sha256: &[u8; 32],
     output_name: &str,
     output_path_name: &'a str,
-) -> Result<StorePath<SP>, Error>
+) -> Result<StorePath<SP>, ParseStorePathError>
 where
     SP: AsRef<str> + std::convert::From<&'a str>,
 {
@@ -146,7 +145,7 @@ fn build_store_path_from_fingerprint_parts<'a, SP>(
     ty: &str,
     inner_digest: &[u8; 32],
     name: &'a str,
-) -> Result<StorePath<SP>, Error>
+) -> Result<StorePath<SP>, ParseStorePathError>
 where
     SP: AsRef<str> + std::convert::From<&'a str>,
 {

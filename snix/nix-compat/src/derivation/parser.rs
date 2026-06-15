@@ -245,13 +245,14 @@ fn string_to_store_path<'a, 'i, S>(
 where
     S: std::clone::Clone + AsRef<str> + std::convert::From<&'a str>,
 {
-    let path =
-        StorePath::from_absolute_path(path_str.as_bytes()).map_err(|e: store_path::Error| {
+    let path = StorePath::from_absolute_path(path_str.as_bytes()).map_err(
+        |e: store_path::ParseStorePathError| {
             nom::Err::Failure(NomError {
                 input: i,
                 code: e.into(),
             })
-        })?;
+        },
+    )?;
 
     #[cfg(debug_assertions)]
     assert_eq!(path_str, path.to_absolute_path());

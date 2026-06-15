@@ -44,7 +44,7 @@ pub enum ValidatePathInfoError {
 
     /// Invalid node name encountered. Root nodes in PathInfos have more strict name requirements
     #[error("Failed to parse {} as StorePath: {}", .0.to_str_lossy(), .1)]
-    InvalidNodeName(Vec<u8>, store_path::Error),
+    InvalidNodeName(Vec<u8>, store_path::ParseStorePathError),
 
     /// The digest in narinfo.nar_sha256 has an invalid len.
     #[error("Invalid narinfo.nar_sha256 length: expected {}, got {}", 32, .0)]
@@ -70,7 +70,7 @@ pub enum ValidatePathInfoError {
 
     /// The deriver field is invalid.
     #[error("deriver field is invalid: {0}")]
-    InvalidDeriverField(store_path::Error),
+    InvalidDeriverField(store_path::ParseStorePathError),
 
     /// The narinfo field is missing
     #[error("The narinfo field is missing")]

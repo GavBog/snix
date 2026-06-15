@@ -189,7 +189,9 @@ mod import_builtins {
 
                 nix_compat::store_path::validate_name(&nix_str)
                     .map_err(|err| {
-                        ErrorKind::SnixError(Arc::new(nix_compat::store_path::Error::from(err)))
+                        ErrorKind::SnixError(Arc::new(
+                            nix_compat::store_path::ParseStorePathError::from(err),
+                        ))
                     })?
                     .to_owned()
             }

@@ -66,7 +66,7 @@ impl FromStr for DerivedPath {
 #[derive(thiserror::Error, Debug)]
 pub enum ParseDerivedPathError {
     #[error("failed to parse store path")]
-    StorePath(#[from] store_path::Error),
+    StorePath(#[from] store_path::ParseStorePathError),
     #[error("store path does not point to a derivation")]
     MissingDrvSuffix,
     #[error("failed to parse output spec")]
@@ -99,16 +99,17 @@ mod tests {
     }
 
     #[rstest]
-    #[should_panic(expected = "InvalidName")]
+    // tries to parse `test.drv^out` as store path name
     #[case("/nix/store/00000000000000000000000000000000-test.drv^out^bin,lib")]
-    #[should_panic(expected = "InvalidName")]
+    // tries to parse `test.drv^out^bin` as store path name
     #[case("/nix/store/00000000000000000000000000000000-test.drv^out^bin^lib")]
-    #[should_panic(expected = "InvalidName")]
+    // treats it as opaque
     #[case("/nix/store/00000000000000000000000000000000-test.drv!out")]
-    #[should_panic(expected = "InvalidName")]
+    // tries to parse `test.drv!out` as store path name
     #[case("/nix/store/00000000000000000000000000000000-test.drv!out^bin")]
-    #[should_panic(expected = "InvalidName")]
+    // tries to parse `test.drv^out^bin!out` as store path name
     #[case("/nix/store/00000000000000000000000000000000-test.drv^out^bin!out^lib")]
+    #[should_panic(expected = "StorePath(Name)")]
     fn parse_fail(#[case] input: &str) {
         input.parse::<DerivedPath>().unwrap();
     }
