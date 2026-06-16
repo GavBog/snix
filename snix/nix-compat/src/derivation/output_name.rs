@@ -22,6 +22,13 @@ impl OutputName {
         self.0.as_str()
     }
 
+    /// Tries to construct from a &'static str.
+    pub fn from_static(s: &'static str) -> Result<Self, ParseOutputNameError> {
+        validate(s)?;
+
+        Ok(Self(SmolStr::new_static(s)))
+    }
+
     pub const fn out() -> Self {
         Self(SmolStr::new_static("out"))
     }
