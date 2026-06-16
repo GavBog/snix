@@ -6,7 +6,7 @@ use bstr::BString;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
-use std::io;
+use std::{fmt::Write, io};
 
 mod errors;
 mod output;
@@ -196,7 +196,7 @@ impl Derivation {
     /// outputs.
     pub fn calculate_output_paths(
         &mut self,
-        name: &str,
+        drv_name: &str,
         hash_derivation_modulo: &[u8; 32],
     ) -> Result<(), DerivationError> {
         // The fingerprint and hash differs per output
@@ -206,17 +206,24 @@ impl Derivation {
             // footgun prevention mechanism.
             assert!(output.path.is_none());
 
-            // FUTUREWORK: generalize `path_name` consumers on `Display`
-            let path_name = output_path_name(name, output_name);
+            // Assemble the name, which is either the drv-name suffixed `-{output_name}`,
+            // except in the `out` case, where it's omitted.
+            let name = {
+                let mut name = drv_name.to_owned();
+                if output_name != &OutputName::out() {
+                    name.write_fmt(format_args!("-{output_name}")).unwrap();
+                }
+                name
+            };
 
             // For fixed output derivation we use [build_ca_path], otherwise we
             // use [build_output_path] with [hash_derivation_modulo].
             let store_path = if let Some(ref hwm) = output.ca_hash {
-                build_ca_path(&path_name, hwm, [], false).map_err(|e| {
+                build_ca_path(&name, hwm, [], false).map_err(|e| {
                     DerivationError::InvalidOutputDerivationPath(output_name.to_string(), e)
                 })?
             } else {
-                build_output_path(hash_derivation_modulo, output_name, &path_name).map_err(|e| {
+                build_output_path(hash_derivation_modulo, output_name, &name).map_err(|e| {
                     DerivationError::InvalidOutputDerivationPath(
                         output_name.to_string(),
                         store_path::BuildStorePathError::InvalidStorePath(e),
@@ -294,20 +301,6 @@ impl DerivationAsyncExt for Derivation {
             }
         }
     }
-}
-
-/// Calculate the name part of the store path of a derivation [Output].
-///
-/// It's the name, and (if it's the non-out output), the output name
-/// after a `-`.
-/// Used in `calculate_output_paths`.
-fn output_path_name(derivation_name: &str, output_name: &OutputName) -> String {
-    let mut buf = derivation_name.to_owned();
-    if output_name.as_ref() != "out" {
-        buf.push('-');
-        buf.push_str(output_name.as_ref());
-    }
-    buf
 }
 
 /// For a [CAHash], return the "prefix" used for NAR purposes.
