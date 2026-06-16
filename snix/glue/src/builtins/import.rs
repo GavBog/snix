@@ -112,7 +112,9 @@ mod import_builtins {
     use crate::snix_store_io::SnixStoreIO;
     use bstr::ByteSlice;
     use nix_compat::nixhash::{CAHash, HashAlgo, NixHash};
-    use nix_compat::store_path::{StorePath, StorePathRef, build_ca_path};
+    use nix_compat::store_path::{
+        StorePath, StorePathRef, build_ca_path, build_text_path_from_content_digest,
+    };
     use sha2::Digest;
     use snix_castore::blobservice::BlobService;
     use snix_eval::builtins::coerce_value_to_path;
@@ -318,7 +320,7 @@ mod import_builtins {
             Some(ca) => ca,
         };
 
-        let store_path = build_ca_path(&name, &ca, [], false)
+        let store_path = build_ca_path(&name, recursive_ingestion, &ca.hash(), [], false)
             .map_err(|e| snix_eval::ErrorKind::SnixError(Arc::from(e)))?
             .to_owned();
 
@@ -507,21 +509,21 @@ mod import_builtins {
             .await
             .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?;
 
-        let ca_hash = CAHash::Text(h.finalize().into());
+        let content_digest: [u8; 32] = h.finalize().into();
+        let references = content.iter_ctx_plain().map(|sp| {
+            StorePathRef::from_absolute_path(sp.as_bytes())
+                .expect("Snix bug: must parse as store path")
+        });
 
         // persist via pathinfo service.
         let store_path = state
             .tokio_handle
             .block_on(
                 state.path_info_service.put(PathInfo {
-                    store_path: build_ca_path(
+                    store_path: build_text_path_from_content_digest(
                         name.to_str()?,
-                        &ca_hash,
-                        content.iter_ctx_plain().map(|sp| {
-                            StorePathRef::from_absolute_path(sp.as_bytes())
-                                .expect("Snix bug: must parse as store path")
-                        }),
-                        false,
+                        content_digest,
+                        references,
                     )
                     .map_err(|_e| {
                         nix_compat::derivation::DerivationError::InvalidOutputName(
@@ -541,7 +543,7 @@ mod import_builtins {
                     nar_sha256,
                     signatures: vec![],
                     deriver: None,
-                    ca: Some(ca_hash),
+                    ca: Some(CAHash::Text(content_digest)),
                 }),
             )
             .map_err(|e| ErrorKind::SnixError(Arc::from(e)))

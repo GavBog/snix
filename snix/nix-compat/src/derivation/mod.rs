@@ -1,6 +1,5 @@
-use crate::store_path::{
-    self, StorePath, StorePathRef, build_ca_path, build_output_path, build_text_path,
-};
+use crate::nixhash::CAHashMode;
+use crate::store_path::{self, StorePath, StorePathRef};
 use bstr::BString;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -74,7 +73,7 @@ impl Derivation {
 
     /// Returns the drv path of a [Derivation] struct.
     ///
-    /// The drv path is calculated by invoking [build_text_path], using
+    /// The drv path is calculated by invoking [store_path::build_text_path], using
     /// the `name` with a `.drv` suffix as name, all [Derivation::input_sources] and
     /// keys of [Derivation::input_derivations] as references, and the ATerm string of
     /// the [Derivation] as content.
@@ -88,7 +87,7 @@ impl Derivation {
             .collect();
         references.extend(self.input_sources.iter().map(StorePath::as_ref));
 
-        build_text_path(
+        store_path::build_text_path(
             // append .drv to the name
             &format!("{name}.drv"),
             self.to_aterm_bytes(),
@@ -100,9 +99,8 @@ impl Derivation {
 
     /// Returns the FOD digest, if the derivation is fixed-output, or None if
     /// it's not.
-    /// TODO: this is kinda the string from [build_ca_path] with a
-    /// [CAHash::Flat], what's fed to `build_store_path_from_fingerprint_parts`
-    /// (except the out_output.path being an empty string)
+    // NOTE: this is called twice, once when constructing out_output.path is None,
+    // it'll later get populated with the path.
     pub fn fod_digest(&self) -> Option<[u8; 32]> {
         if self.outputs.len() != 1 {
             return None;
@@ -111,20 +109,15 @@ impl Derivation {
         let out_output = self.outputs.get(&OutputName::out())?;
         let ca_hash = out_output.ca_hash.as_ref()?;
 
-        Some(if let Some(out_output_path) = out_output.path.as_ref() {
-            sha256!(
-                "fixed:out:{}{}:{}",
-                ca_kind_prefix(ca_hash),
-                ca_hash.hash().as_nix_lowerhex_string_fmt(),
-                out_output_path.as_absolute_path_fmt(),
-            )
-        } else {
-            sha256!(
-                "fixed:out:{}{}:",
-                ca_kind_prefix(ca_hash),
-                ca_hash.hash().as_nix_lowerhex_string_fmt(),
-            )
-        })
+        debug_assert!(
+            [CAHashMode::Nar, CAHashMode::Flat].contains(&ca_hash.mode()),
+            "invalid ca hash in derivation context: {ca_hash:?}"
+        );
+        Some(store_path::fod_digest(
+            ca_hash.mode() == CAHashMode::Nar,
+            &ca_hash.hash(),
+            out_output.path.as_ref().map(|sp| sp.as_ref()),
+        ))
     }
 
     /// Calculates the hash of a derivation modulo fixed-output subderivations.
@@ -218,18 +211,16 @@ impl Derivation {
 
             // For fixed output derivation we use [build_ca_path], otherwise we
             // use [build_output_path] with [hash_derivation_modulo].
-            let store_path = if let Some(ref hwm) = output.ca_hash {
-                build_ca_path(&name, hwm, [], false).map_err(|e| {
-                    DerivationError::InvalidOutputDerivationPath(output_name.to_string(), e)
-                })?
+            let store_path = if let Some(ca_hash) = &output.ca_hash {
+                match ca_hash {
+                    CAHash::Flat(hash) => store_path::build_ca_path(&name, false, hash, [], false),
+                    CAHash::Nar(hash) => store_path::build_ca_path(&name, true, hash, [], false),
+                    _ => panic!("invalid ca hash in derivation context: {ca_hash:?}"),
+                }
             } else {
-                build_output_path(hash_derivation_modulo, output_name, &name).map_err(|e| {
-                    DerivationError::InvalidOutputDerivationPath(
-                        output_name.to_string(),
-                        store_path::BuildStorePathError::InvalidStorePath(e),
-                    )
-                })?
-            };
+                store_path::build_output_path(&name, hash_derivation_modulo, output_name)
+            }
+            .map_err(|e| DerivationError::InvalidOutputDerivationPath(name.to_string(), e))?;
 
             self.environment.insert(
                 output_name.to_string(),

@@ -1,4 +1,4 @@
-use crate::derivation::{Derivation, DerivationError};
+use crate::derivation::{Derivation, DerivationError, OutputName};
 
 impl Derivation {
     /// validate ensures a Derivation struct is properly populated,
@@ -21,7 +21,7 @@ impl Derivation {
                 if self.outputs.len() != 1 {
                     return Err(DerivationError::MoreThanOneOutputButFixed());
                 }
-                if output_name.as_str() != "out" {
+                if *output_name != OutputName::out() {
                     return Err(DerivationError::InvalidOutputNameForFixed(
                         output_name.to_string(),
                     ));

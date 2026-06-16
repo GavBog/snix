@@ -11,6 +11,7 @@ use nix_compat::{
         types::{NarHash, UnkeyedValidPathInfo, ValidPathInfo},
     },
     nixbase32,
+    nixhash::CAHashMode,
     store_path::{StorePath, build_ca_path},
 };
 use snix_castore::{blobservice::BlobService, directoryservice::DirectoryService};
@@ -104,7 +105,8 @@ impl NixDaemonIO for SnixDaemon {
         if let Some(cahash) = &info.info.ca {
             let actual_path = build_ca_path(
                 info.path.name(),
-                cahash,
+                cahash.mode() == CAHashMode::Nar,
+                &cahash.hash(),
                 info.info.references.iter().map(|p| p.as_ref()),
                 false,
             )

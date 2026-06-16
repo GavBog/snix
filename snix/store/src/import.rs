@@ -59,16 +59,17 @@ where
         .await
         .map_err(std::io::Error::other)?;
 
-    let ca = CAHash::Nar(NixHash::Sha256(nar_sha256));
+    let hash = NixHash::Sha256(nar_sha256);
 
     // Calculate the output path. Will fail if the previously passed name doesn't pass
     // the [nix_compat::store_path::validate_name] check.
-    let output_path = store_path::build_ca_path(name.as_ref(), &ca, [], false).map_err(|_| {
-        std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("invalid name: {0}", name.as_ref()),
-        )
-    })?;
+    let output_path =
+        store_path::build_ca_path(name.as_ref(), true, &hash, [], false).map_err(|_| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("invalid name: {0}", name.as_ref()),
+            )
+        })?;
 
     // Insert a PathInfo. On success, return it back to the caller.
     path_info_service
@@ -82,7 +83,7 @@ where
             nar_sha256,
             signatures: vec![],
             deriver: None,
-            ca: Some(ca),
+            ca: Some(CAHash::Nar(hash)),
         })
         .await
         .map_err(std::io::Error::other)

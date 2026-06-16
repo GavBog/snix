@@ -3,23 +3,9 @@ use std::fmt::Display;
 use super::{ParseStorePathError, STORE_DIR, StorePathRef};
 use crate::derivation::OutputName;
 use crate::nixbase32;
-use crate::nixhash::{CAHash, NixHash};
+use crate::nixhash::{HashAlgo, NixHash};
 use data_encoding::HEXLOWER;
 use sha2::{Digest, Sha256};
-
-/// Errors that can occur when creating a content-addressed store path.
-///
-/// This wraps the main [crate::store_path::ParseStorePathError].
-#[derive(Debug, PartialEq, Eq, thiserror::Error)]
-pub enum BuildStorePathError {
-    #[error("Invalid Store Path: {0}")]
-    InvalidStorePath(ParseStorePathError),
-    /// This error occurs when we have references outside the SHA-256 +
-    /// Recursive case. The restriction comes from upstream Nix. It may be
-    /// lifted at some point but there isn't a pressing need to anticipate that.
-    #[error("References were not supported as much as requested")]
-    InvalidReference(),
-}
 
 /// compress_hash takes an arbitrarily long sequence of bytes (usually
 /// a hash digest), and returns a sequence of bytes of length
@@ -41,94 +27,87 @@ pub fn compress_hash<const OUTPUT_SIZE: usize>(input: &[u8]) -> [u8; OUTPUT_SIZE
     output
 }
 
-/// This builds a store path, by calculating the text_hash_string of either a
-/// derivation or a literal text file that may contain references.
-/// If you don't want to have to pass the entire contents, you might want to use
-/// [build_ca_path] instead.
-pub fn build_text_path<'a, 'n>(
-    name: &'n str,
+/// This builds a store path, for a CAHash::Text type store path.
+/// If you don't want to have to pass the entire contents,
+/// you might want to use [build_text_path_from_content_digest] instead.
+pub fn build_text_path<'r, 'name>(
+    name: &'name str,
     content: impl AsRef<[u8]>,
-    references: impl IntoIterator<Item = StorePathRef<'a>>,
-) -> Result<StorePathRef<'n>, BuildStorePathError> {
-    // produce the sha256 digest of the contents
-    let content_digest = Sha256::digest(content.as_ref()).into();
-
-    build_ca_path(name, &CAHash::Text(content_digest), references, false)
+    references: impl IntoIterator<Item = StorePathRef<'r>> + 'r,
+) -> Result<StorePathRef<'name>, ParseStorePathError> {
+    build_text_path_from_content_digest(name, Sha256::digest(content.as_ref()), references)
 }
 
-/// This builds a store path from a [CAHash] and a list of references.
+/// This builds a store path, for a CAHash::Text type store path.
+/// `content_digest` needs to be the sha256 digest of the contents.
+/// If you have the contents as a byte slice, you can also use [build_text_path].
+pub fn build_text_path_from_content_digest<'r, 'n>(
+    name: &'n str,
+    content_digest: impl Into<[u8; 32]>,
+    references: impl IntoIterator<Item = StorePathRef<'r>> + 'r,
+) -> Result<StorePathRef<'n>, ParseStorePathError> {
+    // produce the sha256 digest of the contents
+
+    let ty = format_references("text", references, false);
+
+    build_store_path_from_fingerprint_parts(ty, &content_digest.into(), name)
+}
+
+/// This builds a store path for a content-addressed path (used for fetches and FODs).
 pub fn build_ca_path<'r, 'n>(
     name: &'n str,
-    ca_hash: &CAHash,
-    references: impl IntoIterator<Item = StorePathRef<'r>>,
-    self_reference: bool,
-) -> Result<StorePathRef<'n>, BuildStorePathError> {
-    // self references are only allowed for CAHash::Nar(NixHash::Sha256(_)).
-    if self_reference && matches!(ca_hash, CAHash::Nar(NixHash::Sha256(_))) {
-        return Err(BuildStorePathError::InvalidReference());
-    }
-
-    let (ty, inner_digest) = match &ca_hash {
-        CAHash::Text(digest) => (make_references_string("text", references, false), *digest),
-        CAHash::Nar(NixHash::Sha256(digest)) => (
-            make_references_string("source", references, self_reference),
-            *digest,
-        ),
-
-        // for all other CAHash::Nar, another custom scheme is used.
-        CAHash::Nar(hash) => {
-            if references.into_iter().next().is_some() {
-                return Err(BuildStorePathError::InvalidReference());
-            }
-
-            (
-                "output:out".to_string(),
-                sha256!("fixed:out:r:{}:", hash.as_nix_lowerhex_string_fmt()),
-            )
-        }
-        // CaHash::Flat is using something very similar, except the `r:` prefix.
-        CAHash::Flat(hash) => {
-            if references.into_iter().next().is_some() {
-                return Err(BuildStorePathError::InvalidReference());
-            }
-
-            (
-                "output:out".to_string(),
-                sha256!("fixed:out:{}:", hash.as_nix_lowerhex_string_fmt()),
-            )
-        }
+    is_recursive: bool,
+    hash: &NixHash,
+    references: impl IntoIterator<Item = StorePathRef<'r>> + 'r,
+    has_self_ref: bool,
+) -> Result<StorePathRef<'n>, ParseStorePathError> {
+    let inner_digest = if let NixHash::Sha256(digest) = hash
+        && is_recursive
+    {
+        *digest
+    } else {
+        fod_digest(is_recursive, hash, None)
     };
 
-    build_store_path_from_fingerprint_parts(&ty, &inner_digest, name)
-        .map_err(BuildStorePathError::InvalidStorePath)
+    if hash.algo() == HashAlgo::Sha256 && is_recursive {
+        build_store_path_from_fingerprint_parts(
+            format_references("source", references, has_self_ref),
+            &inner_digest,
+            name,
+        )
+    } else {
+        // FUTUREWORK: dump when references are non-empty, and when has_self_ref is true.
+        // Add an assertion here?
+        build_store_path_from_fingerprint_parts("output:out", &inner_digest, name)
+    }
 }
 
-/// This builds an input-addressed store path.
+/// Builds an input-addressed store path.
 ///
 /// Input-addresed store paths are always derivation outputs, the "input" in question is the
 /// derivation and its closure.
 pub fn build_output_path<'n>(
-    drv_sha256: &[u8; 32],
+    name: &'n str,
+    hash_derivation_modulo: &[u8; 32],
     output_name: &OutputName,
-    output_path_name: &'n str,
 ) -> Result<StorePathRef<'n>, ParseStorePathError> {
     build_store_path_from_fingerprint_parts(
         format_args!("output:{output_name}"),
-        drv_sha256,
-        output_path_name,
+        hash_derivation_modulo,
+        name,
     )
 }
 
 /// This builds a store path from fingerprint parts.
-/// Usually, that function is used from [build_text_path] and
-/// passed a "text hash string" (starting with "text:" as fingerprint),
-/// but other fingerprints starting with "output:" are also used in Derivation
-/// output path calculation.
 ///
-/// The fingerprint is hashed with sha256, and its digest is compressed to 20
-/// bytes.
-/// Inside a StorePath, that digest is printed nixbase32-encoded
-/// (32 characters).
+/// This is called from [build_text_path], [build_output_path] and
+/// [build_ca_path] to assemble the final path.
+///
+/// Using the inputs, it creates a fingerprint, hashes and compresses it,
+/// then uses the passed `name` to create a store path.
+///
+/// If that `name` doesn't match store path name requirements, the error is
+/// passed along.
 fn build_store_path_from_fingerprint_parts<'n>(
     ty: impl Display,
     inner_digest: &[u8; 32],
@@ -142,34 +121,68 @@ fn build_store_path_from_fingerprint_parts<'n>(
     StorePathRef::from_name_and_digest_fixed(name, compress_hash(&fingerprint_hash))
 }
 
-/// This contains the Nix logic to create "text hash strings", which are used
-/// in `builtins.toFile`, as well as in Derivation Path calculation.
-///
-/// A text hash is calculated by concatenating the following fields, separated by a `:`:
-///
-///  - text
-///  - references, individually joined by `:`
-///  - the nix_hash_string representation of the sha256 digest of some contents
-///  - the value of `storeDir`
-///  - the name
-fn make_references_string<'a>(
-    ty: &str,
-    references: impl IntoIterator<Item = StorePathRef<'a>>,
-    self_ref: bool,
-) -> String {
-    let mut s = String::from(ty);
-    use std::fmt::Write;
+pub(crate) fn fod_digest(
+    is_recursive: bool,
+    hash: &NixHash,
+    out_output_path: Option<StorePathRef<'_>>,
+) -> [u8; 32] {
+    let absolute_sp_optional = std::fmt::from_fn(|f| {
+        if let Some(sp) = &out_output_path {
+            write!(f, "{}", sp.as_absolute_path_fmt())?
+        }
+        Ok(())
+    });
 
-    for reference in references {
-        s.push(':');
-        write!(&mut s, "{}", reference.as_absolute_path_fmt()).unwrap();
+    if is_recursive {
+        sha256!(
+            "fixed:out:r:{}:{}",
+            hash.as_nix_lowerhex_string_fmt(),
+            absolute_sp_optional
+        )
+    } else {
+        sha256!(
+            "fixed:out:{}:{}",
+            hash.as_nix_lowerhex_string_fmt(),
+            absolute_sp_optional
+        )
+    }
+}
+
+/// This contains the Nix logic to create "reference strings", used for the
+/// output path calculation of ca paths and text paths.
+fn format_references<'a, R>(ty: &'a str, references: R, has_self_ref: bool) -> impl Display + 'a
+where
+    R: IntoIterator<Item = StorePathRef<'a>> + 'a,
+{
+    struct ReferencesFormatter<'a, R> {
+        ty: &'a str,
+        references: std::cell::RefCell<R>,
+        has_self_ref: bool,
     }
 
-    if self_ref {
-        s.push_str(":self");
+    impl<'a, R> Display for ReferencesFormatter<'a, R>
+    where
+        R: Iterator<Item = StorePathRef<'a>> + 'a,
+    {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.ty)?;
+            while let Some(reference) = self.references.borrow_mut().next() {
+                write!(f, ":{}", reference.as_absolute_path_fmt()).unwrap();
+            }
+
+            if self.has_self_ref {
+                write!(f, ":self")?;
+            }
+
+            Ok(())
+        }
     }
 
-    s
+    ReferencesFormatter {
+        ty,
+        references: std::cell::RefCell::new(references.into_iter()),
+        has_self_ref,
+    }
 }
 
 /// Nix placeholders (i.e. values returned by `builtins.placeholder`)
@@ -187,10 +200,7 @@ mod test {
     use hex_literal::hex;
 
     use super::*;
-    use crate::{
-        nixhash::{CAHash, NixHash},
-        store_path::StorePathRef,
-    };
+    use crate::{nixhash::NixHash, store_path::StorePathRef};
 
     #[test]
     fn build_text_path_with_zero_references() {
@@ -231,9 +241,8 @@ mod test {
     fn build_sha1_path() {
         let outer: StorePathRef = build_ca_path(
             "bar",
-            &CAHash::Nar(NixHash::Sha1(hex!(
-                "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33"
-            ))),
+            true,
+            &NixHash::Sha1(hex!("0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33")),
             [],
             false,
         )
@@ -256,12 +265,13 @@ mod test {
         // rewrote '/nix/store/5xd714cbfnkz02h2vbsj4fm03x3f15nf-baz' to '/nix/store/s89y431zzhmdn3k8r96rvakryddkpv2v-baz'
         let outer: StorePathRef = build_ca_path(
             "baz",
-            &CAHash::Nar(NixHash::Sha256(
+            true,
+            &NixHash::Sha256(
                 nixbase32::decode(b"1xqkzcb3909fp07qngljr4wcdnrh1gdam1m2n29i6hhrxlmkgkv1")
                     .expect("nixbase32 should decode")
                     .try_into()
                     .expect("should have right len"),
-            )),
+            ),
             [
                 StorePathRef::from_bytes(b"dxwkwjzdaq7ka55pkk252gh32bgpmql4-foo")
                     .expect("to parse"),

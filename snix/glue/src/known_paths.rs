@@ -11,7 +11,7 @@
 use hashbrown::HashMap;
 use nix_compat::{
     derivation::Derivation,
-    store_path::{BuildStorePathError, StorePath, StorePathRef},
+    store_path::{ParseStorePathError, StorePath, StorePathRef},
 };
 
 use crate::fetchers::Fetch;
@@ -111,7 +111,7 @@ impl KnownPaths {
         &mut self,
         fetch: Fetch,
         name: &'a str,
-    ) -> Result<StorePathRef<'a>, BuildStorePathError> {
+    ) -> Result<StorePathRef<'a>, ParseStorePathError> {
         let store_path = fetch
             .store_path(name)?
             .expect("Snix bug: fetch must have an expected hash");

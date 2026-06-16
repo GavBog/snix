@@ -1,7 +1,7 @@
 //! Contains errors that can occur during evaluation of builtins in this crate
 use nix_compat::{
     nixhash::{self, NixHash},
-    store_path::BuildStorePathError,
+    store_path,
 };
 use reqwest::Url;
 use snix_castore::import;
@@ -60,7 +60,7 @@ pub enum FetcherError {
     Import(#[from] snix_castore::import::IngestionError<import::archive::Error>),
 
     #[error("Error calculating store path for fetcher output: {0}")]
-    StorePath(#[from] BuildStorePathError),
+    StorePath(#[from] store_path::ParseStorePathError),
 }
 
 /// Errors related to `builtins.path` and `builtins.filterSource`,

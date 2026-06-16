@@ -3,8 +3,8 @@ use futures::TryStreamExt;
 use md5::{Md5, digest::DynDigest};
 use nix_compat::{
     hashing::hash,
-    nixhash::{CAHash, HashAlgo, NixHash},
-    store_path::{BuildStorePathError, StorePathRef, build_ca_path},
+    nixhash::{CAHash, CAHashMode, HashAlgo, NixHash},
+    store_path::{ParseStorePathError, StorePathRef, build_ca_path},
 };
 use sha1::Sha1;
 use sha2::{Digest, Sha256, Sha512};
@@ -138,7 +138,7 @@ impl Fetch {
     pub fn store_path<'a>(
         &self,
         name: &'a str,
-    ) -> Result<Option<StorePathRef<'a>>, BuildStorePathError> {
+    ) -> Result<Option<StorePathRef<'a>>, ParseStorePathError> {
         let ca_hash = match self {
             Fetch::URL {
                 exp_hash: Some(exp_hash),
@@ -154,7 +154,7 @@ impl Fetch {
                 CAHash::Nar(hash.to_owned())
             }
 
-            Fetch::Git() => todo!(),
+            Fetch::Git() => unimplemented!(),
 
             // everything else
             Fetch::URL { exp_hash: None, .. }
@@ -165,7 +165,14 @@ impl Fetch {
         };
 
         // calculate the store path of this fetch
-        build_ca_path(name, &ca_hash, [], false).map(Some)
+        build_ca_path(
+            name,
+            ca_hash.mode() == CAHashMode::Nar,
+            &ca_hash.hash(),
+            [],
+            false,
+        )
+        .map(Some)
     }
 }
 
@@ -575,7 +582,13 @@ where
         let (node, ca_hash, size) = self.ingest(fetch).await?;
 
         // Calculate the store path to return, by calculating from ca_hash.
-        let store_path = build_ca_path(name, &ca_hash, [], false)?;
+        let store_path = build_ca_path(
+            name,
+            ca_hash.mode() == CAHashMode::Nar,
+            &ca_hash.hash(),
+            [],
+            false,
+        )?;
 
         // If the resulting hash is not a CAHash::Nar, we also need to invoke
         // `calculate_nar` to calculate this representation, as it's required in

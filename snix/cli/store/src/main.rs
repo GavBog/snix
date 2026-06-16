@@ -360,11 +360,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
                         // Calculate the output path. This might still fail, as some names are illegal.
                         // FUTUREWORK: express the `name` at the type level to be valid and check for this earlier.
-                        let ca = CAHash::Nar(NixHash::Sha256(nar_sha256));
+                        let hash = NixHash::Sha256(nar_sha256);
                         let output_path =
                             store_path::build_ca_path(
                                 &name,
-                                &ca,
+                                true,
+                                &hash,
                                 [],
                                 false,
                             )
@@ -385,7 +386,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                                 nar_sha256,
                                 signatures: vec![],
                                 deriver: None,
-                                ca: Some(ca),
+                                ca: Some(CAHash::Nar(hash)),
                             })
                             .await
                         {
