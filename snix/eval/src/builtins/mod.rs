@@ -101,11 +101,8 @@ impl BuiltinState {
 
 #[builtins(state = "Rc<BuiltinState>")]
 mod pure_builtins {
-    use std::ffi::OsString;
-
     use bstr::{B, BString, ByteSlice};
     use itertools::Itertools;
-    use os_str_bytes::OsStringBytes;
     use rustc_hash::{FxHashMap, FxHashSet};
 
     use crate::{
@@ -361,7 +358,7 @@ mod pure_builtins {
             .unwrap_or(b".");
         if is_path {
             Ok(Value::Path(Box::new(PathBuf::from(
-                OsString::assert_from_raw_vec(result.to_owned()),
+                std::str::from_utf8(result).unwrap(),
             ))))
         } else {
             Ok(Value::from(NixString::new_inherit_context_from(

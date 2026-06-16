@@ -17,7 +17,6 @@ genawaiter.workspace = true
 hashbrown.workspace = true
 itertools.workspace = true
 lexical-core = { workspace = true, features = ["format", "parse-floats"] }
-os_str_bytes = { workspace = true, features = ["conversions"] }
 path-clean.workspace = true
 proptest = { workspace = true, features = [
   "std",
