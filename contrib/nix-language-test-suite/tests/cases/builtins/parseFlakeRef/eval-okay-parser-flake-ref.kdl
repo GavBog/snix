@@ -1,5 +1,3 @@
-// This test case is skipped based on builtin
-
 lang {
   builtins "parseFlakeRef"
   features "flakes"

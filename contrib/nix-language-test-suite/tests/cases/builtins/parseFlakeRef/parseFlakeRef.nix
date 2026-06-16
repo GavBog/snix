@@ -8,9 +8,6 @@
   # Test GitHub URL with ref
   (builtins.parseFlakeRef "github:user/project/branch")
 
-  # Test extraneous query params
-  (builtins.parseFlakeRef "github:user/project/branch?foo=1")
-
   # Test GitLab URL format
   (builtins.parseFlakeRef "gitlab:user/project")
 

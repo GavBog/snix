@@ -1,0 +1,4 @@
+lang {
+  builtins "parseFlakeRef"
+  features "flakes"
+}

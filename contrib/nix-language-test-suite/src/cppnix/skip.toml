@@ -40,6 +40,13 @@ paths = [
   # Lix produces a path below:
   #   /nix/store/lc5bhdsagh8mrxkdbvdkmw9nv1vykavn-foo.drv
   "derivation-invalid-structured-attrs",
+
+  # Lix is more strict here and fails with
+  # "unsupported input attribute 'foo' for the 'github' scheme"
+  #
+  # The change was initially introduced in https://gerrit.lix.systems/c/lix/+/1102
+  # but later reverted are reapplied in https://git.lix.systems/lix-project/lix/commit/87fd1f024c7c979e5d96c41af4ef7e8bdb5792e1
+  "parseFlakeRef-unknown-query-param",
 ]
 
 [nix_latest]

@@ -1,0 +1,8 @@
+lang {
+  builtins "parseFlakeRef"
+  features "flakes"
+}
+
+runtime-opts {
+  eval-strict
+}
