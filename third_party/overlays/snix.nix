@@ -9,16 +9,6 @@
 
 final: prev:
 depot.nix.readTree.drvTargets {
-  # Avoid builds of mkShell derivations in CI.
-  mkShell = prev.lib.makeOverridable (
-    args:
-    (prev.mkShell args).overrideAttrs (_: {
-      passthru = {
-        meta.ci.skip = true;
-      };
-    })
-  );
-
   crate2nix = prev.crate2nix.overrideAttrs (old: {
     patches = old.patches or [ ] ++ [
       # https://github.com/nix-community/crate2nix/pull/301
