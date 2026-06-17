@@ -2640,6 +2640,7 @@ version = "0.1.0"
 dependencies = [
  "knus",
  "nix 0.31.3",
+ "rstest",
  "serde",
  "tempfile",
 ]

@@ -5,7 +5,7 @@ use std::process::Command;
 
 use nix_language_test_suite_common::{
     ErrorKind, TestCase, load_expected_error, load_expected_output, load_test_case,
-    normalize_output, setup_environment,
+    matches_short_path, normalize_output, setup_environment,
 };
 use rstest::rstest;
 use serde::Deserialize;
@@ -65,10 +65,10 @@ impl SkipConfig {
             .filter_map(|s| s.parse::<nix_language_test_suite_common::Feature>().ok())
             .any(|f| test_case.lang.features.contains(&f));
 
-        let skip_path = config.paths.iter().any(|s| {
-            let file_name = test_path.file_stem().expect("test path should have a name");
-            file_name.to_string_lossy() == s.as_str()
-        });
+        let skip_path = config
+            .paths
+            .iter()
+            .any(|s| matches_short_path(test_path, s));
 
         skip_sandbox || skip_builtins || skip_feature || skip_path
     }

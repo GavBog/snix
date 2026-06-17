@@ -379,3 +379,39 @@ fn copy_dir(src: &Path, dst: &Path) -> std::io::Result<()> {
 
     Ok(())
 }
+
+/// Checks if the test case path corresponds to the given short form, used by
+/// skip.toml files.
+pub fn matches_short_path(abs_case_path: &Path, short_path: &str) -> bool {
+    let s = abs_case_path.to_string_lossy();
+
+    let (_, right) = s
+        .trim_end_matches(".kdl")
+        .split_once("cases/")
+        .expect("absolute case path must contain 'cases/' component");
+
+    right == short_path
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::matches_short_path;
+    use rstest::rstest;
+    use std::path::PathBuf;
+
+    #[rstest]
+    #[case::simple("/pwd/tests/cases/case.kdl", "case", true)]
+    #[case::nested("/pwd/tests/cases/builtins/path.kdl", "builtins/path", true)]
+    #[case::starts_with_slash("/pwd/tests/cases/builtins/path.kdl", "/builtins/path", false)]
+    #[case::file_name_only("/pwd/tests/cases/builtins/path.kdl", "path", false)]
+    fn test_matches_short_path(
+        #[case] abs_case_path: &str,
+        #[case] short_path: &str,
+        #[case] expected: bool,
+    ) {
+        assert_eq!(
+            matches_short_path(&PathBuf::from(abs_case_path), short_path),
+            expected
+        );
+    }
+}

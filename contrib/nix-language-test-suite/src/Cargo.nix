@@ -11071,6 +11071,12 @@ rec {
             packageId = "tempfile";
           }
         ];
+        devDependencies = [
+          {
+            name = "rstest";
+            packageId = "rstest";
+          }
+        ];
 
       };
       "nix-language-test-suite-cppnix" = rec {

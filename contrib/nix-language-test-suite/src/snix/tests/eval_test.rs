@@ -9,7 +9,7 @@ use rstest::rstest;
 use clap::Parser as _;
 use nix_language_test_suite_common::{
     ErrorKind, TestCase, load_expected_error, load_expected_output, load_test_case,
-    normalize_output, setup_environment,
+    matches_short_path, normalize_output, setup_environment,
 };
 use serde::Deserialize;
 use snix_build::buildservice::DummyBuildService;
@@ -44,10 +44,7 @@ impl SkipConfig {
             .iter()
             .any(|x| self.builtins.contains(x));
 
-        let skip_path = self.paths.iter().any(|s| {
-            let file_name = test_path.file_stem().expect("test path should have a name");
-            file_name.to_string_lossy() == s.as_str()
-        });
+        let skip_path = self.paths.iter().any(|s| matches_short_path(test_path, s));
 
         skip_feature || skip_path || skip_builtins
     }

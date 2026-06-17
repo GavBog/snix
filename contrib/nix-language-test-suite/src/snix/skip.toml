@@ -1,20 +1,20 @@
 paths = [
   # dir is missing in snix's output
-  "eval-okay-parser-flake-ref",
+  "builtins/parseFlakeRef/eval-okay-parser-flake-ref",
 
   # Nix changed how filterSource works,
   # so the output of latest Nix and Snix differs
   #
   # Related issue: https://github.com/NixOS/nix/issues/7761
-  "filterSource-symlink-dir",
+  "builtins/filterSource/symlink-dir",
 
   # Snix fails with duplicate attrs correctly,
   # but only with strict evaluation, while
   # Nix fails with lazy evaluation too
-  "unthunked-dup-attr-path",
+  "laziness/unthunked-dup-attr-path",
 
   # Nix fails, but Snix only emits a "UselessInherit" warning
-  "dup-inherit",
+  "scope/dup-inherit",
 ]
 
 builtins = ["readFileType", "readFile", "__nixPath", "unsafeGetAttrPos"]

@@ -1,52 +1,52 @@
 [nix_2_3]
 paths = [
   # Ordering change after 2.3
-  "eval-okay-xml",
+  "xml/eval-okay-xml",
 
   # In 2.3, even if NIX_PATH is overwritten,
   # nix search path includes `corepkgs` and test
   # assertion fails
-  "eval-okay-search-path",
+  "search_path/eval-okay-search-path",
 
   # Nix changed how filterSource works,
   # so the output of latest Nix and others (Nix2.3, Lix) differs
   #
   # Related issue: https://github.com/NixOS/nix/issues/7761
-  "filterSource-symlink-dir",
+  "builtins/filterSource/symlink-dir",
 
   # getAttrPos gains support for functionArgs-returned sets after 2.3
-  "eval-okay-getattrpos-functionargs",
+  "builtins/unsafeGetAttrPos/eval-okay-getattrpos-functionargs",
 
   # getAttrPos calculates columns differently in 2.3
-  "eval-okay-inherit-attr-pos",
+  "builtins/unsafeGetAttrPos/eval-okay-inherit-attr-pos",
 
   # Newer Nix versions return an attr set, while 2.3 returns null
-  "unsafeGetAttrPos-corepkgs",
+  "builtins/unsafeGetAttrPos/corepkgs",
 
   # Nix2.3 produces a path below:
   #   /nix/store/lc5bhdsagh8mrxkdbvdkmw9nv1vykavn-foo.drv
-  "derivation-invalid-structured-attrs",
+  "builtins/derivation/invalid-structured-attrs",
 ]
 builtins = ["readFileType"]
 features = ["flakes", "pipe-operators", "path-interpolation"]
 
 [lix_latest]
 paths = [
-  "filterSource-symlink-dir",
+  "builtins/filterSource/symlink-dir",
 
   # Newer Nix versions return an attr set, while Lix returns null
-  "unsafeGetAttrPos-corepkgs",
+  "builtins/unsafeGetAttrPos/corepkgs",
 
   # Lix produces a path below:
   #   /nix/store/lc5bhdsagh8mrxkdbvdkmw9nv1vykavn-foo.drv
-  "derivation-invalid-structured-attrs",
+  "builtins/derivation/invalid-structured-attrs",
 
   # Lix is more strict here and fails with
   # "unsupported input attribute 'foo' for the 'github' scheme"
   #
   # The change was initially introduced in https://gerrit.lix.systems/c/lix/+/1102
   # but later reverted are reapplied in https://git.lix.systems/lix-project/lix/commit/87fd1f024c7c979e5d96c41af4ef7e8bdb5792e1
-  "parseFlakeRef-unknown-query-param",
+  "builtins/parseFlakeRef/unknown-query-param",
 ]
 
 [nix_latest]
