@@ -6,11 +6,10 @@ use futures::stream::BoxStream;
 use tonic::async_trait;
 use tracing::{instrument, trace};
 
-use super::{Directory, DirectoryService, SimplePutter};
-use crate::B3Digest;
 use crate::composition::{CompositionContext, ServiceBuilder};
-use crate::directoryservice::DirectoryPutter;
 use crate::directoryservice::directory_graph::DirectoryGraphBuilder;
+use crate::directoryservice::{self, DirectoryPutter, DirectoryService, SimplePutter};
+use crate::{B3Digest, Directory};
 
 /// Asks near first, if not found, asks far.
 /// If found in there, returns it, and *inserts* it into
@@ -42,7 +41,7 @@ where
     DF: DirectoryService + Clone + 'static,
 {
     #[instrument(skip(self, digest), fields(directory.digest = %digest, instance_name = %self.instance_name))]
-    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, super::Error> {
+    async fn get(&self, digest: &B3Digest) -> Result<Option<Directory>, directoryservice::Error> {
         // check near
         if let Some(directory) = self.near.get(digest).await.map_err(Error::NearGet)? {
             trace!("serving from cache");
@@ -86,7 +85,7 @@ where
     }
 
     #[instrument(skip_all, fields(instance_name = %self.instance_name))]
-    async fn put(&self, _directory: Directory) -> Result<B3Digest, super::Error> {
+    async fn put(&self, _directory: Directory) -> Result<B3Digest, directoryservice::Error> {
         Err(Error::Unimplemented.into())
     }
 
@@ -94,7 +93,7 @@ where
     fn get_recursive(
         &self,
         root_directory_digest: &B3Digest,
-    ) -> BoxStream<'_, Result<Directory, super::Error>> {
+    ) -> BoxStream<'_, Result<Directory, directoryservice::Error>> {
         let near = &self.near;
         let far = &self.far;
         let digest = *root_directory_digest;
@@ -156,17 +155,17 @@ pub enum Error {
     SerdeQS(#[from] serde_qs::Error),
 
     #[error("getting from near: {0}")]
-    NearGet(#[source] super::Error),
+    NearGet(#[source] directoryservice::Error),
     #[error("putting into near: {0}")]
-    NearPut(#[source] super::Error),
+    NearPut(#[source] directoryservice::Error),
     #[error("getting from far: {0}")]
-    FarGet(#[source] super::Error),
+    FarGet(#[source] directoryservice::Error),
 
     #[error("puts are unimplemented")]
     Unimplemented,
 }
 
-impl From<Error> for super::Error {
+impl From<Error> for directoryservice::Error {
     fn from(value: Error) -> Self {
         Self(Box::new(value))
     }

@@ -59,7 +59,8 @@ pub struct NixHTTPPathInfoService<BS: Clone, DS> {
     /// A DirectoryService Cache with 'far' talking to the configured endpoint over gRPC.
     /// This is used when validating castore-infused NAR URLs in NARInfos.
     /// We rely on Cache to *insert* into 'near'.
-    layered_directory_service: directoryservice::Cache<DS, GRPCDirectoryService<Channel>>,
+    layered_directory_service:
+        directoryservice::combinators::Cache<DS, GRPCDirectoryService<Channel>>,
 
     /// An optional list of [narinfo::VerifyingKey].
     /// If the list is not empty, the .narinfo files received need to have
@@ -111,12 +112,16 @@ where
                         BlobServiceClient::new(channel.clone()),
                     ),
                 ),
-                directoryservice::Cache::new(instance_name_layered, directory_service.clone(), {
-                    GRPCDirectoryService::from_client(
-                        instance_name_grpc,
-                        DirectoryServiceClient::new(channel),
-                    )
-                }),
+                directoryservice::combinators::Cache::new(
+                    instance_name_layered,
+                    directory_service.clone(),
+                    {
+                        GRPCDirectoryService::from_client(
+                            instance_name_grpc,
+                            DirectoryServiceClient::new(channel),
+                        )
+                    },
+                ),
             )
         };
 
