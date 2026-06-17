@@ -64,7 +64,6 @@ tonic-prost-build.workspace = true
 
 [dev-dependencies]
 async-process.workspace = true
-fuse-backend-rs.workspace = true
 rstest.workspace = true
 rstest_reuse.workspace = true
 tempfile.workspace = true

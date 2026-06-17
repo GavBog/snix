@@ -3276,29 +3276,19 @@ dependencies = [
 name = "nix-compat-derive"
 version = "0.1.0"
 dependencies = [
- "hex-literal",
  "nix-compat",
- "pretty_assertions",
  "proc-macro2",
- "proptest",
  "quote",
- "rstest",
  "syn 2.0.117",
- "tokio",
- "tokio-test",
 ]
 
 [[package]]
 name = "nix-compat-derive-tests"
 version = "0.1.0"
 dependencies = [
- "hex-literal",
  "nix-compat",
  "nix-compat-derive",
- "pretty_assertions",
- "rstest",
  "tokio",
- "tokio-test",
  "trybuild",
 ]
 
@@ -5364,7 +5354,6 @@ dependencies = [
  "count-write",
  "data-encoding",
  "ed25519",
- "fuse-backend-rs",
  "futures",
  "googleapis-tonic-google-bigtable-v2",
  "hex-literal",

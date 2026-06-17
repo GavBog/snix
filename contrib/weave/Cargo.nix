@@ -3263,33 +3263,6 @@ rec {
         };
         resolvedDefaultFeatures = [ "default" ];
       };
-      "libmimalloc-sys" = rec {
-        crateName = "libmimalloc-sys";
-        version = "0.1.39";
-        edition = "2018";
-        links = "mimalloc";
-        sha256 = "0i3b0dzz7cp0ik7ys66q92r16va78gwlbrnxhj5fnkdxsc8niai3";
-        libName = "libmimalloc_sys";
-        authors = [
-          "Octavian Oncescu <octavonce@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-          }
-        ];
-        buildDependencies = [
-          {
-            name = "cc";
-            packageId = "cc";
-          }
-        ];
-        features = {
-          "cty" = [ "dep:cty" ];
-          "extended" = [ "cty" ];
-        };
-      };
       "lock_api" = rec {
         crateName = "lock_api";
         version = "0.4.12";
@@ -3476,34 +3449,6 @@ rec {
         features = {
           "stable_deref_trait" = [ "dep:stable_deref_trait" ];
         };
-      };
-      "mimalloc" = rec {
-        crateName = "mimalloc";
-        version = "0.1.43";
-        edition = "2018";
-        sha256 = "0csnyrxc16i592gm5ffham07jyj2w98qsh9jyy1rv59lmr8474b8";
-        authors = [
-          "Octavian Oncescu <octavonce@gmail.com>"
-          "Vincent Rouillé <vincent@speedy37.fr>"
-          "Thom Chiovoloni <chiovolonit@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "libmimalloc-sys";
-            packageId = "libmimalloc-sys";
-            usesDefaultFeatures = false;
-          }
-        ];
-        features = {
-          "debug" = [ "libmimalloc-sys/debug" ];
-          "debug_in_debug" = [ "libmimalloc-sys/debug_in_debug" ];
-          "extended" = [ "libmimalloc-sys/extended" ];
-          "local_dynamic_tls" = [ "libmimalloc-sys/local_dynamic_tls" ];
-          "no_thp" = [ "libmimalloc-sys/no_thp" ];
-          "override" = [ "libmimalloc-sys/override" ];
-          "secure" = [ "libmimalloc-sys/secure" ];
-        };
-        resolvedDefaultFeatures = [ "default" ];
       };
       "miniz_oxide" = rec {
         crateName = "miniz_oxide";
@@ -3706,10 +3651,6 @@ rec {
             packageId = "ed25519-dalek";
           }
           {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
-          {
             name = "nom";
             packageId = "nom";
           }
@@ -3735,10 +3676,6 @@ rec {
           }
         ];
         devDependencies = [
-          {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
           {
             name = "smol_str";
             packageId = "smol_str";

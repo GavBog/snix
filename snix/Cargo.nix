@@ -13464,10 +13464,6 @@ rec {
             optional = true;
           }
           {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
-          {
             name = "nix-compat-derive";
             packageId = "nix-compat-derive";
             optional = true;
@@ -13690,10 +13686,6 @@ rec {
         ];
         devDependencies = [
           {
-            name = "hex-literal";
-            packageId = "hex-literal";
-          }
-          {
             name = "nix-compat";
             packageId = "nix-compat";
             usesDefaultFeatures = false;
@@ -13702,37 +13694,6 @@ rec {
               "wire"
               "test"
             ];
-          }
-          {
-            name = "pretty_assertions";
-            packageId = "pretty_assertions";
-          }
-          {
-            name = "proptest";
-            packageId = "proptest";
-            usesDefaultFeatures = false;
-            features = [
-              "std"
-              "alloc"
-              "tempfile"
-            ];
-          }
-          {
-            name = "rstest";
-            packageId = "rstest";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            features = [
-              "io-util"
-              "macros"
-            ];
-          }
-          {
-            name = "tokio-test";
-            packageId = "tokio-test";
           }
         ];
 
@@ -13748,10 +13709,6 @@ rec {
         libName = "nix_compat_derive_tests";
         devDependencies = [
           {
-            name = "hex-literal";
-            packageId = "hex-literal";
-          }
-          {
             name = "nix-compat";
             packageId = "nix-compat";
             features = [
@@ -13764,25 +13721,13 @@ rec {
             packageId = "nix-compat-derive";
           }
           {
-            name = "pretty_assertions";
-            packageId = "pretty_assertions";
-          }
-          {
-            name = "rstest";
-            packageId = "rstest";
-            usesDefaultFeatures = false;
-          }
-          {
             name = "tokio";
             packageId = "tokio";
             features = [
               "io-util"
               "macros"
+              "rt"
             ];
-          }
-          {
-            name = "tokio-test";
-            packageId = "tokio-test";
           }
           {
             name = "trybuild";
@@ -23907,10 +23852,6 @@ rec {
           {
             name = "async-process";
             packageId = "async-process";
-          }
-          {
-            name = "fuse-backend-rs";
-            packageId = "fuse-backend-rs";
           }
           {
             name = "hex-literal";

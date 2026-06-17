@@ -10029,27 +10029,6 @@ rec {
         };
         resolvedDefaultFeatures = [ "bindgen" ];
       };
-      "libmimalloc-sys" = rec {
-        crateName = "libmimalloc-sys";
-        version = "0.1.47";
-        edition = "2018";
-        links = "mimalloc";
-        sha256 = "1xkx0r1pwgsdpskvx206dn3gj04zcsjnn4rwhxgc4gn367xaq7id";
-        libName = "libmimalloc_sys";
-        authors = [
-          "Octavian Oncescu <octavonce@gmail.com>"
-        ];
-        buildDependencies = [
-          {
-            name = "cc";
-            packageId = "cc";
-          }
-        ];
-        features = {
-          "cty" = [ "dep:cty" ];
-          "extended" = [ "cty" ];
-        };
-      };
       "linux-raw-sys" = rec {
         crateName = "linux-raw-sys";
         version = "0.12.1";
@@ -10406,35 +10385,6 @@ rec {
           }
         ];
 
-      };
-      "mimalloc" = rec {
-        crateName = "mimalloc";
-        version = "0.1.50";
-        edition = "2018";
-        sha256 = "0h06df0h7ia6yqz4qgbjvqzcjn8xxima9fnac296ny6zf917qqmk";
-        authors = [
-          "Octavian Oncescu <octavonce@gmail.com>"
-          "Vincent Rouillé <vincent@speedy37.fr>"
-          "Thom Chiovoloni <chiovolonit@gmail.com>"
-        ];
-        dependencies = [
-          {
-            name = "libmimalloc-sys";
-            packageId = "libmimalloc-sys";
-            usesDefaultFeatures = false;
-          }
-        ];
-        features = {
-          "debug" = [ "libmimalloc-sys/debug" ];
-          "debug_in_debug" = [ "libmimalloc-sys/debug_in_debug" ];
-          "extended" = [ "libmimalloc-sys/extended" ];
-          "local_dynamic_tls" = [ "libmimalloc-sys/local_dynamic_tls" ];
-          "no_thp" = [ "libmimalloc-sys/no_thp" ];
-          "override" = [ "libmimalloc-sys/override" ];
-          "secure" = [ "libmimalloc-sys/secure" ];
-          "v2" = [ "libmimalloc-sys/v2" ];
-        };
-        resolvedDefaultFeatures = [ "default" ];
       };
       "mime" = rec {
         crateName = "mime";
@@ -10915,10 +10865,6 @@ rec {
             optional = true;
           }
           {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
-          {
             name = "nix-compat-derive";
             packageId = "nix-compat-derive";
             optional = true;
@@ -10999,10 +10945,6 @@ rec {
           {
             name = "futures";
             packageId = "futures";
-          }
-          {
-            name = "mimalloc";
-            packageId = "mimalloc";
           }
           {
             name = "smol_str";

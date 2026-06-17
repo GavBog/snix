@@ -32,7 +32,6 @@ ed25519.workspace = true
 ed25519-dalek.workspace = true
 futures = { workspace = true, optional = true }
 hashbrown = { workspace = true, optional = true }
-mimalloc.workspace = true
 nom.workspace = true
 serde = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true, optional = true }

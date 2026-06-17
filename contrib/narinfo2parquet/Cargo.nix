@@ -3433,10 +3433,6 @@ rec {
             packageId = "ed25519-dalek";
           }
           {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
-          {
             name = "nom";
             packageId = "nom";
           }
@@ -3462,10 +3458,6 @@ rec {
           }
         ];
         devDependencies = [
-          {
-            name = "mimalloc";
-            packageId = "mimalloc";
-          }
           {
             name = "smol_str";
             packageId = "smol_str";
