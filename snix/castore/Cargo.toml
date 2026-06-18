@@ -72,6 +72,7 @@ tonic-prost-build.workspace = true
 [dev-dependencies]
 async-process.workspace = true
 hex-literal.workspace = true
+mockall.workspace = true
 pretty_assertions = { workspace = true, features = ["unstable"] }
 rstest.workspace = true
 rstest_reuse.workspace = true

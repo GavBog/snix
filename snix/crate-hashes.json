@@ -1,5 +1,7 @@
 {
   "git+https://github.com/arianvp/hyper.git?branch=push-ktssyytnyrru#hyper@1.9.0": "1ghxvg78h0dkjba9xb722pv4p2xzf0z2pnhy7g5f4syghx0hwxay",
+  "git+https://github.com/asomers/mockall.git?rev=2270cdb77897aeb55326ba730f1c1fc2131cc8e1#mockall@0.14.0": "1gs86vzn7rydiikyqj08rd5zyay1vkdf2kbq2glcnccj29f3mx0n",
+  "git+https://github.com/asomers/mockall.git?rev=2270cdb77897aeb55326ba730f1c1fc2131cc8e1#mockall_derive@0.14.0": "1gs86vzn7rydiikyqj08rd5zyay1vkdf2kbq2glcnccj29f3mx0n",
   "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-build@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
   "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-health@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
   "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-prost-build@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",

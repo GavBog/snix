@@ -12801,9 +12801,14 @@ rec {
       };
       "mockall" = rec {
         crateName = "mockall";
-        version = "0.13.1";
+        version = "0.14.0";
         edition = "2021";
-        sha256 = "1lir70dd9cnsjlf20gi3i51ha9n7mlrkx74bx5gfszlcdk6bz9ir";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/asomers/mockall.git";
+          rev = "2270cdb77897aeb55326ba730f1c1fc2131cc8e1";
+          sha256 = "1gs86vzn7rydiikyqj08rd5zyay1vkdf2kbq2glcnccj29f3mx0n";
+        };
         authors = [
           "Alan Somers <asomers@gmail.com>"
         ];
@@ -12843,9 +12848,14 @@ rec {
       };
       "mockall_derive" = rec {
         crateName = "mockall_derive";
-        version = "0.13.1";
+        version = "0.14.0";
         edition = "2021";
-        sha256 = "1608qajqrz23xbvv81alc6wm4l24as1bsqg4shdh3sggq8231ji5";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/asomers/mockall.git";
+          rev = "2270cdb77897aeb55326ba730f1c1fc2131cc8e1";
+          sha256 = "1gs86vzn7rydiikyqj08rd5zyay1vkdf2kbq2glcnccj29f3mx0n";
+        };
         procMacro = true;
         authors = [
           "Alan Somers <asomers@gmail.com>"
@@ -22158,6 +22168,10 @@ rec {
           {
             name = "hex-literal";
             packageId = "hex-literal";
+          }
+          {
+            name = "mockall";
+            packageId = "mockall";
           }
           {
             name = "pretty_assertions";

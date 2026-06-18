@@ -44,6 +44,7 @@ impl std::fmt::Display for Error {
 /// The base trait all Directory services need to implement.
 /// This is a simple get and put of [Directory], returning their
 /// digest.
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 #[auto_impl(&, &mut, Arc, Box)]
 pub trait DirectoryService: Send + Sync {
@@ -83,7 +84,7 @@ pub trait DirectoryService: Send + Sync {
 
     /// Allows persisting a closure of [Directory], which is a graph of
     /// connected Directory messages.
-    fn put_multiple_start(&self) -> Box<dyn DirectoryPutter + '_>;
+    fn put_multiple_start<'a>(&'a self) -> Box<dyn DirectoryPutter + 'a>;
 }
 
 /// Provides a handle to put a closure of connected [Directory] elements.
