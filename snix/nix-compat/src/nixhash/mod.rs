@@ -88,7 +88,7 @@ impl Display for NixHash {
 
 impl NixHash {
     /// returns the algo as [HashAlgo].
-    pub fn algo(&self) -> HashAlgo {
+    pub const fn algo(&self) -> HashAlgo {
         match self {
             NixHash::Md5(_) => HashAlgo::Md5,
             NixHash::Sha1(_) => HashAlgo::Sha1,
