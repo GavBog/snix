@@ -100,7 +100,7 @@ pub(crate) fn derivation_into_build_request(
     mut derivation: Derivation,
     inputs: &BTreeMap<StorePath, Node>,
 ) -> std::io::Result<BuildRequest> {
-    debug_assert!(derivation.validate(true).is_ok(), "drv must validate");
+    debug_assert!(derivation.validate().is_ok(), "drv must validate");
 
     // produce command_args, which is builder and arguments in a Vec, replacing any placeholders.
     let command_args: Vec<String> = Vec::from_iter(
@@ -185,7 +185,14 @@ pub(crate) fn derivation_into_build_request(
         outputs: derivation
             .outputs
             .values()
-            .map(|e| PathBuf::from(e.path_str()[1..].to_owned()))
+            .map(|output| {
+                let s = output
+                    .path
+                    .as_ref()
+                    .expect("Snix bug: Output has no path")
+                    .to_absolute_path();
+                PathBuf::from(s[1..].to_owned())
+            })
             .collect(),
 
         // Turn this into a sorted-by-key Vec<EnvVar>.

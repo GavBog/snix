@@ -5,6 +5,8 @@ use crate::derivation::OutputName;
 #[cfg(feature = "serde")]
 #[cfg(feature = "serde")]
 use crate::derivation::output::Output;
+#[cfg(feature = "serde")]
+use crate::derivation::output::OutputHash;
 use crate::derivation::parse_error::NomError;
 use crate::derivation::parser::Error;
 #[cfg(feature = "serde")]
@@ -58,7 +60,7 @@ fn validate(
         serde_json::from_slice(&json_bytes).expect("JSON was not well-formatted");
 
     derivation
-        .validate(true)
+        .validate()
         .expect("derivation failed to validate")
 }
 
@@ -347,18 +349,13 @@ fn output_path_construction() {
         OutputName::out(),
         Output {
             path: None, // will be calculated
-            ca_hash: Some(crate::nixhash::CAHash::Nar(
-                crate::nixhash::NixHash::from_algo_and_digest(
-                    crate::nixhash::HashAlgo::Sha256,
-                    &data_encoding::HEXLOWER
-                        .decode(
-                            "08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"
-                                .as_bytes(),
-                        )
-                        .unwrap(),
+            output_hash: Some(
+                OutputHash::from_mode_algo_and_digest(
+                    "r:sha256",
+                    hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"),
                 )
-                .unwrap(),
-            )),
+                .expect("valid OutputHash"),
+            ),
         },
     );
 
@@ -421,7 +418,7 @@ fn output_path_construction() {
         OutputName::out(),
         Output {
             path: None, // will be calculated
-            ca_hash: None,
+            output_hash: None,
         },
     );
 

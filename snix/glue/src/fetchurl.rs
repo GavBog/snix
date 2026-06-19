@@ -1,10 +1,7 @@
 //! This contains the code translating from a `builtin:derivation` [Derivation]
 //! to a [Fetch].
 use crate::fetchers::Fetch;
-use nix_compat::{
-    derivation::{Derivation, OutputName},
-    nixhash::CAHash,
-};
+use nix_compat::derivation::{Derivation, OutputHash, OutputName};
 use tracing::instrument;
 use url::Url;
 
@@ -27,7 +24,7 @@ pub(crate) fn fetchurl_derivation_to_fetch(drv: &Derivation) -> Result<(String, 
         return Err(Error::NoFOD);
     }
     let out_output = &drv.outputs.get(&OutputName::out()).ok_or(Error::NoFOD)?;
-    let ca_hash = out_output.ca_hash.clone().ok_or(Error::NoFOD)?;
+    let output_hash = out_output.output_hash.as_ref().ok_or(Error::NoFOD)?;
 
     let name: String = drv
         .environment
@@ -42,24 +39,40 @@ pub(crate) fn fetchurl_derivation_to_fetch(drv: &Derivation) -> Result<(String, 
         .parse()
         .map_err(|_| Error::URLInvalid)?;
 
-    match ca_hash {
-        CAHash::Flat(hash) => Ok((
+    Ok(match output_hash {
+        OutputHash {
+            mode: nix_compat::derivation::OutputHashMode::Flat,
+            hash,
+        } => (
             name,
             Fetch::URL {
                 url,
-                exp_hash: Some(hash),
+                exp_hash: Some(hash.to_owned()),
             },
-        )),
-        CAHash::Nar(hash) => {
+        ),
+        OutputHash {
+            mode: nix_compat::derivation::OutputHashMode::Recursive,
+            hash,
+        } => {
             if drv.environment.get("executable").map(|v| v.as_slice()) == Some(b"1") {
-                Ok((name, Fetch::Executable { url, hash }))
+                (
+                    name,
+                    Fetch::Executable {
+                        url,
+                        hash: hash.to_owned(),
+                    },
+                )
             } else {
-                Ok((name, Fetch::NAR { url, hash }))
+                (
+                    name,
+                    Fetch::NAR {
+                        url,
+                        hash: hash.to_owned(),
+                    },
+                )
             }
         }
-        // you can't construct derivations containing this
-        CAHash::Text(_) => panic!("Snix bug: got CaHash::Text in drv"),
-    }
+    })
 }
 
 #[derive(Debug, thiserror::Error)]

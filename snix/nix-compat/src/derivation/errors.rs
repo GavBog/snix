@@ -1,8 +1,6 @@
 //! Contains [DerivationError], exported as [crate::derivation::DerivationError]
-use crate::store_path;
+use crate::{derivation::output::ParseOutputError, store_path};
 use thiserror::Error;
-
-use super::CAHash;
 
 /// Errors that can occur during the validation of Derivation structs.
 #[derive(Debug, Error, PartialEq)]
@@ -17,7 +15,7 @@ pub enum DerivationError {
     #[error("invalid output name for fixed-output derivation: {0}")]
     InvalidOutputNameForFixed(String),
     #[error("unable to validate output {0}: {1}")]
-    InvalidOutput(String, OutputError),
+    InvalidOutput(String, ParseOutputError),
     #[error("invalid calculated output derivation path name: {0}")]
     InvalidOutputDerivationPath(String, store_path::ParseStorePathError),
     // input derivation
@@ -45,16 +43,4 @@ pub enum DerivationError {
     // environment
     #[error("invalid environment key {0}")]
     InvalidEnvironmentKey(String),
-}
-
-/// Errors that can occur during the validation of a specific
-// [crate::derivation::Output] of a [crate::derivation::Derviation].
-#[derive(Debug, Error, PartialEq)]
-pub enum OutputError {
-    #[error("Invalid output path {0}: {1}")]
-    InvalidOutputPath(String, store_path::ParseStorePathError),
-    #[error("Missing output path")]
-    MissingOutputPath,
-    #[error("Invalid CAHash: {:?}", .0)]
-    InvalidCAHash(CAHash),
 }

@@ -1,30 +1,133 @@
+use std::str::FromStr;
+
+use crate::nixhash;
 use crate::nixhash::CAHash;
-use crate::{derivation::OutputError, store_path::StorePath};
-#[cfg(feature = "serde")]
-use serde::de::Unexpected;
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-#[cfg(feature = "serde")]
-use serde_json::Map;
-use std::borrow::Cow;
+use crate::nixhash::HashAlgo;
+use crate::nixhash::NixHash;
+use crate::store_path::ParseStorePathError;
+use crate::store_path::StorePath;
 
 /// References the derivation output.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Output {
     /// Store path of build result.
     pub path: Option<StorePath>,
 
     #[cfg_attr(feature = "serde", serde(flatten))]
-    pub ca_hash: Option<CAHash>, // we can only represent a subset here.
+    pub output_hash: Option<OutputHash>,
+}
+
+/// Represents the information about the hash of a single-output FOD.
+/// We store it in a [OutputHashMode] and [NixHash].
+/// The serde model uses a different format, as we want to emit the same JSON:
+/// There we use `hashAlgo` and `hash`:
+///  - `hashAlgo`: optional `r:` prefix (for recursive),
+///    followed by hash algo identifier (`sha1`, `sha256`, `sha512`, `md5`)
+///  - `hash`: hexlower-encoded digest
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct OutputHash {
+    pub mode: OutputHashMode,
+    pub hash: NixHash,
+}
+
+/// Whether the FOD describes the hash of the raw contents (only possible if it's a single file),
+/// or a digest over the NAR representation of the contents.
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Serialize, serde::Deserialize),
+    serde(rename_all = "lowercase")
+)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub enum OutputHashMode {
+    #[default]
+    Flat,
+    Recursive,
+}
+
+impl OutputHashMode {
+    pub const fn as_mode_prefix(&self) -> &'static str {
+        match self {
+            OutputHashMode::Flat => "",
+            OutputHashMode::Recursive => "r:",
+        }
+    }
+}
+
+impl FromStr for OutputHashMode {
+    type Err = ParseOutputHashModeError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "" | "flat" => Ok(Self::Flat),
+            "recursive" => Ok(Self::Recursive),
+            _ => Err(ParseOutputHashModeError::InvalidHashMode(s.to_owned())),
+        }
+    }
+}
+
+impl OutputHash {
+    /// Construct from a string containing the algo (with an optional `r:` prefix), and a digest.
+    pub fn from_mode_algo_and_digest(
+        mode_and_algo: &str,
+        digest: impl AsRef<[u8]>,
+    ) -> Result<Self, nixhash::Error> {
+        let (hash_mode, algo_str) = if let Some(algo_str) = mode_and_algo.strip_prefix("r:") {
+            (OutputHashMode::Recursive, algo_str)
+        } else {
+            (OutputHashMode::Flat, mode_and_algo)
+        };
+
+        let algo = algo_str.parse()?;
+
+        Ok(OutputHash {
+            mode: hash_mode,
+            hash: NixHash::from_algo_and_digest(algo, digest.as_ref())?,
+        })
+    }
+
+    /// Returns the OutputHashMode prefix str and the algo, concatenated.
+    /// This is used in the ATerm representation.
+    pub const fn as_mode_and_algo_str(&self) -> &'static str {
+        match self.mode {
+            OutputHashMode::Flat => self.hash.algo().as_str(),
+            OutputHashMode::Recursive => match self.hash.algo() {
+                HashAlgo::Md5 => "r:md5",
+                HashAlgo::Sha1 => "r:sha1",
+                HashAlgo::Sha256 => "r:sha256",
+                HashAlgo::Sha512 => "r:sha512",
+            },
+        }
+    }
 }
 
 #[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for Output {
+impl serde::Serialize for OutputHash {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeMap;
+        let mut map = serializer.serialize_map(Some(3))?;
+
+        map.serialize_entry(
+            "hash",
+            &data_encoding::HEXLOWER.encode(self.hash.digest_as_bytes()),
+        )?;
+
+        map.serialize_entry("hashAlgo", self.as_mode_and_algo_str())?;
+
+        map.end()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Output {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
+        use serde_json::Map;
         let fields = Map::deserialize(deserializer)?;
         let path: &str = fields
             .get("path")
@@ -37,42 +140,73 @@ impl<'de> Deserialize<'de> for Output {
                 &"a string",
             ))?;
 
-        let path = StorePath::from_absolute_path(path.as_bytes())
-            .map_err(|_| serde::de::Error::invalid_value(Unexpected::Str(path), &"StorePath"))?;
+        let path = StorePath::from_absolute_path(path.as_bytes()).map_err(|_| {
+            serde::de::Error::invalid_value(serde::de::Unexpected::Str(path), &"StorePath")
+        })?;
+
         Ok(Self {
             path: Some(path),
-            ca_hash: CAHash::from_map::<D>(&fields)?,
+            // deserialize Option<OutputHash>. we don't do this in a `impl Deserialize for OutputHash`,
+            // as this is flattened and we don't want to silently swallow errors.
+            output_hash: match (fields.get("hash"), fields.get("hashAlgo")) {
+                // If hash is not provided, do nothing.
+                (None, None) => None,
+                (Some(hash_f), Some(mode_and_algo)) => {
+                    let hash_str = hash_f.as_str().ok_or(serde::de::Error::invalid_type(
+                        serde::de::Unexpected::Other("certainly not a string"),
+                        &"a string",
+                    ))?;
+                    let mode_and_algo =
+                        mode_and_algo
+                            .as_str()
+                            .ok_or(serde::de::Error::invalid_type(
+                                serde::de::Unexpected::Other("certainly not a string"),
+                                &"a mode:algo string",
+                            ))?;
+
+                    let digest = data_encoding::HEXLOWER
+                        .decode(hash_str.as_bytes())
+                        .map_err(serde::de::Error::custom)?;
+
+                    let output_hash = OutputHash::from_mode_algo_and_digest(mode_and_algo, digest)
+                        .map_err(serde::de::Error::custom)?;
+
+                    Some(output_hash)
+                }
+                _ => {
+                    return Err(serde::de::Error::invalid_value(
+                        serde::de::Unexpected::Other("Exactly one of `hash` and `hashAlgo`"),
+                        &"none or both fields",
+                    ));
+                }
+            },
         })
     }
 }
 
+/// Errors that can occur during the validation of a specific
+// [crate::derivation::Output] of a [crate::derivation::Derivation].
+#[derive(Debug, thiserror::Error, PartialEq)]
+pub enum ParseOutputHashModeError {
+    #[error("Invalid hash mode: {0}")]
+    InvalidHashMode(String),
+}
+
+/// Errors that can occur during the validation of a specific
+// [crate::derivation::Output] of a [crate::derivation::Derivation].
+#[derive(Debug, thiserror::Error, PartialEq)]
+pub enum ParseOutputError {
+    #[error("Invalid output path {0}: {1}")]
+    InvalidOutputPath(String, ParseStorePathError),
+    #[error("Missing output path")]
+    MissingOutputPath,
+    #[error("Invalid CAHash: {:?}", .0)]
+    InvalidCAHash(CAHash),
+}
+
 impl Output {
     pub fn is_fixed(&self) -> bool {
-        self.ca_hash.is_some()
-    }
-
-    /// The output path as a string -- use `""` to indicate an unset output path.
-    pub fn path_str(&self) -> Cow<'_, str> {
-        match &self.path {
-            None => Cow::Borrowed(""),
-            Some(path) => Cow::Owned(path.to_absolute_path()),
-        }
-    }
-
-    pub fn validate(&self, validate_output_paths: bool) -> Result<(), OutputError> {
-        if let Some(fixed_output_hash) = &self.ca_hash {
-            match fixed_output_hash {
-                CAHash::Flat(_) | CAHash::Nar(_) => {
-                    // all hashes allowed for Flat, and Nar.
-                }
-                _ => return Err(OutputError::InvalidCAHash(fixed_output_hash.clone())),
-            }
-        }
-
-        if validate_output_paths && self.path.is_none() {
-            return Err(OutputError::MissingOutputPath);
-        }
-        Ok(())
+        self.output_hash.is_some()
     }
 }
 
@@ -198,4 +332,37 @@ fn serialize_deserialize_fixed() {
     let output2: Output = serde_json::from_str(&s).expect("must parse again");
 
     assert_eq!(output, output2);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::nixhash::NixHash;
+
+    use super::{OutputHash, OutputHashMode};
+    use hex_literal::hex;
+    use rstest::rstest;
+
+    const DIGEST_SHA256: [u8; 32] =
+        hex!("a5ce9c155ed09397614646c9717fc7cd94b1023d7b76b618d409e4fefd6e9d39");
+    const NIXHASH_SHA256: NixHash = NixHash::Sha256(DIGEST_SHA256);
+
+    #[rstest]
+    #[case::sha256_flat("sha256", &DIGEST_SHA256, OutputHash { mode: OutputHashMode::Flat, hash: NIXHASH_SHA256.clone()})]
+    #[case::sha256_recursive("r:sha256", &DIGEST_SHA256, OutputHash { mode: OutputHashMode::Recursive, hash: NIXHASH_SHA256.clone()})]
+    fn test_from_algo_and_mode_and_digest(
+        #[case] algo_and_mode: &str,
+        #[case] digest: &[u8],
+        #[case] expected: OutputHash,
+    ) {
+        assert_eq!(
+            expected,
+            OutputHash::from_mode_algo_and_digest(algo_and_mode, digest).expect("to parse")
+        );
+    }
+
+    #[test]
+    fn from_algo_and_mode_and_digest_failure() {
+        assert!(OutputHash::from_mode_algo_and_digest("r:sha256", []).is_err());
+        assert!(OutputHash::from_mode_algo_and_digest("ha256", DIGEST_SHA256).is_err());
+    }
 }

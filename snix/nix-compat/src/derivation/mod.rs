@@ -1,4 +1,3 @@
-use crate::nixhash::CAHashMode;
 use crate::store_path::{self, StorePath, StorePathRef};
 use bstr::BString;
 #[cfg(feature = "serde")]
@@ -20,8 +19,8 @@ mod tests;
 
 // Public API of the crate.
 pub use crate::nixhash::{CAHash, NixHash};
-pub use errors::{DerivationError, OutputError};
-pub use output::Output;
+pub use errors::DerivationError;
+pub use output::{Output, OutputHash, OutputHashMode};
 pub use output_name::{OutputName, ParseOutputNameError};
 pub use parser::Error as ParserError;
 
@@ -107,15 +106,11 @@ impl Derivation {
         }
 
         let out_output = self.outputs.get(&OutputName::out())?;
-        let ca_hash = out_output.ca_hash.as_ref()?;
+        let out_output_hash = out_output.output_hash.as_ref()?;
 
-        debug_assert!(
-            [CAHashMode::Nar, CAHashMode::Flat].contains(&ca_hash.mode()),
-            "invalid ca hash in derivation context: {ca_hash:?}"
-        );
         Some(store_path::fod_digest(
-            ca_hash.mode() == CAHashMode::Nar,
-            &ca_hash.hash(),
+            out_output_hash.mode == OutputHashMode::Recursive,
+            &out_output_hash.hash,
             out_output.path.as_ref().map(|sp| sp.as_ref()),
         ))
     }
@@ -211,12 +206,16 @@ impl Derivation {
 
             // For fixed output derivation we use [build_ca_path], otherwise we
             // use [build_output_path] with [hash_derivation_modulo].
-            let store_path = if let Some(ca_hash) = &output.ca_hash {
-                match ca_hash {
-                    CAHash::Flat(hash) => store_path::build_ca_path(&name, false, hash, [], false),
-                    CAHash::Nar(hash) => store_path::build_ca_path(&name, true, hash, [], false),
-                    _ => panic!("invalid ca hash in derivation context: {ca_hash:?}"),
-                }
+            let store_path = if let Some(output_hash) = &output.output_hash {
+                assert!(output_name == &OutputName::out(), "Snix bug: non-out FOD");
+
+                store_path::build_ca_path(
+                    &name,
+                    output_hash.mode == OutputHashMode::Recursive,
+                    &output_hash.hash,
+                    [],
+                    false,
+                )
             } else {
                 store_path::build_output_path(&name, hash_derivation_modulo, output_name)
             }
@@ -291,17 +290,5 @@ impl DerivationAsyncExt for Derivation {
                 }
             }
         }
-    }
-}
-
-/// For a [CAHash], return the "prefix" used for NAR purposes.
-/// For [CAHash::Flat], this is an empty string, for [CAHash::Nar], it's "r:".
-/// Panics for other [CAHash] kinds, as they're not valid in a derivation
-/// context.
-fn ca_kind_prefix(ca_hash: &CAHash) -> &'static str {
-    match ca_hash {
-        CAHash::Flat(_) => "",
-        CAHash::Nar(_) => "r:",
-        _ => panic!("invalid ca hash in derivation context: {ca_hash:?}"),
     }
 }

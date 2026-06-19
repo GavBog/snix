@@ -271,8 +271,8 @@ impl NixHash {
 /// Errors related to NixHash construction.
 #[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum Error {
-    #[error("invalid hash algo")]
-    InvalidAlgo,
+    #[error("invalid hash algo: '{0}'")]
+    InvalidAlgo(String),
     #[error("invalid SRI string")]
     InvalidSRI,
     #[error("invalid digest length for algo {0}")]

@@ -264,12 +264,13 @@ fn matches_expected_error(version: NixVersion, error_string: &str, expected: &Er
             NixVersion::CppNix23 => &["requires a function", "was expected"][..],
             _ => &["requires a function", "expected a"][..],
         },
+        ErrorKind::InvalidHash => &["invalid SRI hash"][..],
         ErrorKind::InvalidStorePath => match version {
             NixVersion::CppNixLatest => &["is not a valid store path"][..],
             NixVersion::CppNix23 => &["Path names are alphanumeric"],
             NixVersion::LixLatest => &["store path"][..],
         },
-        ErrorKind::HashMismatch => &["store path mismatch", "invalid SRI hash"][..],
+        ErrorKind::HashMismatch => &["store path mismatch"][..],
         ErrorKind::DerivationError => match version {
             NixVersion::LixLatest => &["trace involved the following derivations"][..],
             NixVersion::CppNix23 => &[

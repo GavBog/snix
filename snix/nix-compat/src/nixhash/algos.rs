@@ -54,9 +54,6 @@ impl Display for HashAlgo {
     }
 }
 
-#[cfg(feature = "serde")]
-pub const SUPPORTED_ALGOS: [&str; 4] = ["md5", "sha1", "sha256", "sha512"];
-
 impl FromStr for HashAlgo {
     type Err = Error;
 
@@ -66,7 +63,7 @@ impl FromStr for HashAlgo {
             "sha1" => Ok(Self::Sha1),
             "sha256" => Ok(Self::Sha256),
             "sha512" => Ok(Self::Sha512),
-            _ => Err(Error::InvalidAlgo),
+            _ => Err(Error::InvalidAlgo(algo_str.to_string())),
         }
     }
 }

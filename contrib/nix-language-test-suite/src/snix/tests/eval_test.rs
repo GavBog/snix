@@ -240,9 +240,15 @@ fn matches_expected_error(result: &snix_eval::EvaluationResult, exp_kind: &Error
             matches!(
                 err.downcast_ref::<ImportError>(),
                 Some(ImportError::HashMismatch(..))
-            ) || matches!(
-                err.downcast_ref::<snix_glue::builtins::DerivationError>(),
-                Some(snix_glue::builtins::DerivationError::InvalidOutputHash(_))
+            )
+        }
+        ErrorKind::InvalidHash => {
+            let snix_eval::ErrorKind::SnixError(err) = snix_kind else {
+                return false;
+            };
+            matches!(
+                err.downcast_ref::<nix_compat::nixhash::Error>(),
+                Some(nix_compat::nixhash::Error::InvalidDigestLength(_))
             )
         }
         ErrorKind::InvalidStorePath => {
@@ -254,9 +260,14 @@ fn matches_expected_error(result: &snix_eval::EvaluationResult, exp_kind: &Error
         }
         ErrorKind::DerivationError => match snix_kind {
             snix_eval::ErrorKind::Abort(err) => err.contains("derivation has empty name"),
-            snix_eval::ErrorKind::SnixError(err) => err
-                .downcast_ref::<snix_glue::builtins::DerivationError>()
-                .is_some(),
+            snix_eval::ErrorKind::SnixError(err) => {
+                err.downcast_ref::<snix_glue::builtins::DerivationError>()
+                    .is_some()
+                    || matches!(
+                        err.downcast_ref::<nix_compat::nixhash::Error>(),
+                        Some(nix_compat::nixhash::Error::ConflictingHashAlgos(_, _))
+                    )
+            }
             _ => false,
         },
         ErrorKind::UnexpectedArgument => matches!(

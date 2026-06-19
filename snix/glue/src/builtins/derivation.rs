@@ -3,8 +3,7 @@ use crate::builtins::DerivationError;
 use crate::known_paths::KnownPaths;
 use crate::snix_store_io::SnixStoreIO;
 use bstr::BString;
-use nix_compat::derivation::{Derivation, Output, OutputName};
-use nix_compat::nixhash::{CAHash, HashAlgo, NixHash};
+use nix_compat::derivation::{Derivation, OutputHash, OutputName};
 use nix_compat::store_path::{StorePath, StorePathRef};
 use snix_eval::builtin_macros::builtins;
 use snix_eval::generators::{self, GenCo, emit_warning_kind};
@@ -96,82 +95,6 @@ fn populate_inputs(drv: &mut Derivation, full_context: NixContext, known_paths: 
     }
 }
 
-/// Populate the output configuration of a derivation based on the
-/// parameters passed to the call, configuring a fixed-output derivation output
-/// if necessary.
-///
-/// This function handles all possible combinations of the
-/// parameters, including invalid ones.
-///
-/// Due to the support for SRI hashes, and how these are passed along to
-/// builtins.derivation, outputHash and outputHashAlgo can have values which
-/// need to be further modified before constructing the Derivation struct.
-///
-/// If outputHashAlgo is an SRI hash, outputHashAlgo must either be an empty
-/// string, or the hash algorithm as specified in the (single) SRI (entry).
-/// SRI strings with multiple hash algorithms are not supported.
-///
-/// In case an SRI string was used, the (single) fixed output is populated
-/// with the hash algo name, and the hash digest is populated with the
-/// (lowercase) hex encoding of the digest.
-///
-/// These values are only rewritten for the outputs, not what's passed to env.
-///
-/// The return value may optionally contain a warning.
-fn handle_fixed_output(
-    drv: &mut Derivation,
-    hash_str: Option<String>,      // in nix: outputHash
-    hash_algo_str: Option<String>, // in nix: outputHashAlgo
-    hash_mode_str: Option<String>, // in nix: outputHashmode
-) -> Result<Option<WarningKind>, ErrorKind> {
-    // If outputHash is provided, ensure hash_algo_str is compatible.
-    // If outputHash is not provided, do nothing.
-    if let Some(hash_str) = hash_str {
-        // treat an empty algo as None
-        let hash_algo_str = match hash_algo_str {
-            Some(s) if s.is_empty() => None,
-            Some(s) => Some(s),
-            None => None,
-        };
-
-        let hash_algo = hash_algo_str
-            .map(|s| HashAlgo::try_from(s.as_str()))
-            .transpose()
-            .map_err(DerivationError::InvalidOutputHash)?;
-
-        // construct a NixHash.
-        let nixhash =
-            NixHash::from_str(&hash_str, hash_algo).map_err(DerivationError::InvalidOutputHash)?;
-        let algo = nixhash.algo();
-
-        // construct the fixed output.
-        drv.outputs.insert(
-            OutputName::default(),
-            Output {
-                path: None,
-                ca_hash: match hash_mode_str.as_deref() {
-                    None | Some("flat") => Some(CAHash::Flat(nixhash)),
-                    Some("recursive") => Some(CAHash::Nar(nixhash)),
-                    Some(other) => {
-                        return Err(DerivationError::InvalidOutputHashMode(other.to_string()))?;
-                    }
-                },
-            },
-        );
-
-        // Peek at hash_str once more.
-        // If it was a SRI hash, but is not using the correct length, this means
-        // the padding was wrong. Emit a warning in that case.
-        let sri_prefix = format!("{algo}-");
-        if let Some(rest) = hash_str.strip_prefix(&sri_prefix)
-            && data_encoding::BASE64.encode_len(algo.digest_length()) != rest.len()
-        {
-            return Ok(Some(WarningKind::SRIHashWrongPadding));
-        }
-    }
-    Ok(None)
-}
-
 #[builtins(state = "Rc<SnixStoreIO>")]
 pub(crate) mod derivation_builtins {
     use std::collections::BTreeMap;
@@ -179,6 +102,7 @@ pub(crate) mod derivation_builtins {
 
     use bstr::ByteSlice;
 
+    use nix_compat::nixhash::{HashAlgo, NixHash};
     use nix_compat::store_path::hash_placeholder;
     use snix_eval::generators::Gen;
     use snix_eval::{NixContext, NixContextElement, NixString, try_cek_to_value};
@@ -232,7 +156,9 @@ pub(crate) mod derivation_builtins {
         let name = name.to_str()?;
 
         let mut drv = Derivation::default();
+        // insert the `out` output. Even without any `outputs` argument or FODs this needs to exist.
         drv.outputs.insert(OutputName::out(), Default::default());
+
         let mut input_context = NixContext::new();
 
         /// Inserts a key and value into the drv.environment BTreeMap, and fails if the
@@ -291,15 +217,14 @@ pub(crate) mod derivation_builtins {
                     }
                 }
 
-                // If outputs is set, remove the original default `out` output,
-                // and replace it with the list of outputs.
+                // If outputs is set, populate drv.outputs with them.
                 "outputs" => {
+                    // Remove the original default `out` output.
+                    drv.outputs.clear();
+
                     let outputs = value
                         .to_list()
                         .context("looking at the `outputs` parameter of the derivation")?;
-
-                    // Remove the original default `out` output.
-                    drv.outputs.clear();
 
                     let mut output_names = Vec::with_capacity(outputs.len());
 
@@ -311,23 +236,21 @@ pub(crate) mod derivation_builtins {
 
                         input_context.mimic(&output_name);
 
-                        // Populate drv.outputs
+                        let output_name: OutputName = output_name
+                            .to_str()?
+                            .parse()
+                            .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?;
+
+                        output_names.push(output_name.as_str().to_owned());
+
+                        // Populate drv.outputs with this output
                         if drv
                             .outputs
-                            .insert(
-                                output_name
-                                    .to_str()?
-                                    .parse()
-                                    .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?,
-                                Default::default(),
-                            )
+                            .insert(output_name.clone(), Default::default())
                             .is_some()
                         {
-                            Err(DerivationError::DuplicateOutput(
-                                output_name.to_str_lossy().into_owned(),
-                            ))?
+                            Err(DerivationError::DuplicateOutput(output_name))?
                         }
-                        output_names.push(output_name.to_str()?.to_owned());
                     }
 
                     match structured_attrs.as_mut() {
@@ -405,28 +328,67 @@ pub(crate) mod derivation_builtins {
         }
         // end of per-argument loop
 
-        // Configure fixed-output derivations if required.
+        // Set the out output, dealing with FOD fields if required.
         {
-            let output_hash = try_cek_to_value!(
+            // Unset or set but empty string are treated the same.
+            let hash_str = try_cek_to_value!(
                 select_string(&co, &input, "outputHash")
                     .await
                     .context("evaluating the `outputHash` parameter")?
-            );
-            let output_hash_algo = try_cek_to_value!(
+            )
+            .filter(|s| !s.is_empty());
+
+            let hash_algo = try_cek_to_value!(
                 select_string(&co, &input, "outputHashAlgo")
                     .await
                     .context("evaluating the `outputHashAlgo` parameter")?
-            );
-            let output_hash_mode = try_cek_to_value!(
+            )
+            .filter(|s| !s.is_empty());
+
+            let hash_mode = try_cek_to_value!(
                 select_string(&co, &input, "outputHashMode")
                     .await
                     .context("evaluating the `outputHashMode` parameter")?
-            );
+            )
+            .filter(|s| !s.is_empty());
 
-            if let Some(warning) =
-                handle_fixed_output(&mut drv, output_hash, output_hash_algo, output_hash_mode)?
-            {
-                emit_warning_kind(&co, warning).await;
+            // FOD case.
+            if let Some(hash_str) = hash_str {
+                // There currently may only be one Output called `out`.
+                let out_output = if drv.outputs.len() == 1
+                    && let Some(out_output) = drv.outputs.get_mut(&OutputName::out())
+                {
+                    out_output
+                } else {
+                    return Err(ErrorKind::SnixError(Arc::new(
+                        DerivationError::ConflictingOutputTypes,
+                    )));
+                };
+
+                // parse outputHashMode.
+                let mode = hash_mode
+                    .map(|s| s.parse().map_err(|err| ErrorKind::SnixError(Arc::new(err))))
+                    .transpose()?
+                    .unwrap_or_default();
+
+                // parse outputHashAlgo
+                let want_algo: Option<HashAlgo> = hash_algo
+                    .map(|s| s.parse())
+                    .transpose()
+                    .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?;
+
+                // construct a NixHash
+                let hash = NixHash::from_str(&hash_str, want_algo)
+                    .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?;
+
+                // Emit a warning if the hash was SRI, but with wrong padding.
+                if let Some(rest) = hash_str.strip_prefix(hash.algo().sri_prefix())
+                    && data_encoding::BASE64.encode_len(hash.algo().digest_length()) != rest.len()
+                {
+                    emit_warning_kind(&co, WarningKind::SRIHashWrongPadding).await;
+                }
+
+                out_output.output_hash = Some(OutputHash { mode, hash });
             }
         }
 
@@ -457,8 +419,7 @@ pub(crate) mod derivation_builtins {
 
         // At this point, derivation fields are fully populated from
         // eval data structures.
-        drv.validate(false)
-            .map_err(DerivationError::InvalidDerivation)?;
+        drv.validate().map_err(DerivationError::InvalidDerivation)?;
 
         // Calculate the hash_derivation_modulo for the current derivation..
         debug_assert!(

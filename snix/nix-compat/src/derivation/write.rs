@@ -3,7 +3,7 @@
 //!
 //! [ATerm]: http://program-transformation.org/Tools/ATermFormat.html
 
-use super::{ca_kind_prefix, output::Output};
+use super::output::Output;
 use crate::derivation::OutputName;
 use crate::store_path::{StorePath, StorePathRef};
 use crate::{aterm::write_escaped, derivation::Derivation};
@@ -187,22 +187,24 @@ fn write_outputs(
 
         write_char(writer, PAREN_OPEN)?;
 
-        let path_str = output.path_str();
+        let path_str = output
+            .path
+            .as_ref()
+            .map(|sp| sp.to_absolute_path())
+            .unwrap_or_default();
 
-        if let Some(ca_hash) = &output.ca_hash {
-            let mode_and_algo = &format!("{}{}", ca_kind_prefix(ca_hash), ca_hash.hash().algo());
-            let digest_str = &data_encoding::HEXLOWER.encode(ca_hash.hash().digest_as_bytes());
+        if let Some(output_hash) = &output.output_hash {
             write_array_elements(
                 writer,
                 [
                     output_name.as_str(),
-                    path_str.as_ref(),
-                    mode_and_algo,
-                    digest_str,
+                    &path_str,
+                    output_hash.as_mode_and_algo_str(),
+                    &data_encoding::HEXLOWER.encode(output_hash.hash.digest_as_bytes()),
                 ],
             )?;
         } else {
-            write_array_elements(writer, [output_name.as_str(), path_str.as_ref(), "", ""])?;
+            write_array_elements(writer, [output_name.as_str(), &path_str, "", ""])?;
         };
 
         write_char(writer, PAREN_CLOSE)?;

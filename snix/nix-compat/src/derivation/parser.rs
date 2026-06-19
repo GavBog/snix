@@ -12,10 +12,11 @@ use nom::sequence::{delimited, preceded, separated_pair, terminated};
 use std::collections::{BTreeMap, BTreeSet, btree_map};
 use thiserror;
 
+use crate::derivation::output::OutputHash;
 use crate::derivation::parse_error::{ErrorKind, NomError, NomResult, into_nomerror};
-use crate::derivation::{CAHash, Derivation, Output, OutputName, write};
+use crate::derivation::{Derivation, Output, OutputName, write};
 use crate::store_path::{self, StorePath};
-use crate::{aterm, nixhash, nixhash::NixHash};
+use crate::{aterm, nixhash};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error<I> {
@@ -48,7 +49,7 @@ pub(crate) fn parse(i: &[u8]) -> Result<Derivation, Error<&[u8]>> {
             debug_assert!(rest.is_empty());
 
             // invoke validate
-            derivation.validate(true).map_err(Error::Validation)?;
+            derivation.validate().map_err(Error::Validation)?;
 
             Ok(derivation)
         }
@@ -66,7 +67,7 @@ pub fn parse_streaming(i: &[u8]) -> (Result<Derivation, Error<&[u8]>>, &[u8]) {
     match consumed(parse_derivation).parse(i) {
         Ok((_, (rest, derivation))) => {
             // invoke validate
-            if let Err(e) = derivation.validate(true).map_err(Error::Validation) {
+            if let Err(e) = derivation.validate().map_err(Error::Validation) {
                 return (Err(e), i);
             }
 
@@ -75,26 +76,6 @@ pub fn parse_streaming(i: &[u8]) -> (Result<Derivation, Error<&[u8]>>, &[u8]) {
         Err(nom::Err::Incomplete(_)) => (Err(Error::Incomplete), i),
         Err(nom::Err::Error(e) | nom::Err::Failure(e)) => (Err(e.into()), i),
     }
-}
-
-/// Consume a string containing the algo, and optionally a `r:`
-/// prefix, and a digest (bytes), return a [CAHash::Nar] or [CAHash::Flat].
-/// This does not live in CAHash, as its only possible to construct a subset of CAHash kinds,
-/// and only used inside Derivation ATerm.
-fn from_algo_and_mode_and_digest<B: AsRef<[u8]>>(
-    algo_and_mode: &str,
-    digest: B,
-) -> Result<CAHash, nixhash::Error> {
-    Ok(match algo_and_mode.strip_prefix("r:") {
-        Some(algo) => nixhash::CAHash::Nar(NixHash::from_algo_and_digest(
-            algo.try_into()?,
-            digest.as_ref(),
-        )?),
-        None => nixhash::CAHash::Flat(NixHash::from_algo_and_digest(
-            algo_and_mode.try_into()?,
-            digest.as_ref(),
-        )?),
-    })
 }
 
 /// Parse one output in ATerm. This is 4 string fields inside parans:
@@ -114,47 +95,50 @@ fn parse_output(i: &[u8]) -> NomResult<&[u8], (OutputName, Output)> {
                     .parse(i)
                     .map_err(into_nomerror)
             },
-            |(output_name_str, output_path, algo_and_mode, encoded_digest)| {
-                let output_name = output_name_str.try_into().map_err(|err| {
+            |(output_name_str, output_path_str, algo_and_mode, encoded_digest)| {
+                let output_name: OutputName = output_name_str.parse().map_err(|err| {
                     nom::Err::Failure(NomError {
                         input: i,
                         code: ErrorKind::InvalidOutputName(err),
                     })
                 })?;
-                // convert these 4 fields into an [Output].
-                let ca_hash_res = {
-                    if algo_and_mode.is_empty() && encoded_digest.is_empty() {
-                        None
-                    } else {
-                        match data_encoding::HEXLOWER.decode(&encoded_digest) {
-                            Ok(digest) => {
-                                Some(from_algo_and_mode_and_digest(&algo_and_mode, digest))
-                            }
-                            Err(e) => Some(Err(nixhash::Error::InvalidBase64Encoding(e))),
-                        }
-                    }
-                }
-                .transpose();
 
-                match ca_hash_res {
-                    Ok(hash_with_mode) => Ok((
-                        output_name,
-                        Output {
-                            // TODO: Check if allowing empty paths here actually makes sense
-                            //       or we should make this code stricter.
-                            path: if output_path.is_empty() {
-                                None
-                            } else {
-                                Some(string_to_store_path(i, &output_path)?)
-                            },
-                            ca_hash: hash_with_mode,
+                // This can't be an empty string in ATerms written to disk.
+                // This being an empty string can only occur during output path calculation.
+                let output_path = string_to_store_path(i, &output_path_str)?;
+
+                Ok::<_, nom::Err<NomError<&[u8]>>>((
+                    output_name,
+                    Output {
+                        path: Some(output_path),
+                        output_hash: if algo_and_mode.is_empty() && encoded_digest.is_empty() {
+                            None
+                        } else {
+                            let digest =
+                                data_encoding::HEXLOWER
+                                    .decode(&encoded_digest)
+                                    .map_err(|err| {
+                                        nom::Err::Failure(NomError {
+                                            input: i,
+                                            code: ErrorKind::NixHashError(
+                                                // TODO: do we still need the outer error?
+                                                nixhash::Error::InvalidBase16Encoding(err),
+                                            ),
+                                        })
+                                    })?;
+
+                            Some(
+                                OutputHash::from_mode_algo_and_digest(&algo_and_mode, digest)
+                                    .map_err(|err| {
+                                        nom::Err::Failure(NomError {
+                                            input: i,
+                                            code: ErrorKind::NixHashError(err),
+                                        })
+                                    })?,
+                            )
                         },
-                    )),
-                    Err(e) => Err(nom::Err::Failure(NomError {
-                        input: i,
-                        code: ErrorKind::NixHashError(e),
-                    })),
-                }
+                    },
+                ))
             },
         ),
         nomchar(')'),
@@ -391,25 +375,20 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::derivation::OutputName;
+    use super::OutputHash;
+    use crate::derivation::{Output, OutputHashMode, OutputName};
     use crate::store_path::StorePathRef;
+    use crate::{
+        derivation::{NixHash, parse_error::ErrorKind},
+        store_path::StorePath,
+    };
     use std::collections::{BTreeMap, BTreeSet};
     use std::sync::LazyLock;
 
-    use crate::{
-        derivation::{
-            CAHash, NixHash, Output, parse_error::ErrorKind, parser::from_algo_and_mode_and_digest,
-        },
-        store_path::StorePath,
-    };
     use bstr::{BString, ByteSlice};
     use hex_literal::hex;
     use rstest::rstest;
 
-    const DIGEST_SHA256: [u8; 32] =
-        hex!("a5ce9c155ed09397614646c9717fc7cd94b1023d7b76b618d409e4fefd6e9d39");
-
-    static NIXHASH_SHA256: NixHash = NixHash::Sha256(DIGEST_SHA256);
     static EXP_MULTI_OUTPUTS: LazyLock<BTreeMap<OutputName, Output>> = LazyLock::new(|| {
         let mut b = BTreeMap::new();
         b.insert(
@@ -419,7 +398,7 @@ mod tests {
                     StorePath::from_bytes(b"2vixb94v0hy2xc6p7mbnxxcyc095yyia-has-multi-out-lib")
                         .unwrap(),
                 ),
-                ca_hash: None,
+                output_hash: None,
             },
         );
         b.insert(
@@ -431,7 +410,7 @@ mod tests {
                     )
                     .unwrap(),
                 ),
-                ca_hash: None,
+                output_hash: None,
             },
         );
         b
@@ -603,7 +582,7 @@ mod tests {
         (OutputName::out(), Output {
             path: Some(
                 StorePathRef::from_absolute_path("/nix/store/5vyvcwah9l9kf07d52rcgdk70g2f4y13-foo".as_bytes()).unwrap().to_owned()),
-            ca_hash: None
+            output_hash: None
         })
     )]
     #[case::fod(
@@ -612,10 +591,12 @@ mod tests {
             path: Some(
                 StorePathRef::from_absolute_path(
                 "/nix/store/4q0pg5zpfmznxscq3avycvf9xdvx50n3-bar".as_bytes()).unwrap().to_owned()),
-            ca_hash: Some(from_algo_and_mode_and_digest("r:sha256",
-                   data_encoding::HEXLOWER.decode(b"08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba").unwrap()            ).unwrap()),
+            output_hash: Some(OutputHash{
+                mode: OutputHashMode::Recursive,
+                hash: NixHash::Sha256(hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba")),
+            }),
         })
-     )]
+    )]
     fn parse_output(#[case] input: &[u8], #[case] expected: (OutputName, Output)) {
         let (rest, parsed) = super::parse_output(input).expect("must parse");
         assert!(rest.is_empty());
@@ -631,25 +612,5 @@ mod tests {
         let (rest, parsed) = super::parse_outputs(input).expect("must parse");
         assert!(rest.is_empty());
         assert_eq!(*expected, parsed);
-    }
-
-    #[rstest]
-    #[case::sha256_flat("sha256", &DIGEST_SHA256, CAHash::Flat(NIXHASH_SHA256.clone()))]
-    #[case::sha256_recursive("r:sha256", &DIGEST_SHA256, CAHash::Nar(NIXHASH_SHA256.clone()))]
-    fn test_from_algo_and_mode_and_digest(
-        #[case] algo_and_mode: &str,
-        #[case] digest: &[u8],
-        #[case] expected: CAHash,
-    ) {
-        assert_eq!(
-            expected,
-            from_algo_and_mode_and_digest(algo_and_mode, digest).unwrap()
-        );
-    }
-
-    #[test]
-    fn from_algo_and_mode_and_digest_failure() {
-        assert!(from_algo_and_mode_and_digest("r:sha256", []).is_err());
-        assert!(from_algo_and_mode_and_digest("ha256", DIGEST_SHA256).is_err());
     }
 }

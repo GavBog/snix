@@ -1,8 +1,5 @@
 //! Contains errors that can occur during evaluation of builtins in this crate
-use nix_compat::{
-    nixhash::{self, NixHash},
-    store_path,
-};
+use nix_compat::{derivation::OutputName, nixhash::NixHash, store_path};
 use reqwest::Url;
 use snix_castore::import;
 use std::{path::PathBuf, sync::Arc};
@@ -12,21 +9,17 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum DerivationError {
     #[error("an output with the name '{0}' is already defined")]
-    DuplicateOutput(String),
+    DuplicateOutput(OutputName),
     #[error("fixed-output derivations can only have the default `out`-output")]
     ConflictingOutputTypes,
     #[error("the environment variable '{0}' has already been set in this derivation")]
     DuplicateEnvVar(String),
-    #[error("invalid derivation parameters: {0}")]
-    InvalidDerivation(#[from] nix_compat::derivation::DerivationError),
-    #[error("invalid output hash: {0}")]
-    InvalidOutputHash(#[from] nixhash::Error),
-    #[error("invalid output hash mode: '{0}', only 'recursive' and 'flat` are supported")]
-    InvalidOutputHashMode(String),
     #[error(
         "Cannot have an environment variable named '__json'. This key is reserved for encoding structured attrs"
     )]
     StructuredAttrsJsonKeyPresent,
+    #[error("invalid derivation parameters: {0}")]
+    InvalidDerivation(#[from] nix_compat::derivation::DerivationError),
 }
 
 impl From<DerivationError> for snix_eval::ErrorKind {

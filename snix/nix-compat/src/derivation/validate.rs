@@ -4,12 +4,9 @@ impl Derivation {
     /// validate ensures a Derivation struct is properly populated,
     /// and returns a [DerivationError] if not.
     ///
-    /// if `validate_output_paths` is set to false, the output paths are
-    /// excluded from validation.
-    ///
     /// This is helpful to validate struct population before invoking
     /// [Derivation::calculate_output_paths].
-    pub fn validate(&self, validate_output_paths: bool) -> Result<(), DerivationError> {
+    pub fn validate(&self) -> Result<(), DerivationError> {
         // Ensure the number of outputs is > 1
         if self.outputs.is_empty() {
             return Err(DerivationError::NoOutputs());
@@ -26,10 +23,6 @@ impl Derivation {
                         output_name.to_string(),
                     ));
                 }
-            }
-
-            if let Err(e) = output.validate(validate_output_paths) {
-                return Err(DerivationError::InvalidOutput(output_name.to_string(), e));
             }
         }
 
@@ -62,36 +55,5 @@ impl Derivation {
         }
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use std::collections::BTreeMap;
-
-    use crate::derivation::{CAHash, Derivation, Output, OutputName};
-
-    /// Regression test: produce a Derivation that's almost valid, except its
-    /// fixed-output output has the wrong hash specified.
-    #[test]
-    fn output_validate() {
-        let mut outputs = BTreeMap::new();
-        outputs.insert(
-            OutputName::out(),
-            Output {
-                path: None,
-                ca_hash: Some(CAHash::Text([0; 32])), // This is disallowed
-            },
-        );
-
-        let drv = Derivation {
-            arguments: vec![],
-            builder: "/bin/sh".to_string(),
-            outputs,
-            system: "x86_64-linux".to_string(),
-            ..Default::default()
-        };
-
-        drv.validate(false).expect_err("must fail");
     }
 }
