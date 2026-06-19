@@ -66,10 +66,12 @@ impl CAHash {
             _ => None,
         }
     }
+}
 
-    /// Formats a [CAHash] in the Nix default hash format, which is the format
-    /// that's used in NARInfos for example.
-    pub fn to_nix_nixbase32_string(&self) -> String {
+/// Formats a [CAHash] in the Nix default hash format, which is the format
+/// that's used in NARInfos for example.
+impl std::fmt::Display for CAHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let (algo, hash) = match self {
             CAHash::Flat(h) => match h {
                 NixHash::Md5(h) => ("fixed:md5", &h[..]),
@@ -86,6 +88,6 @@ impl CAHash {
             CAHash::Text(h) => ("text:sha256", &h[..]),
         };
 
-        format!("{}:{}", algo, nixbase32::encode(hash))
+        write!(f, "{}:{}", algo, nixbase32::encode(hash))
     }
 }

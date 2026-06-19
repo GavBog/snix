@@ -400,7 +400,7 @@ impl Display for NarInfo<'_> {
         }
 
         if let Some(ca) = &self.ca {
-            writeln!(w, "CA: {}", ca.to_nix_nixbase32_string())?;
+            writeln!(w, "CA: {}", ca)?;
         }
 
         Ok(())

@@ -96,7 +96,7 @@ impl NixSerialize for CAHash {
     where
         W: NixWrite,
     {
-        writer.write_value(&self.to_nix_nixbase32_string()).await
+        writer.write_value(&self.to_string()).await
     }
 }
 
