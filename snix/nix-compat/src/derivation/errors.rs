@@ -15,12 +15,12 @@ pub enum DerivationError {
     #[error("invalid output name for fixed-output derivation: {0}")]
     InvalidOutputNameForFixed(String),
     #[error("unable to validate output {0}: {1}")]
-    InvalidOutput(String, ParseOutputError),
+    InvalidOutput(String, #[source] ParseOutputError),
     #[error("invalid calculated output derivation path name: {0}")]
-    InvalidOutputDerivationPath(String, store_path::ParseStorePathError),
+    InvalidOutputDerivationPath(String, #[source] store_path::ParseStorePathError),
     // input derivation
     #[error("unable to parse input derivation path {0}: {1}")]
-    InvalidInputDerivationPath(String, store_path::ParseStorePathError),
+    InvalidInputDerivationPath(String, #[source] store_path::ParseStorePathError),
     #[error("input derivation {0} doesn't end with .drv")]
     InvalidInputDerivationPrefix(String),
     #[error("input derivation {0} output names are empty")]
@@ -30,7 +30,7 @@ pub enum DerivationError {
 
     // input sources
     #[error("unable to parse input sources path {0}: {1}")]
-    InvalidInputSourcesPath(String, store_path::ParseStorePathError),
+    InvalidInputSourcesPath(String, #[source] store_path::ParseStorePathError),
 
     // platform
     #[error("invalid platform field: {0}")]
