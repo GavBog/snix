@@ -17,6 +17,26 @@ pub enum HashAlgo {
 }
 
 impl HashAlgo {
+    // return the algo name as a &'static str.
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            HashAlgo::Md5 => "md5",
+            HashAlgo::Sha1 => "sha1",
+            HashAlgo::Sha256 => "sha256",
+            HashAlgo::Sha512 => "sha512",
+        }
+    }
+
+    // return the prefix this would have in the SRI case.
+    pub const fn sri_prefix(&self) -> &'static str {
+        match self {
+            HashAlgo::Md5 => "md5-",
+            HashAlgo::Sha1 => "sha1-",
+            HashAlgo::Sha256 => "sha256-",
+            HashAlgo::Sha512 => "sha512-",
+        }
+    }
+
     // return the number of bytes in the digest of the given hash algo.
     pub const fn digest_length(&self) -> usize {
         match self {
@@ -30,12 +50,7 @@ impl HashAlgo {
 
 impl Display for HashAlgo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self {
-            HashAlgo::Md5 => write!(f, "md5"),
-            HashAlgo::Sha1 => write!(f, "sha1"),
-            HashAlgo::Sha256 => write!(f, "sha256"),
-            HashAlgo::Sha512 => write!(f, "sha512"),
-        }
+        write!(f, "{}", self.as_str())
     }
 }
 
