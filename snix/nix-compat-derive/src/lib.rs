@@ -458,3 +458,20 @@ pub fn nix_serialize_remote(item: TokenStream) -> TokenStream {
         .unwrap_or_else(syn::Error::into_compile_error)
         .into()
 }
+
+/// Macro to implement both `NixDeserialize` and `NixSerialize` on a type.
+///
+/// This is just a short hand for calling 'nix_deserialize_remote' and
+/// 'nix_serialize_remote' in one macro.
+#[proc_macro]
+pub fn nix_serde_remote(item: TokenStream) -> TokenStream {
+    let input = syn::parse_macro_input!(item as RemoteInput);
+    let crate_path: syn::Path = parse_quote!(::nix_compat);
+    let mut ret = ser::expand_nix_serialize_remote(crate_path.clone(), &input)
+        .unwrap_or_else(syn::Error::into_compile_error);
+    ret.extend(
+        de::expand_nix_deserialize_remote(crate_path, &input)
+            .unwrap_or_else(syn::Error::into_compile_error),
+    );
+    ret.into()
+}
