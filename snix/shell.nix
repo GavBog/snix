@@ -15,7 +15,6 @@ pkgs.mkShell {
     pkgs.go
     pkgs.grpcurl
     pkgs.hyperfine
-    pkgs.perf-with-rust-addr2line
     pkgs.pkg-config
     pkgs.prek
     pkgs.rust-addr2line
@@ -26,6 +25,7 @@ pkgs.mkShell {
     pkgs.tracy_0_13
   ]
   ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+    pkgs.perf-with-rust-addr2line
     pkgs.bubblewrap
     pkgs.cbtemulator
     pkgs.google-cloud-bigtable-tool
