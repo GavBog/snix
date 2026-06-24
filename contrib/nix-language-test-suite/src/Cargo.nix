@@ -4341,6 +4341,105 @@ rec {
         ];
 
       };
+      "crc-fast" = rec {
+        crateName = "crc-fast";
+        version = "1.10.0";
+        edition = "2021";
+        crateBin = [ ];
+        sha256 = "19fv025y2yb0hrvirvfqb3zkrigr56v0b2n67akpsnksx61j8nz7";
+        libName = "crc_fast";
+        type = [
+          "lib"
+          "cdylib"
+          "staticlib"
+        ];
+        authors = [
+          "Don MacAskill"
+        ];
+        dependencies = [
+          {
+            name = "digest";
+            packageId = "digest 0.10.7";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "alloc" ];
+          }
+          {
+            name = "spin";
+            packageId = "spin";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [
+              "once"
+              "rwlock"
+              "mutex"
+              "spin_mutex"
+            ];
+          }
+          {
+            name = "spin";
+            packageId = "spin";
+            usesDefaultFeatures = false;
+            target = { target, features }: ("aarch64" == target."arch" or null);
+            features = [
+              "once"
+              "rwlock"
+              "mutex"
+              "spin_mutex"
+            ];
+          }
+          {
+            name = "spin";
+            packageId = "spin";
+            usesDefaultFeatures = false;
+            target = { target, features }: ("x86" == target."arch" or null);
+            features = [
+              "once"
+              "rwlock"
+              "mutex"
+              "spin_mutex"
+            ];
+          }
+          {
+            name = "spin";
+            packageId = "spin";
+            usesDefaultFeatures = false;
+            target = { target, features }: ("x86_64" == target."arch" or null);
+            features = [
+              "once"
+              "rwlock"
+              "mutex"
+              "spin_mutex"
+            ];
+          }
+        ];
+        features = {
+          "alloc" = [ "digest" ];
+          "cache" = [
+            "alloc"
+            "hashbrown"
+            "spin"
+          ];
+          "cli" = [ "std" ];
+          "default" = [
+            "std"
+            "panic-handler"
+            "ffi"
+          ];
+          "digest" = [ "dep:digest" ];
+          "hashbrown" = [ "dep:hashbrown" ];
+          "spin" = [ "dep:spin" ];
+          "std" = [ "alloc" ];
+        };
+        resolvedDefaultFeatures = [
+          "alloc"
+          "default"
+          "digest"
+          "ffi"
+          "panic-handler"
+          "std"
+        ];
+      };
       "crc32fast" = rec {
         crateName = "crc32fast";
         version = "1.5.0";
@@ -9169,6 +9268,34 @@ rec {
           "use_std"
         ];
       };
+      "itertools 0.15.0" = rec {
+        crateName = "itertools";
+        version = "0.15.0";
+        edition = "2018";
+        sha256 = "1p412hriqm4kxn7x1539vz2p5c5s1v2m36m4kis2ai4dyn9syjwb";
+        authors = [
+          "bluss"
+        ];
+        dependencies = [
+          {
+            name = "either";
+            packageId = "either";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "default" = [ "use_std" ];
+          "use_std" = [
+            "use_alloc"
+            "either/use_std"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "default"
+          "use_alloc"
+          "use_std"
+        ];
+      };
       "itoa" = rec {
         crateName = "itoa";
         version = "1.0.18";
@@ -10227,7 +10354,7 @@ rec {
         };
         resolvedDefaultFeatures = [ "default" ];
       };
-      "md-5" = rec {
+      "md-5 0.10.6" = rec {
         crateName = "md-5";
         version = "0.10.6";
         edition = "2018";
@@ -10264,6 +10391,42 @@ rec {
           "default"
           "std"
         ];
+      };
+      "md-5 0.11.0" = rec {
+        crateName = "md-5";
+        version = "0.11.0";
+        edition = "2024";
+        sha256 = "166yqj8b11pawpys7knnn77cr618cby2iywpp0dq4dh3b4gl9dk9";
+        libName = "md5";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "cfg-if";
+            packageId = "cfg-if";
+          }
+          {
+            name = "digest";
+            packageId = "digest 0.11.3";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "digest";
+            packageId = "digest 0.11.3";
+            features = [ "dev" ];
+          }
+        ];
+        features = {
+          "alloc" = [ "digest/alloc" ];
+          "default" = [
+            "alloc"
+            "oid"
+          ];
+          "oid" = [ "digest/oid" ];
+          "zeroize" = [ "digest/zeroize" ];
+        };
       };
       "memchr" = rec {
         crateName = "memchr";
@@ -11442,13 +11605,19 @@ rec {
       };
       "object_store" = rec {
         crateName = "object_store";
-        version = "0.13.2";
+        version = "0.14.0";
         edition = "2024";
-        sha256 = "0jcajnvha22jrla3i9as7n9mrra0m864p00mxvi10g0d234wnak2";
+        sha256 = "1glxrvc2fg34arl290wcknf666v6wgs24nkf660cysqc76s88mvn";
         dependencies = [
           {
             name = "async-trait";
             packageId = "async-trait";
+          }
+          {
+            name = "aws-lc-rs";
+            packageId = "aws-lc-rs";
+            optional = true;
+            usesDefaultFeatures = false;
           }
           {
             name = "base64";
@@ -11466,6 +11635,11 @@ rec {
             packageId = "chrono";
             usesDefaultFeatures = false;
             features = [ "clock" ];
+          }
+          {
+            name = "crc-fast";
+            packageId = "crc-fast";
+            optional = true;
           }
           {
             name = "form_urlencoded";
@@ -11516,13 +11690,20 @@ rec {
           }
           {
             name = "itertools";
-            packageId = "itertools 0.14.0";
+            packageId = "itertools 0.15.0";
           }
           {
             name = "md-5";
-            packageId = "md-5";
+            packageId = "md-5 0.11.0";
             optional = true;
             usesDefaultFeatures = false;
+          }
+          {
+            name = "nix";
+            packageId = "nix 0.31.3";
+            optional = true;
+            usesDefaultFeatures = false;
+            target = { target, features }: (builtins.elem "unix" target."family");
           }
           {
             name = "parking_lot";
@@ -11554,20 +11735,10 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest 0.12.28";
+            packageId = "reqwest";
             optional = true;
             usesDefaultFeatures = false;
-            features = [
-              "rustls-tls-native-roots"
-              "http2"
-            ];
-          }
-          {
-            name = "ring";
-            packageId = "ring";
-            optional = true;
-            usesDefaultFeatures = false;
-            features = [ "std" ];
+            features = [ "http2" ];
           }
           {
             name = "rustls-pki-types";
@@ -11637,6 +11808,14 @@ rec {
             target =
               { target, features }: (("wasm32" == target."arch" or null) && ("unknown" == target."os" or null));
           }
+          {
+            name = "windows-sys";
+            packageId = "windows-sys 0.61.2";
+            optional = true;
+            usesDefaultFeatures = false;
+            target = { target, features }: (builtins.elem "windows" target."family");
+            features = [ "Win32_Foundation" ];
+          }
         ];
         devDependencies = [
           {
@@ -11645,53 +11824,85 @@ rec {
             features = [ "server" ];
           }
           {
+            name = "nix";
+            packageId = "nix 0.31.3";
+            target = { target, features }: (builtins.elem "unix" target."family");
+            features = [ "fs" ];
+          }
+          {
             name = "rand";
             packageId = "rand 0.10.1";
           }
           {
             name = "reqwest";
-            packageId = "reqwest 0.12.28";
+            packageId = "reqwest";
             usesDefaultFeatures = false;
             features = [ "gzip" ];
           }
         ];
         features = {
           "aws" = [
-            "cloud"
+            "aws-base"
+            "reqwest"
+            "reqwest/rustls"
+            "aws-lc-rs"
+          ];
+          "aws-base" = [
+            "cloud-base"
+            "crc-fast"
             "md-5"
           ];
+          "aws-lc-rs" = [
+            "dep:aws-lc-rs"
+            "rustls-pki-types"
+          ];
           "azure" = [
-            "cloud"
+            "azure-base"
+            "reqwest"
+            "reqwest/rustls"
+            "aws-lc-rs"
+          ];
+          "azure-base" = [
+            "cloud-base"
             "httparse"
           ];
           "base64" = [ "dep:base64" ];
-          "cloud" = [
+          "cloud-base" = [
             "serde"
             "serde_json"
             "quick-xml"
             "hyper"
-            "reqwest"
-            "reqwest/stream"
             "chrono/serde"
             "base64"
             "rand"
-            "ring"
             "http-body-util"
             "form_urlencoded"
             "serde_urlencoded"
             "tokio"
           ];
+          "crc-fast" = [ "dep:crc-fast" ];
           "default" = [ "fs" ];
           "form_urlencoded" = [ "dep:form_urlencoded" ];
           "fs" = [
             "walkdir"
             "tokio"
+            "nix"
+            "windows-sys"
           ];
           "gcp" = [
-            "cloud"
-            "rustls-pki-types"
+            "gcp-base"
+            "reqwest"
+            "reqwest/rustls"
+            "aws-lc-rs"
           ];
-          "http" = [ "cloud" ];
+          "gcp-base" = [ "cloud-base" ];
+          "http" = [
+            "http-base"
+            "reqwest"
+            "reqwest/rustls"
+            "aws-lc-rs"
+          ];
+          "http-base" = [ "cloud-base" ];
           "http-body-util" = [ "dep:http-body-util" ];
           "httparse" = [ "dep:httparse" ];
           "hyper" = [ "dep:hyper" ];
@@ -11700,45 +11911,59 @@ rec {
             "tokio"
           ];
           "md-5" = [ "dep:md-5" ];
+          "nix" = [ "dep:nix" ];
           "quick-xml" = [ "dep:quick-xml" ];
           "rand" = [ "dep:rand" ];
-          "reqwest" = [ "dep:reqwest" ];
-          "ring" = [ "dep:ring" ];
+          "reqwest" = [
+            "dep:reqwest"
+            "reqwest/stream"
+          ];
+          "ring" = [
+            "dep:ring"
+            "rustls-pki-types"
+          ];
           "rustls-pki-types" = [ "dep:rustls-pki-types" ];
           "serde" = [ "dep:serde" ];
           "serde_json" = [ "dep:serde_json" ];
           "serde_urlencoded" = [ "dep:serde_urlencoded" ];
-          "tls-webpki-roots" = [ "reqwest?/rustls-tls-webpki-roots" ];
           "tokio" = [
             "dep:tokio"
             "dep:tracing"
           ];
           "walkdir" = [ "dep:walkdir" ];
+          "windows-sys" = [ "dep:windows-sys" ];
         };
         resolvedDefaultFeatures = [
           "aws"
+          "aws-base"
+          "aws-lc-rs"
           "azure"
+          "azure-base"
           "base64"
-          "cloud"
+          "cloud-base"
+          "crc-fast"
           "default"
           "form_urlencoded"
           "fs"
           "gcp"
+          "gcp-base"
           "http"
+          "http-base"
           "http-body-util"
           "httparse"
           "hyper"
           "md-5"
+          "nix"
           "quick-xml"
           "rand"
           "reqwest"
-          "ring"
           "rustls-pki-types"
           "serde"
           "serde_json"
           "serde_urlencoded"
           "tokio"
           "walkdir"
+          "windows-sys"
         ];
       };
       "oci-spec" = rec {
@@ -12936,9 +13161,9 @@ rec {
       };
       "quick-xml" = rec {
         crateName = "quick-xml";
-        version = "0.39.4";
+        version = "0.40.1";
         edition = "2021";
-        sha256 = "0plfhnna58ad2hlym3q02zrmmh7xdpikzs7hll4x6w7nwba8vk6d";
+        sha256 = "0zysqy81aa242n89bx7d3n2k78w34g7lifmjmfvcrrr9a0pbsx14";
         libName = "quick_xml";
         dependencies = [
           {
@@ -13115,11 +13340,8 @@ rec {
         };
         resolvedDefaultFeatures = [
           "aws-lc-rs"
-          "ring"
           "runtime-tokio"
-          "rustls"
           "rustls-aws-lc-rs"
-          "rustls-ring"
         ];
       };
       "quinn-proto" = rec {
@@ -13258,9 +13480,7 @@ rec {
         };
         resolvedDefaultFeatures = [
           "aws-lc-rs"
-          "ring"
           "rustls-aws-lc-rs"
-          "rustls-ring"
         ];
       };
       "quinn-udp" = rec {
@@ -14115,451 +14335,7 @@ rec {
         };
         resolvedDefaultFeatures = [ "default" ];
       };
-      "reqwest 0.12.28" = rec {
-        crateName = "reqwest";
-        version = "0.12.28";
-        edition = "2021";
-        sha256 = "0iqidijghgqbzl3bjg5hb4zmigwa4r612bgi0yiq0c90b6jkrpgd";
-        authors = [
-          "Sean McArthur <sean@seanmonstar.com>"
-        ];
-        dependencies = [
-          {
-            name = "base64";
-            packageId = "base64";
-          }
-          {
-            name = "bytes";
-            packageId = "bytes";
-          }
-          {
-            name = "futures-core";
-            packageId = "futures-core";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "h2";
-            packageId = "h2";
-            optional = true;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-          }
-          {
-            name = "http";
-            packageId = "http 1.4.0";
-          }
-          {
-            name = "http-body";
-            packageId = "http-body 1.0.1";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-          }
-          {
-            name = "http-body-util";
-            packageId = "http-body-util";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-          }
-          {
-            name = "hyper";
-            packageId = "hyper";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "http1"
-              "client"
-            ];
-          }
-          {
-            name = "hyper-rustls";
-            packageId = "hyper-rustls";
-            optional = true;
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "http1"
-              "tls12"
-            ];
-          }
-          {
-            name = "hyper-util";
-            packageId = "hyper-util";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "http1"
-              "client"
-              "client-legacy"
-              "client-proxy"
-              "tokio"
-            ];
-          }
-          {
-            name = "js-sys";
-            packageId = "js-sys";
-            target = { target, features }: ("wasm32" == target."arch" or null);
-          }
-          {
-            name = "log";
-            packageId = "log";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-          }
-          {
-            name = "percent-encoding";
-            packageId = "percent-encoding";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-          }
-          {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-          }
-          {
-            name = "quinn";
-            packageId = "quinn";
-            optional = true;
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "rustls"
-              "runtime-tokio"
-            ];
-          }
-          {
-            name = "rustls";
-            packageId = "rustls";
-            optional = true;
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "std"
-              "tls12"
-            ];
-          }
-          {
-            name = "rustls-native-certs";
-            packageId = "rustls-native-certs";
-            optional = true;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-          }
-          {
-            name = "rustls-pki-types";
-            packageId = "rustls-pki-types";
-            optional = true;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "std" ];
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-          }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
-            optional = true;
-          }
-          {
-            name = "serde_json";
-            packageId = "serde_json";
-            target = { target, features }: ("wasm32" == target."arch" or null);
-          }
-          {
-            name = "serde_urlencoded";
-            packageId = "serde_urlencoded";
-          }
-          {
-            name = "sync_wrapper";
-            packageId = "sync_wrapper";
-            features = [ "futures" ];
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "net"
-              "time"
-            ];
-          }
-          {
-            name = "tokio-rustls";
-            packageId = "tokio-rustls";
-            optional = true;
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "tls12" ];
-          }
-          {
-            name = "tokio-util";
-            packageId = "tokio-util";
-            optional = true;
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "io" ];
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.5.3";
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "retry"
-              "timeout"
-              "util"
-            ];
-          }
-          {
-            name = "tower-http";
-            packageId = "tower-http";
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "follow-redirect" ];
-          }
-          {
-            name = "tower-service";
-            packageId = "tower-service";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-          }
-          {
-            name = "url";
-            packageId = "url";
-          }
-          {
-            name = "wasm-bindgen";
-            packageId = "wasm-bindgen";
-            target = { target, features }: ("wasm32" == target."arch" or null);
-          }
-          {
-            name = "wasm-bindgen-futures";
-            packageId = "wasm-bindgen-futures";
-            target = { target, features }: ("wasm32" == target."arch" or null);
-          }
-          {
-            name = "wasm-streams";
-            packageId = "wasm-streams 0.4.2";
-            optional = true;
-            target = { target, features }: ("wasm32" == target."arch" or null);
-          }
-          {
-            name = "web-sys";
-            packageId = "web-sys";
-            target = { target, features }: ("wasm32" == target."arch" or null);
-            features = [
-              "AbortController"
-              "AbortSignal"
-              "Headers"
-              "Request"
-              "RequestInit"
-              "RequestMode"
-              "Response"
-              "Window"
-              "FormData"
-              "Blob"
-              "BlobPropertyBag"
-              "ServiceWorkerGlobalScope"
-              "RequestCredentials"
-              "File"
-              "ReadableStream"
-              "RequestCache"
-            ];
-          }
-        ];
-        devDependencies = [
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "std"
-              "alloc"
-            ];
-          }
-          {
-            name = "hyper";
-            packageId = "hyper";
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "http1"
-              "http2"
-              "client"
-              "server"
-            ];
-          }
-          {
-            name = "hyper-util";
-            packageId = "hyper-util";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "http1"
-              "http2"
-              "client"
-              "client-legacy"
-              "server-auto"
-              "server-graceful"
-              "tokio"
-            ];
-          }
-          {
-            name = "serde";
-            packageId = "serde";
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [ "derive" ];
-          }
-          {
-            name = "tokio";
-            packageId = "tokio";
-            usesDefaultFeatures = false;
-            target = { target, features }: (!("wasm32" == target."arch" or null));
-            features = [
-              "macros"
-              "rt-multi-thread"
-            ];
-          }
-          {
-            name = "tower";
-            packageId = "tower 0.5.3";
-            usesDefaultFeatures = false;
-            features = [ "limit" ];
-          }
-          {
-            name = "wasm-bindgen";
-            packageId = "wasm-bindgen";
-            target = { target, features }: ("wasm32" == target."arch" or null);
-            features = [ "serde-serialize" ];
-          }
-        ];
-        features = {
-          "__rustls" = [
-            "dep:hyper-rustls"
-            "dep:tokio-rustls"
-            "dep:rustls"
-            "__tls"
-          ];
-          "__rustls-ring" = [
-            "hyper-rustls?/ring"
-            "tokio-rustls?/ring"
-            "rustls?/ring"
-            "quinn?/ring"
-          ];
-          "__tls" = [
-            "dep:rustls-pki-types"
-            "tokio/io-util"
-          ];
-          "blocking" = [
-            "dep:futures-channel"
-            "futures-channel?/sink"
-            "dep:futures-util"
-            "futures-util?/io"
-            "futures-util?/sink"
-            "tokio/sync"
-          ];
-          "brotli" = [ "tower-http/decompression-br" ];
-          "charset" = [
-            "dep:encoding_rs"
-            "dep:mime"
-          ];
-          "cookies" = [
-            "dep:cookie_crate"
-            "dep:cookie_store"
-          ];
-          "default" = [
-            "default-tls"
-            "charset"
-            "http2"
-            "system-proxy"
-          ];
-          "default-tls" = [
-            "dep:hyper-tls"
-            "dep:native-tls-crate"
-            "__tls"
-            "dep:tokio-native-tls"
-          ];
-          "deflate" = [ "tower-http/decompression-deflate" ];
-          "gzip" = [ "tower-http/decompression-gzip" ];
-          "h2" = [ "dep:h2" ];
-          "hickory-dns" = [
-            "dep:hickory-resolver"
-            "dep:once_cell"
-          ];
-          "http2" = [
-            "h2"
-            "hyper/http2"
-            "hyper-util/http2"
-            "hyper-rustls?/http2"
-          ];
-          "http3" = [
-            "rustls-tls-manual-roots"
-            "dep:h3"
-            "dep:h3-quinn"
-            "dep:quinn"
-            "tokio/macros"
-          ];
-          "json" = [ "dep:serde_json" ];
-          "macos-system-configuration" = [ "system-proxy" ];
-          "multipart" = [
-            "dep:mime_guess"
-            "dep:futures-util"
-          ];
-          "native-tls" = [ "default-tls" ];
-          "native-tls-alpn" = [
-            "native-tls"
-            "native-tls-crate?/alpn"
-            "hyper-tls?/alpn"
-          ];
-          "native-tls-vendored" = [
-            "native-tls"
-            "native-tls-crate?/vendored"
-          ];
-          "rustls-tls" = [ "rustls-tls-webpki-roots" ];
-          "rustls-tls-manual-roots" = [
-            "rustls-tls-manual-roots-no-provider"
-            "__rustls-ring"
-          ];
-          "rustls-tls-manual-roots-no-provider" = [ "__rustls" ];
-          "rustls-tls-native-roots" = [
-            "rustls-tls-native-roots-no-provider"
-            "__rustls-ring"
-          ];
-          "rustls-tls-native-roots-no-provider" = [
-            "dep:rustls-native-certs"
-            "hyper-rustls?/native-tokio"
-            "__rustls"
-          ];
-          "rustls-tls-no-provider" = [ "rustls-tls-manual-roots-no-provider" ];
-          "rustls-tls-webpki-roots" = [
-            "rustls-tls-webpki-roots-no-provider"
-            "__rustls-ring"
-          ];
-          "rustls-tls-webpki-roots-no-provider" = [
-            "dep:webpki-roots"
-            "hyper-rustls?/webpki-tokio"
-            "__rustls"
-          ];
-          "stream" = [
-            "tokio/fs"
-            "dep:futures-util"
-            "dep:tokio-util"
-            "dep:wasm-streams"
-          ];
-          "system-proxy" = [ "hyper-util/client-proxy-system" ];
-          "zstd" = [ "tower-http/decompression-zstd" ];
-        };
-        resolvedDefaultFeatures = [
-          "__rustls"
-          "__rustls-ring"
-          "__tls"
-          "h2"
-          "http2"
-          "rustls-tls-native-roots"
-          "rustls-tls-native-roots-no-provider"
-          "stream"
-        ];
-      };
-      "reqwest 0.13.3" = rec {
+      "reqwest" = rec {
         crateName = "reqwest";
         version = "0.13.3";
         edition = "2021";
@@ -14935,7 +14711,7 @@ rec {
           }
           {
             name = "wasm-streams";
-            packageId = "wasm-streams 0.5.0";
+            packageId = "wasm-streams";
             optional = true;
             target =
               { target, features }:
@@ -15221,7 +14997,7 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest 0.13.3";
+            packageId = "reqwest";
             usesDefaultFeatures = false;
           }
           {
@@ -15236,7 +15012,7 @@ rec {
         devDependencies = [
           {
             name = "reqwest";
-            packageId = "reqwest 0.13.3";
+            packageId = "reqwest";
             features = [ "rustls" ];
           }
         ];
@@ -15293,7 +15069,7 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest 0.13.3";
+            packageId = "reqwest";
             usesDefaultFeatures = false;
           }
           {
@@ -15308,7 +15084,7 @@ rec {
         devDependencies = [
           {
             name = "reqwest";
-            packageId = "reqwest 0.13.3";
+            packageId = "reqwest";
             features = [ "rustls" ];
           }
         ];
@@ -15483,7 +15259,6 @@ rec {
           "alloc"
           "default"
           "dev_urandom_fallback"
-          "std"
           "wasm32_unknown_unknown_js"
         ];
       };
@@ -18182,7 +17957,7 @@ rec {
           }
           {
             name = "md-5";
-            packageId = "md-5";
+            packageId = "md-5 0.10.6";
           }
           {
             name = "os_str_bytes";
@@ -18376,7 +18151,7 @@ rec {
           }
           {
             name = "md-5";
-            packageId = "md-5";
+            packageId = "md-5 0.10.6";
           }
           {
             name = "nix-compat";
@@ -18392,7 +18167,7 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest 0.13.3";
+            packageId = "reqwest";
           }
           {
             name = "serde";
@@ -18545,7 +18320,7 @@ rec {
           }
           {
             name = "md-5";
-            packageId = "md-5";
+            packageId = "md-5 0.10.6";
           }
           {
             name = "nix-compat";
@@ -18574,7 +18349,7 @@ rec {
           }
           {
             name = "reqwest";
-            packageId = "reqwest 0.13.3";
+            packageId = "reqwest";
             features = [ "stream" ];
           }
           {
@@ -18856,6 +18631,46 @@ rec {
         features = {
         };
         resolvedDefaultFeatures = [ "all" ];
+      };
+      "spin" = rec {
+        crateName = "spin";
+        version = "0.10.0";
+        edition = "2015";
+        sha256 = "14g5sdsjf4wk2ys5dq8ivkq4rz57gphab2gcdzar5hnrk35lrznm";
+        authors = [
+          "Mathijs van de Nes <git@mathijs.vd-nes.nl>"
+          "John Ericson <git@JohnEricson.me>"
+          "Joshua Barretto <joshua.s.barretto@gmail.com>"
+        ];
+        features = {
+          "barrier" = [ "mutex" ];
+          "default" = [
+            "lock_api"
+            "mutex"
+            "spin_mutex"
+            "rwlock"
+            "once"
+            "lazy"
+            "barrier"
+          ];
+          "fair_mutex" = [ "mutex" ];
+          "lazy" = [ "once" ];
+          "lock_api" = [ "dep:lock_api_crate" ];
+          "portable-atomic" = [ "dep:portable-atomic" ];
+          "portable_atomic" = [ "portable-atomic" ];
+          "spin_mutex" = [ "mutex" ];
+          "ticket_mutex" = [ "mutex" ];
+          "use_ticket_mutex" = [
+            "mutex"
+            "ticket_mutex"
+          ];
+        };
+        resolvedDefaultFeatures = [
+          "mutex"
+          "once"
+          "rwlock"
+          "spin_mutex"
+        ];
       };
       "spki" = rec {
         crateName = "spki";
@@ -20084,7 +19899,6 @@ rec {
           "aws-lc-rs"
           "aws_lc_rs"
           "logging"
-          "ring"
           "tls12"
         ];
       };
@@ -23045,87 +22859,7 @@ rec {
           ];
         };
       };
-      "wasm-streams 0.4.2" = rec {
-        crateName = "wasm-streams";
-        version = "0.4.2";
-        edition = "2021";
-        sha256 = "0rddn007hp6k2cm91mm9y33n79b0jxv0c3znzszcvv67hn6ks18m";
-        libName = "wasm_streams";
-        type = [
-          "cdylib"
-          "rlib"
-        ];
-        authors = [
-          "Mattias Buelens <mattias@buelens.com>"
-        ];
-        dependencies = [
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            features = [
-              "io"
-              "sink"
-            ];
-          }
-          {
-            name = "js-sys";
-            packageId = "js-sys";
-          }
-          {
-            name = "wasm-bindgen";
-            packageId = "wasm-bindgen";
-          }
-          {
-            name = "wasm-bindgen-futures";
-            packageId = "wasm-bindgen-futures";
-          }
-          {
-            name = "web-sys";
-            packageId = "web-sys";
-            features = [
-              "AbortSignal"
-              "QueuingStrategy"
-              "ReadableStream"
-              "ReadableStreamType"
-              "ReadableWritablePair"
-              "ReadableStreamByobReader"
-              "ReadableStreamReaderMode"
-              "ReadableStreamReadResult"
-              "ReadableStreamByobRequest"
-              "ReadableStreamDefaultReader"
-              "ReadableByteStreamController"
-              "ReadableStreamGetReaderOptions"
-              "ReadableStreamDefaultController"
-              "StreamPipeOptions"
-              "TransformStream"
-              "TransformStreamDefaultController"
-              "Transformer"
-              "UnderlyingSink"
-              "UnderlyingSource"
-              "WritableStream"
-              "WritableStreamDefaultController"
-              "WritableStreamDefaultWriter"
-            ];
-          }
-        ];
-        devDependencies = [
-          {
-            name = "web-sys";
-            packageId = "web-sys";
-            features = [
-              "console"
-              "AbortSignal"
-              "ErrorEvent"
-              "PromiseRejectionEvent"
-              "Response"
-              "ReadableStream"
-              "Window"
-            ];
-          }
-        ];
-
-      };
-      "wasm-streams 0.5.0" = rec {
+      "wasm-streams" = rec {
         crateName = "wasm-streams";
         version = "0.5.0";
         edition = "2021";

@@ -81,19 +81,21 @@ pub struct ObjectStoreBlobService {
 #[instrument(level=Level::TRACE, skip_all,fields(base_path=%base_path,blob.digest=%digest),ret(Display))]
 fn derive_blob_path(base_path: &Path, digest: &B3Digest) -> Path {
     base_path
-        .child("blobs")
-        .child("b3")
-        .child(HEXLOWER.encode(&digest[..2]))
-        .child(HEXLOWER.encode(&digest[..]))
+        .clone()
+        .join("blobs")
+        .join("b3")
+        .join(HEXLOWER.encode(&digest[..2]))
+        .join(HEXLOWER.encode(&digest[..]))
 }
 
 #[instrument(level=Level::TRACE, skip_all,fields(base_path=%base_path,chunk.digest=%digest),ret(Display))]
 fn derive_chunk_path(base_path: &Path, digest: &B3Digest) -> Path {
     base_path
-        .child("chunks")
-        .child("b3")
-        .child(HEXLOWER.encode(&digest[..2]))
-        .child(HEXLOWER.encode(&digest[..]))
+        .clone()
+        .join("chunks")
+        .join("b3")
+        .join(HEXLOWER.encode(&digest[..2]))
+        .join(HEXLOWER.encode(&digest[..]))
 }
 
 #[async_trait]

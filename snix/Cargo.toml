@@ -105,7 +105,7 @@ mimalloc = "0.1.43"
 mockall = { git = "https://github.com/asomers/mockall.git", rev = "2270cdb77897aeb55326ba730f1c1fc2131cc8e1" }
 nix = "0.27.1"
 nom = "8.0"
-object_store = "0.13.1"
+object_store = "0.14.0"
 opentelemetry = "0.31.0"
 opentelemetry-http = "0.31.0"
 opentelemetry-instrumentation-tower = "0.17.0"
