@@ -15,6 +15,7 @@ use super::{
 };
 
 use crate::{
+    nix_daemon::types::BuildPaths,
     store_path::StorePath,
     wire::{
         ProtocolVersion,
@@ -262,6 +263,11 @@ where
                                 }
                             }
                         }
+                    }
+                    Operation::BuildPaths => {
+                        let args: BuildPaths = self.reader.read_value().await?;
+                        Self::handle(&self.writer, self.io.build_paths(args.paths, args.mode))
+                            .await?
                     }
                     _ => {
                         return Err(std::io::Error::other(format!(

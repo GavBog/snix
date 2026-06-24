@@ -6,7 +6,7 @@ use tokio::io::AsyncRead;
 use tracing::warn;
 use types::{QueryValidPaths, UnkeyedValidPathInfo, ValidPathInfo};
 
-use crate::store_path::StorePath;
+use crate::{derived_path::DerivedPath, nix_daemon::types::BuildMode, store_path::StorePath};
 
 pub mod framing;
 pub mod handler;
@@ -74,12 +74,19 @@ pub trait NixDaemonIO: Sync {
     ) -> impl std::future::Future<Output = Result<()>> + Send
     where
         R: AsyncRead + Send + Unpin;
+
+    fn build_paths(
+        &self,
+        derived_paths: Vec<DerivedPath>,
+        mode: BuildMode,
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 #[cfg(test)]
 mod tests {
 
     use crate::{
+        derived_path::DerivedPath,
         nix_daemon::types::{NarHash, QueryValidPaths},
         store_path::StorePath,
     };
@@ -117,6 +124,14 @@ mod tests {
         where
             R: tokio::io::AsyncRead + Send + Unpin,
         {
+            Ok(())
+        }
+
+        async fn build_paths(
+            &self,
+            _derived_paths: Vec<DerivedPath>,
+            _mode: super::types::BuildMode,
+        ) -> std::io::Result<()> {
             Ok(())
         }
     }

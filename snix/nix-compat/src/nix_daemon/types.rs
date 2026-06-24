@@ -1,3 +1,4 @@
+use crate::derived_path::DerivedPath;
 use crate::nixbase32;
 use crate::wire::de::Error;
 use crate::{
@@ -25,6 +26,29 @@ impl From<IgnoredZero> for u64 {
     fn from(_: IgnoredZero) -> Self {
         0
     }
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    num_enum::TryFromPrimitive,
+    num_enum::IntoPrimitive,
+    NixDeserialize,
+    NixSerialize,
+)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[nix(try_from = "u16", into = "u16")]
+#[repr(u16)]
+pub enum BuildMode {
+    Normal = 0,
+    Repair = 1,
+    Check = 2,
 }
 
 #[derive(Debug, NixSerialize)]
@@ -108,6 +132,16 @@ pub struct QueryValidPaths {
     // Whether to try and substitute the paths.
     #[nix(version = "27..")]
     pub substitute: bool,
+}
+
+/// Request tuple for [super::worker_protocol::Operation::BuildPaths]
+#[derive(NixDeserialize)]
+pub struct BuildPaths {
+    // Paths to build
+    pub paths: Vec<DerivedPath>,
+
+    // How to build the paths
+    pub mode: BuildMode,
 }
 
 /// newtype wrapper for the byte array that correctly implements NixSerialize, NixDeserialize.

@@ -6,9 +6,10 @@ use std::{
 };
 
 use nix_compat::{
+    derived_path::DerivedPath,
     nix_daemon::{
         NixDaemonIO,
-        types::{NarHash, UnkeyedValidPathInfo, ValidPathInfo},
+        types::{BuildMode, NarHash, UnkeyedValidPathInfo, ValidPathInfo},
     },
     nixbase32,
     nixhash::CAHashMode,
@@ -131,6 +132,10 @@ impl NixDaemonIO for SnixDaemon {
             .put(path_info)
             .await
             .map_err(|e| Error::other(e.to_string()))?;
+        Ok(())
+    }
+
+    async fn build_paths(&self, _derived_paths: Vec<DerivedPath>, _mode: BuildMode) -> Result<()> {
         Ok(())
     }
 }
