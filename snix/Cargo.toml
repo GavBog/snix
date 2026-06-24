@@ -71,7 +71,7 @@ axum-range = "1.0.0"
 axum-tracing-opentelemetry = { version = "0.33.1", features = [
   "tracing_level_info",
 ] }
-bigtable_rs = "0.3.0"
+bigtable_rs = "0.4.0"
 bitflags = "2.6.0"
 blake3 = "1.5.4"
 bstr = "1.10.0"
@@ -92,7 +92,7 @@ fastcdc = "3.1.0"
 fuse-backend-rs = "=0.12.0"
 futures = "0.3.30"
 genawaiter = { version = "0.99.1", default-features = false }
-googleapis-tonic-google-bigtable-v2 = "0.36.0"
+googleapis-tonic-google-bigtable-v2 = "0.39.0"
 hashbrown = "0.17.1"
 hex-literal = "0.4.1"
 http = "1.1.0"
