@@ -12,11 +12,8 @@ pub mod framing;
 pub mod handler;
 pub mod types;
 
-#[cfg(test)]
-use mockall::automock;
-
 /// Represents all possible operations over the nix-daemon protocol.
-#[cfg_attr(test, automock)]
+#[cfg_attr(test, mockall::automock)]
 pub trait NixDaemonIO: Sync {
     fn is_valid_path(
         &self,
