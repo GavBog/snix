@@ -23872,6 +23872,10 @@ rec {
             packageId = "hex-literal";
           }
           {
+            name = "mockall";
+            packageId = "mockall";
+          }
+          {
             name = "rstest";
             packageId = "rstest";
             usesDefaultFeatures = false;
