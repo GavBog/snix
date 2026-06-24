@@ -18,11 +18,6 @@ pub const AT_NIX_PREFIX: &str = "@nix ";
     derive(Serialize, Deserialize),
     serde(try_from = "u64", into = "u64")
 )]
-#[cfg_attr(
-    feature = "daemon",
-    derive(nix_compat_derive::NixDeserialize, nix_compat_derive::NixSerialize),
-    nix(try_from = "u64", into = "u64")
-)]
 #[repr(u64)]
 pub enum VerbosityLevel {
     #[default]

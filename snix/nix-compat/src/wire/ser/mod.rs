@@ -6,8 +6,6 @@ use super::ProtocolVersion;
 
 mod bytes;
 mod collections;
-#[cfg(feature = "nix-compat-derive")]
-mod display;
 mod int;
 #[cfg(any(test, feature = "test"))]
 pub mod mock;

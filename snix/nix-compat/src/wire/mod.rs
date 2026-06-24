@@ -2,6 +2,8 @@
 //! nix-daemon protocol as well as in the NAR format.
 
 mod bytes;
+#[cfg(feature = "nix-compat-derive")]
+mod serde;
 pub use bytes::*;
 
 mod protocol_version;

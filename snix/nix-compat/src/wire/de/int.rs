@@ -30,14 +30,6 @@ impl NixDeserialize for bool {
         Ok(reader.try_read_number().await?.map(|v| v != 0))
     }
 }
-impl NixDeserialize for i64 {
-    async fn try_deserialize<R>(reader: &mut R) -> Result<Option<Self>, R::Error>
-    where
-        R: ?Sized + NixRead + Send,
-    {
-        Ok(reader.try_read_number().await?.map(|v| v as i64))
-    }
-}
 
 #[cfg(test)]
 mod test {

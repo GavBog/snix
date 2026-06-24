@@ -1,6 +1,3 @@
-#[cfg(feature = "nix-compat-derive")]
-use nix_compat_derive::nix_serialize_remote;
-
 use super::{Error, NixSerialize, NixWrite};
 
 impl NixSerialize for u64 {
@@ -22,22 +19,6 @@ impl NixSerialize for usize {
     }
 }
 
-#[cfg(feature = "nix-compat-derive")]
-nix_serialize_remote!(
-    #[nix(into = "u64")]
-    u8
-);
-#[cfg(feature = "nix-compat-derive")]
-nix_serialize_remote!(
-    #[nix(into = "u64")]
-    u16
-);
-#[cfg(feature = "nix-compat-derive")]
-nix_serialize_remote!(
-    #[nix(into = "u64")]
-    u32
-);
-
 impl NixSerialize for bool {
     async fn serialize<W>(&self, writer: &mut W) -> Result<(), W::Error>
     where
@@ -48,15 +29,6 @@ impl NixSerialize for bool {
         } else {
             writer.write_number(0).await
         }
-    }
-}
-
-impl NixSerialize for i64 {
-    async fn serialize<W>(&self, writer: &mut W) -> Result<(), W::Error>
-    where
-        W: NixWrite,
-    {
-        writer.write_number(*self as u64).await
     }
 }
 
