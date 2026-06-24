@@ -115,6 +115,13 @@ in
           if pkgs.stdenv.isLinux then pkgs.pkgsStatic.busybox + "/bin/sh" else "/bin/sh";
       };
 
+      snix-build-glue = prev: {
+        src = filterRustCrateSrc rec {
+          root = prev.src.origSrc;
+          extraFileset = root + "/test-data";
+        };
+      };
+
       snix-castore = prev: {
         src = filterRustCrateSrc rec {
           root = prev.src.origSrc;

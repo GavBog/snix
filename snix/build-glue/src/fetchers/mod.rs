@@ -20,7 +20,8 @@ use tracing::{Span, instrument, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 use url::Url;
 
-use crate::builtins::FetcherError;
+mod error;
+pub use error::FetcherError;
 
 /// Representing options for doing a fetch.
 #[derive(Clone, Eq, PartialEq)]
@@ -626,16 +627,6 @@ where
     }
 }
 
-/// Attempts to mimic `nix::libutil::baseNameOf`
-pub(crate) fn url_basename(url: &Url) -> &str {
-    let s = url.path().trim_end_matches('/');
-
-    match s.rsplit_once('/') {
-        None => url.host_str().unwrap_or_default(),
-        Some((_, basename)) => basename,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     mod fetch {
@@ -720,25 +711,6 @@ mod tests {
                 "7adgvk5zdfq4pwrhsm3n9lzypb12gw0g-source",
                 &fetch.store_path("source").unwrap().unwrap().to_string(),
             )
-        }
-    }
-
-    mod url_basename {
-        use super::super::*;
-        use rstest::rstest;
-
-        #[rstest]
-        #[case::empty_path("", "localhost")]
-        #[case::path_on_root("/dir", "dir")]
-        #[case::relative_path("dir/foo", "foo")]
-        #[case::root_with_trailing_slash("/", "localhost")]
-        #[case::root_with_many_trailing_slashes("///", "localhost")]
-        #[case::trailing_slash("/dir/", "dir")]
-        #[case::many_trailing_slashes("/dir//", "dir")]
-        fn test_url_basename(#[case] url_path: &str, #[case] exp_basename: &str) {
-            let mut url = Url::parse("http://localhost").expect("invalid url");
-            url.set_path(url_path);
-            assert_eq!(url_basename(&url), exp_basename);
         }
     }
 }

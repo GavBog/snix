@@ -355,9 +355,11 @@ mod test {
 
     #[test]
     fn test_derivation_to_build_request() {
-        let aterm_bytes = include_bytes!("../tests/ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv");
+        let aterm_bytes =
+            include_bytes!("../../test-data/ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv");
 
-        let dep_drv_bytes = include_bytes!("../tests/ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv");
+        let dep_drv_bytes =
+            include_bytes!("../../test-data/ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv");
 
         let derivation1 = Derivation::from_aterm_bytes(aterm_bytes).expect("drv1 must parse");
         let drv_path1 =
@@ -424,8 +426,9 @@ mod test {
 
     #[test]
     fn test_drv_with_placeholders_to_build_request() {
-        let aterm_bytes =
-            include_bytes!("../tests/18m7y1d025lqgrzx8ypnhjbvq23z2kda-with-placeholders.drv");
+        let aterm_bytes = include_bytes!(
+            "../../test-data/18m7y1d025lqgrzx8ypnhjbvq23z2kda-with-placeholders.drv"
+        );
         let derivation = Derivation::from_aterm_bytes(aterm_bytes).expect("must parse");
 
         let mut expected_environment_vars: BTreeMap<&str, String> =
@@ -487,7 +490,8 @@ mod test {
 
     #[test]
     fn test_fod_to_build_request() {
-        let aterm_bytes = include_bytes!("../tests/0hm2f1psjpcwg8fijsmr4wwxrx59s092-bar.drv");
+        let aterm_bytes =
+            include_bytes!("../../test-data/0hm2f1psjpcwg8fijsmr4wwxrx59s092-bar.drv");
 
         let derivation = Derivation::from_aterm_bytes(aterm_bytes).expect("must parse");
 

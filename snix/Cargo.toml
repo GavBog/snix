@@ -20,6 +20,7 @@ resolver = "3"
 
 members = [
   "build",
+  "build-glue",
   "castore",
   "castore-http",
   "cli/base",

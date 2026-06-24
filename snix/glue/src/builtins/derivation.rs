@@ -1,10 +1,10 @@
 //! Implements `builtins.derivation`, the core of what makes Nix build packages.
 use crate::builtins::DerivationError;
-use crate::known_paths::KnownPaths;
 use crate::snix_store_io::SnixStoreIO;
 use bstr::BString;
 use nix_compat::derivation::{Derivation, OutputHash, OutputName};
 use nix_compat::store_path::{StorePath, StorePathRef};
+use snix_build_glue::known_paths::KnownPaths;
 use snix_eval::builtin_macros::builtins;
 use snix_eval::generators::{self, GenCo, emit_warning_kind};
 use snix_eval::{
@@ -104,6 +104,7 @@ pub(crate) mod derivation_builtins {
 
     use nix_compat::nixhash::{HashAlgo, NixHash};
     use nix_compat::store_path::hash_placeholder;
+    use snix_build_glue::builder;
     use snix_eval::generators::Gen;
     use snix_eval::{NixContext, NixContextElement, NixString, try_cek_to_value};
 
@@ -312,7 +313,7 @@ pub(crate) mod derivation_builtins {
                         }
                         // In non-SA case, coerce to string and add to env.
                         None => {
-                            if arg_name == crate::builder::structured_attrs::JSON_KEY {
+                            if arg_name == builder::structured_attrs::JSON_KEY {
                                 return Err(DerivationError::StructuredAttrsJsonKeyPresent.into());
                             }
                             let val_str = try_cek_to_value!(
@@ -409,12 +410,12 @@ pub(crate) mod derivation_builtins {
         if let Some(structured_attrs) = structured_attrs {
             // configure __json
             drv.environment.insert(
-                crate::builder::structured_attrs::JSON_KEY.to_string(),
+                builder::structured_attrs::JSON_KEY.to_string(),
                 BString::from(serde_json::to_string(&structured_attrs)?),
             );
         }
 
-        let mut known_paths = state.as_ref().known_paths.borrow_mut();
+        let mut known_paths = state.as_ref().build_state.known_paths.borrow_mut();
         populate_inputs(&mut drv, input_context, &known_paths);
 
         // At this point, derivation fields are fully populated from

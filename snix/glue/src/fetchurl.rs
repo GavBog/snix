@@ -1,7 +1,7 @@
 //! This contains the code translating from a `builtin:derivation` [Derivation]
 //! to a [Fetch].
-use crate::fetchers::Fetch;
 use nix_compat::derivation::{Derivation, OutputHash, OutputName};
+use snix_build_glue::fetchers::Fetch;
 use tracing::instrument;
 use url::Url;
 

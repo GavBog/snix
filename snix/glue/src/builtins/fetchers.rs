@@ -1,10 +1,7 @@
 //! Contains builtins that fetch paths from the Internet, or local filesystem.
 
 use super::utils::select_string;
-use crate::{
-    fetchers::{Fetch, url_basename},
-    snix_store_io::SnixStoreIO,
-};
+use crate::snix_store_io::SnixStoreIO;
 use nix_compat::nixhash::{HashAlgo, NixHash};
 use snix_eval::builtin_macros::builtins;
 use snix_eval::generators::Gen;
@@ -81,10 +78,21 @@ async fn extract_fetch_args(
 pub(crate) mod fetcher_builtins {
     use bstr::ByteSlice;
     use nix_compat::{flakeref, nixhash::NixHash};
+    use snix_build_glue::fetchers::Fetch;
     use snix_eval::{NixContext, NixString, try_cek_to_value};
     use std::collections::BTreeMap;
 
     use super::*;
+
+    /// Attempts to mimic `nix::libutil::baseNameOf`
+    fn url_basename(url: &Url) -> &str {
+        let s = url.path().trim_end_matches('/');
+
+        match s.rsplit_once('/') {
+            None => url.host_str().unwrap_or_default(),
+            Some((_, basename)) => basename,
+        }
+    }
 
     /// Consumes a fetch.
     /// If there is enough info to calculate the store path without fetching,
@@ -101,6 +109,7 @@ pub(crate) mod fetcher_builtins {
             Some(store_path) => {
                 // Move the fetch to KnownPaths, so it can be actually fetched later.
                 let sp = state
+                    .build_state
                     .known_paths
                     .borrow_mut()
                     .add_fetch(fetch, &name)
@@ -116,7 +125,13 @@ pub(crate) mod fetcher_builtins {
                 // If we don't have enough info, do the fetch now.
                 let (store_path, _path_info) = state
                     .tokio_handle
-                    .block_on(async { state.fetcher.ingest_and_persist(&name, fetch).await })
+                    .block_on(async {
+                        state
+                            .build_state
+                            .fetcher
+                            .ingest_and_persist(&name, fetch)
+                            .await
+                    })
                     .map_err(|e| ErrorKind::SnixError(Arc::from(e)))?;
 
                 store_path
@@ -247,5 +262,27 @@ pub(crate) mod fetcher_builtins {
         }
 
         Ok(Value::Attrs(attrs.into()))
+    }
+
+    #[cfg(test)]
+    mod tests {
+        mod url_basename {
+            use super::super::*;
+            use rstest::rstest;
+
+            #[rstest]
+            #[case::empty_path("", "localhost")]
+            #[case::path_on_root("/dir", "dir")]
+            #[case::relative_path("dir/foo", "foo")]
+            #[case::root_with_trailing_slash("/", "localhost")]
+            #[case::root_with_many_trailing_slashes("///", "localhost")]
+            #[case::trailing_slash("/dir/", "dir")]
+            #[case::many_trailing_slashes("/dir//", "dir")]
+            fn test_url_basename(#[case] url_path: &str, #[case] exp_basename: &str) {
+                let mut url = Url::parse("http://localhost").expect("invalid url");
+                url.set_path(url_path);
+                assert_eq!(url_basename(&url), exp_basename);
+            }
+        }
     }
 }

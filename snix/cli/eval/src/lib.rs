@@ -180,6 +180,7 @@ pub fn evaluate<E: std::io::Write + Clone + Send>(
         // Dump all known derivations files to `dumpdir`.
         std::fs::create_dir_all(dumpdir).expect("failed to create drv dumpdir");
         snix_store_io
+            .build_state
             .known_paths
             .borrow()
             .get_derivations()

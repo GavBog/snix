@@ -90,12 +90,12 @@ async fn filtered_ingest(
 
     state.tokio_handle.block_on(async {
         let entries = snix_castore::import::fs::dir_entries_to_ingestion_stream::<'_, _, _, &[u8]>(
-            &state.blob_service,
+            &state.build_state.blob_service,
             dir_entries,
             path,
             None, // TODO re-scan
         );
-        ingest_entries(&state.directory_service, entries)
+        ingest_entries(&state.build_state.directory_service, entries)
             .await
             .map_err(|e| ErrorKind::IO {
                 path: Some(path.to_path_buf()),
@@ -221,7 +221,7 @@ mod import_builtins {
 
                 let (blob_digest, blob_size) = copy_to_blobservice(
                     state.tokio_handle.clone(),
-                    &state.blob_service,
+                    &state.build_state.blob_service,
                     &mut file,
                     |data| {
                         // update blob_sha256 if needed.
@@ -293,6 +293,7 @@ mod import_builtins {
             .tokio_handle
             .block_on(async {
                 state
+                    .build_state
                     .nar_calculation_service
                     .as_ref()
                     .calculate_nar(&root_node)
@@ -328,6 +329,7 @@ mod import_builtins {
             .tokio_handle
             .block_on(async {
                 state
+                    .build_state
                     .path_info_service
                     .as_ref()
                     .put(PathInfo {
@@ -491,7 +493,7 @@ mod import_builtins {
         let mut h = sha2::Sha256::new();
         let (blob_digest, blob_size) = copy_to_blobservice(
             state.tokio_handle.clone(),
-            &state.blob_service,
+            &state.build_state.blob_service,
             std::io::Cursor::new(&content),
             |data| h.update(data),
         )?;
@@ -504,6 +506,7 @@ mod import_builtins {
 
         // calculate the nar hash
         let (nar_size, nar_sha256) = state
+            .build_state
             .nar_calculation_service
             .calculate_nar(&root_node)
             .await
@@ -519,7 +522,7 @@ mod import_builtins {
         let store_path = state
             .tokio_handle
             .block_on(
-                state.path_info_service.put(PathInfo {
+                state.build_state.path_info_service.put(PathInfo {
                     store_path: build_text_path_from_content_digest(
                         name.to_str()?,
                         content_digest,

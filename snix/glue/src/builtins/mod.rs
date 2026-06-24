@@ -10,7 +10,7 @@ mod fetchers;
 mod import;
 mod utils;
 
-pub use errors::{DerivationError, FetcherError, ImportError};
+pub use errors::{DerivationError, ImportError};
 
 /// Adds derivation-related builtins to the passed [snix_eval::EvaluationBuilder]:
 ///

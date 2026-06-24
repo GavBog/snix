@@ -5067,6 +5067,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "snix-build-glue"
+version = "0.1.0"
+dependencies = [
+ "async-stream",
+ "bstr",
+ "bytes",
+ "data-encoding",
+ "futures",
+ "hashbrown 0.17.1",
+ "hex-literal",
+ "md-5 0.10.6",
+ "nix-compat",
+ "regex",
+ "reqwest 0.13.1",
+ "rstest",
+ "serde",
+ "serde_json",
+ "sha1",
+ "sha2 0.10.9",
+ "snix-build",
+ "snix-castore",
+ "snix-store",
+ "snix-tracing",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "tracing-indicatif",
+ "url",
+]
+
+[[package]]
 name = "snix-castore"
 version = "0.1.0"
 dependencies = [
@@ -5389,6 +5421,7 @@ dependencies = [
  "sha1",
  "sha2 0.10.9",
  "snix-build",
+ "snix-build-glue",
  "snix-castore",
  "snix-eval",
  "snix-store",

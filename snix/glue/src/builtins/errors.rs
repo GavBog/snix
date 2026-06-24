@@ -1,7 +1,5 @@
 //! Contains errors that can occur during evaluation of builtins in this crate
-use nix_compat::{derivation::OutputName, nixhash::NixHash, store_path};
-use reqwest::Url;
-use snix_castore::import;
+use nix_compat::{derivation::OutputName, nixhash::NixHash};
 use std::{path::PathBuf, sync::Arc};
 use thiserror::Error;
 
@@ -26,34 +24,6 @@ impl From<DerivationError> for snix_eval::ErrorKind {
     fn from(err: DerivationError) -> Self {
         snix_eval::ErrorKind::SnixError(Arc::from(err))
     }
-}
-
-#[derive(Debug, Error)]
-pub enum FetcherError {
-    #[error("hash mismatch in file downloaded from {url}:\n  wanted: {wanted}\n     got: {got}")]
-    HashMismatch {
-        url: Url,
-        wanted: NixHash,
-        got: NixHash,
-    },
-
-    #[error("Invalid hash type '{0}' for fetcher")]
-    InvalidHashType(&'static str),
-
-    #[error("Unable to parse URL: {0}")]
-    InvalidUrl(#[from] url::ParseError),
-
-    #[error(transparent)]
-    Http(#[from] reqwest::Error),
-
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-
-    #[error(transparent)]
-    Import(#[from] snix_castore::import::IngestionError<import::archive::Error>),
-
-    #[error("Error calculating store path for fetcher output: {0}")]
-    StorePath(#[from] store_path::ParseStorePathError),
 }
 
 /// Errors related to `builtins.path` and `builtins.filterSource`,

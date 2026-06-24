@@ -1,16 +1,10 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-pub mod builder;
 pub mod builtins;
-pub mod fetchers;
-pub mod known_paths;
 pub mod snix_io;
 pub mod snix_store_io;
 
 mod fetchurl;
-
-// Used as user agent in various HTTP Clients
-const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 #[cfg(test)]
 mod tests;

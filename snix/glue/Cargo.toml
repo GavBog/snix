@@ -18,6 +18,7 @@ nix-compat = { path = "../nix-compat", features = [
 ] }
 reqwest = { workspace = true }
 snix-build = { path = "../build", default-features = false, features = [] }
+snix-build-glue.path = "../build-glue"
 snix-eval = { path = "../eval" }
 snix-castore = { path = "../castore" }
 snix-store = { path = "../store", default-features = false, features = [] }

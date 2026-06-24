@@ -100,6 +100,16 @@ rec {
       # File a bug if you depend on any for non-debug work!
       debug = internal.debugCrate { inherit packageId; };
     };
+    "snix-build-glue" = rec {
+      packageId = "snix-build-glue";
+      build = internal.buildRustCrateWithFeatures {
+        packageId = "snix-build-glue";
+      };
+
+      # Debug support which might change between releases.
+      # File a bug if you depend on any for non-debug work!
+      debug = internal.debugCrate { inherit packageId; };
+    };
     "snix-castore" = rec {
       packageId = "snix-castore";
       build = internal.buildRustCrateWithFeatures {
@@ -22319,6 +22329,132 @@ rec {
         };
         resolvedDefaultFeatures = [ "default" ];
       };
+      "snix-build-glue" = rec {
+        crateName = "snix-build-glue";
+        version = "0.1.0";
+        edition = "2024";
+        src = lib.cleanSourceWith {
+          filter = sourceFilter;
+          src = ./build-glue;
+        };
+        libName = "snix_build_glue";
+        dependencies = [
+          {
+            name = "async-stream";
+            packageId = "async-stream";
+          }
+          {
+            name = "bstr";
+            packageId = "bstr";
+          }
+          {
+            name = "bytes";
+            packageId = "bytes";
+          }
+          {
+            name = "data-encoding";
+            packageId = "data-encoding";
+          }
+          {
+            name = "futures";
+            packageId = "futures";
+          }
+          {
+            name = "hashbrown";
+            packageId = "hashbrown 0.17.1";
+          }
+          {
+            name = "md-5";
+            packageId = "md-5 0.10.6";
+          }
+          {
+            name = "nix-compat";
+            packageId = "nix-compat";
+          }
+          {
+            name = "regex";
+            packageId = "regex";
+          }
+          {
+            name = "reqwest";
+            packageId = "reqwest 0.13.1";
+          }
+          {
+            name = "serde_json";
+            packageId = "serde_json";
+          }
+          {
+            name = "sha1";
+            packageId = "sha1";
+          }
+          {
+            name = "sha2";
+            packageId = "sha2 0.10.9";
+          }
+          {
+            name = "snix-build";
+            packageId = "snix-build";
+          }
+          {
+            name = "snix-castore";
+            packageId = "snix-castore";
+          }
+          {
+            name = "snix-store";
+            packageId = "snix-store";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "snix-tracing";
+            packageId = "snix-tracing";
+          }
+          {
+            name = "thiserror";
+            packageId = "thiserror 2.0.17";
+          }
+          {
+            name = "tokio";
+            packageId = "tokio";
+          }
+          {
+            name = "tokio-util";
+            packageId = "tokio-util";
+            features = [
+              "io"
+              "io-util"
+              "compat"
+            ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
+          }
+          {
+            name = "tracing-indicatif";
+            packageId = "tracing-indicatif";
+          }
+          {
+            name = "url";
+            packageId = "url";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "hex-literal";
+            packageId = "hex-literal";
+          }
+          {
+            name = "rstest";
+            packageId = "rstest";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "serde";
+            packageId = "serde";
+          }
+        ];
+
+      };
       "snix-castore" = rec {
         crateName = "snix-castore";
         version = "0.1.0";
@@ -23950,6 +24086,10 @@ rec {
             name = "snix-build";
             packageId = "snix-build";
             usesDefaultFeatures = false;
+          }
+          {
+            name = "snix-build-glue";
+            packageId = "snix-build-glue";
           }
           {
             name = "snix-castore";

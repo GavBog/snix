@@ -154,14 +154,14 @@ mod tests {
 
     static BAR_DRV: LazyLock<Derivation> = LazyLock::new(|| {
         Derivation::from_aterm_bytes(include_bytes!(
-            "tests/ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv"
+            "../test-data/ss2p4wmxijn652haqyd7dckxwl4c7hxx-bar.drv"
         ))
         .expect("must parse")
     });
 
     static FOO_DRV: LazyLock<Derivation> = LazyLock::new(|| {
         Derivation::from_aterm_bytes(include_bytes!(
-            "tests/ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv"
+            "../test-data/ch49594n9avinrf8ip0aslidkc4lxkqv-foo.drv"
         ))
         .expect("must parse")
     });

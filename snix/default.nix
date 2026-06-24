@@ -83,6 +83,7 @@ in
       RUSTDOCFLAGS = "-D rustdoc::broken-intra-doc-links --document-private-items --enable-index-page";
       packages = [
         "snix-build"
+        "snix-build-glue"
         "snix-castore"
         "snix-castore-http"
         "snix-cli"
