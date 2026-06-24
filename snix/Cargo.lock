@@ -2094,9 +2094,9 @@ dependencies = [
 
 [[package]]
 name = "gcp_auth"
-version = "0.12.4"
+version = "0.12.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59619ec98ca106a826e2bc35b4523b5ce872b1baae9b1dda6ed10a517bdfb69e"
+checksum = "26d27dbcc645b60b8e7f6e2868a9d7102ece97d1bb49c1288b5321fcc67f7260"
 dependencies = [
  "async-trait",
  "base64",
@@ -2108,7 +2108,8 @@ dependencies = [
  "hyper-rustls",
  "hyper-util",
  "ring",
- "rustls-pemfile",
+ "rustls",
+ "rustls-pki-types",
  "serde",
  "serde_json",
  "thiserror 2.0.17",
@@ -4637,15 +4638,6 @@ dependencies = [
  "rustls-pki-types",
  "schannel",
  "security-framework",
-]
-
-[[package]]
-name = "rustls-pemfile"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
-dependencies = [
- "rustls-pki-types",
 ]
 
 [[package]]

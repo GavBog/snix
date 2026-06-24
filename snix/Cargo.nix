@@ -8715,9 +8715,9 @@ rec {
       };
       "gcp_auth" = rec {
         crateName = "gcp_auth";
-        version = "0.12.4";
+        version = "0.12.7";
         edition = "2021";
-        sha256 = "17mnvxxm22nidvd1v6xfpaqp5s2w7d9b8ddww8kah1m1ik4rwqar";
+        sha256 = "0q3jgz3gq8akiclc2jdvs6bwwbhhsylnha3fgy70pdj5qsy7vli6";
         dependencies = [
           {
             name = "async-trait";
@@ -8761,6 +8761,7 @@ rec {
             features = [
               "http1"
               "http2"
+              "rustls-native-certs"
             ];
           }
           {
@@ -8771,10 +8772,17 @@ rec {
           {
             name = "ring";
             packageId = "ring";
+            optional = true;
           }
           {
-            name = "rustls-pemfile";
-            packageId = "rustls-pemfile";
+            name = "rustls";
+            packageId = "rustls";
+            usesDefaultFeatures = false;
+            features = [ "std" ];
+          }
+          {
+            name = "rustls-pki-types";
+            packageId = "rustls-pki-types";
           }
           {
             name = "serde";
@@ -8826,13 +8834,21 @@ rec {
           }
         ];
         features = {
-          "default" = [
-            "hyper-rustls/rustls-native-certs"
+          "aws-lc-rs" = [
+            "hyper-rustls/aws-lc-rs"
+            "dep:aws-lc-rs"
+          ];
+          "default" = [ "ring" ];
+          "ring" = [
             "hyper-rustls/ring"
+            "dep:ring"
           ];
           "webpki-roots" = [ "hyper-rustls/webpki-roots" ];
         };
-        resolvedDefaultFeatures = [ "default" ];
+        resolvedDefaultFeatures = [
+          "default"
+          "ring"
+        ];
       };
       "genawaiter" = rec {
         crateName = "genawaiter";
@@ -20520,28 +20536,6 @@ rec {
           }
         ];
 
-      };
-      "rustls-pemfile" = rec {
-        crateName = "rustls-pemfile";
-        version = "2.2.0";
-        edition = "2018";
-        sha256 = "0l3f3mrfkgdjrava7ibwzgwc4h3dljw3pdkbsi9rkwz3zvji9qyw";
-        libName = "rustls_pemfile";
-        dependencies = [
-          {
-            name = "rustls-pki-types";
-            packageId = "rustls-pki-types";
-            rename = "pki-types";
-          }
-        ];
-        features = {
-          "default" = [ "std" ];
-          "std" = [ "pki-types/std" ];
-        };
-        resolvedDefaultFeatures = [
-          "default"
-          "std"
-        ];
       };
       "rustls-pki-types" = rec {
         crateName = "rustls-pki-types";
