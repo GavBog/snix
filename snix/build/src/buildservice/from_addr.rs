@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 #[cfg(target_os = "linux")]
 use crate::buildservice::bwrap::BubblewrapBuildService;
 
@@ -27,7 +29,7 @@ pub async fn from_addr<BS, DS>(
     uri: &str,
     blob_service: BS,
     directory_service: DS,
-) -> std::io::Result<Box<dyn BuildService>>
+) -> std::io::Result<Arc<dyn BuildService>>
 where
     BS: BlobService + Send + Sync + Clone + 'static,
     DS: DirectoryService + Send + Sync + Clone + 'static,
@@ -44,7 +46,7 @@ where
             if !url.path().is_empty() {
                 Err(std::io::Error::other("dummy must not have path"))?
             }
-            Box::<DummyBuildService>::default()
+            Arc::new(DummyBuildService::default())
         }
         #[cfg(target_os = "linux")]
         "oci" => {
@@ -59,7 +61,7 @@ where
 
             // TODO: make sandbox shell and rootless_uid_gid
 
-            Box::new(OCIBuildService::new(
+            Arc::new(OCIBuildService::new(
                 url.path().into(),
                 blob_service,
                 directory_service,
@@ -76,7 +78,7 @@ where
                 Err(std::io::Error::other("bwap needs a bundle dir as path"))?
             }
 
-            Box::new(BubblewrapBuildService::new(
+            Arc::new(BubblewrapBuildService::new(
                 url.path().into(),
                 blob_service,
                 directory_service,
@@ -93,7 +95,7 @@ where
                     );
                 // FUTUREWORK: also allow responding to {blob,directory}_service
                 // requests from the remote BuildService?
-                Box::new(GRPCBuildService::from_client(client))
+                Arc::new(GRPCBuildService::from_client(client))
             } else {
                 Err(std::io::Error::other(format!(
                     "unknown scheme: {}",
