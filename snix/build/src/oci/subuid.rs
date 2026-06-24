@@ -114,7 +114,7 @@ mod tests {
     fn create_fixture<'a>(content: impl IntoIterator<Item = &'a str>) -> tempfile::NamedTempFile {
         use std::io::Write;
         let mut file = tempfile::NamedTempFile::new().expect("Could not create tempfile");
-        for line in content.into_iter() {
+        for line in content {
             writeln!(file, "{line}").expect("");
         }
         file
