@@ -31,13 +31,14 @@ pub fn make_validity_registration<
     Ok(())
 }
 
+#[cfg(feature = "serde")] // Test fixtures rely on nix-compat serde features
 #[cfg(test)]
 mod test {
     use std::sync::LazyLock;
 
     use nix_compat::store_path::StorePathRef;
 
-    use crate::builder::export_reference_graph::make_validity_registration;
+    use super::make_validity_registration;
 
     #[derive(serde::Deserialize)]
     #[allow(unused)]
@@ -59,6 +60,7 @@ mod test {
 
         pub references: Vec<StorePathRef<'a>>,
     }
+
     static CLOSURE_HELLO: LazyLock<Vec<PathData<'static>>> = LazyLock::new(|| {
         let json_str = r#"
     [

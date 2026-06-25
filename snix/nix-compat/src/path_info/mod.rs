@@ -1,3 +1,5 @@
+pub mod export_reference_graph;
+
 #[cfg(feature = "serde")]
 use crate::nixhash;
 use crate::{narinfo::SignatureRef, store_path::StorePathRef};
