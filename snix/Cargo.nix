@@ -23259,6 +23259,7 @@ rec {
             "mimalloc"
           ];
           "mimalloc" = [ "dep:mimalloc" ];
+          "no_leak" = [ "snix-eval/no_leak" ];
           "otlp" = [ "snix-tracing/otlp" ];
           "tracing-chrome" = [ "snix-tracing/chrome" ];
           "tracing-tracy" = [ "snix-tracing/tracy" ];
@@ -23267,6 +23268,7 @@ rec {
         resolvedDefaultFeatures = [
           "default"
           "mimalloc"
+          "no_leak"
           "otlp"
           "tracing-chrome"
           "tracing-tracy"
