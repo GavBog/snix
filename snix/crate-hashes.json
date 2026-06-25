@@ -1,12 +1,12 @@
 {
-  "git+https://github.com/arianvp/hyper.git?branch=push-ktssyytnyrru#hyper@1.9.0": "1ghxvg78h0dkjba9xb722pv4p2xzf0z2pnhy7g5f4syghx0hwxay",
   "git+https://github.com/asomers/mockall.git?rev=2270cdb77897aeb55326ba730f1c1fc2131cc8e1#mockall@0.14.0": "1gs86vzn7rydiikyqj08rd5zyay1vkdf2kbq2glcnccj29f3mx0n",
   "git+https://github.com/asomers/mockall.git?rev=2270cdb77897aeb55326ba730f1c1fc2131cc8e1#mockall_derive@0.14.0": "1gs86vzn7rydiikyqj08rd5zyay1vkdf2kbq2glcnccj29f3mx0n",
-  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-build@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
-  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-health@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
-  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-prost-build@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
-  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-prost@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
-  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic-reflection@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
-  "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#tonic@0.14.5": "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd",
+  "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#tonic-build@0.14.6": "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn",
+  "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#tonic-health@0.14.6": "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn",
+  "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#tonic-prost-build@0.14.6": "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn",
+  "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#tonic-prost@0.14.6": "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn",
+  "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#tonic-reflection@0.14.6": "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn",
+  "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#tonic@0.14.6": "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn",
+  "git+https://github.com/flokli/hyper.git?rev=554050c2ac5057110dc76a71022d7f6a7a8c9e2e#hyper@1.10.1": "1vbh478dlpzhqhxckdx167cqnnzbp1afjzhm12q7czhswz3k3774",
   "git+https://github.com/tvlfyi/wu-manber.git#wu-manber@0.1.0": "1zhk83lbq99xzyjwphv2qrb8f8qgfqwa5bbbvyzm0z0bljsjv0pd"
 }

@@ -2486,8 +2486,8 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "1.9.0"
-source = "git+https://github.com/arianvp/hyper.git?branch=push-ktssyytnyrru#e071325cc75549b37bbcd5be591e93c4c974b4a2"
+version = "1.10.1"
+source = "git+https://github.com/flokli/hyper.git?rev=554050c2ac5057110dc76a71022d7f6a7a8c9e2e#554050c2ac5057110dc76a71022d7f6a7a8c9e2e"
 dependencies = [
  "atomic-waker",
  "bytes",
@@ -6128,8 +6128,8 @@ checksum = "df8b2b54733674ad286d16267dcfc7a71ed5c776e4ac7aa3c3e2561f7c637bf2"
 
 [[package]]
 name = "tonic"
-version = "0.14.5"
-source = "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#f03397b816b834f78c8b9e1a271c23ac4265d750"
+version = "0.14.6"
+source = "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#292ed1a6aa8011208f685e9e116ea205d3156256"
 dependencies = [
  "async-trait",
  "axum",
@@ -6158,8 +6158,8 @@ dependencies = [
 
 [[package]]
 name = "tonic-build"
-version = "0.14.5"
-source = "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#f03397b816b834f78c8b9e1a271c23ac4265d750"
+version = "0.14.6"
+source = "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#292ed1a6aa8011208f685e9e116ea205d3156256"
 dependencies = [
  "prettyplease",
  "proc-macro2",
@@ -6169,8 +6169,8 @@ dependencies = [
 
 [[package]]
 name = "tonic-health"
-version = "0.14.5"
-source = "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#f03397b816b834f78c8b9e1a271c23ac4265d750"
+version = "0.14.6"
+source = "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#292ed1a6aa8011208f685e9e116ea205d3156256"
 dependencies = [
  "prost",
  "tokio",
@@ -6181,8 +6181,8 @@ dependencies = [
 
 [[package]]
 name = "tonic-prost"
-version = "0.14.5"
-source = "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#f03397b816b834f78c8b9e1a271c23ac4265d750"
+version = "0.14.6"
+source = "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#292ed1a6aa8011208f685e9e116ea205d3156256"
 dependencies = [
  "bytes",
  "prost",
@@ -6191,8 +6191,8 @@ dependencies = [
 
 [[package]]
 name = "tonic-prost-build"
-version = "0.14.5"
-source = "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#f03397b816b834f78c8b9e1a271c23ac4265d750"
+version = "0.14.6"
+source = "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#292ed1a6aa8011208f685e9e116ea205d3156256"
 dependencies = [
  "prettyplease",
  "proc-macro2",
@@ -6206,8 +6206,8 @@ dependencies = [
 
 [[package]]
 name = "tonic-reflection"
-version = "0.14.5"
-source = "git+https://github.com/edef1c/tonic.git?branch=push-rosuyzxnysvw#f03397b816b834f78c8b9e1a271c23ac4265d750"
+version = "0.14.6"
+source = "git+https://github.com/flokli/grpc-rust.git?rev=292ed1a6aa8011208f685e9e116ea205d3156256#292ed1a6aa8011208f685e9e116ea205d3156256"
 dependencies = [
  "prost",
  "prost-types",

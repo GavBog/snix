@@ -10305,13 +10305,13 @@ rec {
       };
       "hyper" = rec {
         crateName = "hyper";
-        version = "1.9.0";
+        version = "1.10.1";
         edition = "2021";
         workspace_member = null;
         src = pkgs.fetchgit {
-          url = "https://github.com/arianvp/hyper.git";
-          rev = "e071325cc75549b37bbcd5be591e93c4c974b4a2";
-          sha256 = "1ghxvg78h0dkjba9xb722pv4p2xzf0z2pnhy7g5f4syghx0hwxay";
+          url = "https://github.com/flokli/hyper.git";
+          rev = "554050c2ac5057110dc76a71022d7f6a7a8c9e2e";
+          sha256 = "1vbh478dlpzhqhxckdx167cqnnzbp1afjzhm12q7czhswz3k3774";
         };
         authors = [
           "Sean McArthur <sean@seanmonstar.com>"
@@ -27062,13 +27062,13 @@ rec {
       };
       "tonic" = rec {
         crateName = "tonic";
-        version = "0.14.5";
+        version = "0.14.6";
         edition = "2024";
         workspace_member = null;
         src = pkgs.fetchgit {
-          url = "https://github.com/edef1c/tonic.git";
-          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
-          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+          url = "https://github.com/flokli/grpc-rust.git";
+          rev = "292ed1a6aa8011208f685e9e116ea205d3156256";
+          sha256 = "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn";
         };
         authors = [
           "Lucio Franco <luciofranco14@gmail.com>"
@@ -27307,13 +27307,13 @@ rec {
       };
       "tonic-build" = rec {
         crateName = "tonic-build";
-        version = "0.14.5";
+        version = "0.14.6";
         edition = "2024";
         workspace_member = null;
         src = pkgs.fetchgit {
-          url = "https://github.com/edef1c/tonic.git";
-          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
-          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+          url = "https://github.com/flokli/grpc-rust.git";
+          rev = "292ed1a6aa8011208f685e9e116ea205d3156256";
+          sha256 = "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn";
         };
         libName = "tonic_build";
         authors = [
@@ -27344,13 +27344,13 @@ rec {
       };
       "tonic-health" = rec {
         crateName = "tonic-health";
-        version = "0.14.5";
+        version = "0.14.6";
         edition = "2024";
         workspace_member = null;
         src = pkgs.fetchgit {
-          url = "https://github.com/edef1c/tonic.git";
-          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
-          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+          url = "https://github.com/flokli/grpc-rust.git";
+          rev = "292ed1a6aa8011208f685e9e116ea205d3156256";
+          sha256 = "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn";
         };
         libName = "tonic_health";
         authors = [
@@ -27398,13 +27398,13 @@ rec {
       };
       "tonic-prost" = rec {
         crateName = "tonic-prost";
-        version = "0.14.5";
+        version = "0.14.6";
         edition = "2024";
         workspace_member = null;
         src = pkgs.fetchgit {
-          url = "https://github.com/edef1c/tonic.git";
-          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
-          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+          url = "https://github.com/flokli/grpc-rust.git";
+          rev = "292ed1a6aa8011208f685e9e116ea205d3156256";
+          sha256 = "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn";
         };
         libName = "tonic_prost";
         authors = [
@@ -27429,13 +27429,13 @@ rec {
       };
       "tonic-prost-build" = rec {
         crateName = "tonic-prost-build";
-        version = "0.14.5";
+        version = "0.14.6";
         edition = "2024";
         workspace_member = null;
         src = pkgs.fetchgit {
-          url = "https://github.com/edef1c/tonic.git";
-          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
-          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+          url = "https://github.com/flokli/grpc-rust.git";
+          rev = "292ed1a6aa8011208f685e9e116ea205d3156256";
+          sha256 = "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn";
         };
         libName = "tonic_prost_build";
         authors = [
@@ -27492,13 +27492,13 @@ rec {
       };
       "tonic-reflection" = rec {
         crateName = "tonic-reflection";
-        version = "0.14.5";
+        version = "0.14.6";
         edition = "2024";
         workspace_member = null;
         src = pkgs.fetchgit {
-          url = "https://github.com/edef1c/tonic.git";
-          rev = "f03397b816b834f78c8b9e1a271c23ac4265d750";
-          sha256 = "0x1qw6mxx8w4mxsmb8gkjqm60qax77jhrm79jrh9jyikjdfkrzvd";
+          url = "https://github.com/flokli/grpc-rust.git";
+          rev = "292ed1a6aa8011208f685e9e116ea205d3156256";
+          sha256 = "0gl6vxwpmq5avdmllagp2xgdazacr3z3nlsf6kgy7svnpflrjpdn";
         };
         libName = "tonic_reflection";
         authors = [

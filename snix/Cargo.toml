@@ -202,9 +202,11 @@ inherits = "release"
 debug = true
 
 [patch.crates-io]
-hyper = { git = "https://github.com/arianvp/hyper.git", branch = "push-ktssyytnyrru" }
-tonic = { git = "https://github.com/edef1c/tonic.git", branch = "push-rosuyzxnysvw" }
-tonic-health = { git = "https://github.com/edef1c/tonic.git", branch = "push-rosuyzxnysvw" }
-tonic-reflection = { git = "https://github.com/edef1c/tonic.git", branch = "push-rosuyzxnysvw" }
-tonic-prost = { git = "https://github.com/edef1c/tonic.git", branch = "push-rosuyzxnysvw" }
-tonic-prost-build = { git = "https://github.com/edef1c/tonic.git", branch = "push-rosuyzxnysvw" }
+# Hyper 1.10.1 plus GOAWAY fixes
+hyper = { git = "https://github.com/flokli/hyper.git", rev = "554050c2ac5057110dc76a71022d7f6a7a8c9e2e" }
+# Tonic 0.14.6 plus GOAWAY fixes
+tonic = { git = "https://github.com/flokli/grpc-rust.git", rev = "292ed1a6aa8011208f685e9e116ea205d3156256" }
+tonic-health = { git = "https://github.com/flokli/grpc-rust.git", rev = "292ed1a6aa8011208f685e9e116ea205d3156256" }
+tonic-reflection = { git = "https://github.com/flokli/grpc-rust.git", rev = "292ed1a6aa8011208f685e9e116ea205d3156256" }
+tonic-prost = { git = "https://github.com/flokli/grpc-rust.git", rev = "292ed1a6aa8011208f685e9e116ea205d3156256" }
+tonic-prost-build = { git = "https://github.com/flokli/grpc-rust.git", rev = "292ed1a6aa8011208f685e9e116ea205d3156256" }
