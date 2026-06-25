@@ -7,7 +7,7 @@ rust-version.workspace = true
 [dependencies]
 async-compression = { workspace = true, features = ["tokio", "zstd"] }
 async-stream.workspace = true
-auto_impl = "1.2.0"
+auto_impl.workspace = true
 aws-config = { workspace = true, features = ["behavior-version-latest"] }
 aws-credential-types.workspace = true
 bigtable_rs = { workspace = true, optional = true }

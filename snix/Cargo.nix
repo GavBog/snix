@@ -22202,6 +22202,10 @@ rec {
             packageId = "anyhow";
           }
           {
+            name = "auto_impl";
+            packageId = "auto_impl";
+          }
+          {
             name = "blake3";
             packageId = "blake3";
           }

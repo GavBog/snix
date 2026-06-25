@@ -1,3 +1,4 @@
+use auto_impl::auto_impl;
 use tonic::async_trait;
 
 pub mod build_request;
@@ -16,6 +17,7 @@ pub use dummy::DummyBuildService;
 pub use from_addr::from_addr;
 
 #[async_trait]
+#[auto_impl(&, &mut, Arc, Box)]
 pub trait BuildService: Send + Sync {
     /// TODO: document
     async fn do_build(&self, request: BuildRequest) -> std::io::Result<BuildResult>;

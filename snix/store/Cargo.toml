@@ -13,6 +13,7 @@ async-compression = { workspace = true, features = [
   "zstd",
 ] }
 async-stream.workspace = true
+auto_impl.workspace = true
 bstr.workspace = true
 bytes.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
@@ -57,7 +58,6 @@ toml = { version = "0.8.19", optional = true }
 redb = { workspace = true, features = ["logging"] }
 bigtable_rs = { workspace = true, optional = true }
 googleapis-tonic-google-bigtable-v2 = { workspace = true, optional = true }
-auto_impl = "1.2.0"
 
 [build-dependencies]
 tonic-prost-build.workspace = true
