@@ -85,7 +85,10 @@ where
             let writer = VirtioFsWriter::new(memory, desc_chain.clone())
                 .map_err(|_| Error::InvalidDescriptorChain)?;
 
-            self.server
+            // Report the bytes written back through the used ring; recent
+            // kernels reject responses shorter than `fuse_out_header`.
+            let len = self
+                .server
                 .handle_message(
                     reader,
                     writer.into(),
@@ -96,10 +99,10 @@ where
                 )
                 .map_err(Error::HandleRequests)?;
 
-            // TODO: Is len 0 correct?
-            if let Err(error) = vring
-                .get_queue_mut()
-                .add_used(memory, desc_chain.head_index(), 0)
+            if let Err(error) =
+                vring
+                    .get_queue_mut()
+                    .add_used(memory, desc_chain.head_index(), len as u32)
             {
                 error!(?error, "failed to add desc back to ring");
             }
