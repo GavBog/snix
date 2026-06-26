@@ -529,8 +529,10 @@ mod import_builtins {
                         references,
                     )
                     .map_err(|_e| {
-                        nix_compat::derivation::DerivationError::InvalidOutputName(
-                            name.to_str_lossy().into_owned(),
+                        nix_compat::derivation::DerivationError::InvalidOutputs(
+                            nix_compat::derivation::outputs::OutputsError::InvalidOutputName(
+                                name.to_str_lossy().into_owned(),
+                            ),
                         )
                     })
                     .map_err(crate::builtins::DerivationError::InvalidDerivation)?

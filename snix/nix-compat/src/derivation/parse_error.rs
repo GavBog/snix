@@ -3,7 +3,7 @@
 use nom::IResult;
 
 use crate::{
-    derivation::{OutputName, ParseOutputNameError},
+    derivation::{OutputName, ParseOutputNameError, outputs::OutputsError},
     nixhash,
     store_path::{self, StorePath},
 };
@@ -25,6 +25,9 @@ pub enum ErrorKind {
 
     #[error("invalind output name")]
     InvalidOutputName(#[from] ParseOutputNameError),
+
+    #[error("invalid outputs")]
+    InvalidOutputs(#[from] OutputsError),
 
     #[error("nix hash error: {0}")]
     NixHashError(nixhash::Error),

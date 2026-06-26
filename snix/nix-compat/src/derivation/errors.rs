@@ -1,5 +1,5 @@
 //! Contains [DerivationError], exported as [crate::derivation::DerivationError]
-use crate::{derivation::output::ParseOutputError, store_path};
+use crate::store_path;
 use thiserror::Error;
 
 /// Errors that can occur during the validation of Derivation structs.
@@ -9,18 +9,12 @@ pub enum DerivationError {
     InvalidDerivationName(String, #[source] store_path::ParseStorePathError),
 
     // outputs
-    #[error("no outputs defined")]
-    NoOutputs(),
-    #[error("invalid output name: {0}")]
-    InvalidOutputName(String),
-    #[error("encountered fixed-output derivation, but more than 1 output in total")]
-    MoreThanOneOutputButFixed(),
-    #[error("invalid output name for fixed-output derivation: {0}")]
-    InvalidOutputNameForFixed(String),
-    #[error("unable to validate output {0}: {1}")]
-    InvalidOutput(String, #[source] ParseOutputError),
-    #[error("invalid calculated output derivation path name: {0}")]
-    InvalidOutputDerivationPath(String, #[source] store_path::ParseStorePathError),
+    #[error("{0}")]
+    InvalidOutputs(
+        #[from]
+        #[source]
+        super::outputs::OutputsError,
+    ),
     // input derivation
     #[error("unable to parse input derivation path {0}: {1}")]
     InvalidInputDerivationPath(String, #[source] store_path::ParseStorePathError),

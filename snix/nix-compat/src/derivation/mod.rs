@@ -4,11 +4,12 @@ use bstr::BString;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
-use std::{fmt::Write, io};
+use std::io;
 
 mod errors;
 mod output;
 mod output_name;
+pub mod outputs;
 mod parse_error;
 mod parser;
 mod validate;
@@ -22,6 +23,8 @@ pub use crate::nixhash::{CAHash, NixHash};
 pub use errors::DerivationError;
 pub use output::{Output, OutputHash, OutputHashMode};
 pub use output_name::{OutputName, ParseOutputNameError};
+#[doc(inline)]
+pub use outputs::Outputs;
 pub use parser::Error as ParserError;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -44,7 +47,7 @@ pub struct Derivation {
     pub input_sources: BTreeSet<StorePath>,
 
     /// Maps output names to Output.
-    pub outputs: BTreeMap<OutputName, Output>,
+    pub outputs: Outputs,
 
     pub system: String,
 }
@@ -165,68 +168,38 @@ impl Derivation {
         })
     }
 
-    /// This calculates all output paths of a Derivation and updates the struct.
-    /// It requires the struct to be initially without output paths.
-    /// This means, self.outputs[$outputName].path needs to be an empty string,
-    /// and self.environment[$outputName] needs to be an empty string.
+    /// This calculates all output paths of a `Derivation` and updates the struct.
+    ///
+    /// It requires the outputs to be initially without output paths.
+    /// This means, [`Output::path`] needs to be `None` for each output.
     ///
     /// Output path calculation requires knowledge of the
-    /// [Derivation::hash_derivation_modulo], which (in case of non-fixed-output
+    /// [`hash_derivation_modulo`], which (in case of non-fixed-output
     /// derivations) also requires knowledge of the
-    /// [Derivation::hash_derivation_modulo] of input derivations (recursively).
+    /// [`hash_derivation_modulo`] of input derivations (recursively).
     ///
     /// To avoid recursing and doing unnecessary calculation, we simply
     /// ask the caller of this function to provide the result of the
-    /// [Derivation::hash_derivation_modulo] call of the current [Derivation],
+    /// [`hash_derivation_modulo`] call of the current [`Derivation`],
     /// and leave it up to them to calculate it when needed.
     ///
-    /// On completion, `self.environment[$outputName]` and
-    /// `self.outputs[$outputName].path` are set to the calculated output path for all
-    /// outputs.
+    /// On completion, [`Output::path`] of each output is set to the calculated output path.
+    ///
+    /// [`hash_derivation_modulo`]: Derivation::hash_derivation_modulo
     pub fn calculate_output_paths(
         &mut self,
         drv_name: &str,
         hash_derivation_modulo: &[u8; 32],
     ) -> Result<(), DerivationError> {
+        self.outputs
+            .calculate_output_paths(drv_name, hash_derivation_modulo)?;
+
         // The fingerprint and hash differs per output
-        for (output_name, output) in self.outputs.iter_mut() {
-            // Assert that outputs are not yet populated, to avoid using this function wrongly.
-            // We don't also go over self.environment, but it's a sufficient
-            // footgun prevention mechanism.
-            assert!(output.path.is_none());
-
-            // Assemble the name, which is either the drv-name suffixed `-{output_name}`,
-            // except in the `out` case, where it's omitted.
-            let name = {
-                let mut name = drv_name.to_owned();
-                if output_name != &OutputName::out() {
-                    name.write_fmt(format_args!("-{output_name}")).unwrap();
-                }
-                name
-            };
-
-            // For fixed output derivation we use [build_ca_path], otherwise we
-            // use [build_output_path] with [hash_derivation_modulo].
-            let store_path = if let Some(output_hash) = &output.output_hash {
-                assert!(output_name == &OutputName::out(), "Snix bug: non-out FOD");
-
-                store_path::build_ca_path(
-                    &name,
-                    output_hash.mode == OutputHashMode::Recursive,
-                    &output_hash.hash,
-                    [],
-                    false,
-                )
-            } else {
-                store_path::build_output_path(&name, hash_derivation_modulo, output_name)
-            }
-            .map_err(|e| DerivationError::InvalidOutputDerivationPath(name.to_string(), e))?;
-
+        for (output_name, output) in self.outputs.iter() {
             self.environment.insert(
                 output_name.to_string(),
-                store_path.to_absolute_path().into(),
+                output.path.as_ref().unwrap().to_absolute_path().into(),
             );
-            output.path = Some(store_path.to_owned());
         }
 
         Ok(())

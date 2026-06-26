@@ -14,7 +14,7 @@ use thiserror;
 
 use crate::derivation::output::OutputHash;
 use crate::derivation::parse_error::{ErrorKind, NomError, NomResult, into_nomerror};
-use crate::derivation::{Derivation, Output, OutputName, write};
+use crate::derivation::{Derivation, Output, OutputName, Outputs, write};
 use crate::store_path::{self, StorePath};
 use crate::{aterm, nixhash};
 
@@ -151,7 +151,7 @@ fn parse_output(i: &[u8]) -> NomResult<&[u8], (OutputName, Output)> {
 /// it to a BTreeMap.
 /// We don't use parse_kv here, as it's dealing with 2-tuples, and these are
 /// 4-tuples.
-fn parse_outputs(i: &[u8]) -> NomResult<&[u8], BTreeMap<OutputName, Output>> {
+fn parse_outputs(i: &[u8]) -> NomResult<&[u8], Outputs> {
     let res = delimited(
         nomchar('['),
         separated_list1(tag(","), parse_output),
@@ -161,16 +161,12 @@ fn parse_outputs(i: &[u8]) -> NomResult<&[u8], BTreeMap<OutputName, Output>> {
 
     match res {
         Ok((rst, outputs_lst)) => {
-            let mut outputs = BTreeMap::default();
-            for (output_name, output) in outputs_lst.into_iter() {
-                if outputs.contains_key(&output_name) {
-                    return Err(nom::Err::Failure(NomError {
-                        input: i,
-                        code: ErrorKind::DuplicateMapKey(output_name.to_string()),
-                    }));
-                }
-                outputs.insert(output_name, output);
-            }
+            let outputs = Outputs::try_from_iter(outputs_lst).map_err(|err| {
+                nom::Err::Failure(NomError {
+                    input: i,
+                    code: ErrorKind::InvalidOutputs(err),
+                })
+            })?;
             Ok((rst, outputs))
         }
         // pass regular parse errors along
@@ -376,7 +372,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::OutputHash;
-    use crate::derivation::{Output, OutputHashMode, OutputName};
+    use crate::derivation::{Output, OutputHashMode, OutputName, Outputs};
     use crate::store_path::StorePathRef;
     use crate::{
         derivation::{NixHash, parse_error::ErrorKind},
@@ -389,7 +385,7 @@ mod tests {
     use hex_literal::hex;
     use rstest::rstest;
 
-    static EXP_MULTI_OUTPUTS: LazyLock<BTreeMap<OutputName, Output>> = LazyLock::new(|| {
+    static EXP_MULTI_OUTPUTS: LazyLock<Outputs> = LazyLock::new(|| {
         let mut b = BTreeMap::new();
         b.insert(
             "lib".parse().expect("valid OutputName"),
@@ -413,7 +409,7 @@ mod tests {
                 output_hash: None,
             },
         );
-        b
+        b.try_into().unwrap()
     });
 
     static EXP_AB_MAP: LazyLock<BTreeMap<String, BString>> = LazyLock::new(|| {
@@ -608,7 +604,7 @@ mod tests {
         br#"[("lib","/nix/store/2vixb94v0hy2xc6p7mbnxxcyc095yyia-has-multi-out-lib","",""),("out","/nix/store/55lwldka5nyxa08wnvlizyqw02ihy8ic-has-multi-out","","")]"#,
         &EXP_MULTI_OUTPUTS
     )]
-    fn parse_outputs(#[case] input: &[u8], #[case] expected: &BTreeMap<OutputName, Output>) {
+    fn parse_outputs(#[case] input: &[u8], #[case] expected: &Outputs) {
         let (rest, parsed) = super::parse_outputs(input).expect("must parse");
         assert!(rest.is_empty());
         assert_eq!(*expected, parsed);

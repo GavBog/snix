@@ -2,7 +2,7 @@
 use crate::builtins::DerivationError;
 use crate::snix_store_io::SnixStoreIO;
 use bstr::BString;
-use nix_compat::derivation::{Derivation, Output, OutputHash, OutputName};
+use nix_compat::derivation::{Derivation, OutputHash, OutputName};
 use nix_compat::store_path::{StorePath, StorePathRef};
 use snix_build_glue::known_paths::KnownPaths;
 use snix_eval::builtin_macros::builtins;
@@ -102,6 +102,7 @@ pub(crate) mod derivation_builtins {
 
     use bstr::ByteSlice;
 
+    use nix_compat::derivation::{Output, Outputs};
     use nix_compat::nixhash::{HashAlgo, NixHash};
     use nix_compat::store_path::hash_placeholder;
     use snix_build_glue::builder;
@@ -157,8 +158,6 @@ pub(crate) mod derivation_builtins {
         let name = name.to_str()?;
 
         let mut drv = Derivation::default();
-        // insert the `out` output. Even without any `outputs` argument or FODs this needs to exist.
-        drv.outputs.insert(OutputName::out(), Default::default());
 
         let mut input_context = NixContext::new();
 
@@ -241,23 +240,14 @@ pub(crate) mod derivation_builtins {
 
                         output_names.push(output_name);
                     }
-                    drv.outputs = BTreeMap::from_iter(
+                    drv.outputs = Outputs::try_from_iter(
                         output_names
                             .iter()
                             .cloned()
                             .map(|name| (name, Output::default())),
-                    );
-                    if drv.outputs.len() != output_names.len() {
-                        // Find the duplicate name
-                        output_names.into_iter().try_for_each(|output_name| {
-                            if drv.outputs.remove(&output_name).is_none() {
-                                Err(DerivationError::DuplicateOutput(output_name))
-                            } else {
-                                Ok(())
-                            }
-                        })?;
-                        unreachable!("should have returned DuplicateOutput error");
-                    }
+                    )
+                    .map_err(nix_compat::derivation::DerivationError::from)
+                    .map_err(DerivationError::from)?;
 
                     match structured_attrs.as_mut() {
                         // add outputs to the json itself (as a list of strings)
@@ -361,16 +351,11 @@ pub(crate) mod derivation_builtins {
 
             // FOD case.
             if let Some(hash_str) = hash_str {
-                // There currently may only be one Output called `out`.
-                let out_output = if drv.outputs.len() == 1
-                    && let Some(out_output) = drv.outputs.get_mut(&OutputName::out())
-                {
-                    out_output
-                } else {
+                if !drv.outputs.is_single() {
                     return Err(ErrorKind::SnixError(Arc::new(
                         DerivationError::ConflictingOutputTypes,
                     )));
-                };
+                }
 
                 // parse outputHashMode.
                 let mode = hash_mode
@@ -394,8 +379,7 @@ pub(crate) mod derivation_builtins {
                 {
                     emit_warning_kind(&co, WarningKind::SRIHashWrongPadding).await;
                 }
-
-                out_output.output_hash = Some(OutputHash { mode, hash });
+                drv.outputs = Outputs::from_fod_hash(OutputHash { mode, hash });
             }
         }
 

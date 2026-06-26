@@ -1,14 +1,11 @@
 use super::parse_error::ErrorKind;
 use crate::derivation::Derivation;
 #[cfg(feature = "serde")]
-use crate::derivation::OutputName;
-#[cfg(feature = "serde")]
-#[cfg(feature = "serde")]
-use crate::derivation::output::Output;
-#[cfg(feature = "serde")]
 use crate::derivation::output::OutputHash;
 use crate::derivation::parse_error::NomError;
 use crate::derivation::parser::Error;
+#[cfg(feature = "serde")]
+use crate::derivation::{OutputName, Outputs};
 #[cfg(feature = "serde")]
 use crate::store_path::StorePath;
 #[cfg(feature = "serde")]
@@ -186,17 +183,11 @@ fn derivation_path(#[case] name: &str, #[case] expected_path: &str) {
 fn derivation_without_output_paths(derivation: &Derivation) -> Derivation {
     let mut trimmed_env = derivation.environment.clone();
     let mut trimmed_outputs = derivation.outputs.clone();
+    trimmed_outputs.trim_store_paths();
 
-    for (output_name, output) in &derivation.outputs {
+    for output_name in derivation.outputs.keys() {
         trimmed_env.insert(output_name.as_str().to_owned(), "".into());
         assert!(trimmed_outputs.contains_key(output_name));
-        trimmed_outputs.insert(
-            output_name.clone(),
-            Output {
-                path: None,
-                ..output.clone()
-            },
-        );
     }
 
     // replace environment and outputs with the trimmed variants
@@ -345,18 +336,12 @@ fn output_path_construction() {
     bar_env.insert("system".to_string(), ":".into());
 
     // assemble bar outputs
-    bar_drv.outputs.insert(
-        OutputName::out(),
-        Output {
-            path: None, // will be calculated
-            output_hash: Some(
-                OutputHash::from_mode_algo_and_digest(
-                    "r:sha256",
-                    hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"),
-                )
-                .expect("valid OutputHash"),
-            ),
-        },
+    bar_drv.outputs = Outputs::from_fod_hash(
+        OutputHash::from_mode_algo_and_digest(
+            "r:sha256",
+            hex!("08813cbee9903c62be4c5027726a418a300da4500b2d369d3af9286f4815ceba"),
+        )
+        .expect("valid OutputHash"),
     );
 
     // calculate bar output paths
@@ -414,13 +399,7 @@ fn output_path_construction() {
     foo_env.insert("system".to_string(), ":".into());
 
     // asssemble foo outputs
-    foo_drv.outputs.insert(
-        OutputName::out(),
-        Output {
-            path: None, // will be calculated
-            output_hash: None,
-        },
-    );
+    foo_drv.outputs = Outputs::with_single_output();
 
     // assemble foo input_derivations
     foo_drv
