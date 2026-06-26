@@ -46,6 +46,38 @@ fn validate<S: AsRef<str>>(s: S) -> Result<(), ParseOutputNameError> {
     Ok(())
 }
 
+impl PartialEq<&str> for OutputName {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == *other
+    }
+}
+impl PartialEq<str> for OutputName {
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
+    }
+}
+impl PartialEq<OutputName> for &str {
+    fn eq(&self, other: &OutputName) -> bool {
+        *self == other.as_str()
+    }
+}
+impl PartialEq<OutputName> for str {
+    fn eq(&self, other: &OutputName) -> bool {
+        self == other.as_str()
+    }
+}
+impl PartialEq<String> for OutputName {
+    fn eq(&self, other: &String) -> bool {
+        self.as_str() == other.as_str()
+    }
+}
+
+impl PartialEq<OutputName> for String {
+    fn eq(&self, other: &OutputName) -> bool {
+        self.as_str() == other.as_str()
+    }
+}
+
 impl fmt::Display for OutputName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
