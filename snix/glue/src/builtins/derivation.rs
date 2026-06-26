@@ -2,7 +2,7 @@
 use crate::builtins::DerivationError;
 use crate::snix_store_io::SnixStoreIO;
 use bstr::BString;
-use nix_compat::derivation::{Derivation, OutputHash, OutputName};
+use nix_compat::derivation::{Derivation, Output, OutputHash, OutputName};
 use nix_compat::store_path::{StorePath, StorePathRef};
 use snix_build_glue::known_paths::KnownPaths;
 use snix_eval::builtin_macros::builtins;
@@ -220,9 +220,6 @@ pub(crate) mod derivation_builtins {
 
                 // If outputs is set, populate drv.outputs with them.
                 "outputs" => {
-                    // Remove the original default `out` output.
-                    drv.outputs.clear();
-
                     let outputs = value
                         .to_list()
                         .context("looking at the `outputs` parameter of the derivation")?;
@@ -242,22 +239,31 @@ pub(crate) mod derivation_builtins {
                             .parse()
                             .map_err(|err| ErrorKind::SnixError(Arc::new(err)))?;
 
-                        output_names.push(output_name.as_str().to_owned());
-
-                        // Populate drv.outputs with this output
-                        if drv
-                            .outputs
-                            .insert(output_name.clone(), Default::default())
-                            .is_some()
-                        {
-                            Err(DerivationError::DuplicateOutput(output_name))?
-                        }
+                        output_names.push(output_name);
+                    }
+                    drv.outputs = BTreeMap::from_iter(
+                        output_names
+                            .iter()
+                            .cloned()
+                            .map(|name| (name, Output::default())),
+                    );
+                    if drv.outputs.len() != output_names.len() {
+                        // Find the duplicate name
+                        output_names.into_iter().try_for_each(|output_name| {
+                            if drv.outputs.remove(&output_name).is_none() {
+                                Err(DerivationError::DuplicateOutput(output_name))
+                            } else {
+                                Ok(())
+                            }
+                        })?;
+                        unreachable!("should have returned DuplicateOutput error");
                     }
 
                     match structured_attrs.as_mut() {
                         // add outputs to the json itself (as a list of strings)
                         Some(structured_attrs) => {
-                            structured_attrs.insert(arg_name, output_names.into());
+                            let names = output_names.iter().map(ToString::to_string).collect();
+                            structured_attrs.insert(arg_name, names);
                         }
                         // add drv.environment["outputs"] as a space-separated list
                         None => {
