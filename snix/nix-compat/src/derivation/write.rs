@@ -9,12 +9,7 @@ use crate::store_path::{StorePath, StorePathRef};
 use crate::{aterm::write_escaped, derivation::Derivation};
 use data_encoding::HEXLOWER;
 
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    io,
-    io::Error,
-    io::Write,
-};
+use std::{collections::BTreeSet, io, io::Error, io::Write};
 
 pub const DERIVATION_PREFIX: &str = "Derive";
 pub const PAREN_OPEN: char = '(';
@@ -175,12 +170,12 @@ where
     Ok(())
 }
 
-fn write_outputs(
-    writer: &mut impl Write,
-    outputs: &BTreeMap<OutputName, Output>,
-) -> Result<(), io::Error> {
+fn write_outputs<'i, I>(writer: &mut impl Write, outputs: I) -> Result<(), io::Error>
+where
+    I: IntoIterator<Item = (&'i OutputName, &'i Output)>,
+{
     write_char(writer, BRACKET_OPEN)?;
-    for (ii, (output_name, output)) in outputs.iter().enumerate() {
+    for (ii, (output_name, output)) in outputs.into_iter().enumerate() {
         if ii > 0 {
             write_char(writer, COMMA)?;
         }

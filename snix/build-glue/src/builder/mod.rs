@@ -292,7 +292,10 @@ fn calculate_pass_as_file_env(k: &str) -> (String, String) {
 }
 
 /// Replace all references to `placeholder outputName` inside the derivation
-fn replace_placeholders(s: &str, outputs: &BTreeMap<OutputName, Output>) -> String {
+fn replace_placeholders<'i, I>(s: &str, outputs: I) -> String
+where
+    I: IntoIterator<Item = (&'i OutputName, &'i Output)>,
+{
     let mut s = s.to_owned();
     for (out_name, output) in outputs {
         let placeholder = hash_placeholder(out_name.as_str());
@@ -309,7 +312,10 @@ fn replace_placeholders(s: &str, outputs: &BTreeMap<OutputName, Output>) -> Stri
 }
 
 /// Replace all references to `placeholder outputName` inside the derivation
-fn replace_placeholders_b(s: &BString, outputs: &BTreeMap<OutputName, Output>) -> BString {
+fn replace_placeholders_b<'i, I>(s: &BString, outputs: I) -> BString
+where
+    I: IntoIterator<Item = (&'i OutputName, &'i Output)>,
+{
     use bstr::ByteSlice;
     let mut s = s.clone();
     for (out_name, output) in outputs {
