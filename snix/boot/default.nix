@@ -105,7 +105,7 @@ rec {
      --memory shared=on,size=$CH_MEM_SIZE \
      --console null \
      --serial tty \
-     --kernel ${kernel}/${pkgs.stdenv.hostPlatform.linux-kernel.target} \
+     --kernel ${kernel}/${kernel.target} \
      --initramfs ${initrd} \
      --cmdline "console=ttyS0 $CH_CMDLINE" \
      --fs tag=snix,socket=$tempdir/snix.sock,num_queues=''${CH_NUM_CPU},queue_size=512

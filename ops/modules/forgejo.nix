@@ -110,7 +110,6 @@ in
         patches =
           old.patches
           ++ (with depot.third_party.lix_forgejo.patches; [
-            upstream_link
             signin_redirect
             api_dont_notify
             forgejo_is_now_gerrit_native

@@ -3,8 +3,6 @@
 { ... }:
 {
   patches = {
-    # Show a link to upstream for a nixos/nix repository.
-    upstream_link = ./upstream-link.patch;
     # Make it possible not to be notified upon issue creation.
     # Minimize noise.
     api_dont_notify = ./api-dont-notify.patch;
