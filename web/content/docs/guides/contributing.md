@@ -216,5 +216,19 @@ does not fall below the rest of the project. This is of course very subjective,
 but as an example if you place code that throws away errors into a block in
 which errors are handled properly your change might be rejected.
 
+#### Use of AI coding tools
+In case you're using AI tooling for your contributions,
+you still take full responsibility for the contribution.
+
+This means:
+
+ - You as a human still have to be in the loop.
+ - All contributions must still be compliant with the licensing requirements of
+   the project.
+ - Carefully review any suggested or generated code, make sure you understand
+   it before sending it for review.
+ - Add a `Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]` tag to the
+   commit message.
+
 [commit history]: https://git.snix.dev/snix/snix/commits/branch/canon
 [Conventional Commits]: https://www.conventionalcommits.org
