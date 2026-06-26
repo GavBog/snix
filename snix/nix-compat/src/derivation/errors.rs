@@ -5,6 +5,9 @@ use thiserror::Error;
 /// Errors that can occur during the validation of Derivation structs.
 #[derive(Debug, Error, PartialEq)]
 pub enum DerivationError {
+    #[error("unable to parse derivation name {0}: {1}")]
+    InvalidDerivationName(String, #[source] store_path::ParseStorePathError),
+
     // outputs
     #[error("no outputs defined")]
     NoOutputs(),

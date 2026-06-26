@@ -86,13 +86,14 @@ impl Derivation {
             .collect();
         references.extend(self.input_sources.iter().map(StorePath::as_ref));
 
+        let drv_name = format!("{name}.drv");
         store_path::build_text_path(
             // append .drv to the name
-            &format!("{name}.drv"),
+            &drv_name,
             self.to_aterm_bytes(),
             references,
         )
-        .map_err(|_e| DerivationError::InvalidOutputName(name.to_owned()))
+        .map_err(|err| DerivationError::InvalidDerivationName(drv_name.to_string(), err))
         .map(|sp| sp.to_owned())
     }
 
