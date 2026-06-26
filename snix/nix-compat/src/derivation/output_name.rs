@@ -58,6 +58,12 @@ impl AsRef<str> for OutputName {
     }
 }
 
+impl std::borrow::Borrow<str> for OutputName {
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
+
 impl Default for OutputName {
     fn default() -> Self {
         Self::out()
